@@ -9,14 +9,17 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "bun run --workspaces build",
+    "build": "bun run build:packages && bun run build:apps",
+    "build:packages": "bun run --filter '@floating-ui-plus/web' build && bun run --filter '@floating-ui-plus/lit' build && bun run --filter '@floating-ui-plus/vue' build",
+    "build:apps": "bun run --filter floating-ui-plus-lit-demo build && bun run --filter floating-ui-plus-vue-demo build",
     "typecheck": "bun run --workspaces typecheck",
     "test": "bun run --workspaces test",
-    "test:browser": "bun run --filter '@floating-ui-plus/*' test:browser && bun run --filter floating-ui-plus-lit-demo test",
-    "test:browser:headed": "PLAYWRIGHT_HEADLESS=false bun run --filter '@floating-ui-plus/*' test:browser && bun run --filter floating-ui-plus-lit-demo test:headed",
+    "test:browser": "bun run --filter '@floating-ui-plus/*' test:browser && bun run --filter floating-ui-plus-lit-demo test && bun run --filter floating-ui-plus-vue-demo test",
+    "test:browser:headed": "PLAYWRIGHT_HEADLESS=false bun run --filter '@floating-ui-plus/*' test:browser && bun run --filter floating-ui-plus-lit-demo test:headed && bun run --filter floating-ui-plus-vue-demo test:headed",
     "dev": "bun run --filter '@floating-ui-plus/*' build && bun run --workspaces --parallel dev",
     "dev:packages": "bun run --filter '@floating-ui-plus/*' --parallel dev",
-    "dev:demo": "bun run --filter floating-ui-plus-lit-demo dev"
+    "dev:demo": "bun run --filter floating-ui-plus-lit-demo dev",
+    "dev:vue": "bun run --filter floating-ui-plus-vue-demo dev"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",

@@ -101,6 +101,19 @@ describe('React parity manifest', () => {
     expect(missing).toEqual([]);
   });
 
+  test('maps every non-deprecated React feature to the Vue package', () => {
+    const manifest = JSON.parse(
+      readFileSync(resolve(packageRoot, 'parity-manifest.json'), 'utf8'),
+    ) as {
+      features: Record<string, unknown>;
+      vue: Record<string, string>;
+    };
+    const missing = Object.keys(manifest.features).filter(
+      (name) => !manifest.vue[name],
+    );
+    expect(missing).toEqual([]);
+  });
+
   test('covers every upstream interaction option in the Web API', () => {
     for (const [reactName, mapping] of Object.entries(interactionFiles)) {
       const source = readFileSync(

@@ -1,0 +1,195 @@
+:root {
+  color: #17172d;
+  background: #f0f2fb;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button {
+  font: inherit;
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 72px 28px 120px;
+}
+
+header {
+  max-width: 760px;
+  margin-bottom: 42px;
+}
+
+h1 {
+  margin: 8px 0 14px;
+  font-size: clamp(3rem, 8vw, 6.7rem);
+  line-height: 0.92;
+  letter-spacing: -0.07em;
+}
+
+h2 {
+  margin: 18px 0 8px;
+  font-size: 1.65rem;
+}
+
+h3 {
+  font-size: 1.8rem;
+}
+
+p {
+  color: #65657d;
+  font-size: 1.06rem;
+  line-height: 1.6;
+}
+
+.eyebrow,
+.step,
+.surface-label {
+  color: #85859d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 22px;
+}
+
+.card {
+  min-height: 360px;
+  padding: 34px;
+  border: 1px solid rgba(23, 23, 45, 0.08);
+  border-radius: 34px;
+  background: #dce6ff;
+  overflow: hidden;
+}
+
+.point-card {
+  background: #fee9ae;
+}
+
+.modal-card {
+  grid-column: 1 / -1;
+  min-height: 260px;
+  background: #e9e5ff;
+}
+
+.trigger,
+.surface button {
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.trigger {
+  display: flex;
+  justify-content: space-between;
+  min-width: 220px;
+  margin-top: 30px;
+  padding: 16px 20px;
+  color: white;
+  background: #41415f;
+}
+
+.surface {
+  z-index: 20;
+  color: #f7f5ff;
+  border: 1px solid #555579;
+  border-radius: 26px;
+  background: #17172d;
+  box-shadow: 0 24px 60px rgba(36, 31, 73, 0.24);
+}
+
+.menu {
+  width: 320px;
+  padding: 24px 16px 16px;
+}
+
+.menu button {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  padding: 15px 16px;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.menu button:hover,
+.menu button:focus-visible {
+  outline: none;
+  background: #3d3d5b;
+}
+
+kbd {
+  color: #aaaac4;
+  font: inherit;
+}
+
+.submenu {
+  width: 280px;
+}
+
+.pointer-zone {
+  display: grid;
+  min-height: 150px;
+  margin-top: 26px;
+  place-content: center;
+  border: 2px dashed rgba(23, 23, 45, 0.35);
+  border-radius: 20px;
+  color: #55556f;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #eb6f67;
+}
+
+.tooltip {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.backdrop {
+  z-index: 40;
+  display: grid;
+  padding: 24px;
+  place-items: center;
+  background: rgba(20, 20, 38, 0.56);
+  backdrop-filter: blur(8px);
+}
+
+.modal {
+  width: min(480px, 100%);
+  padding: 34px;
+}
+
+.modal button {
+  padding: 12px 18px;
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-card {
+    grid-column: auto;
+  }
+}

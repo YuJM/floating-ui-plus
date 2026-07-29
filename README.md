@@ -1,12 +1,14 @@
 # Floating UI Plus
 
-A Bun workspace monorepo containing framework-neutral Floating UI interactions
-and Light DOM bindings for Lit.
+A Bun workspace monorepo containing framework-neutral Floating UI interactions,
+Light DOM bindings for Lit, and Vue-native bindings.
 
 ## Packages
 
 - `@floating-ui-plus/web`: DOM interaction pipeline and web-standard utilities
 - `@floating-ui-plus/lit`: Light DOM Lit controllers and directives
+- `@floating-ui-plus/vue`: upstream-compatible Vue positioning plus Teleport,
+  focus, collection, and interaction adapters
 
 `@floating-ui-plus/web` installs `@floating-ui/dom` and `@floating-ui/utils`
 as direct runtime dependencies, so applications do not need to add them
@@ -22,8 +24,8 @@ bun run test
 bun run test:browser
 ```
 
-`test:browser` runs the Web and Lit suites through Vitest Browser Mode's
-Playwright provider, then runs the demo E2E suite. All Playwright-backed tests
+`test:browser` runs the Web, Lit, and Vue suites through Vitest Browser Mode's
+Playwright provider, then runs both demo E2E suites. All Playwright-backed tests
 are headless by default and use the installed Chrome browser. They exercise the
 native DOM, CSS layout engine, focus, pointer, and keyboard behavior rather than
 JSDOM geometry.
@@ -34,7 +36,7 @@ For local visual debugging only:
 bun run test:browser:headed
 ```
 
-Both packages are built with [tsdown](https://tsdown.dev/). Their `dev` scripts
+All packages are built with [tsdown](https://tsdown.dev/). Their `dev` scripts
 run `tsdown --watch`.
 
 ## Lit demo app
@@ -59,7 +61,7 @@ bun run dev
 ```
 
 Open <http://127.0.0.1:5173>. The root `dev` script first builds
-`@floating-ui-plus/web` and `@floating-ui-plus/lit`, then runs Vite together with both
+the framework packages, then runs Vite together with the package
 `tsdown --watch --no-clean` processes. The initial build creates complete
 package output, while disabling watcher cleanup prevents Vite from resolving a
 package through a temporarily empty `dist`; later source changes rebuild
@@ -67,3 +69,15 @@ automatically.
 
 To run only the package watchers or only the demo server, use `bun run
 dev:packages` or `bun run dev:demo` respectively.
+
+## Vue demo app
+
+`apps/vue-demo` demonstrates an interaction-pipelined Vue composable, Teleport
+portals, nested tree context, a pointer-following tooltip, and a focus-managed
+modal.
+
+```sh
+bun run --filter floating-ui-plus-vue-demo dev
+```
+
+Open <http://127.0.0.1:5174>.

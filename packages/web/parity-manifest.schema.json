@@ -1,8 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["features", "excluded", "reactOnly"],
+  "required": ["features", "vue", "excluded", "reactOnly"],
   "properties": {
+    "vue": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
     "features": {
       "type": "object",
       "additionalProperties": {
