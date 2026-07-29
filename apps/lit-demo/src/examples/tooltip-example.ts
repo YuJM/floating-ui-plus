@@ -22,7 +22,7 @@ class LitTooltipExample extends LitElement {
       this.emitAction(open ? 'Tooltip opened from pointer or focus' : 'Tooltip closed');
     },
     placement: 'top',
-    middleware: [offset(10), flip(), shift({padding: 12})],
+    middleware: [offset(14), flip(), shift({padding: 12})],
     whileElementsMounted: autoUpdate,
   })).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
 
@@ -39,7 +39,13 @@ class LitTooltipExample extends LitElement {
         <div class="card-action">
           <button class="ink-button" ${this.floating.reference()}>Inspect signal <span aria-hidden="true">↗</span></button>
           ${this.open
-            ? html`<div class="tooltip" ${this.floating.floating()}>Positioned by <b>autoUpdate</b></div>`
+            ? html`<div
+                class="tooltip"
+                data-placement=${this.floating.position.placement}
+                ${this.floating.floating()}
+              >
+                Positioned by <b>autoUpdate</b>
+              </div>`
             : nothing}
         </div>
         <code>hover() → focus() → dismiss()</code>
