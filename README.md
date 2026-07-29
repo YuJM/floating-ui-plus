@@ -29,6 +29,9 @@ plugin in a browser: tooltip hover/focus/safe polygon, a portaled popover,
 cursor-following virtual references, hide/clipping middleware strategies, a
 modal focus trap, and a roving-focus / typeahead menu.
 
+The `/examples/middleware` route demonstrates every DOM positioning middleware
+from the Floating UI middleware navigation.
+
 ```sh
 bun run dev
 ```

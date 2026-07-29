@@ -23,3 +23,7 @@ a live demo:
 Routes are handled by the Lit `Router` controller from `@lit-labs/router`.
 Each `/examples/*` route lazy-loads its corresponding view. Production hosting
 must rewrite unknown paths to `index.html` so direct links keep working.
+
+`/examples/middleware` is a dedicated gallery for all DOM middleware shown in
+the Floating UI navigation: `offset`, `shift`, `flip`, `arrow`, `size`,
+`autoPlacement`, `hide`, and `inline`.
