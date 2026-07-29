@@ -18,6 +18,7 @@ a live demo:
 - Command menu: `click`, `dismiss`, menu `role`, `listNavigation`, and `typeahead`
 - Cursor signal: `hover`, `clientPoint`, `dismiss`, and tooltip `role`
 - Modal: `click`, `dismiss`, dialog `role`, and `focusManager`
+- Clipping signal: `hide()` with both `referenceHidden` and `escaped` strategies
 
 Routes are handled by the Lit `Router` controller from `@lit-labs/router`.
 Each `/examples/*` route lazy-loads its corresponding view. Production hosting
