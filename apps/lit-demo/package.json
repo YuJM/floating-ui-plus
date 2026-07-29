@@ -10,11 +10,13 @@
     "test": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@vaadin/router": "^2.0.1",
     "@floating-ui/dom": "^1.8.0",
     "@floating-ui/lit": "workspace:^",
     "@floating-ui/utils": "^0.2.12",
-    "lit": "^3.3.3"
+    "@lit-labs/router": "^0.1.4",
+    "@vaadin/router": "^2.0.1",
+    "lit": "^3.3.3",
+    "urlpattern-polyfill": "^10.1.0"
   },
   "devDependencies": {
     "vite": "^8.1.5"

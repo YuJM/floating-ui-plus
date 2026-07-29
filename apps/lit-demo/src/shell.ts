@@ -1,8 +1,65 @@
+import {Router} from '@lit-labs/router';
 import {html, LitElement} from 'lit';
+import type {RouteConfig} from '@lit-labs/router/routes.js';
+
+const routes: RouteConfig[] = [
+  {
+    path: '/',
+    enter: async () => {
+      await import('./views/home-view');
+      return true;
+    },
+    render: () => html`<lit-home-view></lit-home-view>`,
+  },
+  {
+    path: '/examples/tooltip',
+    enter: async () => {
+      await import('./views/tooltip-view');
+      return true;
+    },
+    render: () => html`<lit-tooltip-view></lit-tooltip-view>`,
+  },
+  {
+    path: '/examples/popover',
+    enter: async () => {
+      await import('./views/popover-view');
+      return true;
+    },
+    render: () => html`<lit-popover-view></lit-popover-view>`,
+  },
+  {
+    path: '/examples/menu',
+    enter: async () => {
+      await import('./views/menu-view');
+      return true;
+    },
+    render: () => html`<lit-menu-view></lit-menu-view>`,
+  },
+  {
+    path: '/examples/modal',
+    enter: async () => {
+      await import('./views/modal-view');
+      return true;
+    },
+    render: () => html`<lit-modal-view></lit-modal-view>`,
+  },
+  {
+    path: '/*',
+    render: () => html`
+      <section class="route-view" aria-labelledby="not-found-title">
+        <p class="eyebrow">404 / route not found</p>
+        <h2 id="not-found-title">That example is not in this lab.</h2>
+        <p>Choose an available interaction example from the navigation.</p>
+        <a class="button-primary" href="/">Return to all examples</a>
+      </section>
+    `,
+  },
+];
 
 class FloatingUiDemo extends LitElement {
   static properties = {lastAction: {state: true}};
   lastAction = 'Choose an example route';
+  private router = new Router(this, routes);
 
   protected createRenderRoot() {
     return this;
@@ -31,7 +88,7 @@ class FloatingUiDemo extends LitElement {
           <a href="/examples/modal">Modal</a>
         </nav>
       </header>
-      <main id="outlet" @floating-demo-action=${this.handleAction}></main>
+      <main @floating-demo-action=${this.handleAction}>${this.router.outlet()}</main>
       <footer class="footer">
         <span>floating-ui-plus</span><span>light DOM / native events / lit 3</span><span class="footer-status"><i></i> ${this.lastAction}</span>
       </footer>
