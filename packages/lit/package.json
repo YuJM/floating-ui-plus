@@ -1,0 +1,39 @@
+{
+  "name": "@floating-ui/lit",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Light DOM Floating UI bindings for Lit",
+  "license": "MIT",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "lit": "^2.7.0 || ^3.0.0"
+  },
+  "dependencies": {
+    "@floating-ui/web": "workspace:^"
+  },
+  "devDependencies": {
+    "lit": "^3.3.3"
+  }
+}

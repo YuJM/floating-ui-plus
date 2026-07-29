@@ -1,0 +1,197 @@
+{
+  "$schema": "./parity-manifest.schema.json",
+  "reactPackage": "@floating-ui/react",
+  "webPackage": "@floating-ui/web",
+  "litPackage": "@floating-ui/lit",
+  "features": {
+    "Composite": {
+      "web": "CompositeController",
+      "lit": "item()",
+      "kind": "adapter"
+    },
+    "CompositeItem": {
+      "web": "CompositeController",
+      "lit": "item()",
+      "kind": "adapter"
+    },
+    "FloatingArrow": {
+      "web": "getArrowStyles",
+      "lit": "arrow()",
+      "kind": "adapter"
+    },
+    "FloatingDelayGroup": {
+      "web": "DelayGroup",
+      "lit": "DelayGroup",
+      "kind": "kernel"
+    },
+    "useDelayGroup": {
+      "web": "DelayGroup",
+      "lit": "DelayGroup",
+      "kind": "kernel"
+    },
+    "useDelayGroupContext": {
+      "web": "Context Protocol",
+      "lit": "Context Protocol",
+      "kind": "adapter"
+    },
+    "NextFloatingDelayGroup": {
+      "web": "NextDelayGroup",
+      "lit": "NextDelayGroup",
+      "kind": "kernel"
+    },
+    "useNextDelayGroup": {
+      "web": "NextDelayGroup",
+      "lit": "NextDelayGroup",
+      "kind": "kernel"
+    },
+    "FloatingFocusManager": {
+      "web": "focusManager",
+      "lit": "focusManager",
+      "kind": "plugin"
+    },
+    "FloatingList": {
+      "web": "FloatingList",
+      "lit": "FloatingList",
+      "kind": "kernel"
+    },
+    "useListItem": {
+      "web": "FloatingList.register",
+      "lit": "item()",
+      "kind": "adapter"
+    },
+    "FloatingOverlay": {
+      "web": "createOverlayElement",
+      "lit": "floatingOverlay",
+      "kind": "adapter"
+    },
+    "FloatingPortal": {
+      "web": "createPortalNode",
+      "lit": "portal()",
+      "kind": "adapter"
+    },
+    "useFloatingPortalNode": {
+      "web": "createPortalNode",
+      "lit": "portal()",
+      "kind": "adapter"
+    },
+    "FloatingNode": {
+      "web": "FloatingTree.register",
+      "lit": "FloatingTree.register",
+      "kind": "kernel"
+    },
+    "FloatingTree": {
+      "web": "FloatingTree",
+      "lit": "FloatingTree",
+      "kind": "kernel"
+    },
+    "useFloatingNodeId": {
+      "web": "FloatingTree.register",
+      "lit": "FloatingTree.register",
+      "kind": "adapter"
+    },
+    "useFloatingParentNodeId": {
+      "web": "Context Protocol",
+      "lit": "Context Protocol",
+      "kind": "adapter"
+    },
+    "useFloatingTree": {
+      "web": "FloatingTree",
+      "lit": "FloatingTree",
+      "kind": "adapter"
+    },
+    "useClick": {"web": "click", "lit": "click", "kind": "plugin"},
+    "useClientPoint": {
+      "web": "clientPoint",
+      "lit": "clientPoint",
+      "kind": "plugin"
+    },
+    "useDismiss": {"web": "dismiss", "lit": "dismiss", "kind": "plugin"},
+    "useFloating": {
+      "web": "createFloating",
+      "lit": "FloatingController",
+      "kind": "adapter"
+    },
+    "useFloatingRootContext": {
+      "web": "createFloating.context",
+      "lit": "FloatingController.context",
+      "kind": "kernel"
+    },
+    "useFocus": {"web": "focus", "lit": "focus", "kind": "plugin"},
+    "useHover": {"web": "hover", "lit": "hover", "kind": "plugin"},
+    "useId": {"web": "createId", "lit": "createId", "kind": "utility"},
+    "useInteractions": {"web": "pipe", "lit": "pipe", "kind": "pipeline"},
+    "useListNavigation": {
+      "web": "listNavigation",
+      "lit": "listNavigation",
+      "kind": "plugin"
+    },
+    "useMergeRefs": {
+      "web": "mergeRefs",
+      "lit": "directives",
+      "kind": "utility"
+    },
+    "useRole": {"web": "role", "lit": "role", "kind": "plugin"},
+    "useTransitionStatus": {
+      "web": "FloatingTransition",
+      "lit": "FloatingTransition",
+      "kind": "kernel"
+    },
+    "useTransitionStyles": {
+      "web": "FloatingTransition",
+      "lit": "FloatingTransition",
+      "kind": "kernel"
+    },
+    "useTypeahead": {"web": "typeahead", "lit": "typeahead", "kind": "plugin"},
+    "safePolygon": {
+      "web": "safePolygon",
+      "lit": "safePolygon",
+      "kind": "plugin"
+    },
+    "arrow": {"web": "arrow", "lit": "arrow", "kind": "positioning"},
+    "autoPlacement": {
+      "web": "autoPlacement",
+      "lit": "autoPlacement",
+      "kind": "positioning"
+    },
+    "autoUpdate": {
+      "web": "autoUpdate",
+      "lit": "autoUpdate",
+      "kind": "positioning"
+    },
+    "computePosition": {
+      "web": "computePosition",
+      "lit": "computePosition",
+      "kind": "positioning"
+    },
+    "detectOverflow": {
+      "web": "detectOverflow",
+      "lit": "detectOverflow",
+      "kind": "positioning"
+    },
+    "flip": {"web": "flip", "lit": "flip", "kind": "positioning"},
+    "getOverflowAncestors": {
+      "web": "getOverflowAncestors",
+      "lit": "getOverflowAncestors",
+      "kind": "positioning"
+    },
+    "hide": {"web": "hide", "lit": "hide", "kind": "positioning"},
+    "inline": {"web": "inline", "lit": "inline", "kind": "positioning"},
+    "limitShift": {
+      "web": "limitShift",
+      "lit": "limitShift",
+      "kind": "positioning"
+    },
+    "offset": {"web": "offset", "lit": "offset", "kind": "positioning"},
+    "platform": {"web": "platform", "lit": "platform", "kind": "positioning"},
+    "shift": {"web": "shift", "lit": "shift", "kind": "positioning"},
+    "size": {"web": "size", "lit": "size", "kind": "positioning"}
+  },
+  "excluded": {
+    "inner": "deprecated",
+    "useInnerOffset": "deprecated"
+  },
+  "reactOnly": {
+    "JSX": "React rendering adapter",
+    "SyntheticEvent": "React event adapter"
+  }
+}

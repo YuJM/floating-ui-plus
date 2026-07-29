@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "useDefineForClassFields": false,
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src", "vite.config.ts"]
+}
