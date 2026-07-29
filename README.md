@@ -8,8 +8,9 @@ and Light DOM bindings for Lit.
 - `@floating-ui-plus/web`: DOM interaction pipeline and web-standard utilities
 - `@floating-ui-plus/lit`: Light DOM Lit controllers and directives
 
-`@floating-ui/dom` and `@floating-ui/utils` are peer dependencies of
-`@floating-ui-plus/web`. Applications choose and install compatible versions.
+`@floating-ui-plus/web` installs `@floating-ui/dom` and `@floating-ui/utils`
+as direct runtime dependencies, so applications do not need to add them
+separately.
 
 ## Development
 

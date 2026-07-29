@@ -54,7 +54,8 @@ may inject `displayCheck: 'none'` for JSDOM.
 
 ## Dependencies and compatibility
 
-- `@floating-ui/dom`: positioning and middleware.
+- `@floating-ui/dom`: direct runtime dependency for positioning and middleware.
+- `@floating-ui/utils`: direct runtime dependency for DOM/platform utilities.
 - `focus-trap`: modal trapping and the document-shared nested trap stack.
 - `tabbable`: public focus-order utilities used outside focus-trap as well.
 

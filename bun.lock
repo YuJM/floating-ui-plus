@@ -23,8 +23,6 @@
       "version": "0.0.0",
       "dependencies": {
         "@floating-ui-plus/lit": "workspace:^",
-        "@floating-ui/dom": "^1.8.0",
-        "@floating-ui/utils": "^0.2.12",
         "@lit-labs/router": "^0.1.4",
         "@vaadin/router": "^2.0.1",
         "lit": "^3.3.3",
@@ -54,16 +52,10 @@
       "name": "@floating-ui-plus/web",
       "version": "0.1.0",
       "dependencies": {
+        "@floating-ui/dom": "^1.8.0",
+        "@floating-ui/utils": "^0.2.12",
         "focus-trap": "^8.2.2",
         "tabbable": "^6.5.0",
-      },
-      "devDependencies": {
-        "@floating-ui/dom": "^1.8.0",
-        "@floating-ui/utils": "^0.2.12",
-      },
-      "peerDependencies": {
-        "@floating-ui/dom": "^1.8.0",
-        "@floating-ui/utils": "^0.2.12",
       },
     },
   },

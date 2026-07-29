@@ -12,9 +12,7 @@
     "test:ui": "playwright test --config playwright.config.ts --ui"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.8.0",
     "@floating-ui-plus/lit": "workspace:^",
-    "@floating-ui/utils": "^0.2.12",
     "@lit-labs/router": "^0.1.4",
     "@vaadin/router": "^2.0.1",
     "lit": "^3.3.3",
