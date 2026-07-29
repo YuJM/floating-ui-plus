@@ -58,8 +58,21 @@ class FloatingElementDirective extends AsyncDirective {
   }
 
   update(part: ElementPart, [binding]: Parameters<this['render']>) {
-    this.#release();
     const element = part.element;
+    const preservesVirtualPositionReference =
+      this.#binding?.kind === 'reference' &&
+      binding.kind === 'reference' &&
+      this.#binding.controller === binding.controller &&
+      this.#element === element &&
+      binding.controller.elements.reference !== element;
+
+    // A controller can replace a DOM reference with a virtual reference (for
+    // example clientPoint()). Lit may then re-render the same element to show
+    // derived state. Rebinding that unchanged DOM element would silently
+    // discard the virtual reference on every update.
+    if (!preservesVirtualPositionReference) {
+      this.#release();
+    }
     this.#element = element;
     this.#binding = binding;
     const attributes =
@@ -74,7 +87,7 @@ class FloatingElementDirective extends AsyncDirective {
             : {};
     this.#attributes = setAttributes(element, attributes, this.#attributes);
 
-    if (binding.kind === 'reference') {
+    if (binding.kind === 'reference' && !preservesVirtualPositionReference) {
       binding.controller.setReference(element);
     } else if (binding.kind === 'floating' && element instanceof HTMLElement) {
       binding.controller.setFloating(element);

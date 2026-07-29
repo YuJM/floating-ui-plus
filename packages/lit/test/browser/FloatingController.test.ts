@@ -49,6 +49,42 @@ afterEach(() => {
 });
 
 describe('FloatingController', () => {
+  test('preserves a virtual position reference across a Lit re-render', async () => {
+    class VirtualReferenceFixture extends LitElement {
+      static properties = {tick: {state: true}};
+      tick = 0;
+      floating = new FloatingController(this, {open: true});
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return html`
+          <button ${this.floating.reference()}>Reference ${this.tick}</button>
+          <div ${this.floating.floating()}>Floating</div>
+        `;
+      }
+    }
+    const virtualTag = 'floating-ui-lit-virtual-reference-test';
+    if (!customElements.get(virtualTag)) {
+      customElements.define(virtualTag, VirtualReferenceFixture);
+    }
+    const host = document.createElement(virtualTag) as VirtualReferenceFixture;
+    document.body.append(host);
+    await host.updateComplete;
+
+    const virtualReference = {
+      contextElement: host.querySelector('button')!,
+      getBoundingClientRect: () => DOMRect.fromRect({x: 80, y: 40}),
+    };
+    host.floating.setPositionReference(virtualReference);
+    host.tick++;
+    await host.updateComplete;
+
+    expect(host.floating.elements.reference).toBe(virtualReference);
+  });
+
   test('binds Light DOM elements without replacing user class or style', async () => {
     const host = document.createElement(tag) as FloatingUiLitTest;
     document.body.append(host);
