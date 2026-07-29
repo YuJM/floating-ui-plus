@@ -18,6 +18,8 @@ class LitClientPointExample extends LitElement {
   };
   open = false;
   pointerLabel = 'Awaiting pointer';
+  private pointerFrame: number | null = null;
+  private nextPointerLabel = this.pointerLabel;
 
   private readonly floating = new FloatingController(this, () => ({
     open: this.open,
@@ -37,6 +39,14 @@ class LitClientPointExample extends LitElement {
 
   protected createRenderRoot() {
     return this;
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this.pointerFrame != null) {
+      cancelAnimationFrame(this.pointerFrame);
+      this.pointerFrame = null;
+    }
   }
 
   render() {
@@ -71,13 +81,15 @@ class LitClientPointExample extends LitElement {
     }));
   }
 
-  private trackPointer(event: MouseEvent) {
-    this.pointerLabel = `${Math.round(event.offsetX)} × ${Math.round(event.offsetY)}`;
-    // clientPoint() has already installed its native mousemove listener on the
-    // reference. Requesting an update here makes the new virtual reference
-    // visible in the same pointer frame.
-    void this.floating.update();
-  }
+  private trackPointer = (event: MouseEvent) => {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    this.nextPointerLabel = `${Math.round(event.clientX - rect.left)} × ${Math.round(event.clientY - rect.top)}`;
+    if (this.pointerFrame != null) return;
+    this.pointerFrame = requestAnimationFrame(() => {
+      this.pointerFrame = null;
+      this.pointerLabel = this.nextPointerLabel;
+    });
+  };
 }
 
 customElements.define('lit-client-point-example', LitClientPointExample);

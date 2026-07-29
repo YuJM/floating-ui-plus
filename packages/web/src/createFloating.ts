@@ -221,7 +221,6 @@ export function createFloating(
     setPositionReference(reference) {
       elements.reference = reference;
       attachPositioning();
-      connectPlugins();
     },
     setFloating(floating) {
       elements.floating = floating;

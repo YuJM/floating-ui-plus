@@ -59,18 +59,25 @@ class FloatingElementDirective extends AsyncDirective {
 
   update(part: ElementPart, [binding]: Parameters<this['render']>) {
     const element = part.element;
-    const preservesVirtualPositionReference =
-      this.#binding?.kind === 'reference' &&
-      binding.kind === 'reference' &&
+    const sameElementBinding =
+      this.#binding?.kind === binding.kind &&
       this.#binding.controller === binding.controller &&
-      this.#element === element &&
-      binding.controller.elements.reference !== element;
+      this.#element === element;
+    const preservesElementBinding =
+      sameElementBinding &&
+      binding.kind !== 'item' &&
+      (binding.kind === 'reference'
+        ? binding.controller.elements.domReference === element
+        : binding.kind === 'floating'
+          ? binding.controller.elements.floating === element
+          : true);
 
-    // A controller can replace a DOM reference with a virtual reference (for
-    // example clientPoint()). Lit may then re-render the same element to show
-    // derived state. Rebinding that unchanged DOM element would silently
-    // discard the virtual reference on every update.
-    if (!preservesVirtualPositionReference) {
+    // Lit calls `update()` whenever the host renders, even when this directive
+    // is still attached to the same DOM node. Keep stable element bindings
+    // mounted so autoUpdate observers and interaction listeners are not torn
+    // down and recreated by unrelated reactive state changes. This also
+    // preserves virtual position references such as clientPoint().
+    if (!preservesElementBinding) {
       this.#release();
     }
     this.#element = element;
@@ -87,10 +94,12 @@ class FloatingElementDirective extends AsyncDirective {
             : {};
     this.#attributes = setAttributes(element, attributes, this.#attributes);
 
-    if (binding.kind === 'reference' && !preservesVirtualPositionReference) {
+    if (binding.kind === 'reference' && !preservesElementBinding) {
       binding.controller.setReference(element);
     } else if (binding.kind === 'floating' && element instanceof HTMLElement) {
-      binding.controller.setFloating(element);
+      if (!preservesElementBinding) {
+        binding.controller.setFloating(element);
+      }
       const styles = binding.controller.floatingStyles;
       POSITION_STYLE_KEYS.forEach((name) => {
         const value = styles[name];

@@ -1,5 +1,4 @@
 import {html, LitElement} from 'lit';
-import '../examples/hide-example';
 import '../examples/middleware-examples';
 
 class LitMiddlewareView extends LitElement {
@@ -16,7 +15,7 @@ class LitMiddlewareView extends LitElement {
           <lit-arrow-example></lit-arrow-example>
           <lit-size-example></lit-size-example>
           <lit-auto-placement-example></lit-auto-placement-example>
-          <lit-hide-example></lit-hide-example>
+          <lit-hide-middleware-example></lit-hide-middleware-example>
           <lit-inline-example></lit-inline-example>
         </section>
       </section>

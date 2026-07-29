@@ -1,4 +1,4 @@
-import {html, LitElement, nothing} from 'lit';
+import {html, LitElement} from 'lit';
 import {ref} from 'lit/directives/ref.js';
 import {
   autoUpdate,

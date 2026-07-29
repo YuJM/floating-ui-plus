@@ -37,11 +37,12 @@ from the Floating UI middleware navigation.
 bun run dev
 ```
 
-Open <http://127.0.0.1:5173>. The root `dev` script runs every workspace
-`dev` script concurrently: Vite for the demo and `tsdown --watch` for
-`@floating-ui/web` and `@floating-ui/lit`. Package changes therefore rebuild
-their `dist` output automatically; no manual package build is needed while
-developing the demo.
+Open <http://127.0.0.1:5173>. The root `dev` script first builds
+`@floating-ui/web` and `@floating-ui/lit`, then runs Vite together with both
+`tsdown --watch --no-clean` processes. The initial build creates complete
+package output, while disabling watcher cleanup prevents Vite from resolving a
+package through a temporarily empty `dist`; later source changes rebuild
+automatically.
 
 To run only the package watchers or only the demo server, use `bun run
 dev:packages` or `bun run dev:demo` respectively.

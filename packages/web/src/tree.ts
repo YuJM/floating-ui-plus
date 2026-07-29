@@ -1,10 +1,12 @@
 import type {FloatingController, OpenChangeReason} from './types';
 import {createId} from './utils/common';
 
+export type FloatingTreeController = Pick<FloatingController, 'context'>;
+
 export interface FloatingNode {
   id: string;
   parentId: string | null;
-  controller: FloatingController;
+  controller: FloatingTreeController;
 }
 
 export class FloatingTree {
@@ -16,7 +18,7 @@ export class FloatingTree {
   }
 
   register(
-    controller: FloatingController,
+    controller: FloatingTreeController,
     options: {id?: string; parentId?: string | null} = {},
   ) {
     const node: FloatingNode = {

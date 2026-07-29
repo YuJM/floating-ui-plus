@@ -29,7 +29,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown --watch",
+    "dev": "tsdown --watch --no-clean",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },

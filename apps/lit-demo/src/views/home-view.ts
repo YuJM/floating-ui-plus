@@ -1,6 +1,7 @@
 import {html, LitElement} from 'lit';
 
 import '../examples/menu-example';
+import '../examples/nested-menu-example';
 import '../examples/modal-example';
 import '../examples/popover-example';
 import '../examples/tooltip-example';
@@ -31,6 +32,7 @@ class LitHomeView extends LitElement {
         <lit-tooltip-example></lit-tooltip-example>
         <lit-popover-example></lit-popover-example>
         <lit-menu-example></lit-menu-example>
+        <lit-nested-menu-example></lit-nested-menu-example>
         <lit-client-point-example></lit-client-point-example>
         <lit-hide-example></lit-hide-example>
       </section>

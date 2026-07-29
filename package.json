@@ -12,7 +12,7 @@
     "build": "bun run --workspaces build",
     "typecheck": "bun run --workspaces typecheck",
     "test": "bun run --workspaces test",
-    "dev": "bun run --workspaces --parallel dev",
+    "dev": "bun run --filter '@floating-ui/*' build && bun run --workspaces --parallel dev",
     "dev:packages": "bun run --filter '@floating-ui/*' --parallel dev",
     "dev:demo": "bun run --filter floating-ui-lit-demo dev"
   },

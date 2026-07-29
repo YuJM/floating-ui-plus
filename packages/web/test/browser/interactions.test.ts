@@ -87,6 +87,107 @@ describe('native interaction plugins', () => {
     harness.controller.destroy();
   });
 
+  test('clientPoint keeps a stable virtual reference while the pointer moves', () => {
+    let connections = 0;
+    const connectionCounter: FloatingPlugin = {
+      connect() {
+        connections++;
+      },
+    };
+    const harness = createHarness({
+      plugins: [clientPoint(), connectionCounter],
+    });
+
+    fireEvent.mouseMove(harness.reference, {clientX: 20, clientY: 30});
+    const virtualReference = harness.controller.elements.reference;
+    fireEvent.mouseMove(harness.reference, {clientX: 80, clientY: 90});
+
+    expect(harness.controller.elements.reference).toBe(virtualReference);
+    expect(connections).toBe(1);
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().x,
+    ).toBe(80);
+    harness.controller.destroy();
+  });
+
+  test('clientPoint uses explicit coordinates without reconnecting plugins', () => {
+    let connections = 0;
+    const connectionCounter: FloatingPlugin = {
+      connect() {
+        connections++;
+      },
+    };
+    const harness = createHarness({
+      plugins: [clientPoint({x: 120, y: 64}), connectionCounter],
+    });
+
+    expect(connections).toBe(1);
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().x,
+    ).toBe(120);
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().y,
+    ).toBe(64);
+
+    fireEvent.mouseMove(harness.reference, {clientX: 20, clientY: 30});
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().x,
+    ).toBe(120);
+    harness.controller.destroy();
+  });
+
+  test('clientPoint tracks window movement while open and cleans up when closed', () => {
+    const harness = createHarness({plugins: [clientPoint()]});
+
+    fireEvent.mouseMove(harness.reference, {clientX: 20, clientY: 30});
+    harness.setOpen(true);
+    fireEvent.mouseMove(document.body, {clientX: 80, clientY: 90});
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().x,
+    ).toBe(80);
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().y,
+    ).toBe(90);
+
+    harness.setOpen(false);
+    fireEvent.mouseMove(document.body, {clientX: 10, clientY: 15});
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().x,
+    ).toBe(80);
+    harness.controller.destroy();
+  });
+
+  test('clientPoint stops window tracking over an interactive floating element', () => {
+    const harness = createHarness({plugins: [clientPoint()]});
+
+    fireEvent.mouseMove(harness.reference, {clientX: 20, clientY: 30});
+    harness.setOpen(true);
+    fireEvent.mouseMove(harness.floating, {clientX: 60, clientY: 70});
+    fireEvent.mouseMove(document.body, {clientX: 100, clientY: 110});
+
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().x,
+    ).toBe(20);
+    expect(
+      harness.controller.elements.reference?.getBoundingClientRect().y,
+    ).toBe(30);
+    harness.controller.destroy();
+  });
+
+  test('clientPoint preserves the DOM reference for non-mouse open events', () => {
+    const harness = createHarness({plugins: [clientPoint()]});
+    harness.controller.context.onOpenChange(
+      true,
+      new FocusEvent('focus'),
+      'focus',
+    );
+
+    fireEvent.mouseMove(harness.reference, {clientX: 42, clientY: 88});
+
+    expect(harness.controller.elements.reference).toBe(harness.reference);
+    harness.controller.destroy();
+  });
+
   test('dismiss closes on outside press and Escape', () => {
     const harness = createHarness({open: true, plugins: [dismiss()]});
 

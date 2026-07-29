@@ -40,7 +40,7 @@ export {
   provideFloatingContext,
   requestFloatingContext,
 } from './tree';
-export type {FloatingNode} from './tree';
+export type {FloatingNode, FloatingTreeController} from './tree';
 export {DelayGroup, NextDelayGroup} from './delayGroup';
 export type {DelayGroupOptions} from './delayGroup';
 export {FloatingTransition} from './transition';

@@ -2,7 +2,15 @@ import {fireEvent} from '@testing-library/dom';
 import {html, LitElement, nothing} from 'lit';
 import {afterEach, describe, expect, test, vi} from 'vitest';
 
-import {click, dismiss, FloatingController, role} from '../../src';
+import {
+  click,
+  clientPoint,
+  dismiss,
+  FloatingController,
+  hover,
+  role,
+} from '../../src';
+import type {FloatingPlugin} from '../../src';
 
 const tag = 'floating-ui-lit-test';
 
@@ -49,6 +57,82 @@ afterEach(() => {
 });
 
 describe('FloatingController', () => {
+  test('keeps a client point reference through open, move, and close renders', async () => {
+    class ClientPointFixture extends LitElement {
+      static properties = {
+        open: {state: true},
+        pointerLabel: {state: true},
+      };
+      open = false;
+      pointerLabel = 'Awaiting pointer';
+      floating = new FloatingController(this, () => ({
+        open: this.open,
+        onOpenChange: (open) => {
+          this.open = open;
+        },
+      })).pipe(
+        hover({move: true}),
+        clientPoint(),
+        role({role: 'tooltip'}),
+      );
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return html`
+          <div
+            class="client-point-reference"
+            ${this.floating.reference()}
+            @mousemove=${(event: MouseEvent) => {
+              this.pointerLabel = `${event.clientX}:${event.clientY}`;
+            }}
+          >
+            ${this.pointerLabel}
+          </div>
+          ${this.open
+            ? html`<div class="client-point-floating" ${this.floating.floating()}>
+                Pointer
+              </div>`
+            : nothing}
+        `;
+      }
+    }
+
+    const clientPointTag = 'floating-ui-lit-client-point-test';
+    if (!customElements.get(clientPointTag)) {
+      customElements.define(clientPointTag, ClientPointFixture);
+    }
+    const host = document.createElement(
+      clientPointTag,
+    ) as ClientPointFixture;
+    document.body.append(host);
+    await host.updateComplete;
+    const reference = host.querySelector<HTMLElement>(
+      '.client-point-reference',
+    )!;
+
+    fireEvent.mouseEnter(reference, {clientX: 40, clientY: 30});
+    await host.updateComplete;
+    expect(host.open).toBe(true);
+    expect(host.querySelector('.client-point-floating')).not.toBeNull();
+
+    fireEvent.mouseMove(reference, {clientX: 90, clientY: 70});
+    await host.updateComplete;
+    expect(host.floating.elements.reference?.getBoundingClientRect().x).toBe(
+      90,
+    );
+    expect(host.floating.elements.reference?.getBoundingClientRect().y).toBe(
+      70,
+    );
+
+    fireEvent.mouseLeave(reference);
+    await host.updateComplete;
+    expect(host.open).toBe(false);
+    expect(host.querySelector('.client-point-floating')).toBeNull();
+  });
+
   test('preserves a virtual position reference across a Lit re-render', async () => {
     class VirtualReferenceFixture extends LitElement {
       static properties = {tick: {state: true}};
@@ -83,6 +167,54 @@ describe('FloatingController', () => {
     await host.updateComplete;
 
     expect(host.floating.elements.reference).toBe(virtualReference);
+  });
+
+  test('keeps stable element bindings connected across a Lit re-render', async () => {
+    let connections = 0;
+    let cleanups = 0;
+    const connectionCounter: FloatingPlugin = {
+      connect() {
+        connections++;
+        return () => {
+          cleanups++;
+        };
+      },
+    };
+
+    class StableBindingFixture extends LitElement {
+      static properties = {tick: {state: true}};
+      tick = 0;
+      floating = new FloatingController(this, {open: true}).pipe(
+        connectionCounter,
+      );
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return html`
+          <button ${this.floating.reference()}>Reference ${this.tick}</button>
+          <div ${this.floating.floating()}>Floating</div>
+        `;
+      }
+    }
+
+    const stableTag = 'floating-ui-lit-stable-binding-test';
+    if (!customElements.get(stableTag)) {
+      customElements.define(stableTag, StableBindingFixture);
+    }
+    const host = document.createElement(stableTag) as StableBindingFixture;
+    document.body.append(host);
+    await host.updateComplete;
+    const mountedConnections = connections;
+    const mountedCleanups = cleanups;
+
+    host.tick++;
+    await host.updateComplete;
+
+    expect(connections).toBe(mountedConnections);
+    expect(cleanups).toBe(mountedCleanups);
   });
 
   test('binds Light DOM elements without replacing user class or style', async () => {

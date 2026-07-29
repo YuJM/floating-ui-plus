@@ -140,7 +140,7 @@ export class FloatingController implements ReactiveController {
     );
   }
 
-  hostUpdated() {
+  hostUpdate() {
     this.#floating.refresh();
   }
 
