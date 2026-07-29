@@ -1,4 +1,5 @@
-import {html, LitElement, nothing} from 'lit';
+import {html, LitElement} from 'lit';
+import {styleMap} from 'lit/directives/style-map.js';
 import {
   autoUpdate,
   dismiss,
@@ -15,6 +16,13 @@ import {
 class LitTooltipExample extends LitElement {
   static properties = {open: {state: true}};
   open = false;
+  private readonly transitionStyles = {
+    duration: {open: 120, close: 180},
+    initial: {opacity: '0'},
+    open: {opacity: '1'},
+    close: {opacity: '0'},
+    common: {transition: 'opacity 180ms ease'},
+  };
 
   private readonly floating = new FloatingController(this, () => ({
     open: this.open,
@@ -44,15 +52,21 @@ class LitTooltipExample extends LitElement {
         <p>One pipeline wires pointer intent, keyboard focus, dismissal, and descriptive ARIA.</p>
         <div class="card-action">
           <button class="ink-button" ${this.floating.reference()}>Inspect signal <span aria-hidden="true">↗</span></button>
-          ${this.open
-            ? html`<div
+          ${this.floating.transition(
+            this.open,
+            ({status, styles}) => html`
+              <div
                 class="tooltip"
                 data-placement=${this.floating.position.placement}
+                data-transition-status=${status}
+                style=${styleMap(styles)}
                 ${this.floating.floating()}
               >
                 Positioned by <b>autoUpdate</b>
-              </div>`
-            : nothing}
+              </div>
+            `,
+            this.transitionStyles,
+          )}
         </div>
         <code>hover({handleClose: safePolygon()}) → focus() → dismiss()</code>
       </article>

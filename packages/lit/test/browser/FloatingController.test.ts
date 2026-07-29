@@ -5,9 +5,12 @@ import {afterEach, describe, expect, test, vi} from 'vitest';
 import {
   click,
   clientPoint,
+  DelayGroup,
   dismiss,
   FloatingController,
+  FloatingTree,
   hover,
+  requestFloatingContext,
   role,
 } from '../../src';
 import type {FloatingPlugin} from '../../src';
@@ -301,6 +304,169 @@ describe('FloatingController', () => {
     expect(
       document.querySelector('[data-floating-ui-portal] p')?.textContent,
     ).toBe('Portaled');
+  });
+
+  test('bridges controller-provided context into portal descendants', async () => {
+    const consumerTag = 'floating-ui-lit-context-consumer-test';
+    class ContextConsumer extends HTMLElement {
+      value: string | undefined;
+
+      connectedCallback() {
+        this.value = requestFloatingContext<string>(this, 'demo-theme');
+        this.textContent = this.value ?? 'missing';
+      }
+    }
+    if (!customElements.get(consumerTag)) {
+      customElements.define(consumerTag, ContextConsumer);
+    }
+
+    class PortalContextFixture extends LitElement {
+      floating = new FloatingController(this, {open: true}).provideContext(
+        'demo-theme',
+        'night',
+      );
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return html`${this.floating.portal(
+          html`<floating-ui-lit-context-consumer-test />`,
+        )}`;
+      }
+    }
+    const contextTag = 'floating-ui-lit-portal-context-test';
+    if (!customElements.get(contextTag)) {
+      customElements.define(contextTag, PortalContextFixture);
+    }
+
+    const host = document.createElement(contextTag) as PortalContextFixture;
+    document.body.append(host);
+    await host.updateComplete;
+
+    expect(
+      document.querySelector<ContextConsumer>(consumerTag)?.value,
+    ).toBe('night');
+  });
+
+  test('inherits Web tree coordination through a portaled Lit child', async () => {
+    const tree = new FloatingTree();
+    class PortaledTreeChild extends LitElement {
+      floating = new FloatingController(this, {open: false}).node({
+        id: 'portaled-child',
+      });
+
+      protected createRenderRoot() {
+        return this;
+      }
+    }
+    class PortaledTreeParent extends LitElement {
+      floating = new FloatingController(this, {open: false}).node({
+        tree,
+        id: 'portal-parent',
+      });
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return this.floating.portal(
+          html`<floating-ui-lit-portaled-tree-child-test />`,
+        );
+      }
+    }
+    const childTag = 'floating-ui-lit-portaled-tree-child-test';
+    const parentTag = 'floating-ui-lit-portaled-tree-parent-test';
+    if (!customElements.get(childTag)) {
+      customElements.define(childTag, PortaledTreeChild);
+    }
+    if (!customElements.get(parentTag)) {
+      customElements.define(parentTag, PortaledTreeParent);
+    }
+
+    const host = document.createElement(parentTag) as PortaledTreeParent;
+    document.body.append(host);
+    await host.updateComplete;
+    await (
+      document.querySelector(childTag) as PortaledTreeChild
+    ).updateComplete;
+
+    expect(tree.nodes.map(({id, parentId}) => [id, parentId])).toEqual([
+      ['portal-parent', null],
+      ['portaled-child', 'portal-parent'],
+    ]);
+
+    host.remove();
+    expect(tree.nodes).toEqual([]);
+  });
+
+  test('owns tree registration and cleanup for the host lifecycle', async () => {
+    const tree = new FloatingTree();
+    class TreeFixture extends LitElement {
+      floating = new FloatingController(this, {open: false}).node({
+        tree,
+        id: 'declarative-node',
+      });
+
+      protected createRenderRoot() {
+        return this;
+      }
+    }
+    const treeTag = 'floating-ui-lit-tree-lifecycle-test';
+    if (!customElements.get(treeTag)) {
+      customElements.define(treeTag, TreeFixture);
+    }
+
+    const host = document.createElement(treeTag) as TreeFixture;
+    document.body.append(host);
+    await host.updateComplete;
+    expect(tree.nodes.map((node) => node.id)).toEqual(['declarative-node']);
+
+    host.remove();
+    expect(tree.nodes).toEqual([]);
+
+    document.body.append(host);
+    await host.updateComplete;
+    expect(tree.nodes.map((node) => node.id)).toEqual(['declarative-node']);
+  });
+
+  test('coordinates open state with a declarative delay group', async () => {
+    const group = new DelayGroup();
+    class DelayGroupFixture extends LitElement {
+      static properties = {open: {state: true}};
+      open = false;
+      floating = new FloatingController(this, () => ({
+        open: this.open,
+        onOpenChange: (open) => {
+          this.open = open;
+        },
+      }))
+        .delayGroup({group, id: 'tooltip'})
+        .pipe(click());
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return html`<button ${this.floating.reference()}>Toggle</button>`;
+      }
+    }
+    const groupTag = 'floating-ui-lit-delay-group-test';
+    if (!customElements.get(groupTag)) {
+      customElements.define(groupTag, DelayGroupFixture);
+    }
+
+    const host = document.createElement(groupTag) as DelayGroupFixture;
+    document.body.append(host);
+    await host.updateComplete;
+    fireEvent.click(host.querySelector('button')!);
+    await host.updateComplete;
+
+    expect(group.currentId).toBe('tooltip');
+    expect(host.floating.context.data.delayGroup).toBe(group);
   });
 
   test('registers item directives in DOM order', async () => {

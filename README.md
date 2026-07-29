@@ -6,7 +6,8 @@ Light DOM bindings for Lit, and Vue-native bindings.
 ## Packages
 
 - `@floating-ui-plus/web`: DOM interaction pipeline and web-standard utilities
-- `@floating-ui-plus/lit`: Light DOM Lit controllers and directives
+- `@floating-ui-plus/lit`: Light DOM controllers and directives with
+  declarative tree/list/group lifecycles and portal context bridging
 - `@floating-ui-plus/vue`: upstream-compatible Vue positioning plus Teleport,
   focus, collection, and interaction adapters
 

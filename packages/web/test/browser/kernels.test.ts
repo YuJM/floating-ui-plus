@@ -3,6 +3,7 @@ import {afterEach, describe, expect, test, vi} from 'vitest';
 
 import {
   CompositeController,
+  createFloatingContextScope,
   createFloating,
   createOverlayElement,
   createPortalNode,
@@ -16,6 +17,7 @@ import {
   provideFloatingContext,
   removePortalNode,
   requestFloatingContext,
+  requestFloatingContextScope,
 } from '../../src';
 
 afterEach(() => {
@@ -200,6 +202,27 @@ describe('portal and overlay services', () => {
     expect(node).toBe(existing);
     removePortalNode(node);
     expect(existing.isConnected).toBe(true);
+  });
+
+  test('attaches and cleans a Web context scope on a portal node', () => {
+    const existing = document.createElement('div');
+    existing.id = 'scoped-consumer-root';
+    document.body.append(existing);
+    const scope = createFloatingContextScope();
+    scope.provide('theme', 'night');
+
+    const node = createPortalNode({
+      id: 'scoped-consumer-root',
+      contextScope: scope,
+    })!;
+    const child = document.createElement('span');
+    node.append(child);
+    expect(requestFloatingContext(child, 'theme')).toBe('night');
+    expect(requestFloatingContextScope(child)).toBe(scope);
+
+    removePortalNode(node);
+    expect(existing.isConnected).toBe(true);
+    expect(requestFloatingContext(child, 'theme')).toBeUndefined();
   });
 
   test('reference-counts scroll locking and restores prior body styles', () => {
@@ -387,6 +410,62 @@ describe('FloatingTree and context protocol', () => {
     });
     cleanup();
     expect(requestFloatingContext(child, 'menu')).toBeUndefined();
+  });
+
+  test('inherits coordinator tree and delay group state through scopes', () => {
+    let parentOpen = false;
+    let childOpen = false;
+    const tree = new FloatingTree();
+    const group = new DelayGroup();
+    const parent = createFloating(() => ({
+      open: parentOpen,
+      onOpenChange: (open) => {
+        parentOpen = open;
+      },
+    }))
+      .node({tree, id: 'parent'})
+      .delayGroup({group, id: 'parent'});
+    const child = createFloating(() => ({
+      open: childOpen,
+      onOpenChange: (open) => {
+        childOpen = open;
+      },
+    }))
+      .node({id: 'child'})
+      .delayGroup({id: 'child'})
+      .setContextParent(parent.contextScope);
+
+    parent.connect();
+    child.connect();
+    expect(tree.nodes.map(({id, parentId}) => [id, parentId])).toEqual([
+      ['parent', null],
+      ['child', 'parent'],
+    ]);
+    expect(child.context.data.delayGroup).toBe(group);
+
+    child.context.onOpenChange(true, undefined, 'hover');
+    expect(group.currentId).toBe('child');
+    child.disconnect();
+    expect(tree.nodes.map(({id}) => id)).toEqual(['parent']);
+    expect(child.context.data.delayGroup).toBeUndefined();
+
+    parent.destroy();
+    child.destroy();
+  });
+
+  test('owns the collection service and accepts an explicit list', () => {
+    const controller = createFloating();
+    const itemCleanup = controller.list.register({
+      label: 'Default',
+      value: 1,
+    });
+    expect(controller.list.items[0]?.label).toBe('Default');
+    itemCleanup();
+
+    const list = new FloatingList<number>();
+    controller.withList(list as FloatingList<unknown>);
+    expect(controller.list).toBe(list);
+    controller.destroy();
   });
 });
 

@@ -31,7 +31,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'bun run dev',
+    command:
+      "bun run --filter '@floating-ui-plus/web' build && bun run --filter '@floating-ui-plus/lit' build && bun run --filter floating-ui-plus-lit-demo dev",
     cwd: '../..',
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,

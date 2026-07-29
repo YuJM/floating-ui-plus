@@ -4,8 +4,6 @@ import {
   click,
   dismiss,
   FloatingController,
-  floatingOverlay,
-  focusManager,
   offset,
   role,
   shift,
@@ -24,12 +22,7 @@ class LitModalExample extends LitElement {
     placement: 'bottom',
     middleware: [offset(20), shift({padding: 24})],
     whileElementsMounted: autoUpdate,
-  })).pipe(click(), dismiss(), role({role: 'dialog'}), focusManager({
-    modal: true,
-    initialFocus: 0,
-    returnFocus: true,
-    outsideElementsInert: true,
-  }));
+  })).pipe(click(), dismiss(), role({role: 'dialog'}));
 
   protected createRenderRoot() {
     return this;
@@ -45,19 +38,49 @@ class LitModalExample extends LitElement {
         <p>Open this one to feel the shared document trap stack, initial focus, inert neighbors, and focus restoration.</p>
         <button class="outline-button" ${this.floating.reference()}>Enter focus room <span aria-hidden="true">→</span></button>
         ${this.open
-          ? this.floating.portal(floatingOverlay(html`
-              <div class="modal-anchor">
-                <section class="modal-panel" aria-labelledby="modal-heading" ${this.floating.floating()}>
-                  <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
-                  <h3 id="modal-heading">You are inside<br />the focus trap.</h3>
-                  <p>Press Escape or choose leave. Focus returns to the trigger because the close reason is known.</p>
-                  <div class="modal-actions">
-                    <button class="coral-button" @click=${(event: Event) => this.floating.context.onOpenChange(false, event, 'click')}>Leave room</button>
-                    <span class="modal-hint">ESC to dismiss</span>
-                  </div>
-                </section>
-              </div>
-            `, {lockScroll: true, className: 'demo-overlay'}))
+          ? this.floating.modal(
+              html`
+                <div class="modal-anchor">
+                  <section
+                    class="modal-panel"
+                    aria-labelledby="modal-heading"
+                    ${this.floating.floating()}
+                  >
+                    <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
+                    <h3 id="modal-heading">
+                      You are inside<br />the focus trap.
+                    </h3>
+                    <p>
+                      Press Escape or choose leave. Focus returns to the trigger
+                      because the close reason is known.
+                    </p>
+                    <div class="modal-actions">
+                      <button
+                        class="coral-button"
+                        @click=${(event: Event) =>
+                          this.floating.context.onOpenChange(
+                            false,
+                            event,
+                            'click',
+                          )}
+                      >
+                        Leave room
+                      </button>
+                      <span class="modal-hint">ESC to dismiss</span>
+                    </div>
+                  </section>
+                </div>
+              `,
+              {
+                focus: {
+                  modal: true,
+                  initialFocus: 0,
+                  returnFocus: true,
+                  outsideElementsInert: true,
+                },
+                overlay: {className: 'demo-overlay'},
+              },
+            )
           : nothing}
       </section>
     `;

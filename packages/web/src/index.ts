@@ -18,6 +18,22 @@ export type * from '@floating-ui/dom';
 
 export {createFloating} from './createFloating';
 export type * from './types';
+export {
+  FLOATING_CONTEXT_SCOPE,
+  FLOATING_DELAY_GROUP_CONTEXT,
+  FLOATING_LIST_CONTEXT,
+  FLOATING_NODE_CONTEXT,
+  FLOATING_TREE_CONTEXT,
+  FloatingContextScope,
+  createFloatingContextScope,
+  requestFloatingContextScope,
+} from './contextScope';
+export type {FloatingContextProvider} from './contextScope';
+export {FloatingCoordinator} from './coordinator';
+export type {
+  FloatingDelayGroupOptions,
+  FloatingNodeOptions,
+} from './coordinator';
 export * from './interactions';
 
 export {focusManager, getDocumentTrapStack} from './focusManager';

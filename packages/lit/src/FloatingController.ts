@@ -2,16 +2,27 @@ import type {ReactiveController, ReactiveControllerHost} from 'lit';
 import type {DirectiveResult} from 'lit/directive.js';
 import {
   createFloating,
-  FloatingList,
+  focusManager,
+  requestFloatingContextScope,
   type ArrowOptions,
+  type FloatingDelayGroupOptions as WebFloatingDelayGroupOptions,
   type FloatingController as WebFloatingController,
+  type FocusManagerOptions,
+  type FloatingList,
+  type FloatingNodeOptions as WebFloatingNodeOptions,
   type FloatingOptionsSource,
   type FloatingPlugin,
   type ItemState,
   type PortalNodeOptions,
+  type TransitionStyles,
 } from '@floating-ui-plus/web';
 
 import {bindFloatingElement, renderFloatingPortal} from './directives';
+import {floatingOverlay, type FloatingOverlayOptions} from './overlay';
+import {
+  floatingTransition,
+  type FloatingTransitionRenderer,
+} from './transition';
 
 export interface LightDomControllerHost extends ReactiveControllerHost {
   readonly renderRoot?: HTMLElement | DocumentFragment;
@@ -22,16 +33,59 @@ export interface FloatingItemState extends ItemState {
   value?: unknown;
 }
 
+export type FloatingNodeOptions = WebFloatingNodeOptions;
+export type FloatingDelayGroupOptions = WebFloatingDelayGroupOptions;
+
+export interface FloatingModalOptions {
+  focus?: FocusManagerOptions | undefined;
+  overlay?: FloatingOverlayOptions | undefined;
+  portal?:
+    | (PortalNodeOptions & {topLayer?: 'popover' | undefined})
+    | undefined;
+}
+
+const EMPTY_TRANSITION_OPTIONS: TransitionStyles = {};
+
 export class FloatingController implements ReactiveController {
   readonly #host: LightDomControllerHost;
   readonly #floating: WebFloatingController;
   #unsubscribePosition: (() => void) | null = null;
   #positionKey = '';
-  readonly list = new FloatingList<unknown>();
+  #connected = false;
+  #destroyed = false;
+  #contextAttachmentCleanup: (() => void) | null = null;
+  #modalOptions: FloatingModalOptions = {};
+  #modalPluginInstalled = false;
+  readonly #placement = () => this.position.placement;
+  readonly listElements: {
+    readonly current: Array<HTMLElement | null>;
+  };
+  readonly listLabels: {
+    readonly current: Array<string | null>;
+  };
+  readonly listValues: {
+    readonly current: unknown[];
+  };
 
   constructor(host: LightDomControllerHost, options: FloatingOptionsSource) {
     this.#host = host;
     this.#floating = createFloating(options);
+    const controller = this;
+    this.listElements = {
+      get current() {
+        return controller.list.items.map((item) => item.element);
+      },
+    };
+    this.listLabels = {
+      get current() {
+        return controller.list.items.map((item) => item.label);
+      },
+    };
+    this.listValues = {
+      get current() {
+        return controller.list.items.map((item) => item.value);
+      },
+    };
     host.addController(this);
   }
 
@@ -51,9 +105,49 @@ export class FloatingController implements ReactiveController {
     return this.#floating.floatingStyles;
   }
 
+  get list() {
+    return this.#floating.list;
+  }
+
   pipe(...plugins: FloatingPlugin[]) {
     this.#floating.pipe(...plugins);
     return this;
+  }
+
+  /**
+   * Registers this controller in a floating tree for the host lifecycle.
+   * Without an explicit tree, the nearest Light DOM context is used and a root
+   * tree is created when no provider exists.
+   */
+  node(options: FloatingNodeOptions = {}) {
+    this.#floating.node(options);
+    return this;
+  }
+
+  /**
+   * Replaces the controller-owned list and provides it to Light DOM and
+   * portaled descendants.
+   */
+  withList(list?: FloatingList<unknown>) {
+    this.#floating.withList(list);
+    return this;
+  }
+
+  /**
+   * Coordinates this controller with a shared delay group for its lifecycle.
+   */
+  delayGroup(options: FloatingDelayGroupOptions = {}) {
+    this.#floating.delayGroup(options);
+    return this;
+  }
+
+  provideContext<T>(key: string, value: T | (() => T)) {
+    this.#floating.contextScope.provide(key, value);
+    return this;
+  }
+
+  consumeContext<T>(key: string): T | undefined {
+    return this.#floating.contextScope.consume<T>(key);
   }
 
   reference(): DirectiveResult {
@@ -75,7 +169,7 @@ export class FloatingController implements ReactiveController {
       controller: this.#floating,
       kind: 'item',
       state,
-      list: this.list,
+      list: this.#floating.list,
     });
   }
 
@@ -98,6 +192,41 @@ export class FloatingController implements ReactiveController {
     });
   }
 
+  transition(
+    open: boolean,
+    renderer: FloatingTransitionRenderer,
+    options: TransitionStyles = EMPTY_TRANSITION_OPTIONS,
+  ): DirectiveResult {
+    return floatingTransition(
+      open,
+      this.#placement,
+      renderer,
+      options,
+    );
+  }
+
+  /**
+   * Lazily installs focus management and renders a scroll-locking portal
+   * overlay. The plugin remains attached so close transitions can restore
+   * focus through the normal controller refresh cycle.
+   */
+  modal(value: unknown, options: FloatingModalOptions = {}): DirectiveResult {
+    this.#modalOptions = options;
+    if (!this.#modalPluginInstalled) {
+      this.#modalPluginInstalled = true;
+      this.#floating.pipe(
+        focusManager(() => this.#modalOptions.focus ?? {modal: true}),
+      );
+    }
+    return this.portal(
+      floatingOverlay(value, {
+        lockScroll: true,
+        ...options.overlay,
+      }),
+      options.portal,
+    );
+  }
+
   setPositionReference(
     reference: Parameters<WebFloatingController['setPositionReference']>[0],
   ) {
@@ -110,6 +239,8 @@ export class FloatingController implements ReactiveController {
   }
 
   hostConnected() {
+    if (this.#destroyed) return;
+    this.#connected = true;
     const root = this.#host.renderRoot;
     if (
       __DEV__ &&
@@ -119,6 +250,13 @@ export class FloatingController implements ReactiveController {
       console.warn(
         '@floating-ui-plus/lit officially supports Light DOM only. Override createRenderRoot() to return this.',
       );
+    }
+    if (isEventTarget(this.#host)) {
+      this.#floating.setContextParent(
+        requestFloatingContextScope(this.#host) ?? null,
+      );
+      this.#contextAttachmentCleanup =
+        this.#floating.contextScope.attach(this.#host);
     }
     this.#floating.connect();
     this.#unsubscribePosition = this.#floating.context.events.on(
@@ -145,14 +283,24 @@ export class FloatingController implements ReactiveController {
   }
 
   hostDisconnected() {
+    this.#connected = false;
     this.#unsubscribePosition?.();
     this.#unsubscribePosition = null;
     this.#floating.disconnect();
+    this.#contextAttachmentCleanup?.();
+    this.#contextAttachmentCleanup = null;
+    this.#floating.setContextParent(null);
   }
 
   destroy() {
-    this.#unsubscribePosition?.();
-    this.#unsubscribePosition = null;
+    this.hostDisconnected();
+    this.#destroyed = true;
     this.#floating.destroy();
   }
+}
+
+function isEventTarget(value: unknown): value is EventTarget {
+  return (
+    typeof EventTarget !== 'undefined' && value instanceof EventTarget
+  );
 }

@@ -1,9 +1,26 @@
+import {fileURLToPath} from 'node:url';
 import {playwright} from '@vitest/browser-playwright';
 import {defineConfig} from 'vitest/config';
 
 const browserHeadless = process.env.PLAYWRIGHT_HEADLESS !== 'false';
 
 export default defineConfig({
+  resolve: {
+    alias: [
+      {
+        find: /^@floating-ui-plus\/web$/,
+        replacement: fileURLToPath(
+          new URL('../web/src/index.ts', import.meta.url),
+        ),
+      },
+      {
+        find: /^@floating-ui-plus\/web\/utils$/,
+        replacement: fileURLToPath(
+          new URL('../web/src/utils.ts', import.meta.url),
+        ),
+      },
+    ],
+  },
   optimizeDeps: {
     include: ['axe-core'],
   },

@@ -1,8 +1,9 @@
+import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import {defineConfig} from 'vite';
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [tailwindcss(), vue()],
   define: {
     __DEV__: true,
     __VUE_OPTIONS_API__: true,

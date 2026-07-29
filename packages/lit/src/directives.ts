@@ -201,6 +201,7 @@ class FloatingPortalDirective extends AsyncDirective {
       this.#node = createPortalNode({
         ...binding.options,
         root: binding.options?.root || document.body,
+        contextScope: binding.controller.contextScope,
       });
       if (
         binding.options?.topLayer === 'popover' &&

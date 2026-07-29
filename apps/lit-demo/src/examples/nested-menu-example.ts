@@ -1,5 +1,4 @@
 import {html, LitElement, nothing} from 'lit';
-import {ref} from 'lit/directives/ref.js';
 import {
   autoUpdate,
   click,
@@ -36,30 +35,6 @@ class LitNestedMenuExample extends LitElement {
   projectActiveIndex: number | null = null;
 
   private readonly tree = new FloatingTree();
-  private registrations: Array<{unregister(): void}> = [];
-  private readonly rootElements = {
-    current: [] as Array<HTMLElement | null>,
-  };
-  private readonly rootText = {
-    current: rootLabels as Array<string | null>,
-  };
-  private readonly projectElements = {
-    current: [] as Array<HTMLElement | null>,
-  };
-  private readonly projectText = {
-    current: projectLabels as Array<string | null>,
-  };
-  private readonly rootItemRefs = rootLabels.map(
-    (_, index) => (element?: Element) => {
-      this.rootElements.current[index] = (element as HTMLElement) || null;
-    },
-  );
-  private readonly projectItemRefs = projectLabels.map(
-    (_, index) => (element?: Element) => {
-      this.projectElements.current[index] =
-        (element as HTMLElement) || null;
-    },
-  );
 
   private readonly rootMenu = new FloatingController(this, () => ({
     open: this.rootOpen,
@@ -86,38 +61,42 @@ class LitNestedMenuExample extends LitElement {
     placement: 'bottom-start',
     middleware: [offset(8), flip(), shift({padding: 18})],
     whileElementsMounted: autoUpdate,
-  })).pipe(
-    click(),
-    dismiss({
-      outsidePress: (event) =>
-        !(event.target instanceof Element) ||
-        !event.target.closest('.nested-menu-submenu'),
-    }),
-    role({role: 'menu'}),
-    listNavigation(() => ({
-      listRef: this.rootElements,
-      activeIndex: this.rootActiveIndex,
-      loop: true,
-      onNavigate: (index) => {
-        this.rootActiveIndex = index;
-        if (index !== 1 && this.projectsOpen) {
-          this.projectsMenu.context.onOpenChange(
-            false,
-            undefined,
-            'focus-out',
-          );
-        }
-      },
-    })),
-    typeahead(() => ({
-      listRef: this.rootText,
-      activeIndex: this.rootActiveIndex,
-      onMatch: (index) => {
-        this.rootActiveIndex = index;
-        this.rootElements.current[index]?.focus({preventScroll: true});
-      },
-    })),
-  );
+  }))
+    .node({tree: this.tree, id: ROOT_NODE_ID})
+    .pipe(
+      click(),
+      dismiss({
+        outsidePress: (event) =>
+          !(event.target instanceof Element) ||
+          !event.target.closest('.nested-menu-submenu'),
+      }),
+      role({role: 'menu'}),
+      listNavigation(() => ({
+        listRef: this.rootMenu.listElements,
+        activeIndex: this.rootActiveIndex,
+        loop: true,
+        onNavigate: (index) => {
+          this.rootActiveIndex = index;
+          if (index !== 1 && this.projectsOpen) {
+            this.projectsMenu.context.onOpenChange(
+              false,
+              undefined,
+              'focus-out',
+            );
+          }
+        },
+      })),
+      typeahead(() => ({
+        listRef: this.rootMenu.listLabels,
+        activeIndex: this.rootActiveIndex,
+        onMatch: (index) => {
+          this.rootActiveIndex = index;
+          this.rootMenu.listElements.current[index]?.focus({
+            preventScroll: true,
+          });
+        },
+      })),
+    );
 
   private readonly projectsMenu = new FloatingController(this, () => ({
     open: this.projectsOpen,
@@ -127,7 +106,9 @@ class LitNestedMenuExample extends LitElement {
         this.projectActiveIndex = null;
         if (reason === 'escape-key' || reason === 'focus-out') {
           queueMicrotask(() => {
-            this.rootElements.current[1]?.focus({preventScroll: true});
+            this.rootMenu.listElements.current[1]?.focus({
+              preventScroll: true,
+            });
           });
         }
       }
@@ -140,47 +121,41 @@ class LitNestedMenuExample extends LitElement {
       padding: 18,
     })],
     whileElementsMounted: autoUpdate,
-  })).pipe(
-    click(),
-    hover({move: false, delay: {open: 80, close: 120}, handleClose: safePolygon()}),
-    dismiss(),
-    role({role: 'menu'}),
-    listNavigation(() => ({
-      listRef: this.projectElements,
-      activeIndex: this.projectActiveIndex,
-      nested: true,
-      loop: true,
-      onNavigate: (index) => {
-        this.projectActiveIndex = index;
-      },
-    })),
-    typeahead(() => ({
-      listRef: this.projectText,
-      activeIndex: this.projectActiveIndex,
-      onMatch: (index) => {
-        this.projectActiveIndex = index;
-        this.projectElements.current[index]?.focus({preventScroll: true});
-      },
-    })),
-  );
-
-  connectedCallback() {
-    super.connectedCallback();
-    if (this.registrations.length === 0) {
-      this.registrations = [
-        this.tree.register(this.rootMenu, {id: ROOT_NODE_ID}),
-        this.tree.register(this.projectsMenu, {
-          id: PROJECTS_NODE_ID,
-          parentId: ROOT_NODE_ID,
-        }),
-      ];
-    }
-  }
-
-  disconnectedCallback() {
-    this.registrations.splice(0).forEach(({unregister}) => unregister());
-    super.disconnectedCallback();
-  }
+  }))
+    .node({
+      tree: this.tree,
+      id: PROJECTS_NODE_ID,
+      parentId: ROOT_NODE_ID,
+    })
+    .pipe(
+      click(),
+      hover({
+        move: false,
+        delay: {open: 80, close: 120},
+        handleClose: safePolygon(),
+      }),
+      dismiss(),
+      role({role: 'menu'}),
+      listNavigation(() => ({
+        listRef: this.projectsMenu.listElements,
+        activeIndex: this.projectActiveIndex,
+        nested: true,
+        loop: true,
+        onNavigate: (index) => {
+          this.projectActiveIndex = index;
+        },
+      })),
+      typeahead(() => ({
+        listRef: this.projectsMenu.listLabels,
+        activeIndex: this.projectActiveIndex,
+        onMatch: (index) => {
+          this.projectActiveIndex = index;
+          this.projectsMenu.listElements.current[index]?.focus({
+            preventScroll: true,
+          });
+        },
+      })),
+    );
 
   protected createRenderRoot() {
     return this;
@@ -219,7 +194,6 @@ class LitNestedMenuExample extends LitElement {
                           ? 'true'
                           : 'false'}
                         aria-haspopup=${index === 1 ? 'menu' : nothing}
-                        ${ref(this.rootItemRefs[index])}
                         ${this.rootMenu.item({
                           active: this.rootActiveIndex === index,
                           index,
@@ -260,7 +234,6 @@ class LitNestedMenuExample extends LitElement {
                         data-active=${this.projectActiveIndex === index
                           ? 'true'
                           : 'false'}
-                        ${ref(this.projectItemRefs[index])}
                         ${this.projectsMenu.item({
                           active: this.projectActiveIndex === index,
                           index,
@@ -278,7 +251,7 @@ class LitNestedMenuExample extends LitElement {
               `)
             : nothing}
         </div>
-        <code>FloatingTree.register() + closeDescendants()</code>
+        <code>.node() + controller-owned list refs</code>
       </article>
     `;
   }

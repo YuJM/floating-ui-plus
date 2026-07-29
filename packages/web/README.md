@@ -41,6 +41,32 @@ order. An interaction with `enabled: false` does not install listeners or
 effects. Call `disconnect()` for temporary removal and `destroy()` for final
 cleanup.
 
+## Declarative coordination and portal context
+
+Tree registration, ordered collections, delay-group state, and cleanup follow
+the Web controller lifecycle:
+
+```ts
+const parent = createFloating(parentOptions)
+  .node({tree, id: 'parent'})
+  .delayGroup({group, id: 'parent'});
+
+const child = createFloating(childOptions)
+  .node({id: 'child'})
+  .delayGroup({id: 'child'})
+  .setContextParent(parent.contextScope);
+```
+
+`contextScope` keeps live object references and can be attached to any
+`EventTarget`. `createPortalNode({contextScope})` attaches the scope to the
+portal and `removePortalNode()` releases it. This is synchronous and
+framework-neutral; Lit and Vue only discover the parent scope and render into
+the returned DOM node.
+
+Use `BroadcastChannel` separately for opt-in cross-tab messages. It is not used
+for portal context because controllers, functions, and DOM nodes must retain
+their identity rather than be structured-cloned.
+
 ## Focus
 
 `focusManager()` uses `focus-trap` for modal trapping and `tabbable` for

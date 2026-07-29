@@ -6,6 +6,12 @@ import type {
   Strategy,
   VirtualElement,
 } from '@floating-ui/dom';
+import type {
+  FloatingDelayGroupOptions,
+  FloatingNodeOptions,
+} from './coordinator';
+import type {FloatingContextScope} from './contextScope';
+import type {FloatingList} from './list';
 
 export type OpenChangeReason =
   | 'outside-press'
@@ -136,11 +142,17 @@ export interface FloatingPlugin {
 
 export interface FloatingController {
   readonly context: FloatingContext;
+  readonly contextScope: FloatingContextScope;
   readonly elements: FloatingElements;
   readonly position: FloatingPosition;
   readonly floatingStyles: FloatingStyles;
+  readonly list: FloatingList<unknown>;
   readonly plugins: readonly FloatingPlugin[];
   pipe(...plugins: FloatingPlugin[]): FloatingController;
+  node(options?: FloatingNodeOptions): FloatingController;
+  withList(list?: FloatingList<unknown>): FloatingController;
+  delayGroup(options?: FloatingDelayGroupOptions): FloatingController;
+  setContextParent(scope: FloatingContextScope | null): FloatingController;
   setReference(reference: Element | VirtualElement | null): void;
   setPositionReference(reference: ReferenceElement | null): void;
   setFloating(floating: HTMLElement | null): void;

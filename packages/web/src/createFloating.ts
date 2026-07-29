@@ -2,6 +2,7 @@ import {computePosition} from '@floating-ui/dom';
 import {isElement} from '@floating-ui/utils/dom';
 
 import {createFloatingEvents} from './events';
+import {FloatingCoordinator} from './coordinator';
 import type {
   FloatingAttributes,
   FloatingContext,
@@ -122,6 +123,7 @@ export function createFloating(
       return update();
     },
   };
+  let coordinator: FloatingCoordinator;
 
   function cleanupPlugins() {
     pluginCleanups
@@ -224,6 +226,9 @@ export function createFloating(
 
   const controller: FloatingController = {
     context,
+    get contextScope() {
+      return coordinator.scope;
+    },
     elements,
     get position() {
       return position;
@@ -231,12 +236,31 @@ export function createFloating(
     get floatingStyles() {
       return floatingStyles;
     },
+    get list() {
+      return coordinator.list;
+    },
     plugins,
     pipe(...nextPlugins) {
       plugins.push(...nextPlugins);
       if (connected) {
         connectPlugins();
       }
+      return controller;
+    },
+    node(options) {
+      coordinator.node(options);
+      return controller;
+    },
+    withList(list) {
+      coordinator.withList(list);
+      return controller;
+    },
+    delayGroup(options) {
+      coordinator.delayGroup(options);
+      return controller;
+    },
+    setContextParent(scope) {
+      coordinator.setParentScope(scope);
       return controller;
     },
     setReference,
@@ -252,6 +276,7 @@ export function createFloating(
     connect() {
       if (destroyed || connected) return;
       connected = true;
+      coordinator.connect();
       attachPositioning();
       connectPlugins();
     },
@@ -261,6 +286,7 @@ export function createFloating(
       attachRequestId++;
       cleanupMounted();
       cleanupPlugins();
+      coordinator.disconnect();
     },
     refresh() {
       if (destroyed) return;
@@ -269,6 +295,7 @@ export function createFloating(
         position = {...position, isPositioned: false};
       }
       plugins.forEach((plugin) => plugin.update?.(context));
+      coordinator.refresh();
       void update();
     },
     update,
@@ -279,8 +306,10 @@ export function createFloating(
       elements.reference = null;
       elements.domReference = null;
       elements.floating = null;
+      coordinator.destroy();
     },
   };
+  coordinator = new FloatingCoordinator(controller);
 
   return controller;
 }

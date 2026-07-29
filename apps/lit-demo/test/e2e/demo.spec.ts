@@ -108,6 +108,40 @@ test('nested menu preserves the complete keyboard path', async ({page}) => {
   await expect(trigger).toBeFocused();
 });
 
+test('controller modal manages focus, scroll lock, and Escape cleanup', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const trigger = page.getByRole('button', {name: /Enter focus room/});
+  await trigger.click();
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+  await expect(page.getByRole('button', {name: 'Leave room'})).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
+});
+
+test('controller transition keeps tooltip through its close phase', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const trigger = page.getByRole('button', {name: /Inspect signal/});
+  await trigger.hover();
+
+  const tooltip = page.getByRole('tooltip');
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip).toHaveAttribute('data-transition-status', 'open');
+
+  await page.mouse.move(2, 2);
+  await expect(tooltip).toHaveAttribute('data-transition-status', 'close');
+  await expect(tooltip).toBeHidden();
+});
+
 test('cursor signal follows the pointer virtual reference', async ({page}) => {
   await page.goto('/examples/client-point');
 
