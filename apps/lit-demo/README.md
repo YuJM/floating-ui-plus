@@ -10,10 +10,15 @@ Run it from the repository root:
 bun run dev
 ```
 
-Try the examples with both a pointer and a keyboard. The modal demonstrates
-the shared focus-trap stack and focus restoration; the command menu supports
-Arrow-key navigation and typeahead.
+Try the examples with both a pointer and a keyboard. Every Web interaction has
+a live demo:
 
-Routes are handled by `@vaadin/router`: `/` and one lazy-loaded route per
-example under `/examples/*`. Production hosting must rewrite unknown paths to
-`index.html` so direct links keep working.
+- Tooltip: `hover`, `focus`, `dismiss`, `role`, and `safePolygon`
+- Popover: `click`, `dismiss`, and dialog `role`
+- Command menu: `click`, `dismiss`, menu `role`, `listNavigation`, and `typeahead`
+- Cursor signal: `hover`, `clientPoint`, `dismiss`, and tooltip `role`
+- Modal: `click`, `dismiss`, dialog `role`, and `focusManager`
+
+Routes are handled by the Lit `Router` controller from `@lit-labs/router`.
+Each `/examples/*` route lazy-loads its corresponding view. Production hosting
+must rewrite unknown paths to `index.html` so direct links keep working.

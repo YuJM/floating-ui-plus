@@ -24,9 +24,10 @@ Both packages are built with [tsdown](https://tsdown.dev/).
 
 ## Lit demo app
 
-`apps/lit-demo` is a real Light DOM Lit app that exercises the package in a
-browser: tooltip hover/focus, a portaled popover, a modal focus trap, and a
-roving-focus/typeahead menu.
+`apps/lit-demo` is a real Light DOM Lit app that exercises every interaction
+plugin in a browser: tooltip hover/focus/safe polygon, a portaled popover,
+cursor-following virtual references, a modal focus trap, and a roving-focus /
+typeahead menu.
 
 ```sh
 bun run dev

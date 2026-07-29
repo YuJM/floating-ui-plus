@@ -8,6 +8,7 @@ import {
   hover,
   offset,
   role,
+  safePolygon,
   shift,
 } from '@floating-ui/lit';
 
@@ -24,7 +25,12 @@ class LitTooltipExample extends LitElement {
     placement: 'top',
     middleware: [offset(14), flip(), shift({padding: 12})],
     whileElementsMounted: autoUpdate,
-  })).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
+  })).pipe(
+    hover({handleClose: safePolygon({buffer: 4})}),
+    focus(),
+    dismiss(),
+    role({role: 'tooltip'}),
+  );
 
   protected createRenderRoot() {
     return this;
@@ -48,7 +54,7 @@ class LitTooltipExample extends LitElement {
               </div>`
             : nothing}
         </div>
-        <code>hover() → focus() → dismiss()</code>
+        <code>hover({handleClose: safePolygon()}) → focus() → dismiss()</code>
       </article>
     `;
   }

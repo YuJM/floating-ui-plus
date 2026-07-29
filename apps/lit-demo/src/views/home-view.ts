@@ -4,6 +4,7 @@ import '../examples/menu-example';
 import '../examples/modal-example';
 import '../examples/popover-example';
 import '../examples/tooltip-example';
+import '../examples/client-point-example';
 
 class LitHomeView extends LitElement {
   protected createRenderRoot() {
@@ -29,6 +30,7 @@ class LitHomeView extends LitElement {
         <lit-tooltip-example></lit-tooltip-example>
         <lit-popover-example></lit-popover-example>
         <lit-menu-example></lit-menu-example>
+        <lit-client-point-example></lit-client-point-example>
       </section>
       <lit-modal-example></lit-modal-example>
     `;

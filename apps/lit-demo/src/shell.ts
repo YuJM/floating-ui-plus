@@ -36,6 +36,14 @@ const routes: RouteConfig[] = [
     render: () => html`<lit-menu-view></lit-menu-view>`,
   },
   {
+    path: '/examples/client-point',
+    enter: async () => {
+      await import('./views/client-point-view');
+      return true;
+    },
+    render: () => html`<lit-client-point-view></lit-client-point-view>`,
+  },
+  {
     path: '/examples/modal',
     enter: async () => {
       await import('./views/modal-view');
@@ -85,6 +93,7 @@ class FloatingUiDemo extends LitElement {
           <a href="/examples/tooltip">Tooltip</a>
           <a href="/examples/popover">Popover</a>
           <a href="/examples/menu">Menu</a>
+          <a href="/examples/client-point">Cursor</a>
           <a href="/examples/modal">Modal</a>
         </nav>
       </header>
