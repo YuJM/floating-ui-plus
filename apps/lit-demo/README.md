@@ -10,6 +10,10 @@ Run it from the repository root:
 bun run dev
 ```
 
+This starts Vite together with `tsdown --watch` for the dependent Web and Lit
+workspace packages, so source changes in either package are rebuilt into the
+demo's resolved `dist` entry automatically.
+
 Try the examples with both a pointer and a keyboard. Every Web interaction has
 a live demo:
 

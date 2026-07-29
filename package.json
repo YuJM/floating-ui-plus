@@ -12,7 +12,9 @@
     "build": "bun run --workspaces build",
     "typecheck": "bun run --workspaces typecheck",
     "test": "bun run --workspaces test",
-    "dev": "bun run --filter '@floating-ui/*' build && bun run --filter floating-ui-lit-demo dev"
+    "dev": "bun run --workspaces --parallel dev",
+    "dev:packages": "bun run --filter '@floating-ui/*' --parallel dev",
+    "dev:demo": "bun run --filter floating-ui-lit-demo dev"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
