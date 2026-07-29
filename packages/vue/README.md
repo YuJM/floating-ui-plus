@@ -24,6 +24,42 @@ const choices = PLACEMENTS;
 
 String literals such as `'bottom-start'` remain supported.
 
+## Search state for custom Comboboxes
+
+Vue does not ship a finished Combobox. `useSearch()` connects generic search
+request state to Vue lifecycle; the application composes it with
+`useFloating()`, `listNavigation()`, `role()`, and its own markup:
+
+```ts
+<script setup lang="ts">
+import {
+  createAsyncSearchSource,
+  useSearch,
+} from '@floating-ui-plus/vue';
+
+const source = createAsyncSearchSource<Product>({
+  async search({query, signal, limit, cursor}) {
+    const response = await fetch(
+      `/api/products/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+      {signal},
+    );
+    if (!response.ok) throw new Error('Search failed');
+    return response.json();
+  },
+});
+
+const search = useSearch({
+  source,
+  getItemKey: (item: Product) => item.id,
+});
+</script>
+```
+
+The demo owns `open`, `activeIndex`, selection, `aria-activedescendant`,
+Teleport, and option rendering. For controlled requests, pass application-owned
+`items`, `loading`, and `error` to `useSearch()` or omit it entirely and bind
+those values directly.
+
 ## Two Vue API styles
 
 Both styles use the same Web controller and interaction kernel. Choose the

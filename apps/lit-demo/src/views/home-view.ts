@@ -6,6 +6,7 @@ import '../examples/modal-example';
 import '../examples/popover-example';
 import '../examples/tooltip-example';
 import '../examples/client-point-example';
+import '../examples/combobox-example';
 
 class LitHomeView extends LitElement {
   protected createRenderRoot() {
@@ -33,6 +34,7 @@ class LitHomeView extends LitElement {
         <lit-menu-example></lit-menu-example>
         <lit-nested-menu-example></lit-nested-menu-example>
         <lit-client-point-example></lit-client-point-example>
+        <lit-combobox-example></lit-combobox-example>
         <a class="demo-card placement-card" href="/examples/placement">
           <div class="card-top">
             <span class="number">P</span><span class="chip">12 typed directions</span>

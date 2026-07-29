@@ -32,6 +32,84 @@ for (const placement of PLACEMENTS) {
 Both exports retain Floating UI's `Placement` literal types, so constants and
 ordinary values such as `'bottom-start'` remain interoperable.
 
+## Search sources
+
+`SearchController` is framework-neutral request state, not a Combobox widget.
+A source owns search and ranking; the controller owns debounce, IME completion,
+request cancellation, stale-response protection, cache TTL, minimum query
+length, and cursor pagination. Consumers own open state, selection, focus,
+ARIA, list navigation, and rendering.
+
+```ts
+import {
+  createAsyncSearchSource,
+  createSearch,
+} from '@floating-ui-plus/web/search';
+
+const source = createAsyncSearchSource<Product>({
+  async search({query, signal, limit, cursor}) {
+    const params = new URLSearchParams({
+      q: query,
+      limit: String(limit),
+      ...(cursor ? {cursor} : {}),
+    });
+    const response = await fetch(`/api/products/search?${params}`, {signal});
+    if (!response.ok) throw new Error('Search failed');
+    return response.json();
+  },
+});
+
+const searchController = createSearch({
+  source,
+  getItemKey: (item: Product) => item.id,
+});
+```
+
+The same search state accepts controlled results when request ownership belongs
+to TanStack Query or application code:
+
+```ts
+const searchController = createSearch({
+  items: results,
+  loading: isFetching,
+  error,
+  getItemKey: (item) => item.id,
+  onQueryChange: setQuery,
+});
+
+searchController.setControlledState({
+  items: results,
+  loading: isFetching,
+  error,
+});
+```
+
+Local fuzzy search is an optional source adapter:
+
+```ts
+import {createFuzzySearchSource} from '@floating-ui-plus/web/fuzzy';
+
+const source = createFuzzySearchSource(destinations, {
+  keys: [
+    {name: 'label', weight: 1},
+    {name: 'keywords', weight: 0.7},
+  ],
+  threshold: 0.35,
+});
+```
+
+`@floating-ui-plus/web/search` does not import Fuse.js.
+`@floating-ui-plus/web/fuzzy` is the opt-in Fuse.js entry. The root package
+re-exports both for convenience and remains tree-shakeable.
+
+Editable Comboboxes are assembled in framework/application code from search,
+floating, role, and list-navigation primitives. `typeahead()` remains for
+non-editable menus and selects. Its default matcher uses Fuse.js, so normalized
+multilingual text and forgiving typos work without a custom `findMatch`.
+Supplying `findMatch` still overrides the default. It ignores duplicate
+`keydown` events during IME composition and matches the completed
+`compositionend` value using NFKC normalization.
+
 ## Pipeline
 
 ```ts

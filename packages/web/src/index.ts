@@ -19,6 +19,39 @@ export type * from '@floating-ui/dom';
 export {createFloating} from './createFloating';
 export type * from './types';
 export {
+  createAsyncSearchSource,
+  createSearch,
+  SearchController,
+} from './search';
+export type {
+  AsyncSearchSourceOptions,
+  ControlledSearchState,
+  SearchHit,
+  SearchHitMatch,
+  SearchOptions,
+  SearchPage,
+  SearchRequest,
+  SearchSnapshot,
+  SearchSource,
+  SearchSourceItem,
+} from './search';
+export {
+  createFuzzyMatcher,
+  createFuzzySearch,
+  createFuzzySearchSource,
+  fuzzySearch,
+  normalizeSearchText,
+} from './fuzzy';
+export type {
+  FuzzyMatchKind,
+  FuzzySearch,
+  FuzzySearchKey,
+  FuzzySearchMatch,
+  FuzzySearchOptions,
+  FuzzySearchResult,
+  FuzzySearchSource,
+} from './fuzzy';
+export {
   PLACEMENT,
   PLACEMENTS,
   FLOATING_UI_PLUS_DATA_ATTRIBUTE,

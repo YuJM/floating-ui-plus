@@ -2,6 +2,8 @@ export {arrow} from './arrow';
 export {vFloating} from './directives';
 export type * from './types';
 export {useFloating} from './useFloating';
+export {useSearch} from './search';
+export type {UseSearchReturn} from './search';
 export {
   FloatingContent,
   FloatingItem,
@@ -13,8 +15,13 @@ export {
   autoPlacement,
   autoUpdate,
   computePosition,
+  createAsyncSearchSource,
   createFloating,
   createFloatingContextScope,
+  createFuzzyMatcher,
+  createFuzzySearch,
+  createFuzzySearchSource,
+  createSearch,
   createOverlayElement,
   createPortalBridge,
   createPortalNode,
@@ -22,6 +29,7 @@ export {
   detectOverflow,
   flip,
   focusManager,
+  fuzzySearch,
   getArrowStyles,
   getContextArrowStyles,
   getDocumentTrapStack,
@@ -30,6 +38,7 @@ export {
   inline,
   limitShift,
   lockScroll,
+  normalizeSearchText,
   offset,
   PLACEMENT,
   PLACEMENTS,
@@ -45,6 +54,8 @@ export {
 } from '@floating-ui-plus/web';
 export type {
   ClickOptions,
+  AsyncSearchSourceOptions,
+  ControlledSearchState,
   ClientPointOptions,
   CompositeOptions,
   CompositeOrientation,
@@ -70,6 +81,13 @@ export type {
   FocusManagerOptions,
   FocusOptions,
   FocusTarget,
+  FuzzyMatchKind,
+  FuzzySearch,
+  FuzzySearchKey,
+  FuzzySearchMatch,
+  FuzzySearchOptions,
+  FuzzySearchResult,
+  FuzzySearchSource,
   HandleClose,
   HandleCloseContext,
   HoverOptions,
@@ -87,6 +105,14 @@ export type {
   PortalTargetSource,
   PlacementConstant,
   RoleOptions,
+  SearchHit,
+  SearchHitMatch,
+  SearchOptions,
+  SearchPage,
+  SearchRequest,
+  SearchSnapshot,
+  SearchSource,
+  SearchSourceItem,
   SafePolygonOptions,
   TransitionStatus,
   TransitionStyles,
@@ -94,6 +120,7 @@ export type {
   ValueOrGetter,
   WhileElementsMounted,
 } from '@floating-ui-plus/web';
+export {SearchController as WebSearchController} from '@floating-ui-plus/web';
 export {
   click,
   clientPoint,

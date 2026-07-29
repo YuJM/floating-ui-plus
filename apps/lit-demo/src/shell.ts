@@ -52,6 +52,14 @@ const routes: RouteConfig[] = [
     render: () => html`<lit-client-point-view></lit-client-point-view>`,
   },
   {
+    path: '/examples/combobox',
+    enter: async () => {
+      await import('./views/combobox-view');
+      return true;
+    },
+    render: () => html`<lit-combobox-view></lit-combobox-view>`,
+  },
+  {
     path: '/examples/placement',
     enter: async () => {
       await import('./views/placement-view');
@@ -137,6 +145,7 @@ class FloatingUiDemo extends LitElement {
           <a href="/examples/menu">Menu</a>
           <a href="/examples/nested-menu">Nested menu</a>
           <a href="/examples/client-point">Cursor</a>
+          <a href="/examples/combobox">Combobox</a>
           <a href="/examples/placement">Placement</a>
           <a href="/examples/middleware">Middleware</a>
           <a href="/examples/modal">Modal</a>

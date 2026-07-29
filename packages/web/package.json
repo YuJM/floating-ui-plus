@@ -22,6 +22,16 @@
       "types": "./dist/utils.d.ts",
       "import": "./dist/utils.js",
       "require": "./dist/utils.cjs"
+    },
+    "./fuzzy": {
+      "types": "./dist/fuzzy.d.ts",
+      "import": "./dist/fuzzy.js",
+      "require": "./dist/fuzzy.cjs"
+    },
+    "./search": {
+      "types": "./dist/search.d.ts",
+      "import": "./dist/search.js",
+      "require": "./dist/search.cjs"
     }
   },
   "publishConfig": {
@@ -39,6 +49,7 @@
     "@floating-ui/dom": "^1.8.0",
     "@floating-ui/utils": "^0.2.12",
     "focus-trap": "^8.2.2",
+    "fuse.js": "^7.5.0",
     "tabbable": "^6.5.0"
   }
 }

@@ -1,8 +1,10 @@
 export * from '@floating-ui-plus/web';
 
-// The explicit export replaces the framework-neutral controller type with the
-// Lit ReactiveController adapter at this package boundary.
+// Explicit exports replace framework-neutral controllers with Lit lifecycle
+// adapters at this package boundary.
 export {FloatingController} from './FloatingController';
+export {SearchController} from './SearchController';
+export type {SearchOptionsSource} from './SearchController';
 export type {
   FloatingDelayGroupOptions,
   FloatingItemState,

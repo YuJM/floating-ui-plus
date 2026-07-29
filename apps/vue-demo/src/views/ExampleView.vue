@@ -2,6 +2,7 @@
 import {computed} from 'vue';
 import {RouterLink, useRoute} from 'vue-router';
 import ExampleClientPoint from '../components/ExampleClientPoint.vue';
+import ExampleCombobox from '../components/ExampleCombobox.vue';
 import ExampleMenu from '../components/ExampleMenu.vue';
 import ExampleModal from '../components/ExampleModal.vue';
 import ExampleNestedMenu from '../components/ExampleNestedMenu.vue';
@@ -15,6 +16,7 @@ const examples = {
   menu: {component: ExampleMenu, kicker: 'menu route', title: 'Roving focus,\none registry.'},
   'nested-menu': {component: ExampleNestedMenu, kicker: 'tree route', title: 'Menus that know\ntheir descendants.'},
   'client-point': {component: ExampleClientPoint, kicker: 'client point route', title: 'A reference\nwithout an element.'},
+  combobox: {component: ExampleCombobox, kicker: 'combobox route', title: 'Search across\nwriting systems.'},
   modal: {component: ExampleModal, kicker: 'modal route', title: 'Focus has\na boundary.'},
 } as const;
 const example = computed(() => examples[route.params.example as keyof typeof examples] ?? examples.tooltip);

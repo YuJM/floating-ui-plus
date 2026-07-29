@@ -1,4 +1,5 @@
 import {expect, test} from 'playwright/test';
+import axe from 'axe-core';
 
 test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   page,
@@ -349,4 +350,62 @@ test('placement constants drive all 12 Lit positions', async ({page}) => {
     referenceBox!.y + referenceBox!.height,
   );
   expect(Math.abs(floatingBox!.x - referenceBox!.x)).toBeLessThanOrEqual(2);
+});
+
+test('multilingual Lit combobox keeps input focus and portals results', async ({
+  page,
+}) => {
+  await page.goto('/examples/combobox');
+  const input = page.getByRole('combobox', {name: 'Destination'});
+
+  for (const [query, expected] of [
+    ['서을', '서울'],
+    ['とうきょ', '東京'],
+    ['bejing', '北京'],
+    ['munchen', 'München'],
+    ['대한민국', '서울'],
+    ['日本', '東京'],
+    ['china', '北京'],
+    ['deutschland', 'München'],
+  ] as const) {
+    await input.fill(query);
+    await expect(page.getByRole('option', {name: new RegExp(expected)}))
+      .toBeVisible();
+  }
+
+  await input.fill('bejing');
+  const option = page.getByRole('option', {name: /北京/});
+  await expect(option).toBeVisible();
+  const popup = page.locator('.combobox-popup');
+  await expect(popup).toHaveCSS('position', 'absolute');
+  expect(
+    await popup.evaluate((element) =>
+      Boolean(element.closest('[data-floating-ui-plus-portal]')),
+    ),
+  ).toBe(true);
+
+  await input.press('ArrowDown');
+  await expect(input).toBeFocused();
+  await expect
+    .poll(() => input.getAttribute('aria-activedescendant'))
+    .toBe(await option.getAttribute('id'));
+  await input.press('Enter');
+  await expect(input).toHaveValue('北京');
+  await expect(popup).toBeHidden();
+
+  await input.fill('no-such-destination');
+  await expect(page.getByText(/No destination found/)).toBeVisible();
+
+  await page.addScriptTag({content: axe.source});
+  const violations = await page.evaluate(async () => {
+    const result = await (window as any).axe.run({
+      include: [['.combobox-card'], ['.combobox-popup']],
+    });
+    return result.violations.filter((violation: {impact: string | null}) =>
+      ['critical', 'serious'].includes(violation.impact ?? ''),
+    );
+  });
+  expect(violations).toEqual([]);
+  await input.press('Escape');
+  await expect(popup).toBeHidden();
 });

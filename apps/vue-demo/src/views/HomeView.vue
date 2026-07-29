@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {RouterLink} from 'vue-router';
 import ExampleClientPoint from '../components/ExampleClientPoint.vue';
+import ExampleCombobox from '../components/ExampleCombobox.vue';
 import ExampleMenu from '../components/ExampleMenu.vue';
 import ExampleModal from '../components/ExampleModal.vue';
 import ExampleNestedMenu from '../components/ExampleNestedMenu.vue';
@@ -25,6 +26,7 @@ import ExampleTooltip from '../components/ExampleTooltip.vue';
     <ExampleMenu />
     <ExampleNestedMenu />
     <ExampleClientPoint />
+    <ExampleCombobox />
     <article class="vue-demo-card vue-placement-card">
       <div class="vue-card-top">
         <span class="vue-number">P</span>

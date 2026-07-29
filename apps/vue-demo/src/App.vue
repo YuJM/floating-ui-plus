@@ -8,6 +8,7 @@ const links = [
   ['/examples/menu', 'Menu'],
   ['/examples/nested-menu', 'Nested menu'],
   ['/examples/client-point', 'Cursor'],
+  ['/examples/combobox', 'Combobox'],
   ['/placement', 'Placement'],
   ['/middleware', 'Middleware'],
   ['/examples/modal', 'Modal'],

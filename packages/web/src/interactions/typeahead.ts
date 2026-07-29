@@ -1,7 +1,8 @@
 import {addListener, cleanupAll} from '../events';
 import type {FloatingPlugin, ValueOrGetter} from '../types';
 import type {Ref} from '../utils/common';
-import {getValue} from '../utils/common';
+import {enqueueMicrotask, getValue} from '../utils/common';
+import {createFuzzyMatcher, normalizeSearchText} from '../fuzzy';
 
 export interface TypeaheadOptions {
   listRef: Ref<Array<string | null>>;
@@ -28,6 +29,9 @@ export function typeahead(
   let timeout = -1;
   let previousMatch = -1;
   let matchIndex: number | null = null;
+  let composing = false;
+  let compositionKeyToIgnore: string | null = null;
+  const defaultFindMatch = createFuzzyMatcher();
 
   return {
     name: 'typeahead',
@@ -60,67 +64,55 @@ export function typeahead(
         setTyping(false);
       }
 
-      function onKeyDown(event: KeyboardEvent) {
+      function getMatchingIndex(
+        orderedList: Array<string | null>,
+        value: string,
+      ) {
         const current = getOptions();
         const list = current.listRef.current;
+        const normalizedValue = normalizeSearchText(value);
+        const match = current.findMatch
+          ? current.findMatch(orderedList, normalizedValue)
+          : defaultFindMatch(orderedList, normalizedValue);
+        return match == null ? -1 : list.indexOf(match);
+      }
 
-        const getMatchingIndex = (
-          orderedList: Array<string | null>,
-          value: string,
-        ) => {
-          const match = current.findMatch
-            ? current.findMatch(orderedList, value)
-            : orderedList.find((item) =>
-                item
-                  ?.toLocaleLowerCase()
-                  .startsWith(value.toLocaleLowerCase()),
-              );
-          return match == null ? -1 : list.indexOf(match);
-        };
-
+      function processText(value: string, event?: KeyboardEvent) {
+        const current = getOptions();
+        const list = current.listRef.current;
+        const normalizedInput = value.normalize('NFKC');
+        if (!normalizedInput || !list.length) return;
         if (typed.length > 0 && typed[0] !== ' ') {
           if (getMatchingIndex(list, typed) === -1) {
             setTyping(false);
-          } else if (event.key === ' ') {
-            event.preventDefault();
-            event.stopPropagation();
+          } else if (normalizedInput === ' ') {
+            event?.preventDefault();
+            event?.stopPropagation();
           }
         }
 
-        if (
-          !current.enabled ||
-          event.defaultPrevented ||
-          (current.ignoreKeys || []).includes(event.key) ||
-          event.key.length !== 1 ||
-          event.ctrlKey ||
-          event.metaKey ||
-          event.altKey
-        ) {
-          return;
-        }
-
-        if (!list.length) return;
-        if (context.open && event.key !== ' ') {
-          event.preventDefault();
-          event.stopPropagation();
+        if (context.open && normalizedInput !== ' ') {
+          event?.preventDefault();
+          event?.stopPropagation();
           setTyping(true);
         }
 
         const allowRapidFirstLetter = list.every((value) =>
           value
-            ? value[0]?.toLocaleLowerCase() !==
-              value[1]?.toLocaleLowerCase()
+            ? normalizeSearchText(value[0] ?? '') !==
+              normalizeSearchText(value[1] ?? '')
             : true,
         );
         if (
           allowRapidFirstLetter &&
-          typed.toLocaleLowerCase() === event.key.toLocaleLowerCase()
+          normalizedInput.length === 1 &&
+          normalizeSearchText(typed) === normalizeSearchText(normalizedInput)
         ) {
           typed = '';
           previousMatch = matchIndex ?? previousMatch;
         }
 
-        typed += event.key;
+        typed += normalizedInput;
         win.clearTimeout(timeout);
         timeout = win.setTimeout(reset, current.resetMs);
 
@@ -133,20 +125,75 @@ export function typeahead(
         if (index >= 0) {
           matchIndex = index;
           current.onMatch?.(index);
-        } else if (event.key !== ' ') {
+        } else if (normalizedInput !== ' ') {
           typed = '';
           setTyping(false);
         }
       }
 
+      function onKeyDown(event: KeyboardEvent) {
+        const current = getOptions();
+        if (
+          !current.enabled ||
+          event.defaultPrevented ||
+          composing ||
+          event.isComposing ||
+          event.keyCode === 229 ||
+          (current.ignoreKeys || []).includes(event.key) ||
+          event.key.length !== 1 ||
+          event.ctrlKey ||
+          event.metaKey ||
+          event.altKey
+        ) {
+          return;
+        }
+        if (
+          compositionKeyToIgnore &&
+          normalizeSearchText(event.key) ===
+            normalizeSearchText(compositionKeyToIgnore)
+        ) {
+          compositionKeyToIgnore = null;
+          return;
+        }
+        processText(event.key, event);
+      }
+
+      function onCompositionStart() {
+        if (!getOptions().enabled) return;
+        composing = true;
+        compositionKeyToIgnore = null;
+        if (context.open) setTyping(true);
+      }
+
+      function onCompositionEnd(event: CompositionEvent) {
+        if (!composing) return;
+        composing = false;
+        const value = event.data?.normalize('NFKC') ?? '';
+        if (!value) {
+          setTyping(Boolean(typed));
+          return;
+        }
+        compositionKeyToIgnore = value;
+        enqueueMicrotask(() => {
+          compositionKeyToIgnore = null;
+        });
+        processText(value);
+      }
+
       const cleanups = [
         addListener(reference, 'keydown', onKeyDown),
         addListener(floating, 'keydown', onKeyDown),
+        addListener(reference, 'compositionstart', onCompositionStart),
+        addListener(floating, 'compositionstart', onCompositionStart),
+        addListener(reference, 'compositionend', onCompositionEnd),
+        addListener(floating, 'compositionend', onCompositionEnd),
         context.events.on('openchange', ({open}) => {
           if (open) {
             win.clearTimeout(timeout);
             typed = '';
             matchIndex = null;
+            composing = false;
+            compositionKeyToIgnore = null;
             previousMatch =
               getOptions().selectedIndex ?? getOptions().activeIndex ?? -1;
           }
@@ -160,6 +207,8 @@ export function typeahead(
 
       return () => {
         win.clearTimeout(timeout);
+        composing = false;
+        compositionKeyToIgnore = null;
         reset();
         cleanupAll(cleanups)();
       };

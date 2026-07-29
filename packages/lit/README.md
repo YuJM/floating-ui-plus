@@ -19,6 +19,39 @@ private choices = PLACEMENTS;
 
 String literals such as `'bottom-start'` remain supported.
 
+## Search state for custom Comboboxes
+
+Lit does not ship a finished Combobox. `SearchController` connects generic
+search request state to the host lifecycle. The host composes it with
+`FloatingController`, `listNavigation()`, `role()`, and its own template:
+
+```ts
+import {
+  createAsyncSearchSource,
+  SearchController,
+} from '@floating-ui-plus/lit';
+
+const source = createAsyncSearchSource<Product>({
+  async search({query, signal, limit, cursor}) {
+    const response = await fetch(
+      `/api/products/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+      {signal},
+    );
+    if (!response.ok) throw new Error('Search failed');
+    return response.json();
+  },
+});
+
+private search = new SearchController(this, {
+  source,
+  getItemKey: (item) => item.id,
+});
+```
+
+Pass `items`, `loading`, and `error` instead of `source` for controlled state.
+The host owns `open`, `activeIndex`, selection, option IDs, ARIA relationships,
+portal rendering, and keyboard selection.
+
 ## Required Light DOM setup
 
 ```ts

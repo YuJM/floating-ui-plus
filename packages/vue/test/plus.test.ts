@@ -10,17 +10,60 @@ import {
   FloatingReference,
   FloatingRoot,
   click,
+  createFuzzySearchSource,
   createFloatingContextScope,
   dismiss,
   requestFloatingContext,
   role,
   useFloating,
+  useSearch,
   vFloating,
 } from '../src';
 
 afterEach(() => cleanup());
 
 describe('Floating UI Plus Vue adapter', () => {
+  test('connects generic search state to Vue lifecycle', async () => {
+    const source = createFuzzySearchSource(
+      [
+        {id: 'seoul', label: '서울', keywords: ['seoul', 'seol']},
+        {id: 'beijing', label: '北京', keywords: ['beijing', 'peking']},
+      ],
+      {
+        keys: [{name: 'label'}, {name: 'keywords', weight: 0.7}],
+      },
+    );
+    const App = defineComponent({
+      setup() {
+        const search = useSearch({
+          source,
+          getItemKey: (item) => item.id,
+          debounceMs: 0,
+        });
+        return () =>
+          h('div', [
+            h(
+              'button',
+              {onClick: () => search.controller.setQuery('bejing')},
+              'Search',
+            ),
+            h(
+              'output',
+              {'data-query': search.query.value},
+              search.items.value.map((item) => item.label).join(','),
+            ),
+          ]);
+      },
+    });
+
+    const {getByRole, getByText} = render(App);
+    await waitFor(() => expect(getByText('서울,北京')).toBeVisible());
+    await fireEvent.click(getByRole('button', {name: 'Search'}));
+    await waitFor(() => {
+      expect(getByText('北京')).toHaveAttribute('data-query', 'bejing');
+    });
+  });
+
   test('offers a declarative root, reference, and content API alongside useFloating', async () => {
     const open = ref(false);
     const App = defineComponent(() => () =>
