@@ -3,14 +3,19 @@ import {afterEach, describe, expect, test, vi} from 'vitest';
 
 import {
   CompositeController,
+  applyFloatingStyles,
+  createPortalBridge,
   createFloatingContextScope,
   createFloating,
   createOverlayElement,
   createPortalNode,
+  createPortalNodeController,
   DelayGroup,
   FloatingList,
   FloatingTransition,
   FloatingTree,
+  FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
+  FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
   getArrowStyles,
   lockScroll,
   NextDelayGroup,
@@ -62,6 +67,44 @@ describe('arrow styles', () => {
     expect(
       getArrowStyles('bottom-end', {}, {element, staticOffset: '15%'}).top,
     ).toBe('15%');
+  });
+});
+
+describe('floating styles', () => {
+  test('applies positioning styles and clears omitted properties', () => {
+    const element = document.createElement('div');
+    element.style.bottom = '8px';
+    applyFloatingStyles(element, {
+      position: 'absolute',
+      top: '0px',
+      left: '0px',
+      transform: 'translate(12px, 24px)',
+    });
+
+    expect(element.style.position).toBe('absolute');
+    expect(element.style.transform).toBe('translate(12px, 24px)');
+    expect(element.style.bottom).toBe('');
+  });
+});
+
+describe('floating presence', () => {
+  test('resolves when the mounted surface receives a positioned update', async () => {
+    const reference = document.createElement('button');
+    const floating = document.createElement('div');
+    document.body.append(reference, floating);
+    const controller = createFloating({open: true});
+    controller.setReference(reference);
+    controller.setFloating(floating);
+    controller.connect();
+
+    const positioned = controller.whenPositioned();
+    controller.presence.set('mounted');
+    await controller.update();
+
+    await expect(positioned).resolves.toMatchObject({isPositioned: true});
+    controller.presence.set('leaving');
+    expect(controller.presence.state).toBe('leaving');
+    controller.destroy();
   });
 });
 
@@ -179,6 +222,119 @@ describe('FloatingList', () => {
 });
 
 describe('portal and overlay services', () => {
+  test('moves a context scope between portal targets and cleans it up', () => {
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    const child = document.createElement('span');
+    const scope = createFloatingContextScope();
+    scope.provide('theme', 'night');
+    document.body.append(first, second);
+
+    const bridge = createPortalBridge({contextScope: scope});
+    bridge.attach(first);
+    first.append(child);
+    expect(requestFloatingContext(child, 'theme')).toBe('night');
+
+    bridge.move(second);
+    expect(requestFloatingContext(child, 'theme')).toBeUndefined();
+    second.append(child);
+    expect(requestFloatingContext(child, 'theme')).toBe('night');
+
+    bridge.detach();
+    expect(requestFloatingContext(child, 'theme')).toBeUndefined();
+    bridge.destroy();
+    expect(bridge.target).toBeNull();
+  });
+
+  test('resolves a deferred target across connect, refresh, and disconnect', () => {
+    const firstScope = createFloatingContextScope();
+    const secondScope = createFloatingContextScope();
+    firstScope.provide('theme', 'first');
+    secondScope.provide('theme', 'second');
+    let target: HTMLElement | null = null;
+    const bridge = createPortalBridge({
+      contextScope: firstScope,
+      target: () => target,
+    });
+    const node = document.createElement('div');
+    const child = document.createElement('span');
+    node.append(child);
+
+    expect(bridge.status).toBe('detached');
+    expect(bridge.connect()).toBeNull();
+    expect(bridge.status).toBe('pending');
+    target = node;
+    expect(bridge.refresh()).toBe(node);
+    expect(bridge.status).toBe('attached');
+    expect(requestFloatingContext(child, 'theme')).toBe('first');
+    bridge.setContextScope(secondScope);
+    expect(requestFloatingContext(child, 'theme')).toBe('second');
+    bridge.disconnect();
+    expect(bridge.status).toBe('detached');
+    expect(requestFloatingContext(child, 'theme')).toBeUndefined();
+    bridge.connect();
+    expect(requestFloatingContext(child, 'theme')).toBe('second');
+    target = null;
+    bridge.refresh();
+    expect(bridge.status).toBe('pending');
+    bridge.destroy();
+    expect(bridge.status).toBe('destroyed');
+  });
+
+  test('creates an owned portal node after its root becomes available', () => {
+    const scope = createFloatingContextScope();
+    scope.provide('theme', 'deferred');
+    let root: HTMLElement | null = null;
+    const portal = createPortalNodeController({
+      id: 'deferred-portal',
+      root: () => root,
+      contextScope: scope,
+    });
+
+    expect(portal.connect()).toBeNull();
+    expect(portal.status).toBe('pending');
+
+    root = document.createElement('section');
+    document.body.append(root);
+    const firstNode = portal.refresh();
+    expect(firstNode?.parentElement).toBe(root);
+    expect(portal.status).toBe('attached');
+    const child = document.createElement('span');
+    firstNode?.append(child);
+    expect(requestFloatingContext(child, 'theme')).toBe('deferred');
+
+    const nextRoot = document.createElement('section');
+    document.body.append(nextRoot);
+    root = nextRoot;
+    const movedNode = portal.refresh();
+    expect(firstNode?.isConnected).toBe(false);
+    expect(movedNode?.parentElement).toBe(nextRoot);
+
+    portal.disconnect();
+    expect(movedNode?.isConnected).toBe(false);
+    expect(portal.status).toBe('detached');
+    expect(portal.connect()?.parentElement).toBe(nextRoot);
+    portal.destroy();
+  });
+
+  test('reuses and preserves a consumer-owned deferred portal node', () => {
+    const root = document.createElement('section');
+    const existing = document.createElement('div');
+    existing.id = 'consumer-deferred-portal';
+    root.append(existing);
+    document.body.append(root);
+    const portal = createPortalNodeController({
+      id: existing.id,
+      root: () => root,
+    });
+
+    expect(portal.connect()).toBe(existing);
+    portal.disconnect();
+    expect(existing.isConnected).toBe(true);
+    portal.destroy();
+    expect(existing.isConnected).toBe(true);
+  });
+
   test('creates, reuses, roots, and removes owned portal nodes', () => {
     const root = document.createElement('section');
     document.body.append(root);
@@ -187,7 +343,7 @@ describe('portal and overlay services', () => {
     const reused = createPortalNode({id: 'portal', root});
     expect(first).toBe(reused);
     expect(first?.parentElement).toBe(root);
-    expect(first?.hasAttribute('data-floating-ui-portal')).toBe(true);
+    expect(first?.hasAttribute(FLOATING_UI_PLUS_PORTAL_ATTRIBUTE)).toBe(true);
 
     removePortalNode(first);
     expect(root.querySelector('#portal')).toBeNull();
@@ -243,7 +399,9 @@ describe('portal and overlay services', () => {
 
   test('creates a fixed overlay and releases its optional scroll lock', () => {
     const overlay = createOverlayElement(document, {lockScroll: true});
-    expect(overlay.element.dataset.floatingUiOverlay).toBe('');
+    expect(overlay.element.hasAttribute(FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE)).toBe(
+      true,
+    );
     expect(overlay.element.style.position).toBe('fixed');
     expect(Number.parseFloat(overlay.element.style.inset)).toBe(0);
     expect(document.body.style.overflow).toBe('hidden');

@@ -2,6 +2,23 @@
 
 Light DOM ReactiveController and directives for `@floating-ui-plus/web`.
 
+## Placement constants
+
+`PLACEMENT` avoids repeating placement string literals, while `PLACEMENTS`
+provides all 12 typed values in clockwise visual order:
+
+```ts
+import {FloatingController, PLACEMENT, PLACEMENTS} from '@floating-ui-plus/lit';
+
+private floating = new FloatingController(this, {
+  placement: PLACEMENT.BOTTOM_START,
+});
+
+private choices = PLACEMENTS;
+```
+
+String literals such as `'bottom-start'` remain supported.
+
 ## Required Light DOM setup
 
 ```ts
@@ -97,6 +114,19 @@ rendered through `floating.portal()`. The Web `FloatingContextScope` is
 attached to both the host and portal node; Lit only renders into that node.
 Tree, node, list, and delay-group contexts therefore preserve logical service
 ownership when DOM moves to `body`.
+
+Portal roots may be resolved lazily. Web owns the pending node and context
+lifecycle, while the Lit directive refreshes it from `update()` and restores it
+from `reconnected()`:
+
+```ts
+this.floating.portal(content, {
+  root: () => document.querySelector<HTMLElement>('#overlay-root'),
+});
+```
+
+Until the resolver returns an element, no portal node is created. Disconnecting
+the host removes owned nodes and reconnecting the host recreates them.
 
 ## Transition and modal directives
 

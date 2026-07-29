@@ -10,6 +10,7 @@ import type {
 import type {
   FloatingContext,
   FloatingController,
+  FloatingContextScope,
   FloatingPlugin,
   ItemState,
   OpenChangeReason,
@@ -168,6 +169,8 @@ export type UseFloatingReturn = {
    * Underlying framework-neutral controller.
    */
   controller: FloatingController;
+  /** Web-owned scope for tree/list/group services and Portal context bridging. */
+  contextScope: FloatingContextScope;
   /**
    * Adds interaction plugins to the controller.
    */

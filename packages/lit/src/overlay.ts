@@ -6,7 +6,11 @@ import {
   type DirectiveResult,
   type PartInfo,
 } from 'lit/directive.js';
-import {lockScroll} from '@floating-ui-plus/web';
+import {
+  FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
+  lockScroll,
+} from '@floating-ui-plus/web';
+import {ref} from 'lit/directives/ref.js';
 
 export interface FloatingOverlayOptions {
   lockScroll?: boolean | undefined;
@@ -25,7 +29,9 @@ class FloatingOverlayDirective extends AsyncDirective {
 
   render(content: unknown, options: FloatingOverlayOptions = {}) {
     return html`<div
-      data-floating-ui-overlay
+      ${ref((element) =>
+        element?.setAttribute(FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE, ''),
+      )}
       class=${options.className || ''}
       style="position:fixed;inset:0"
     >

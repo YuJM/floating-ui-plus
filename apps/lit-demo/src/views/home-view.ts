@@ -33,6 +33,17 @@ class LitHomeView extends LitElement {
         <lit-menu-example></lit-menu-example>
         <lit-nested-menu-example></lit-nested-menu-example>
         <lit-client-point-example></lit-client-point-example>
+        <a class="demo-card placement-card" href="/examples/placement">
+          <div class="card-top">
+            <span class="number">P</span><span class="chip">12 typed directions</span>
+          </div>
+          <h3>Placement constants</h3>
+          <p>Choose every side and alignment without repeating string literals.</p>
+          <div class="card-action">
+            <span class="outline-button">Open placement lab <span>↗</span></span>
+          </div>
+          <code>PLACEMENT.BOTTOM_START</code>
+        </a>
       </section>
       <lit-modal-example></lit-modal-example>
     `;

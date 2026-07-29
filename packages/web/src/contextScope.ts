@@ -1,15 +1,11 @@
 import {
+  FLOATING_CONTEXT_SCOPE,
+} from './constants';
+import {
   FLOATING_CONTEXT_REQUEST,
   type FloatingContextRequestEvent,
   requestFloatingContext,
 } from './tree';
-
-export const FLOATING_CONTEXT_SCOPE = '@floating-ui-plus/context/scope';
-export const FLOATING_TREE_CONTEXT = '@floating-ui-plus/context/tree';
-export const FLOATING_NODE_CONTEXT = '@floating-ui-plus/context/node';
-export const FLOATING_LIST_CONTEXT = '@floating-ui-plus/context/list';
-export const FLOATING_DELAY_GROUP_CONTEXT =
-  '@floating-ui-plus/context/delay-group';
 
 export type FloatingContextProvider<T = unknown> = () => T;
 

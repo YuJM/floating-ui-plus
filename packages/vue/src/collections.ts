@@ -7,6 +7,7 @@ import {
   type CompositeOptions,
   type DelayGroupOptions,
   type FloatingController,
+  type FloatingContextScope,
   type FloatingListItemOptions,
 } from '@floating-ui-plus/web';
 import {
@@ -23,6 +24,9 @@ import {
   type PropType,
 } from 'vue';
 
+import type {UseFloatingReturn} from './types';
+import {useFloatingRoot} from './root';
+
 const TreeKey: InjectionKey<WebFloatingTree> = Symbol('FloatingTree');
 const ParentNodeKey: InjectionKey<string | null> = Symbol('FloatingNode');
 const ListKey: InjectionKey<WebFloatingList<unknown>> = Symbol('FloatingList');
@@ -32,11 +36,33 @@ const CompositeKey: InjectionKey<{
   elements: Set<HTMLElement>;
   sync(): void;
 }> = Symbol('FloatingComposite');
+const ScopeKey: InjectionKey<FloatingContextScope> = Symbol(
+  'FloatingContextScope',
+);
 
 let nodeId = 0;
 
+type FloatingControllerInput = FloatingController | UseFloatingReturn;
+
+function resolveController(
+  input?: FloatingControllerInput | null,
+  fallback?: UseFloatingReturn | null,
+) {
+  const controller = input ? ('controller' in input ? input.controller : input) : fallback?.controller;
+  if (!controller) {
+    throw new Error('FloatingNode, FloatingList, and FloatingDelayGroup require a FloatingRoot or controller prop.');
+  }
+  return controller;
+}
+
 export function useFloatingTree(explicit?: WebFloatingTree | null) {
   return explicit ?? inject(TreeKey, null);
+}
+
+export function useFloatingContextScope(
+  explicit?: FloatingContextScope | null,
+) {
+  return explicit ?? inject(ScopeKey, null);
 }
 
 export const FloatingTree = defineComponent({
@@ -56,33 +82,34 @@ export const FloatingNode = defineComponent({
   name: 'FloatingNode',
   props: {
     controller: {
-      type: Object as PropType<FloatingController>,
-      required: true,
+      type: Object as PropType<FloatingControllerInput>,
     },
     id: String,
     parentId: {type: String as PropType<string | null>, default: undefined},
     tree: Object as PropType<WebFloatingTree>,
   },
   setup(props, {slots}) {
+    const root = useFloatingRoot();
     const tree = useFloatingTree(props.tree);
+    const controller = resolveController(props.controller, root);
     const injectedParentId = inject(ParentNodeKey, null);
+    const parentScope = useFloatingContextScope();
     const id = props.id ?? `floating-vue-node-${++nodeId}`;
     provide(ParentNodeKey, id);
-    let unregister: (() => void) | undefined;
+    provide(ScopeKey, controller.contextScope);
 
     onMounted(() => {
-      if (!tree) {
-        if (__DEV__) {
-          console.warn('FloatingNode requires a FloatingTree provider.');
-        }
-        return;
-      }
-      unregister = tree.register(props.controller, {
-        id,
-        parentId: props.parentId ?? injectedParentId,
-      }).unregister;
+      controller
+        .setContextParent(parentScope)
+        .node({
+          ...(tree ? {tree} : {}),
+          id,
+          parentId: props.parentId ?? injectedParentId,
+        });
     });
-    onBeforeUnmount(() => unregister?.());
+    onBeforeUnmount(() => {
+      controller.node(null).setContextParent(null);
+    });
 
     return () => slots.default?.({id, tree});
   },
@@ -102,10 +129,14 @@ export const FloatingList = defineComponent({
   name: 'FloatingList',
   props: {
     list: Object as PropType<WebFloatingList<unknown>>,
+    controller: Object as PropType<FloatingControllerInput>,
   },
   setup(props, {slots}) {
+    const root = useFloatingRoot();
     const list = props.list ?? new WebFloatingList();
     provide(ListKey, list);
+    const controller = resolveController(props.controller, root);
+    onMounted(() => controller.withList(list));
     return () => slots.default?.({list});
   },
 });
@@ -171,15 +202,20 @@ function createDelayGroupComponent(
     name,
     props: {
       group: Object as PropType<DelayGroup>,
+      controller: Object as PropType<FloatingControllerInput>,
       options: {
         type: Object as PropType<DelayGroupOptions>,
         default: () => ({}),
       },
     },
     setup(props, {slots}) {
+      const root = useFloatingRoot();
       const group = props.group ?? new Group(props.options);
+      const controller = resolveController(props.controller, root);
       provide(DelayGroupKey, group);
+      onMounted(() => controller.delayGroup({group}));
       onBeforeUnmount(() => {
+        controller.delayGroup(null);
         if (!props.group) group.destroy();
       });
       return () => slots.default?.({group});

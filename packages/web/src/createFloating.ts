@@ -11,6 +11,8 @@ import type {
   FloatingElements,
   FloatingOptions,
   FloatingOptionsSource,
+  FloatingPresence,
+  FloatingPresenceState,
   FloatingPlugin,
   FloatingPosition,
   FloatingStyles,
@@ -93,6 +95,24 @@ export function createFloating(
     null,
     resolveOptions(optionsSource).transform !== false,
   );
+  let presenceState: FloatingPresenceState = 'unmounted';
+  const positionedResolvers = new Set<(position: FloatingPosition) => void>();
+
+  function resolvePositioned() {
+    if (presenceState !== 'mounted' || !position.isPositioned) return;
+    positionedResolvers.forEach((resolve) => resolve(position));
+    positionedResolvers.clear();
+  }
+
+  const presence: FloatingPresence = {
+    get state() {
+      return presenceState;
+    },
+    set(state) {
+      presenceState = state;
+      resolvePositioned();
+    },
+  };
 
   const context: FloatingContext = {
     get open() {
@@ -213,6 +233,7 @@ export function createFloating(
       options.transform !== false,
     );
     events.emit('positionchange', position);
+    resolvePositioned();
   }
 
   function setReference(reference: Element | ReferenceElement | null) {
@@ -236,6 +257,7 @@ export function createFloating(
     get floatingStyles() {
       return floatingStyles;
     },
+    presence,
     get list() {
       return coordinator.list;
     },
@@ -299,10 +321,18 @@ export function createFloating(
       void update();
     },
     update,
+    whenPositioned() {
+      if (presenceState === 'mounted' && position.isPositioned) {
+        return Promise.resolve(position);
+      }
+      return new Promise((resolve) => positionedResolvers.add(resolve));
+    },
     destroy() {
       controller.disconnect();
       destroyed = true;
       requestId++;
+      presence.set('unmounted');
+      positionedResolvers.clear();
       elements.reference = null;
       elements.domReference = null;
       elements.floating = null;

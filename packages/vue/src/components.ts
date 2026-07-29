@@ -1,7 +1,12 @@
 import {
+  createPortalBridge,
   focusManager,
   getContextArrowStyles,
   lockScroll,
+  FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
+  FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
+  type FloatingContextScope,
+  type PortalBridge,
   type FloatingContext,
   type FocusManagerOptions,
 } from '@floating-ui-plus/web';
@@ -13,34 +18,128 @@ import {
   mergeProps,
   onBeforeUnmount,
   onMounted,
-  ref,
+  onScopeDispose,
+  onUpdated,
   shallowRef,
   watch,
   type PropType,
 } from 'vue';
 
+import type {UseFloatingReturn} from './types';
+import {useFloatingRoot} from './root';
+
+function resolveContext(
+  context: FloatingContext | undefined,
+  floating: UseFloatingReturn | undefined,
+) {
+  return context ?? floating?.context ?? useFloatingRoot()?.context;
+}
+
 export const FloatingPortal = defineComponent({
   name: 'FloatingPortal',
+  inheritAttrs: false,
   props: {
     to: {
       type: [String, Object] as PropType<string | Element>,
       default: 'body',
     },
     disabled: Boolean,
+    active: Boolean,
+    contextScope: Object as PropType<FloatingContextScope | null>,
+    floating: Object as PropType<UseFloatingReturn>,
   },
-  setup(props, {slots}) {
-    const mounted = ref(false);
-    onMounted(() => {
-      mounted.value = true;
+  setup(props, {attrs, slots}) {
+    const injected = useFloatingRoot();
+    const mounted = shallowRef(false);
+    const teleportTarget = shallowRef<Element | null>(null);
+    const portalRoot = shallowRef<HTMLElement | null>(null);
+    const portalBridge: PortalBridge = createPortalBridge({
+      contextScope: props.contextScope,
+      target: () => portalRoot.value,
     });
 
+    function setPortalRoot(element: unknown) {
+      portalRoot.value =
+        typeof HTMLElement !== 'undefined' && element instanceof HTMLElement
+          ? element
+          : null;
+      portalBridge.refresh();
+    }
+
+    function refreshTeleportTarget() {
+      if (typeof document === 'undefined') {
+        teleportTarget.value = null;
+        return;
+      }
+      const nextTarget =
+        typeof props.to === 'string'
+          ? document.querySelector(props.to)
+          : props.to;
+      teleportTarget.value = nextTarget ?? null;
+      portalBridge.refresh();
+    }
+
+    watch(
+      () =>
+        props.contextScope ??
+        props.floating?.contextScope ??
+        injected?.contextScope ??
+        null,
+      (scope) => portalBridge.setContextScope(scope),
+      {immediate: true},
+    );
+    watch(
+      () => props.to,
+      () => refreshTeleportTarget(),
+      {flush: 'post'},
+    );
+    onMounted(() => {
+      refreshTeleportTarget();
+      portalBridge.connect();
+      mounted.value = true;
+    });
+    onUpdated(refreshTeleportTarget);
+    onBeforeUnmount(() => {
+      mounted.value = false;
+      portalBridge.disconnect();
+    });
+    onScopeDispose(() => portalBridge.destroy());
+
     return () => {
+      // Slot contents are often closed over by a parent render function. An
+      // explicit state signal keeps the Teleport render effect reactive when
+      // consumers conditionally render a floating surface inside the slot.
+      props.active;
       const children = slots.default?.();
-      if (!mounted.value) return children;
+      if (!mounted.value || typeof document === 'undefined') return children;
+      const target = teleportTarget.value;
+      const teleportProps = {
+        to: target ?? document.body,
+        disabled: props.disabled || !target,
+        defer: true,
+      };
+      const contextScope = props.contextScope ?? props.floating?.contextScope ?? injected?.contextScope;
+      if (!contextScope) {
+        return h(
+          Teleport as any,
+          teleportProps,
+          children,
+        );
+      }
       return h(
-        Teleport,
-        {to: props.to, disabled: props.disabled},
-        {default: () => children},
+        Teleport as any,
+        teleportProps,
+        [
+          h(
+            'div',
+            mergeProps(attrs, {
+              ref: setPortalRoot,
+              [FLOATING_UI_PLUS_PORTAL_ATTRIBUTE]: '',
+              style: {display: 'contents'},
+            }),
+            children,
+          ),
+        ],
       );
     };
   },
@@ -73,7 +172,7 @@ export const FloatingOverlay = defineComponent({
         props.tag,
         mergeProps(
           {
-            'data-floating-ui-overlay': '',
+            [FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE]: '',
             style: {position: 'fixed', inset: '0'},
           },
           attrs,
@@ -89,8 +188,8 @@ export const FloatingArrow = defineComponent({
   props: {
     context: {
       type: Object as PropType<FloatingContext>,
-      required: true,
     },
+    floating: Object as PropType<UseFloatingReturn>,
     width: {type: Number, default: 14},
     height: {type: Number, default: 7},
     staticOffset: {
@@ -99,12 +198,16 @@ export const FloatingArrow = defineComponent({
     },
   },
   setup(props, {attrs, slots}) {
+    const context = resolveContext(props.context, props.floating);
+    if (!context) {
+      throw new Error('FloatingArrow requires a FloatingRoot, floating, or context prop.');
+    }
     const element = shallowRef<SVGSVGElement | null>(null);
     const revision = shallowRef(0);
     let unsubscribe: (() => void) | undefined;
 
     onMounted(() => {
-      unsubscribe = props.context.events.on('positionchange', () => {
+      unsubscribe = context.events.on('positionchange', () => {
         revision.value++;
       });
     });
@@ -113,7 +216,7 @@ export const FloatingArrow = defineComponent({
     const styles = computed(() => {
       revision.value;
       if (!element.value) return {position: 'absolute' as const};
-      return getContextArrowStyles(props.context, {
+      return getContextArrowStyles(context, {
         element: element.value as unknown as HTMLElement,
         staticOffset: props.staticOffset ?? -(props.width / 2),
       });
@@ -146,8 +249,8 @@ export const FloatingFocusManager = defineComponent({
   props: {
     context: {
       type: Object as PropType<FloatingContext>,
-      required: true,
     },
+    floating: Object as PropType<UseFloatingReturn>,
     options: {
       type: Object as PropType<FocusManagerOptions>,
       default: () => ({}),
@@ -155,6 +258,10 @@ export const FloatingFocusManager = defineComponent({
     enabled: {type: Boolean, default: true},
   },
   setup(props, {slots}) {
+    const context = resolveContext(props.context, props.floating);
+    if (!context) {
+      throw new Error('FloatingFocusManager requires a FloatingRoot, floating, or context prop.');
+    }
     const plugin = focusManager(() => ({
       ...props.options,
       enabled: props.enabled,
@@ -162,11 +269,11 @@ export const FloatingFocusManager = defineComponent({
     let cleanup: (() => void) | undefined;
 
     onMounted(() => {
-      cleanup = plugin.connect(props.context) || undefined;
+      cleanup = plugin.connect(context) || undefined;
     });
     watch(
       [() => props.enabled, () => props.options],
-      () => plugin.update?.(props.context),
+      () => plugin.update?.(context),
       {deep: true},
     );
     onBeforeUnmount(() => cleanup?.());

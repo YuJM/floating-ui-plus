@@ -6,7 +6,10 @@ test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   await page.goto('/');
 
   await expect(
-    page.getByRole('heading', {level: 1, name: 'Floating UI Plus'}),
+    page.getByRole('heading', {
+      level: 1,
+      name: 'Floating UI Plus Lit demo',
+    }),
   ).toBeVisible();
 
   const tokens = await page.evaluate(() => {
@@ -21,9 +24,9 @@ test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   });
 
   expect(tokens).toEqual({
-    background: '#e8e9f5',
-    foreground: '#17182f',
-    ring: '#77e3e0',
+    background: '#edf3ff',
+    foreground: '#172554',
+    ring: '#00b8ff',
     radius: '0.8125rem',
     overflow: 0,
   });
@@ -183,6 +186,12 @@ test('all middleware fixtures expose their observable behavior', async ({
   await expect(
     page.getByRole('heading', {level: 2, name: /Position with intent/}),
   ).toBeVisible();
+  await expect(page.locator('.middleware-title a')).toHaveCount(8);
+  await expect(
+    page.getByRole('link', {
+      name: 'autoPlacement middleware official documentation',
+    }),
+  ).toHaveAttribute('href', 'https://floating-ui.com/docs/autoplacement');
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth - window.innerWidth,
@@ -306,4 +315,38 @@ test('all middleware fixtures expose their observable behavior', async ({
   expect(inlineMetrics.lines).toBeGreaterThan(1);
   expect(inlineMetrics.withoutDistance).toBeLessThanOrEqual(2);
   expect(inlineMetrics.withDistance).toBeLessThanOrEqual(2);
+});
+
+test('placement constants drive all 12 Lit positions', async ({page}) => {
+  await page.goto('/examples/placement');
+
+  await expect(
+    page.getByRole('heading', {level: 2, name: /Choose a constant/}),
+  ).toBeVisible();
+  await expect(page.locator('[data-placement-control]')).toHaveCount(12);
+
+  const floating = page.locator('.placement-floating');
+  const reference = page.locator('.placement-reference');
+  await expect(floating).toHaveAttribute('data-placement', 'top');
+
+  const bottomStart = page.getByRole('button', {
+    name: 'Place floating element at bottom-start',
+  });
+  await bottomStart.click();
+  await expect(bottomStart).toHaveAttribute('aria-pressed', 'true');
+  await expect(floating).toHaveAttribute('data-placement', 'bottom-start');
+  await expect(page.locator('.placement-readout')).toContainText(
+    'PLACEMENT.BOTTOM_START',
+  );
+
+  const [floatingBox, referenceBox] = await Promise.all([
+    floating.boundingBox(),
+    reference.boundingBox(),
+  ]);
+  expect(floatingBox).not.toBeNull();
+  expect(referenceBox).not.toBeNull();
+  expect(floatingBox!.y).toBeGreaterThan(
+    referenceBox!.y + referenceBox!.height,
+  );
+  expect(Math.abs(floatingBox!.x - referenceBox!.x)).toBeLessThanOrEqual(2);
 });

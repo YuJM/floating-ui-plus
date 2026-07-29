@@ -3,8 +3,8 @@ import {
   FLOATING_LIST_CONTEXT,
   FLOATING_NODE_CONTEXT,
   FLOATING_TREE_CONTEXT,
-  FloatingContextScope,
-} from './contextScope';
+} from './constants';
+import {FloatingContextScope} from './contextScope';
 import {DelayGroup, type DelayGroupOptions} from './delayGroup';
 import {FloatingList} from './list';
 import {FloatingTree} from './tree';
@@ -61,7 +61,7 @@ export class FloatingCoordinator {
     return this.#list;
   }
 
-  node(options: FloatingNodeOptions = {}) {
+  node(options: FloatingNodeOptions | null = {}) {
     this.#nodeOptions = options;
     if (this.#connected) this.#connectNode();
   }
@@ -70,7 +70,7 @@ export class FloatingCoordinator {
     this.#list = list;
   }
 
-  delayGroup(options: FloatingDelayGroupOptions = {}) {
+  delayGroup(options: FloatingDelayGroupOptions | null = {}) {
     this.#delayGroupOptions = options;
     if (this.#connected) this.#connectDelayGroup();
   }

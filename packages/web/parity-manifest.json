@@ -117,12 +117,12 @@
       "kind": "adapter"
     },
     "FloatingPortal": {
-      "web": "createPortalNode",
+      "web": "createPortalNodeController",
       "lit": "portal()",
       "kind": "adapter"
     },
     "useFloatingPortalNode": {
-      "web": "createPortalNode",
+      "web": "createPortalNodeController",
       "lit": "portal()",
       "kind": "adapter"
     },

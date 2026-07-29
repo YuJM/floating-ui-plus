@@ -73,6 +73,13 @@ export type FloatingStyles = Partial<CSSStyleDeclaration> & {
   willChange?: string;
 };
 
+export type FloatingPresenceState = 'mounted' | 'leaving' | 'unmounted';
+
+export interface FloatingPresence {
+  readonly state: FloatingPresenceState;
+  set(state: FloatingPresenceState): void;
+}
+
 export interface FloatingOpenChangeEvent {
   open: boolean;
   event?: Event | undefined;
@@ -146,12 +153,13 @@ export interface FloatingController {
   readonly elements: FloatingElements;
   readonly position: FloatingPosition;
   readonly floatingStyles: FloatingStyles;
+  readonly presence: FloatingPresence;
   readonly list: FloatingList<unknown>;
   readonly plugins: readonly FloatingPlugin[];
   pipe(...plugins: FloatingPlugin[]): FloatingController;
-  node(options?: FloatingNodeOptions): FloatingController;
+  node(options?: FloatingNodeOptions | null): FloatingController;
   withList(list?: FloatingList<unknown>): FloatingController;
-  delayGroup(options?: FloatingDelayGroupOptions): FloatingController;
+  delayGroup(options?: FloatingDelayGroupOptions | null): FloatingController;
   setContextParent(scope: FloatingContextScope | null): FloatingController;
   setReference(reference: Element | VirtualElement | null): void;
   setPositionReference(reference: ReferenceElement | null): void;
@@ -160,6 +168,7 @@ export interface FloatingController {
   disconnect(): void;
   refresh(): void;
   update(): Promise<void>;
+  whenPositioned(): Promise<FloatingPosition>;
   destroy(): void;
 }
 

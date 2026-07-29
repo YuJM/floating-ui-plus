@@ -9,6 +9,7 @@ import {
   dismiss,
   FloatingController,
   FloatingTree,
+  FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
   hover,
   requestFloatingContext,
   role,
@@ -302,8 +303,52 @@ describe('FloatingController', () => {
     await host.updateComplete;
 
     expect(
-      document.querySelector('[data-floating-ui-portal] p')?.textContent,
+      document.querySelector(`[${FLOATING_UI_PLUS_PORTAL_ATTRIBUTE}] p`)
+        ?.textContent,
     ).toBe('Portaled');
+  });
+
+  test('refreshes a deferred portal root and reconnects its directive', async () => {
+    class DeferredPortalFixture extends LitElement {
+      floating = new FloatingController(this, {open: true});
+      portalRoot: HTMLElement | null = null;
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return html`${this.floating.portal(
+          html`<p data-testid="deferred-portal">Deferred</p>`,
+          {root: () => this.portalRoot},
+        )}`;
+      }
+    }
+    const deferredPortalTag = 'floating-ui-lit-deferred-portal-test';
+    if (!customElements.get(deferredPortalTag)) {
+      customElements.define(deferredPortalTag, DeferredPortalFixture);
+    }
+    const host = document.createElement(
+      deferredPortalTag,
+    ) as DeferredPortalFixture;
+    document.body.append(host);
+    await host.updateComplete;
+    expect(document.querySelector('[data-testid="deferred-portal"]')).toBeNull();
+
+    const root = document.createElement('section');
+    document.body.append(root);
+    host.portalRoot = root;
+    host.requestUpdate();
+    await host.updateComplete;
+    expect(root.querySelector('[data-testid="deferred-portal"]')).not.toBeNull();
+
+    host.remove();
+    await Promise.resolve();
+    expect(root.querySelector('[data-testid="deferred-portal"]')).toBeNull();
+
+    document.body.append(host);
+    await host.updateComplete;
+    expect(root.querySelector('[data-testid="deferred-portal"]')).not.toBeNull();
   });
 
   test('bridges controller-provided context into portal descendants', async () => {

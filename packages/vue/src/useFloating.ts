@@ -216,6 +216,7 @@ export function useFloating<T extends ReferenceElement = ReferenceElement>(
     update,
     context: controller.context,
     controller,
+    contextScope: controller.contextScope,
     pipe,
     referenceAttrs,
     floatingAttrs,

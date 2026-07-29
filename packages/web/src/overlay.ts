@@ -43,7 +43,7 @@ export function createOverlayElement(
   options: OverlayOptions = {},
 ) {
   const element = document.createElement('div');
-  element.setAttribute('data-floating-ui-overlay', '');
+  element.setAttribute(FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE, '');
   Object.assign(element.style, {
     position: 'fixed',
     inset: '0',
@@ -51,3 +51,4 @@ export function createOverlayElement(
   const unlock = options.lockScroll ? lockScroll(document) : () => {};
   return {element, destroy: unlock};
 }
+import {FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE} from './constants';

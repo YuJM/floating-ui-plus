@@ -12,6 +12,11 @@ const routes = [
     name: 'middleware',
     component: () => import('./views/MiddlewareView.vue'),
   },
+  {
+    path: '/placement',
+    name: 'placement',
+    component: () => import('./views/PlacementView.vue'),
+  },
   {path: '/:pathMatch(.*)*', redirect: '/'},
 ];
 

@@ -6,6 +6,7 @@ import {
   clientPoint,
   createFloating,
   dismiss,
+  FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE,
   focus,
   FloatingTree,
   hover,
@@ -630,7 +631,7 @@ describe('role option parity', () => {
       plugins: [role(() => ({enabled, role: 'dialog'}))],
     });
     const focusElement = document.createElement('div');
-    focusElement.dataset.floatingUiFocusable = '';
+    focusElement.setAttribute(FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE, '');
     focusElement.id = 'custom-focus-id';
     harness.floating.append(focusElement);
     harness.controller.refresh();

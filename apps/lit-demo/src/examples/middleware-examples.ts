@@ -27,6 +27,23 @@ abstract class MiddlewareExample extends LitElement {
     return this.querySelector<HTMLElement>(selector) ?? undefined;
   }
 
+  protected renderTitle(index: string, label: string, docPath: string) {
+    return html`
+      <div class="middleware-title">
+        <span>${index}</span>
+        <h3>${label}</h3>
+        <a
+          href="https://floating-ui.com/docs/${docPath}"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="${label} middleware official documentation"
+        >
+          (DOC)
+        </a>
+      </div>
+    `;
+  }
+
   protected initializeScroll(
     selector: string,
     position: {left?: number; top?: number},
@@ -59,7 +76,7 @@ class LitOffsetExample extends MiddlewareExample {
   render() {
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>01</span><h3>offset</h3></div>
+        ${this.renderTitle('01', 'offset', 'offset')}
         <p>Compare the default position with a 10px gutter on the main axis.</p>
         <div class="mw-comparison" aria-label="Offset comparison">
           <div class="mw-static-stage">
@@ -100,7 +117,7 @@ class LitShiftExample extends MiddlewareExample {
   render() {
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>02</span><h3>shift</h3></div>
+        ${this.renderTitle('02', 'shift', 'shift')}
         <p>Scroll horizontally. The panel stays on top and shifts along the x-axis to remain visible.</p>
         <div class="mw-stage mw-stage-scroll-x mw-stage-shift" tabindex="0" aria-label="Horizontally scrollable shift demo">
           <span class="mw-scroll-hint">scroll horizontally</span>
@@ -137,7 +154,7 @@ class LitFlipExample extends MiddlewareExample {
   render() {
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>03</span><h3>flip</h3></div>
+        ${this.renderTitle('03', 'flip', 'flip')}
         <p>Scroll up. The preferred bottom placement flips to top when bottom space disappears.</p>
         <div class="mw-stage mw-stage-scroll-y mw-stage-flip" tabindex="0" aria-label="Vertically scrollable flip demo">
           <span class="mw-scroll-hint">scroll up</span>
@@ -181,7 +198,7 @@ class LitArrowExample extends MiddlewareExample {
   render() {
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>04</span><h3>arrow</h3></div>
+        ${this.renderTitle('04', 'arrow', 'arrow')}
         <p>Scroll horizontally. The square arrow keeps pointing toward the reference center.</p>
         <div class="mw-stage mw-stage-scroll-x mw-stage-arrow" tabindex="0" aria-label="Horizontally scrollable arrow demo">
           <span class="mw-scroll-hint">scroll horizontally</span>
@@ -231,7 +248,7 @@ class LitSizeExample extends MiddlewareExample {
   render() {
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>05</span><h3>size</h3></div>
+        ${this.renderTitle('05', 'size', 'size')}
         <p>Scroll vertically. Available height constrains the panel, whose content remains scrollable.</p>
         <div class="mw-stage mw-stage-scroll-y mw-stage-size" tabindex="0" aria-label="Vertically scrollable size demo">
           <span class="mw-scroll-hint">scroll vertically</span>
@@ -273,7 +290,7 @@ class LitAutoPlacementExample extends MiddlewareExample {
   render() {
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>06</span><h3>autoPlacement</h3></div>
+        ${this.renderTitle('06', 'autoPlacement', 'autoplacement')}
         <p>Scroll vertically. The panel continuously chooses the side with the most available space.</p>
         <div class="mw-stage mw-stage-scroll-y mw-stage-auto-placement" tabindex="0" aria-label="Vertically scrollable auto placement demo">
           <span class="mw-scroll-hint">scroll vertically</span>
@@ -332,7 +349,7 @@ class LitHideMiddlewareExample extends MiddlewareExample {
 
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>07</span><h3>hide</h3></div>
+        ${this.renderTitle('07', 'hide', 'hide')}
         <p>Scroll up. The panel dims after escaping, then hides when its reference is fully clipped.</p>
         <div class="mw-stage mw-stage-scroll-y mw-stage-hide" tabindex="0" aria-label="Vertically scrollable hide demo">
           <span class="mw-scroll-hint">scroll up</span>
@@ -372,7 +389,7 @@ class LitInlineExample extends MiddlewareExample {
   render() {
     return html`
       <article class="middleware-card">
-        <div class="middleware-title"><span>08</span><h3>inline</h3></div>
+        ${this.renderTitle('08', 'inline', 'inline')}
         <p>Compare the detached bounding box with the relevant client rect of a wrapped inline anchor.</p>
         <div class="mw-inline-comparison" aria-label="Inline middleware comparison">
           <div class="mw-inline-case">

@@ -7,13 +7,14 @@ import {
 } from 'lit/directive.js';
 import {noChange, nothing, render} from 'lit';
 import {
-  createPortalNode,
+  applyFloatingStyles,
+  createPortalNodeController,
   getContextArrowStyles,
-  removePortalNode,
   type ArrowOptions,
   type FloatingController,
   type FloatingList,
   type ItemState,
+  type PortalNodeController,
   type PortalNodeOptions,
 } from '@floating-ui-plus/web';
 import {setAttributes} from '@floating-ui-plus/web/utils';
@@ -27,16 +28,6 @@ interface ElementBinding {
   list?: FloatingList<unknown> | undefined;
   arrowOptions?: Omit<ArrowOptions, 'element'> | undefined;
 }
-
-const POSITION_STYLE_KEYS = [
-  'position',
-  'left',
-  'top',
-  'right',
-  'bottom',
-  'transform',
-  'willChange',
-] as const;
 
 class FloatingElementDirective extends AsyncDirective {
   #element: Element | null = null;
@@ -99,18 +90,9 @@ class FloatingElementDirective extends AsyncDirective {
     } else if (binding.kind === 'floating' && element instanceof HTMLElement) {
       if (!preservesElementBinding) {
         binding.controller.setFloating(element);
+        binding.controller.presence.set('mounted');
       }
-      const styles = binding.controller.floatingStyles;
-      POSITION_STYLE_KEYS.forEach((name) => {
-        const value = styles[name];
-        if (value == null || value === '') {
-          element.style.removeProperty(
-            name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
-          );
-        } else {
-          element.style[name] = value;
-        }
-      });
+      applyFloatingStyles(element, binding.controller.floatingStyles);
     } else if (binding.kind === 'arrow' && element instanceof HTMLElement) {
       ['position', 'left', 'top', 'right', 'bottom', 'transform'].forEach(
         (name) => element.style.removeProperty(name),
@@ -160,6 +142,7 @@ class FloatingElementDirective extends AsyncDirective {
       this.#binding.controller.elements.floating === this.#element
     ) {
       this.#binding.controller.setFloating(null);
+      this.#binding.controller.presence.set('unmounted');
     }
     this.#binding = null;
     this.#element = null;
@@ -177,7 +160,10 @@ interface PortalBinding {
 }
 
 class FloatingPortalDirective extends AsyncDirective {
+  #portal: PortalNodeController | null = null;
   #node: HTMLElement | null = null;
+  #binding: PortalBinding | null = null;
+  #ownerDocument: Document | null = null;
 
   constructor(partInfo: PartInfo) {
     super(partInfo);
@@ -192,39 +178,63 @@ class FloatingPortalDirective extends AsyncDirective {
 
   update(part: ChildPart, [binding]: Parameters<this['render']>) {
     if (typeof document === 'undefined') return nothing;
-    if (!this.#node) {
-      const parent = part.parentNode;
-      const document =
-        parent instanceof Node
-          ? parent.ownerDocument || window.document
-          : window.document;
-      this.#node = createPortalNode({
-        ...binding.options,
-        root: binding.options?.root || document.body,
-        contextScope: binding.controller.contextScope,
-      });
-      if (
-        binding.options?.topLayer === 'popover' &&
-        this.#node &&
-        'showPopover' in this.#node
-      ) {
-        this.#node.setAttribute('popover', 'manual');
-        try {
-          (this.#node as HTMLElement & {showPopover(): void}).showPopover();
-        } catch {
-          // The regular portal remains the fallback when the top layer rejects
-          // the operation for the current document state.
-        }
-      }
-    }
-    if (this.#node) render(binding.value, this.#node);
+    const parent = part.parentNode;
+    this.#ownerDocument =
+      parent instanceof Node
+        ? parent.ownerDocument || window.document
+        : window.document;
+    this.#binding = binding;
+    if (this.isConnected) this.#syncPortal();
     return noChange;
   }
 
   disconnected() {
     if (this.#node) render(nothing, this.#node);
-    removePortalNode(this.#node);
+    this.#portal?.disconnect();
     this.#node = null;
+  }
+
+  reconnected() {
+    this.#syncPortal();
+  }
+
+  #syncPortal() {
+    const binding = this.#binding;
+    const ownerDocument = this.#ownerDocument;
+    if (!binding || !ownerDocument) return;
+
+    const {topLayer: _topLayer, ...portalOptions} = binding.options ?? {};
+    const options: PortalNodeOptions = {
+      ...portalOptions,
+      ownerDocument,
+      contextScope: binding.controller.contextScope,
+    };
+    const previousNode = this.#node;
+    if (!this.#portal) {
+      this.#portal = createPortalNodeController(options);
+      this.#node = this.#portal.connect();
+    } else {
+      this.#node = this.#portal.updateOptions(options);
+      if (!this.#portal.connected) this.#node = this.#portal.connect();
+    }
+
+    if (previousNode && previousNode !== this.#node) {
+      render(nothing, previousNode);
+    }
+    if (!this.#node) return;
+    if (
+      binding.options?.topLayer === 'popover' &&
+      'showPopover' in this.#node
+    ) {
+      this.#node.setAttribute('popover', 'manual');
+      try {
+        (this.#node as HTMLElement & {showPopover(): void}).showPopover();
+      } catch {
+        // The regular portal remains the fallback when the top layer rejects
+        // the operation for the current document state.
+      }
+    }
+    render(binding.value, this.#node);
   }
 }
 

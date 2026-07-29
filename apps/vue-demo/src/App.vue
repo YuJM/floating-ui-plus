@@ -1,222 +1,68 @@
 <script setup lang="ts">
-import {
-  FloatingFocusManager,
-  FloatingNode,
-  FloatingOverlay,
-  FloatingPortal,
-  FloatingTree,
-  autoUpdate,
-  click,
-  clientPoint,
-  dismiss,
-  flip,
-  focus,
-  hover,
-  offset,
-  role,
-  shift,
-  useFloating,
-} from '@floating-ui-plus/vue';
-import {ref} from 'vue';
+import {RouterLink, RouterView} from 'vue-router';
 
-const menuOpen = ref(false);
-const menuReference = ref<HTMLElement | null>(null);
-const menuFloating = ref<HTMLElement | null>(null);
-const menu = useFloating(menuReference, menuFloating, {
-  open: menuOpen,
-  onOpenChange: (open) => {
-    menuOpen.value = open;
-    if (!open) submenuOpen.value = false;
-  },
-  placement: 'bottom-start',
-  middleware: [offset(10), flip(), shift({padding: 12})],
-  whileElementsMounted: autoUpdate,
-}).pipe(click(), dismiss(), role({role: 'menu'}));
-const menuStyles = menu.floatingStyles;
-
-const submenuOpen = ref(false);
-const submenuReference = ref<HTMLElement | null>(null);
-const submenuFloating = ref<HTMLElement | null>(null);
-const submenu = useFloating(submenuReference, submenuFloating, {
-  open: submenuOpen,
-  onOpenChange: (open) => {
-    submenuOpen.value = open;
-  },
-  placement: 'right-start',
-  middleware: [offset(8), flip(), shift({padding: 12})],
-  whileElementsMounted: autoUpdate,
-}).pipe(click(), dismiss(), role({role: 'menu'}));
-const submenuStyles = submenu.floatingStyles;
-
-const modalOpen = ref(false);
-const modalReference = ref<HTMLElement | null>(null);
-const modalFloating = ref<HTMLElement | null>(null);
-const modal = useFloating(modalReference, modalFloating, {
-  open: modalOpen,
-  onOpenChange: (open) => {
-    modalOpen.value = open;
-  },
-}).pipe(click(), dismiss(), role({role: 'dialog'}));
-const modalStyles = modal.floatingStyles;
-
-const pointOpen = ref(false);
-const pointReference = ref<HTMLElement | null>(null);
-const pointFloating = ref<HTMLElement | null>(null);
-const point = useFloating(pointReference, pointFloating, {
-  open: pointOpen,
-  onOpenChange: (open) => {
-    pointOpen.value = open;
-  },
-  placement: 'top',
-  middleware: [offset(14), flip(), shift({padding: 12})],
-  whileElementsMounted: autoUpdate,
-}).pipe(
-  hover({move: true}),
-  focus(),
-  clientPoint(),
-  dismiss(),
-  role({role: 'tooltip'}),
-);
-const pointStyles = point.floatingStyles;
-
-function openSubmenuFromKeyboard(event: KeyboardEvent) {
-  if (event.key === 'ArrowRight') {
-    event.preventDefault();
-    submenuOpen.value = true;
-  }
-}
+const links = [
+  ['/', 'Overview'],
+  ['/examples/tooltip', 'Tooltip'],
+  ['/examples/popover', 'Popover'],
+  ['/examples/menu', 'Menu'],
+  ['/examples/nested-menu', 'Nested menu'],
+  ['/examples/client-point', 'Cursor'],
+  ['/placement', 'Placement'],
+  ['/middleware', 'Middleware'],
+  ['/examples/modal', 'Modal'],
+] as const;
 </script>
 
 <template>
-  <main>
-    <header>
-      <p class="eyebrow">FLOATING UI PLUS / VUE</p>
-      <h1>Vue-native floating surfaces.</h1>
-      <p>
-        Positioning and interaction state come from the shared Web kernel.
-        Teleport, lifecycle, slots, and context stay native to Vue.
-      </p>
+  <div class="min-h-screen overflow-hidden bg-vue-canvas text-vue-ink">
+    <header class="mx-auto w-[min(1180px,calc(100%-4rem))] py-10 sm:py-14">
+      <div class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.12em] text-vue-muted">
+        <i class="h-2 w-2 rounded-full bg-vue-green shadow-[0_0_0_5px_rgb(66_184_131_/_16%)]" />
+        floating-ui-plus / vue lab
+      </div>
+      <div class="mt-7 flex items-end justify-between gap-8">
+        <div>
+          <RouterLink class="no-underline" to="/" aria-label="Floating UI Plus Vue demo home">
+            <h1 class="font-display text-[clamp(4rem,10.3vw,8.9rem)] font-medium leading-[.78] tracking-[-.09em] text-vue-ink">
+              Floating UI<br />
+              <em class="not-italic text-vue-green">Plus</em>
+              <span class="ml-[.25em] align-middle text-[.24em] uppercase tracking-[.04em] text-vue-deep">
+                Vue demo
+              </span>
+            </h1>
+          </RouterLink>
+          <p class="mt-6 max-w-md text-sm leading-6 text-vue-muted">
+            Reactive positioning and interaction pipelines, expressed with Vue
+            Router, Teleport, Transition, and Composition API.
+          </p>
+        </div>
+        <div class="hidden min-w-40 border-l border-vue-line px-4 py-3 sm:grid">
+          <span class="font-mono text-[10px] uppercase tracking-[.1em] text-vue-muted">reactivity</span>
+          <strong class="mt-1 text-5xl font-medium tracking-[-.1em]">03</strong>
+          <span class="mt-2 font-mono text-[9px] uppercase tracking-[.08em] text-vue-muted">web + vue</span>
+        </div>
+      </div>
+      <nav class="mt-8 flex flex-wrap gap-x-5 gap-y-2 border-t border-vue-line pt-4" aria-label="Vue demo routes">
+        <RouterLink
+          v-for="[to, label] in links"
+          :key="to"
+          :to="to"
+          class="font-mono text-[10px] uppercase tracking-[.07em] text-vue-muted no-underline transition hover:text-vue-green"
+        >
+          {{ label }}
+        </RouterLink>
+      </nav>
     </header>
 
-    <section class="grid">
-      <article class="card menu-card">
-        <span class="step">01 / TELEPORT + TREE</span>
-        <h2>Nested actions</h2>
-        <p>Click the trigger, then “Move to project”. ArrowRight also opens the child.</p>
+    <main class="mx-auto w-[min(1180px,calc(100%-4rem))]">
+      <RouterView />
+    </main>
 
-        <FloatingTree>
-          <FloatingNode :controller="menu.controller">
-            <button
-              ref="menuReference"
-              class="trigger"
-              v-bind="menu.referenceAttrs"
-            >
-              Open actions <span>⌄</span>
-            </button>
-
-            <FloatingPortal>
-              <div
-                v-if="menuOpen"
-                ref="menuFloating"
-                class="surface menu"
-                data-testid="actions-menu"
-                v-bind="menu.floatingAttrs"
-                :style="menuStyles"
-              >
-                <span class="surface-label">TREE COORDINATED ACTIONS</span>
-                <button role="menuitem">New note <kbd>1</kbd></button>
-
-                <FloatingNode :controller="submenu.controller">
-                  <button
-                    ref="submenuReference"
-                    role="menuitem"
-                    aria-haspopup="menu"
-                    :aria-expanded="submenuOpen"
-                    @keydown="openSubmenuFromKeyboard"
-                  >
-                    Move to project <kbd>→</kbd>
-                  </button>
-
-                  <FloatingPortal>
-                    <div
-                      v-if="submenuOpen"
-                      ref="submenuFloating"
-                      class="surface menu submenu"
-                      data-testid="project-menu"
-                      v-bind="submenu.floatingAttrs"
-                      :style="submenuStyles"
-                    >
-                      <span class="surface-label">CHOOSE A PROJECT</span>
-                      <button role="menuitem">Atlas <kbd>1</kbd></button>
-                      <button role="menuitem">Field research <kbd>2</kbd></button>
-                      <button role="menuitem">Signals <kbd>3</kbd></button>
-                    </div>
-                  </FloatingPortal>
-                </FloatingNode>
-
-                <button role="menuitem">Archive <kbd>3</kbd></button>
-              </div>
-            </FloatingPortal>
-          </FloatingNode>
-        </FloatingTree>
-      </article>
-
-      <article class="card point-card">
-        <span class="step">02 / CLIENT POINT</span>
-        <h2>Pointer-aware tooltip</h2>
-        <div
-          ref="pointReference"
-          class="pointer-zone"
-          tabindex="0"
-          v-bind="point.referenceAttrs"
-        >
-          <span class="dot" />
-          {{ pointOpen ? 'Tracking pointer' : 'Awaiting pointer' }}
-        </div>
-        <FloatingPortal>
-          <div
-            v-if="pointOpen"
-            ref="pointFloating"
-            class="surface tooltip"
-            v-bind="point.floatingAttrs"
-            :style="pointStyles"
-          >
-            hover() → clientPoint() → dismiss()
-          </div>
-        </FloatingPortal>
-      </article>
-
-      <article class="card modal-card">
-        <span class="step">03 / FOCUS</span>
-        <h2>A modal should feel inevitable.</h2>
-        <button
-          ref="modalReference"
-          class="trigger"
-          v-bind="modal.referenceAttrs"
-        >
-          Open modal
-        </button>
-
-        <FloatingPortal>
-          <FloatingOverlay v-if="modalOpen" lock-scroll class="backdrop">
-            <FloatingFocusManager :context="modal.context">
-              <section
-                ref="modalFloating"
-                class="surface modal"
-                v-bind="modal.floatingAttrs"
-                :style="modalStyles"
-                aria-modal="true"
-                aria-label="Vue modal example"
-              >
-                <span class="surface-label">FOCUS MANAGED</span>
-                <h3>Shared behavior, Vue lifecycle.</h3>
-                <p>Tab stays inside. Escape closes and returns focus.</p>
-                <button @click="modalOpen = false">Done</button>
-              </section>
-            </FloatingFocusManager>
-          </FloatingOverlay>
-        </FloatingPortal>
-      </article>
-    </section>
-  </main>
+    <footer class="mx-auto flex w-[min(1180px,calc(100%-4rem))] flex-wrap justify-between gap-4 py-8 font-mono text-[10px] uppercase tracking-[.07em] text-vue-muted">
+      <span>floating-ui-plus</span>
+      <span>@floating-ui-plus/web / @floating-ui-plus/vue / vue 3</span>
+      <span class="text-vue-green">● reactive surface ready</span>
+    </footer>
+  </div>
 </template>

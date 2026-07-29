@@ -52,6 +52,14 @@ const routes: RouteConfig[] = [
     render: () => html`<lit-client-point-view></lit-client-point-view>`,
   },
   {
+    path: '/examples/placement',
+    enter: async () => {
+      await import('./views/placement-view');
+      return true;
+    },
+    render: () => html`<lit-placement-view></lit-placement-view>`,
+  },
+  {
     path: '/examples/hide',
     enter: async () => {
       window.history.replaceState(
@@ -108,7 +116,12 @@ class FloatingUiDemo extends LitElement {
         <div class="eyebrow"><span class="pulse"></span> floating-ui-plus / lit demo</div>
         <div class="header-row">
           <div>
-            <a class="brand-link" href="/" aria-label="Floating UI Plus home"><h1>Floating UI<br /><em>Plus</em></h1></a>
+            <a class="brand-link" href="/" aria-label="Floating UI Plus Lit demo home">
+              <h1>
+                Floating UI<br /><em>Plus</em>
+                <span class="framework-title">Lit demo</span>
+              </h1>
+            </a>
             <p class="lede">Framework-neutral interactions and positioning,<br />with Light DOM bindings for Lit.</p>
           </div>
           <div class="coordinate-stamp" aria-label="Current demo status">
@@ -124,6 +137,7 @@ class FloatingUiDemo extends LitElement {
           <a href="/examples/menu">Menu</a>
           <a href="/examples/nested-menu">Nested menu</a>
           <a href="/examples/client-point">Cursor</a>
+          <a href="/examples/placement">Placement</a>
           <a href="/examples/middleware">Middleware</a>
           <a href="/examples/modal">Modal</a>
         </nav>

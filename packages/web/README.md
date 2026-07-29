@@ -7,6 +7,31 @@ collection services for browser DOM.
 you also need open-state coordination, native interactions, focus management,
 portals, trees, lists, delay groups, or transitions.
 
+## Placement constants
+
+Use `PLACEMENT` when an application prefers discoverable constants over string
+literals. `PLACEMENTS` contains all 12 values in clockwise visual order and is
+useful for controls, documentation, and tests.
+
+```ts
+import {
+  createFloating,
+  PLACEMENT,
+  PLACEMENTS,
+} from '@floating-ui-plus/web';
+
+const floating = createFloating({
+  placement: PLACEMENT.BOTTOM_START,
+});
+
+for (const placement of PLACEMENTS) {
+  console.log(placement);
+}
+```
+
+Both exports retain Floating UI's `Placement` literal types, so constants and
+ordinary values such as `'bottom-start'` remain interoperable.
+
 ## Pipeline
 
 ```ts
@@ -58,10 +83,29 @@ const child = createFloating(childOptions)
 ```
 
 `contextScope` keeps live object references and can be attached to any
-`EventTarget`. `createPortalNode({contextScope})` attaches the scope to the
-portal and `removePortalNode()` releases it. This is synchronous and
-framework-neutral; Lit and Vue only discover the parent scope and render into
-the returned DOM node.
+`EventTarget`. `createPortalBridge({contextScope, target})` owns pending target
+resolution and context attachment without rendering or moving DOM. A renderer
+calls `connect()`, `refresh()`, `disconnect()`, and `destroy()` from its own
+lifecycle:
+
+```ts
+const portal = createPortalBridge({
+  contextScope,
+  target: () => document.querySelector('#portal-content'),
+});
+
+portal.connect(); // pending when the target is not available yet
+portal.refresh(); // resolves and attaches after a renderer commit
+```
+
+`createPortalNodeController({root: () => portalRoot})` adds owned node creation,
+root replacement, reuse, and cleanup for Lit-style renderers. Its status is
+`detached`, `pending`, `attached`, or `destroyed`. Vue retains Teleport and
+Suspense ownership; Lit retains template rendering.
+
+`floating.presence.set('mounted' | 'leaving' | 'unmounted')` lets a renderer
+signal its real element lifecycle, and `floating.whenPositioned()` resolves
+after a mounted surface receives its next positioned update.
 
 Use `BroadcastChannel` separately for opt-in cross-tab messages. It is not used
 for portal context because controllers, functions, and DOM nodes must retain
