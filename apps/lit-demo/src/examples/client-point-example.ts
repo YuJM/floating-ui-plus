@@ -12,8 +12,12 @@ import {
 } from '@floating-ui/lit';
 
 class LitClientPointExample extends LitElement {
-  static properties = {open: {state: true}};
+  static properties = {
+    open: {state: true},
+    pointerLabel: {state: true},
+  };
   open = false;
+  pointerLabel = 'Awaiting pointer';
 
   private readonly floating = new FloatingController(this, () => ({
     open: this.open,
@@ -42,8 +46,13 @@ class LitClientPointExample extends LitElement {
         <h3>Cursor signal</h3>
         <p>Move across the field. A virtual reference follows the pointer instead of the whole element.</p>
         <div class="card-action">
-          <div class="cursor-field" tabindex="0" ${this.floating.reference()}>
-            <span>Move here</span><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>
+          <div
+            class="cursor-field"
+            tabindex="0"
+            ${this.floating.reference()}
+            @mousemove=${this.trackPointer}
+          >
+            <span>${this.pointerLabel}</span><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i>
           </div>
           ${this.open
             ? html`<div class="cursor-tooltip" ${this.floating.floating()}>Pointer is the <b>reference</b></div>`
@@ -60,6 +69,14 @@ class LitClientPointExample extends LitElement {
       bubbles: true,
       composed: true,
     }));
+  }
+
+  private trackPointer(event: MouseEvent) {
+    this.pointerLabel = `${Math.round(event.offsetX)} × ${Math.round(event.offsetY)}`;
+    // clientPoint() has already installed its native mousemove listener on the
+    // reference. Requesting an update here makes the new virtual reference
+    // visible in the same pointer frame.
+    void this.floating.update();
   }
 }
 
