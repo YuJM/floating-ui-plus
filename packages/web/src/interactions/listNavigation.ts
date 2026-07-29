@@ -104,6 +104,7 @@ export function listNavigation(
   let pendingFocusOnOpen = false;
   let pendingFocusDirection: 'start' | 'end' | null = null;
   let logicalIndex = -1;
+  let scrollRequest = 0;
 
   return {
     name: 'listNavigation',
@@ -133,6 +134,33 @@ export function listNavigation(
         ...getValue(options),
       });
 
+      function scheduleScrollIntoView(index: number) {
+        const request = ++scrollRequest;
+        const view =
+          floating?.ownerDocument.defaultView ??
+          reference?.ownerDocument.defaultView;
+        const run = () => {
+          if (request !== scrollRequest) return;
+          const current = getOptions();
+          const element = current.listRef.current[index];
+          if (!element?.isConnected || !current.scrollItemIntoView) return;
+          element.scrollIntoView(
+            current.scrollItemIntoView === true
+              ? {block: 'nearest', inline: 'nearest'}
+              : current.scrollItemIntoView,
+          );
+        };
+
+        // Positioning and conditionally-rendered list items settle in
+        // microtasks. Scroll on the next frame so an item is never brought
+        // into view while its floating ancestor is still at the initial 0,0.
+        if (view) {
+          view.requestAnimationFrame(run);
+        } else {
+          enqueueMicrotask(run);
+        }
+      }
+
       function navigate(index: number | null, event?: Event) {
         const current = getOptions();
         logicalIndex = index ?? -1;
@@ -149,11 +177,7 @@ export function listNavigation(
           element.focus({preventScroll: true});
         }
         if (current.scrollItemIntoView) {
-          element.scrollIntoView(
-            current.scrollItemIntoView === true
-              ? {block: 'nearest', inline: 'nearest'}
-              : current.scrollItemIntoView,
-          );
+          scheduleScrollIntoView(publicIndex);
         }
         if (event && !context.open && current.openOnArrowKeyDown) {
           context.onOpenChange(true, event, 'list-navigation');
@@ -479,7 +503,12 @@ export function listNavigation(
         enqueueMicrotask(focusPendingItem);
       }
 
-      return cleanupAll(cleanups);
+      return cleanupAll([
+        ...cleanups,
+        () => {
+          scrollRequest++;
+        },
+      ]);
     },
   };
 }

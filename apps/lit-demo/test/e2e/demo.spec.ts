@@ -51,6 +51,8 @@ test('nested menu preserves the complete keyboard path', async ({page}) => {
 
   await archive.press('ArrowUp');
   await expect(moveToProject).toBeFocused();
+
+  const scrollBeforeSubmenu = await page.evaluate(() => window.scrollY);
   await moveToProject.press('ArrowRight');
 
   const projectMenu = page.getByRole('menu', {name: 'Move to project'});
@@ -60,6 +62,36 @@ test('nested menu preserves the complete keyboard path', async ({page}) => {
   });
   await expect(projectMenu).toBeVisible();
   await expect(atlas).toBeFocused();
+
+  const openingGeometry = await projectMenu.evaluate((menu) => {
+    const animation = menu
+      .getAnimations()
+      .find(
+        (candidate) =>
+          candidate instanceof CSSAnimation &&
+          candidate.animationName === 'surface-in',
+      );
+    if (animation) {
+      animation.pause();
+      animation.currentTime = 80;
+    }
+    const menuRect = menu.getBoundingClientRect();
+    const parentRect = document
+      .querySelector<HTMLElement>(
+        '.nested-menu-root [aria-haspopup="menu"]',
+      )
+      ?.getBoundingClientRect();
+    return {
+      hasSurfaceAnimation: Boolean(animation),
+      menuTop: menuRect.top,
+      parentTop: parentRect?.top ?? Number.NaN,
+    };
+  });
+  expect(openingGeometry.hasSurfaceAnimation).toBe(true);
+  expect(
+    Math.abs(openingGeometry.menuTop - openingGeometry.parentTop),
+  ).toBeLessThan(180);
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollBeforeSubmenu);
 
   await atlas.press('ArrowDown');
   await expect(fieldResearch).toBeFocused();
