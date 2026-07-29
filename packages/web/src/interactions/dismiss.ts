@@ -1,6 +1,8 @@
 import {getOverflowAncestors} from '@floating-ui/dom';
+import {isElement} from '@floating-ui/utils/dom';
 
 import {addListener, cleanupAll} from '../events';
+import type {FloatingTree} from '../tree';
 import type {FloatingPlugin, ValueOrGetter} from '../types';
 import {contains, getTarget, getValue} from '../utils/common';
 
@@ -27,6 +29,7 @@ export function dismiss(
 ): FloatingPlugin {
   let composing = false;
   let startedInside = false;
+  let compositionTimeout = -1;
 
   return {
     name: 'dismiss',
@@ -35,6 +38,7 @@ export function dismiss(
       const floating = context.elements.floating;
       const doc = floating?.ownerDocument || reference?.ownerDocument;
       if (!doc) return;
+      const win = doc.defaultView || window;
 
       const getOptions = () => ({
         enabled: true,
@@ -46,6 +50,23 @@ export function dismiss(
         ancestorScroll: false,
         ...getValue(options),
       });
+      const normalizeProp = (
+        value: DismissOptions['bubbles'] | DismissOptions['capture'],
+      ) => ({
+        escapeKey:
+          typeof value === 'boolean' ? value : value?.escapeKey ?? false,
+        outsidePress:
+          typeof value === 'boolean' ? value : value?.outsidePress ?? true,
+      });
+      const getTreeState = () => {
+        const tree = context.data.floatingTree as FloatingTree | undefined;
+        const nodeId = context.data.nodeId;
+        const descendants =
+          tree && typeof nodeId === 'string'
+            ? tree.descendants(nodeId)
+            : [];
+        return {descendants, tree};
+      };
 
       const onEscape = (event: KeyboardEvent) => {
         const current = getOptions();
@@ -58,6 +79,21 @@ export function dismiss(
           event.key !== 'Escape'
         ) {
           return;
+        }
+        const {escapeKey: escapeKeyBubbles} = normalizeProp(current.bubbles);
+        context.data.__escapeKeyBubbles = escapeKeyBubbles;
+        if (!escapeKeyBubbles) {
+          event.stopPropagation();
+          const {descendants} = getTreeState();
+          if (
+            descendants.some(
+              (node) =>
+                node.controller.context.open &&
+                !node.controller.context.data.__escapeKeyBubbles,
+            )
+          ) {
+            return;
+          }
         }
         context.onOpenChange(false, event, 'escape-key');
       };
@@ -74,10 +110,20 @@ export function dismiss(
         }
         const target = getTarget(event);
         if (!(target instanceof Node) || !target.isConnected) return;
+        const {descendants} = getTreeState();
         if (
-          startedInside ||
           contains(floating, target as Element) ||
-          contains(reference, target as Element)
+          contains(reference, target as Element) ||
+          descendants.some((node) =>
+            contains(node.controller.context.elements.floating, target as Element),
+          )
+        ) {
+          startedInside = false;
+          return;
+        }
+        if (
+          (current.outsidePressEvent || 'pointerdown') === 'click' &&
+          startedInside
         ) {
           startedInside = false;
           return;
@@ -89,26 +135,44 @@ export function dismiss(
         ) {
           return;
         }
+        const {outsidePress: outsidePressBubbles} = normalizeProp(
+          current.bubbles,
+        );
+        context.data.__outsidePressBubbles = outsidePressBubbles;
+        if (
+          descendants.some(
+            (node) =>
+              node.controller.context.open &&
+              !node.controller.context.data.__outsidePressBubbles,
+          )
+        ) {
+          return;
+        }
         context.onOpenChange(false, event, 'outside-press');
       };
 
       const initial = getOptions();
+      const initialBubbles = normalizeProp(initial.bubbles);
+      const initialCapture = normalizeProp(initial.capture);
+      context.data.__escapeKeyBubbles = initialBubbles.escapeKey;
+      context.data.__outsidePressBubbles = initialBubbles.outsidePress;
       const cleanups = [
         addListener(doc, 'compositionstart', () => {
+          win.clearTimeout(compositionTimeout);
           composing = true;
         }),
         addListener(doc, 'compositionend', () => {
-          composing = false;
+          win.clearTimeout(compositionTimeout);
+          compositionTimeout = win.setTimeout(() => {
+            composing = false;
+          }, 0);
         }),
-        addListener(doc, 'keydown', onEscape, true),
-        addListener(floating, 'pointerdown', () => {
-          startedInside = true;
-        }),
+        addListener(doc, 'keydown', onEscape, initialCapture.escapeKey),
         addListener(
           doc,
           initial.outsidePressEvent || 'pointerdown',
           onOutsidePress as EventListener,
-          true,
+          initialCapture.outsidePress,
         ),
         addListener(
           reference,
@@ -127,8 +191,42 @@ export function dismiss(
         ),
       ];
 
-      if (initial.ancestorScroll && reference) {
-        getOverflowAncestors(reference).forEach((ancestor) => {
+      if (initial.outsidePressEvent === 'click') {
+        const markInside = (event: MouseEvent) => {
+          if (event.button === 0) {
+            startedInside = true;
+          }
+        };
+        cleanups.push(
+          addListener(floating, 'mousedown', markInside),
+          addListener(floating, 'mouseup', markInside),
+        );
+      }
+
+      if (initial.ancestorScroll) {
+        const ancestors = new Set<EventTarget>();
+        if (reference) {
+          getOverflowAncestors(reference).forEach((ancestor) =>
+            ancestors.add(ancestor),
+          );
+        }
+        if (floating) {
+          getOverflowAncestors(floating).forEach((ancestor) =>
+            ancestors.add(ancestor),
+          );
+        }
+        const positionReference = context.elements.reference;
+        if (
+          positionReference &&
+          !isElement(positionReference) &&
+          positionReference.contextElement
+        ) {
+          getOverflowAncestors(positionReference.contextElement).forEach(
+            (ancestor) => ancestors.add(ancestor),
+          );
+        }
+        ancestors.delete(doc.defaultView?.visualViewport as EventTarget);
+        ancestors.forEach((ancestor) => {
           cleanups.push(
             addListener(ancestor, 'scroll', (event: Event) => {
               if (context.open) {
@@ -139,7 +237,12 @@ export function dismiss(
         });
       }
 
-      return cleanupAll(cleanups);
+      return () => {
+        win.clearTimeout(compositionTimeout);
+        delete context.data.__escapeKeyBubbles;
+        delete context.data.__outsidePressBubbles;
+        cleanupAll(cleanups)();
+      };
     },
   };
 }

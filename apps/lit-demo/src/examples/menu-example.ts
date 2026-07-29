@@ -11,7 +11,7 @@ import {
   role,
   shift,
   typeahead,
-} from '@floating-ui/lit';
+} from '@floating-ui-plus/lit';
 
 const labels = ['North star', 'Orbit map', 'Signal log', 'Field notes'];
 

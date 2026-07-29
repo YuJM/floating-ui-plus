@@ -23,6 +23,7 @@ export function click(
 ): FloatingPlugin {
   let pointerType: string | undefined;
   let didKeyDown = false;
+  let didMouseDown = false;
 
   return {
     name: 'click',
@@ -77,12 +78,14 @@ export function click(
           if (!context.open) {
             event.preventDefault();
           }
+          didMouseDown = true;
           toggle(event);
         }),
         addListener(reference, 'click', (event) => {
           const current = getOptions();
           if (!current.enabled || event.defaultPrevented) return;
-          if (current.event === 'mousedown' && pointerType) {
+          if (current.event === 'mousedown' && didMouseDown) {
+            didMouseDown = false;
             pointerType = undefined;
             return;
           }

@@ -1,6 +1,8 @@
 import {playwright} from '@vitest/browser-playwright';
 import {defineConfig} from 'vitest/config';
 
+const browserHeadless = process.env.PLAYWRIGHT_HEADLESS !== 'false';
+
 export default defineConfig({
   test: {
     environment: 'jsdom',
@@ -9,13 +11,16 @@ export default defineConfig({
       process.env.TEST_ENV === 'browser'
         ? ['browser/**/*.test.ts']
         : ['**/*.test.ts'],
-    // The copied upstream parity test intentionally reads ../react/src/index.ts.
-    // This standalone Web/Lit monorepo does not ship a React workspace.
-    exclude: ['parity.test.ts'],
+    exclude:
+      process.env.TEST_ENV === 'browser'
+        ? []
+        : ['browser/**/*.browser.test.ts'],
     browser: {
-      provider: playwright(),
+      provider: playwright({launchOptions: {channel: 'chrome'}}),
       enabled: process.env.TEST_ENV === 'browser',
+      headless: browserHeadless,
       instances: [{browser: 'chromium'}],
+      viewport: {width: 1280, height: 720},
     },
   },
   define: {

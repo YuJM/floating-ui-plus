@@ -3,6 +3,15 @@ import '../examples/middleware-examples';
 
 class LitMiddlewareView extends LitElement {
   protected createRenderRoot() { return this; }
+
+  protected firstUpdated() {
+    if (window.location.hash === '#hide') {
+      requestAnimationFrame(() => {
+        this.querySelector('#hide')?.scrollIntoView({block: 'center'});
+      });
+    }
+  }
+
   render() {
     return html`
       <section class="middleware-view" aria-labelledby="middleware-title">
@@ -15,7 +24,7 @@ class LitMiddlewareView extends LitElement {
           <lit-arrow-example></lit-arrow-example>
           <lit-size-example></lit-size-example>
           <lit-auto-placement-example></lit-auto-placement-example>
-          <lit-hide-middleware-example></lit-hide-middleware-example>
+          <lit-hide-middleware-example id="hide"></lit-hide-middleware-example>
           <lit-inline-example></lit-inline-example>
         </section>
       </section>

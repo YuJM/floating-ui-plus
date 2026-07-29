@@ -15,8 +15,8 @@ import {
   type FloatingList,
   type ItemState,
   type PortalNodeOptions,
-} from '@floating-ui/web';
-import {setAttributes} from '@floating-ui/web/utils';
+} from '@floating-ui-plus/web';
+import {setAttributes} from '@floating-ui-plus/web/utils';
 
 type BindingKind = 'reference' | 'floating' | 'item' | 'arrow';
 

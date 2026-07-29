@@ -11,10 +11,10 @@
     "types": ["node", "vitest/globals"],
     "baseUrl": ".",
     "paths": {
-      "@floating-ui/web": ["./packages/web/src/index.ts"],
-      "@floating-ui/web/*": ["./packages/web/src/*"],
-      "@floating-ui/lit": ["./packages/lit/src/index.ts"],
-      "@floating-ui/lit/*": ["./packages/lit/src/*"]
+      "@floating-ui-plus/web": ["./packages/web/src/index.ts"],
+      "@floating-ui-plus/web/*": ["./packages/web/src/*"],
+      "@floating-ui-plus/lit": ["./packages/lit/src/index.ts"],
+      "@floating-ui-plus/lit/*": ["./packages/lit/src/*"]
     }
   }
 }

@@ -9,7 +9,7 @@ import {
   offset,
   role,
   shift,
-} from '@floating-ui/lit';
+} from '@floating-ui-plus/lit';
 
 class LitModalExample extends LitElement {
   static properties = {open: {state: true}};

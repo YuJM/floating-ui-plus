@@ -78,6 +78,164 @@ export function getMaxListIndex(
   });
 }
 
+export function getGridNavigatedIndex(
+  listRef: Ref<Array<HTMLElement | null>>,
+  {
+    key,
+    orientation,
+    loop,
+    rtl,
+    cols,
+    disabledIndices,
+    minIndex,
+    maxIndex,
+    prevIndex,
+  }: {
+    key: string;
+    orientation: 'horizontal' | 'vertical' | 'both';
+    loop: boolean;
+    rtl: boolean;
+    cols: number;
+    disabledIndices: DisabledIndices;
+    minIndex: number;
+    maxIndex: number;
+    prevIndex: number;
+  },
+) {
+  let nextIndex = prevIndex;
+
+  if (key === 'ArrowUp') {
+    if (prevIndex === -1) {
+      nextIndex = maxIndex;
+    } else {
+      nextIndex = findNonDisabledListIndex(listRef, {
+        startingIndex: nextIndex,
+        amount: cols,
+        decrement: true,
+        disabledIndices,
+      });
+
+      if (loop && (prevIndex - cols < minIndex || nextIndex < 0)) {
+        const col = prevIndex % cols;
+        const maxCol = maxIndex % cols;
+        const offset = maxIndex - (maxCol - col);
+        nextIndex =
+          maxCol === col ? maxIndex : maxCol > col ? offset : offset - cols;
+      }
+    }
+
+    if (isIndexOutOfListBounds(listRef, nextIndex)) {
+      nextIndex = prevIndex;
+    }
+  }
+
+  if (key === 'ArrowDown') {
+    if (prevIndex === -1) {
+      nextIndex = minIndex;
+    } else {
+      nextIndex = findNonDisabledListIndex(listRef, {
+        startingIndex: prevIndex,
+        amount: cols,
+        disabledIndices,
+      });
+
+      if (loop && prevIndex + cols > maxIndex) {
+        nextIndex = findNonDisabledListIndex(listRef, {
+          startingIndex: (prevIndex % cols) - cols,
+          amount: cols,
+          disabledIndices,
+        });
+      }
+    }
+
+    if (isIndexOutOfListBounds(listRef, nextIndex)) {
+      nextIndex = prevIndex;
+    }
+  }
+
+  if (orientation === 'both') {
+    const prevRow = Math.floor(prevIndex / cols);
+    const forwardKey = rtl ? 'ArrowLeft' : 'ArrowRight';
+    const backwardKey = rtl ? 'ArrowRight' : 'ArrowLeft';
+
+    if (key === forwardKey) {
+      if (prevIndex % cols !== cols - 1) {
+        nextIndex = findNonDisabledListIndex(listRef, {
+          startingIndex: prevIndex,
+          disabledIndices,
+        });
+
+        if (
+          loop &&
+          isDifferentGridRow(prevIndex, nextIndex, cols)
+        ) {
+          nextIndex = findNonDisabledListIndex(listRef, {
+            startingIndex: prevIndex - (prevIndex % cols) - 1,
+            disabledIndices,
+          });
+        }
+      } else if (loop) {
+        nextIndex = findNonDisabledListIndex(listRef, {
+          startingIndex: prevIndex - (prevIndex % cols) - 1,
+          disabledIndices,
+        });
+      }
+
+      if (Math.floor(nextIndex / cols) !== prevRow) {
+        nextIndex = prevIndex;
+      }
+    }
+
+    if (key === backwardKey) {
+      if (prevIndex % cols !== 0) {
+        nextIndex = findNonDisabledListIndex(listRef, {
+          startingIndex: prevIndex,
+          decrement: true,
+          disabledIndices,
+        });
+
+        if (
+          loop &&
+          isDifferentGridRow(prevIndex, nextIndex, cols)
+        ) {
+          nextIndex = findNonDisabledListIndex(listRef, {
+            startingIndex: prevIndex + (cols - (prevIndex % cols)),
+            decrement: true,
+            disabledIndices,
+          });
+        }
+      } else if (loop) {
+        nextIndex = findNonDisabledListIndex(listRef, {
+          startingIndex: prevIndex + (cols - (prevIndex % cols)),
+          decrement: true,
+          disabledIndices,
+        });
+      }
+
+      if (Math.floor(nextIndex / cols) !== prevRow) {
+        nextIndex = prevIndex;
+      }
+    }
+
+    const lastRow = Math.floor(maxIndex / cols) === prevRow;
+    if (isIndexOutOfListBounds(listRef, nextIndex)) {
+      if (loop && lastRow) {
+        nextIndex =
+          key === backwardKey
+            ? maxIndex
+            : findNonDisabledListIndex(listRef, {
+                startingIndex: prevIndex - (prevIndex % cols) - 1,
+                disabledIndices,
+              });
+      } else {
+        nextIndex = prevIndex;
+      }
+    }
+  }
+
+  return nextIndex;
+}
+
 export function createGridCellMap(
   sizes: Array<{width: number; height: number}>,
   cols: number,

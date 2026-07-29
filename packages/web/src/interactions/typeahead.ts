@@ -27,6 +27,7 @@ export function typeahead(
   let typed = '';
   let timeout = -1;
   let previousMatch = -1;
+  let matchIndex: number | null = null;
 
   return {
     name: 'typeahead',
@@ -55,11 +56,37 @@ export function typeahead(
 
       function reset() {
         typed = '';
+        previousMatch = matchIndex ?? previousMatch;
         setTyping(false);
       }
 
       function onKeyDown(event: KeyboardEvent) {
         const current = getOptions();
+        const list = current.listRef.current;
+
+        const getMatchingIndex = (
+          orderedList: Array<string | null>,
+          value: string,
+        ) => {
+          const match = current.findMatch
+            ? current.findMatch(orderedList, value)
+            : orderedList.find((item) =>
+                item
+                  ?.toLocaleLowerCase()
+                  .startsWith(value.toLocaleLowerCase()),
+              );
+          return match == null ? -1 : list.indexOf(match);
+        };
+
+        if (typed.length > 0 && typed[0] !== ' ') {
+          if (getMatchingIndex(list, typed) === -1) {
+            setTyping(false);
+          } else if (event.key === ' ') {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }
+
         if (
           !current.enabled ||
           event.defaultPrevented ||
@@ -72,7 +99,6 @@ export function typeahead(
           return;
         }
 
-        const list = current.listRef.current;
         if (!list.length) return;
         if (context.open && event.key !== ' ') {
           event.preventDefault();
@@ -80,25 +106,37 @@ export function typeahead(
           setTyping(true);
         }
 
-        win.clearTimeout(timeout);
-        typed += event.key;
-        const lower = typed.toLocaleLowerCase();
-        const start =
-          previousMatch >= 0
-            ? [
-                ...list.slice(previousMatch + 1),
-                ...list.slice(0, previousMatch + 1),
-              ]
-            : list;
-        const match = current.findMatch
-          ? current.findMatch(start, typed)
-          : start.find((value) => value?.toLocaleLowerCase().startsWith(lower));
-        const index = match == null ? -1 : list.indexOf(match);
-        if (index >= 0) {
-          previousMatch = index;
-          current.onMatch?.(index);
+        const allowRapidFirstLetter = list.every((value) =>
+          value
+            ? value[0]?.toLocaleLowerCase() !==
+              value[1]?.toLocaleLowerCase()
+            : true,
+        );
+        if (
+          allowRapidFirstLetter &&
+          typed.toLocaleLowerCase() === event.key.toLocaleLowerCase()
+        ) {
+          typed = '';
+          previousMatch = matchIndex ?? previousMatch;
         }
+
+        typed += event.key;
+        win.clearTimeout(timeout);
         timeout = win.setTimeout(reset, current.resetMs);
+
+        const startIndex = (previousMatch || 0) + 1;
+        const ordered = [
+          ...list.slice(startIndex),
+          ...list.slice(0, startIndex),
+        ];
+        const index = getMatchingIndex(ordered, typed);
+        if (index >= 0) {
+          matchIndex = index;
+          current.onMatch?.(index);
+        } else if (event.key !== ' ') {
+          typed = '';
+          setTyping(false);
+        }
       }
 
       const cleanups = [
@@ -108,8 +146,14 @@ export function typeahead(
           if (open) {
             win.clearTimeout(timeout);
             typed = '';
+            matchIndex = null;
             previousMatch =
               getOptions().selectedIndex ?? getOptions().activeIndex ?? -1;
+          }
+        }),
+        addListener(floating, 'keyup', (event) => {
+          if (event.key === ' ') {
+            setTyping(false);
           }
         }),
       ];

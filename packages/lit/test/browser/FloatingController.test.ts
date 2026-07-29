@@ -217,6 +217,50 @@ describe('FloatingController', () => {
     expect(cleanups).toBe(mountedCleanups);
   });
 
+  test('mounts positioning observers after Light DOM elements are connected', async () => {
+    let mountedWithConnectedElements = false;
+
+    class ConnectedMountFixture extends LitElement {
+      floating = new FloatingController(this, {
+        open: true,
+        whileElementsMounted(reference, floating, update) {
+          mountedWithConnectedElements =
+            reference instanceof Element &&
+            reference.isConnected &&
+            floating.isConnected;
+          void update();
+          return () => {};
+        },
+      });
+
+      protected createRenderRoot() {
+        return this;
+      }
+
+      render() {
+        return html`
+          <div class="overflow-stage">
+            <button ${this.floating.reference()}>Reference</button>
+            <div ${this.floating.floating()}>Floating</div>
+          </div>
+        `;
+      }
+    }
+
+    const connectedMountTag = 'floating-ui-lit-connected-mount-test';
+    if (!customElements.get(connectedMountTag)) {
+      customElements.define(connectedMountTag, ConnectedMountFixture);
+    }
+    const host = document.createElement(
+      connectedMountTag,
+    ) as ConnectedMountFixture;
+    document.body.append(host);
+    await host.updateComplete;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mountedWithConnectedElements).toBe(true);
+  });
+
   test('binds Light DOM elements without replacing user class or style', async () => {
     const host = document.createElement(tag) as FloatingUiLitTest;
     document.body.append(host);

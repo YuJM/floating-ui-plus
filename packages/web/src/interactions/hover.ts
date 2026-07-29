@@ -99,10 +99,12 @@ export function hover(
         }
         const delay = getDelay(current.delay, 'open', pointerType);
         const rest =
-          typeof current.restMs === 'function'
-            ? current.restMs()
-            : current.restMs;
-        if ((rest || 0) > 0 && event.type === 'mousemove') {
+          pointerType && !isMouseLikePointerType(pointerType)
+            ? 0
+            : typeof current.restMs === 'function'
+              ? current.restMs()
+              : current.restMs;
+        if ((rest || 0) > 0) {
           win.clearTimeout(restTimeout);
           restTimeout = win.setTimeout(() => open(event), rest);
         } else if (delay > 0) {

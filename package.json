@@ -12,9 +12,11 @@
     "build": "bun run --workspaces build",
     "typecheck": "bun run --workspaces typecheck",
     "test": "bun run --workspaces test",
-    "dev": "bun run --filter '@floating-ui/*' build && bun run --workspaces --parallel dev",
-    "dev:packages": "bun run --filter '@floating-ui/*' --parallel dev",
-    "dev:demo": "bun run --filter floating-ui-lit-demo dev"
+    "test:browser": "bun run --filter '@floating-ui-plus/*' test:browser && bun run --filter floating-ui-plus-lit-demo test",
+    "test:browser:headed": "PLAYWRIGHT_HEADLESS=false bun run --filter '@floating-ui-plus/*' test:browser && bun run --filter floating-ui-plus-lit-demo test:headed",
+    "dev": "bun run --filter '@floating-ui-plus/*' build && bun run --workspaces --parallel dev",
+    "dev:packages": "bun run --filter '@floating-ui-plus/*' --parallel dev",
+    "dev:demo": "bun run --filter floating-ui-plus-lit-demo dev"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",

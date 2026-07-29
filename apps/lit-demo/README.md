@@ -1,6 +1,7 @@
-# Lit interaction lab
+# Floating UI Plus · Lit demo
 
-This app is the browser fixture for `@floating-ui/lit`. The custom element
+This app is the browser fixture for the `floating-ui-plus` workspace package
+`@floating-ui-plus/lit`. The custom element
 explicitly returns itself from `createRenderRoot()`, so every controller and
 directive runs in Light DOM.
 
@@ -9,6 +10,11 @@ Run it from the repository root:
 ```sh
 bun run dev
 ```
+
+The visual system uses Tailwind CSS v4 through `@tailwindcss/vite`. It is
+CSS-first: `src/styles.css` owns the semantic `@theme` tokens and the shared
+component layer, while Lit templates keep stable semantic class names. No
+runtime Tailwind configuration or Shadow DOM style duplication is required.
 
 This first builds the dependent Web and Lit workspace packages, then starts
 Vite together with both `tsdown --watch` processes. The initial build keeps
@@ -25,7 +31,6 @@ a live demo:
 - Nested menu: `FloatingTree`, descendant closing, nested navigation, hover, and typeahead
 - Cursor signal: `hover`, `clientPoint`, `dismiss`, and tooltip `role`
 - Modal: `click`, `dismiss`, dialog `role`, and `focusManager`
-- Clipping signal: `hide()` with both `referenceHidden` and `escaped` strategies
 
 Routes are handled by the Lit `Router` controller from `@lit-labs/router`.
 Each `/examples/*` route lazy-loads its corresponding view. Production hosting
@@ -45,5 +50,29 @@ behavior in the official middleware documentation:
 - `hide`: dim an escaped panel, then hide it once its reference is clipped
 - `inline`: compare a bounding box with the matching multiline client rect
 
+The scroll fixtures pass their stage as `boundary` and use
+`rootBoundary: 'document'`, following the official website demos. This keeps
+the outer documentation viewport from changing a card's result while the card
+is still below the fold.
+
 The controller follows Lit's Reactive Controller lifecycle, while its element
 directives bind the reference, floating, and arrow elements from the template.
+
+Run the real-browser demo suite with:
+
+```sh
+bun run --filter floating-ui-plus-lit-demo test
+```
+
+It runs in desktop and mobile system Chrome. From the repository root,
+`bun run test:browser` also runs the Web and Lit Vitest Browser suites first.
+Playwright is explicitly headless by default. The configured web server reuses
+the current local server outside CI, or starts the root development command so
+the dependent Web and Lit packages are built before Vite serves the app.
+
+For visual debugging:
+
+```sh
+bun run --filter floating-ui-plus-lit-demo test:headed
+bun run --filter floating-ui-plus-lit-demo test:ui
+```

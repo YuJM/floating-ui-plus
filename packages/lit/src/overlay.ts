@@ -6,7 +6,7 @@ import {
   type DirectiveResult,
   type PartInfo,
 } from 'lit/directive.js';
-import {lockScroll} from '@floating-ui/web';
+import {lockScroll} from '@floating-ui-plus/web';
 
 export interface FloatingOverlayOptions {
   lockScroll?: boolean | undefined;

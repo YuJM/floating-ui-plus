@@ -1,4 +1,4 @@
-# `@floating-ui/web`
+# `@floating-ui-plus/web`
 
 Framework-neutral Floating UI positioning, interactions, focus management, and
 collection services for browser DOM.
@@ -20,7 +20,7 @@ import {
   offset,
   role,
   shift,
-} from '@floating-ui/web';
+} from '@floating-ui-plus/web';
 
 const floating = createFloating(() => ({
   open,
@@ -66,3 +66,23 @@ The kernel preserves the repository browser targets: Chrome 73, Firefox 78,
 Edge 79, Safari/iOS 12. `inert`, listener `AbortSignal`, and Popover APIs are
 used only behind feature checks. Importing the package does not access `window`
 or `document`.
+
+## React parity checks
+
+`react-parity-baseline.json` pins the audited `floating-ui/packages/react`
+commit, root exports, and every interaction option. The parity test compares
+the local Web API with that baseline and, when the sibling upstream checkout is
+available, also detects upstream drift directly.
+
+```sh
+bun run --filter '@floating-ui-plus/web' test
+bun run --filter '@floating-ui-plus/web' test:browser
+```
+
+The first command is the fast JSDOM/unit layer. `test:browser` is a separate,
+headless Playwright Browser Mode layer. Its `realDom.browser.test.ts` fixture
+uses provider-backed `userEvent` input and verifies native event ordering,
+focus, `getBoundingClientRect()`, CSS sizing, and Floating UI coordinates in
+the installed Chrome browser.
+
+Use `test:browser:headed` only when a visible browser is useful for debugging.

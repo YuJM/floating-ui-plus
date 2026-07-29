@@ -39,7 +39,7 @@ export class DelayGroup {
   }
 
   getDelay(id: string): Delay {
-    if (this.#instantPhase && this.#currentId !== id) return 0;
+    if (this.#instantPhase) return 0;
     return this.options.delay ?? 0;
   }
 

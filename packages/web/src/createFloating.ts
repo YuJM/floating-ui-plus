@@ -85,6 +85,7 @@ export function createFloating(
   let connected = false;
   let destroyed = false;
   let requestId = 0;
+  let attachRequestId = 0;
   let position = createInitialPosition(resolveOptions(optionsSource));
   let floatingStyles = getFloatingStyles(
     position,
@@ -146,11 +147,32 @@ export function createFloating(
     mountedCleanup = undefined;
   }
 
-  function attachPositioning() {
+  function attachPositioning(deferIfDetached = true) {
+    const currentAttachRequest = ++attachRequestId;
     cleanupMounted();
     const reference = elements.reference;
     const floating = elements.floating;
     if (!connected || !reference || !floating) return;
+
+    const contextElement = isElement(reference)
+      ? reference
+      : reference.contextElement;
+    if (
+      !floating.isConnected ||
+      (contextElement && !contextElement.isConnected)
+    ) {
+      if (deferIfDetached) {
+        // Framework directives can bind elements while their template is still
+        // detached. Wait until the commit completes so autoUpdate discovers
+        // the real overflow ancestors instead of subscribing only to window.
+        setTimeout(() => {
+          if (currentAttachRequest === attachRequestId) {
+            attachPositioning(false);
+          }
+        }, 0);
+      }
+      return;
+    }
 
     const whileElementsMounted =
       resolveOptions(optionsSource).whileElementsMounted;
@@ -236,6 +258,7 @@ export function createFloating(
     disconnect() {
       if (!connected) return;
       connected = false;
+      attachRequestId++;
       cleanupMounted();
       cleanupPlugins();
     },

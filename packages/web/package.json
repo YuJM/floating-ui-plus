@@ -1,5 +1,5 @@
 {
-  "name": "@floating-ui/web",
+  "name": "@floating-ui-plus/web",
   "version": "0.1.0",
   "type": "module",
   "description": "Framework-agnostic positioning and interaction primitives for the web",
@@ -31,7 +31,9 @@
     "build": "tsdown",
     "dev": "tsdown --watch --no-clean",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:browser": "TEST_ENV=browser vitest run",
+    "test:browser:headed": "PLAYWRIGHT_HEADLESS=false TEST_ENV=browser vitest run"
   },
   "peerDependencies": {
     "@floating-ui/dom": "^1.8.0",

@@ -1,8 +1,8 @@
 {
   "$schema": "./parity-manifest.schema.json",
   "reactPackage": "@floating-ui/react",
-  "webPackage": "@floating-ui/web",
-  "litPackage": "@floating-ui/lit",
+  "webPackage": "@floating-ui-plus/web",
+  "litPackage": "@floating-ui-plus/lit",
   "features": {
     "Composite": {
       "web": "CompositeController",

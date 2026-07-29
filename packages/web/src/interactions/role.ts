@@ -51,7 +51,9 @@ export function role(options: ValueOrGetter<RoleOptions> = {}): FloatingPlugin {
         'aria-haspopup': ariaRole === 'alertdialog' ? 'dialog' : ariaRole,
         'aria-controls': context.open ? floatingId : undefined,
         ...(ariaRole === 'listbox' ? {role: 'combobox'} : {}),
-        ...(ariaRole === 'menu' ? {id: referenceId} : {}),
+        ...(ariaRole === 'menu'
+          ? {id: referenceId, ...(context.nested ? {role: 'menuitem'} : {})}
+          : {}),
         ...(role === 'select' ? {'aria-autocomplete': 'none'} : {}),
         ...(role === 'combobox' ? {'aria-autocomplete': 'list'} : {}),
       };

@@ -15,7 +15,7 @@ import {
   shift,
   type OpenChangeReason,
   typeahead,
-} from '@floating-ui/lit';
+} from '@floating-ui-plus/lit';
 
 const ROOT_NODE_ID = 'nested-menu-root';
 const PROJECTS_NODE_ID = 'nested-menu-projects';
@@ -72,6 +72,14 @@ class LitNestedMenuExample extends LitElement {
           event,
           reason ?? 'focus-out',
         );
+        if (reason === 'escape-key') {
+          queueMicrotask(() => {
+            const reference = this.rootMenu.elements.domReference;
+            if (reference instanceof HTMLElement) {
+              reference.focus({preventScroll: true});
+            }
+          });
+        }
       }
       this.emitAction(open ? 'Nested menu opened' : 'Nested menu closed');
     },
@@ -81,7 +89,6 @@ class LitNestedMenuExample extends LitElement {
   })).pipe(
     click(),
     dismiss({
-      escapeKey: false,
       outsidePress: (event) =>
         !(event.target instanceof Element) ||
         !event.target.closest('.nested-menu-submenu'),
@@ -200,7 +207,6 @@ class LitNestedMenuExample extends LitElement {
                 <div
                   class="menu-panel nested-menu-root"
                   ${this.rootMenu.floating()}
-                  @keydown=${this.handleRootKeyDown}
                 >
                   <div class="menu-heading">Tree coordinated actions</div>
                   ${rootLabels.map(
@@ -223,9 +229,6 @@ class LitNestedMenuExample extends LitElement {
                         ${index === 1
                           ? this.projectsMenu.reference()
                           : nothing}
-                        @keydown=${index === 1
-                          ? this.handleProjectsReferenceKeyDown
-                          : nothing}
                         @click=${index === 1
                           ? nothing
                           : (event: Event) =>
@@ -246,7 +249,6 @@ class LitNestedMenuExample extends LitElement {
                 <div
                   class="menu-panel nested-menu-submenu"
                   ${this.projectsMenu.floating()}
-                  @keydown=${this.handleProjectsKeyDown}
                 >
                   <div class="menu-heading">Choose a project</div>
                   ${projectLabels.map(
@@ -281,40 +283,9 @@ class LitNestedMenuExample extends LitElement {
     `;
   }
 
-  private readonly handleRootKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && !this.projectsOpen) {
-      event.preventDefault();
-      this.rootMenu.context.onOpenChange(false, event, 'escape-key');
-    }
-  };
-
-  private readonly handleProjectsReferenceKeyDown = (
-    event: KeyboardEvent,
-  ) => {
-    if (event.key !== 'ArrowRight') return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.projectsMenu.context.onOpenChange(true, event, 'list-navigation');
-    void this.focusFirstProject();
-  };
-
-  private readonly handleProjectsKeyDown = (event: KeyboardEvent) => {
-    if (event.key !== 'ArrowLeft') return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.projectsMenu.context.onOpenChange(false, event, 'focus-out');
-  };
-
   private selectRoot(index: number, event: Event) {
     this.emitAction(`${rootLabels[index]} selected`);
     this.rootMenu.context.onOpenChange(false, event, 'click');
-  }
-
-  private async focusFirstProject() {
-    await this.updateComplete;
-    this.projectActiveIndex = 0;
-    await this.updateComplete;
-    this.projectElements.current[0]?.focus({preventScroll: true});
   }
 
   private selectProject(index: number, event: Event) {

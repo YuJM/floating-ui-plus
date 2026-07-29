@@ -26,12 +26,20 @@ export class FloatingTree {
       parentId: options.parentId ?? null,
       controller,
     };
+    controller.context.nested = node.parentId != null;
+    controller.context.data.nodeId = node.id;
+    controller.context.data.parentId = node.parentId;
+    controller.context.data.floatingTree = this;
     this.#nodes.set(node.id, node);
     this.#emit();
     return {
       node,
       unregister: () => {
         this.#nodes.delete(node.id);
+        controller.context.nested = false;
+        delete controller.context.data.nodeId;
+        delete controller.context.data.parentId;
+        delete controller.context.data.floatingTree;
         this.#emit();
       },
     };
@@ -39,6 +47,13 @@ export class FloatingTree {
 
   children(parentId: string) {
     return this.nodes.filter((node) => node.parentId === parentId);
+  }
+
+  descendants(parentId: string, onlyOpen = true): readonly FloatingNode[] {
+    return this.children(parentId).flatMap((child) => {
+      if (onlyOpen && !child.controller.context.open) return [];
+      return [child, ...this.descendants(child.id, onlyOpen)];
+    });
   }
 
   closeDescendants(

@@ -10,7 +10,7 @@ import {
   offset,
   shift,
   size,
-} from '@floating-ui/lit';
+} from '@floating-ui-plus/lit';
 
 abstract class MiddlewareExample extends LitElement {
   protected createRenderRoot() {
@@ -21,6 +21,10 @@ abstract class MiddlewareExample extends LitElement {
     return controller.position.isPositioned
       ? controller.position.placement
       : 'measuring';
+  }
+
+  protected boundary(selector: string) {
+    return this.querySelector<HTMLElement>(selector) ?? undefined;
   }
 
   protected initializeScroll(
@@ -79,7 +83,13 @@ class LitShiftExample extends MiddlewareExample {
   private readonly floating = new FloatingController(this, () => ({
     open: true,
     placement: 'top',
-    middleware: [shift({padding: 8})],
+    middleware: [
+      shift({
+        boundary: this.boundary('.mw-stage-shift'),
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+    ],
     whileElementsMounted: autoUpdate,
   }));
 
@@ -109,7 +119,14 @@ class LitFlipExample extends MiddlewareExample {
   private readonly floating = new FloatingController(this, () => ({
     open: true,
     placement: 'bottom',
-    middleware: [offset(8), flip({padding: 8})],
+    middleware: [
+      offset(8),
+      flip({
+        boundary: this.boundary('.mw-stage-flip'),
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+    ],
     whileElementsMounted: autoUpdate,
   }));
 
@@ -143,7 +160,11 @@ class LitArrowExample extends MiddlewareExample {
     placement: 'top',
     middleware: [
       offset(10),
-      shift({padding: 8}),
+      shift({
+        boundary: this.boundary('.mw-stage-arrow'),
+        padding: 8,
+        rootBoundary: 'document',
+      }),
       ...(this.arrowElement
         ? [arrow({element: this.arrowElement, padding: 8})]
         : []),
@@ -152,7 +173,9 @@ class LitArrowExample extends MiddlewareExample {
   }));
 
   protected firstUpdated() {
-    this.initializeScroll('.mw-stage-arrow', {left: 410}, this.floating);
+    // Keep the reference fully visible at the initial desktop and mobile
+    // widths so the arrow visibly targets its center before users scroll.
+    this.initializeScroll('.mw-stage-arrow', {left: 520}, this.floating);
   }
 
   render() {
@@ -187,7 +210,9 @@ class LitSizeExample extends MiddlewareExample {
     middleware: [
       offset(8),
       size({
+        boundary: this.boundary('.mw-stage-size'),
         padding: 8,
+        rootBoundary: 'document',
         apply({availableWidth, availableHeight, elements}) {
           Object.assign(elements.floating.style, {
             maxWidth: `${Math.max(0, availableWidth)}px`,
@@ -227,7 +252,13 @@ class LitSizeExample extends MiddlewareExample {
 class LitAutoPlacementExample extends MiddlewareExample {
   private readonly floating = new FloatingController(this, () => ({
     open: true,
-    middleware: [autoPlacement({padding: 8})],
+    middleware: [
+      autoPlacement({
+        boundary: this.boundary('.mw-stage-auto-placement'),
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+    ],
     whileElementsMounted: autoUpdate,
   }));
 
@@ -270,8 +301,15 @@ class LitHideMiddlewareExample extends MiddlewareExample {
     placement: 'bottom',
     middleware: [
       offset(8),
-      hide(),
-      hide({strategy: 'escaped'}),
+      hide({
+        boundary: this.boundary('.mw-stage-hide'),
+        rootBoundary: 'document',
+      }),
+      hide({
+        boundary: this.boundary('.mw-stage-hide'),
+        strategy: 'escaped',
+        rootBoundary: 'document',
+      }),
     ],
     whileElementsMounted: autoUpdate,
   }));

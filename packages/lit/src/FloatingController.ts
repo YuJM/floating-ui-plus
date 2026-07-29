@@ -9,7 +9,7 @@ import {
   type FloatingPlugin,
   type ItemState,
   type PortalNodeOptions,
-} from '@floating-ui/web';
+} from '@floating-ui-plus/web';
 
 import {bindFloatingElement, renderFloatingPortal} from './directives';
 
@@ -117,7 +117,7 @@ export class FloatingController implements ReactiveController {
       root instanceof ShadowRoot
     ) {
       console.warn(
-        '@floating-ui/lit officially supports Light DOM only. Override createRenderRoot() to return this.',
+        '@floating-ui-plus/lit officially supports Light DOM only. Override createRenderRoot() to return this.',
       );
     }
     this.#floating.connect();

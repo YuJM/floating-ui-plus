@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./react-parity-baseline.schema.json",
+  "title": "Floating UI React parity baseline",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source", "exports", "interactionOptions"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "package", "commit"],
+      "properties": {
+        "repository": {"type": "string"},
+        "package": {"type": "string"},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "exports": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "interactionOptions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "string"},
+        "uniqueItems": true
+      }
+    }
+  }
+}

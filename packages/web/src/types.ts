@@ -122,7 +122,7 @@ export interface FloatingContext {
   readonly events: FloatingEvents;
   readonly floatingId: string;
   readonly attributes: FloatingAttributes;
-  readonly nested: boolean;
+  nested: boolean;
   onOpenChange(open: boolean, event?: Event, reason?: OpenChangeReason): void;
   setPositionReference(reference: ReferenceElement | null): void;
   update(): Promise<void>;

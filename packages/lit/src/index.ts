@@ -1,4 +1,4 @@
-export * from '@floating-ui/web';
+export * from '@floating-ui-plus/web';
 
 // The explicit export replaces the framework-neutral controller type with the
 // Lit ReactiveController adapter at this package boundary.

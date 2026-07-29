@@ -10,7 +10,7 @@ import {
   role,
   safePolygon,
   shift,
-} from '@floating-ui/lit';
+} from '@floating-ui-plus/lit';
 
 class LitTooltipExample extends LitElement {
   static properties = {open: {state: true}};

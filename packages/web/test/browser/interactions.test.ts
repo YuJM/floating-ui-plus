@@ -291,6 +291,80 @@ describe('native interaction plugins', () => {
     harness.controller.destroy();
   });
 
+  test('nested listNavigation leaves parent-axis keys to the parent menu', () => {
+    const first = document.createElement('button');
+    const second = document.createElement('button');
+    const listRef = {
+      current: [first, second] as Array<HTMLElement | null>,
+    };
+    const onNavigate = vi.fn();
+    const parentKeyDown = vi.fn();
+    const harness = createHarness({
+      plugins: [
+        listNavigation({
+          listRef,
+          activeIndex: null,
+          nested: true,
+          onNavigate,
+          scrollItemIntoView: false,
+        }),
+      ],
+    });
+    harness.floating.append(first, second);
+    document.body.addEventListener('keydown', parentKeyDown);
+
+    const parentAxisEvent = new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key: 'ArrowDown',
+    });
+    harness.reference.dispatchEvent(parentAxisEvent);
+
+    expect(parentAxisEvent.defaultPrevented).toBe(false);
+    expect(parentKeyDown).toHaveBeenCalledOnce();
+    expect(onNavigate).not.toHaveBeenCalled();
+    expect(harness.onOpenChange).not.toHaveBeenCalled();
+
+    harness.controller.destroy();
+  });
+
+  test('nested listNavigation opens, focuses after mounting, and closes on cross-axis keys', async () => {
+    const first = document.createElement('button');
+    const listRef = {current: [first] as Array<HTMLElement | null>};
+    const harness = createHarness({
+      plugins: [
+        listNavigation({
+          listRef,
+          activeIndex: null,
+          nested: true,
+          scrollItemIntoView: false,
+        }),
+      ],
+    });
+    harness.controller.setFloating(null);
+
+    fireEvent.keyDown(harness.reference, {key: 'ArrowRight'});
+    expect(harness.onOpenChange).toHaveBeenLastCalledWith(
+      true,
+      expect.any(KeyboardEvent),
+      'list-navigation',
+    );
+
+    harness.floating.append(first);
+    harness.controller.setFloating(harness.floating);
+    await Promise.resolve();
+    expect(document.activeElement).toBe(first);
+
+    fireEvent.keyDown(first, {key: 'ArrowLeft'});
+    expect(harness.onOpenChange).toHaveBeenLastCalledWith(
+      false,
+      expect.any(KeyboardEvent),
+      'list-navigation',
+    );
+    expect(document.activeElement).toBe(harness.reference);
+    harness.controller.destroy();
+  });
+
   test('role applies menu relationships and option semantics', () => {
     const harness = createHarness({open: true, plugins: [role({role: 'select'})]});
     harness.controller.refresh();

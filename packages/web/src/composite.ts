@@ -30,6 +30,21 @@ export class CompositeController {
   }
 
   keydown(event: KeyboardEvent) {
+    if (event.key === 'Home' || event.key === 'End') {
+      const indices =
+        event.key === 'Home'
+          ? this.#items.keys()
+          : Array.from(this.#items.keys()).reverse();
+      for (const index of indices) {
+        if (!this.#isDisabled(index)) {
+          event.preventDefault();
+          this.setActiveIndex(index, true);
+          return;
+        }
+      }
+      return;
+    }
+
     const cols = this.options.cols || 1;
     const rtl = this.options.rtl === true;
     const deltas: Record<string, number> = {
@@ -49,14 +64,34 @@ export class CompositeController {
     ) {
       return;
     }
-    let nextIndex = this.#activeIndex + delta;
-    if (this.options.loop) {
-      nextIndex = (nextIndex + this.#items.length) % this.#items.length;
+    let nextIndex = this.#activeIndex;
+    for (let attempts = 0; attempts < this.#items.length; attempts++) {
+      nextIndex += delta;
+      if (this.options.loop) {
+        nextIndex =
+          (nextIndex + this.#items.length) % this.#items.length;
+      } else if (nextIndex < 0 || nextIndex >= this.#items.length) {
+        return;
+      }
+      if (!this.#isDisabled(nextIndex)) break;
     }
-    nextIndex = Math.max(0, Math.min(nextIndex, this.#items.length - 1));
-    if (nextIndex == null || nextIndex === this.#activeIndex) return;
+    if (
+      nextIndex === this.#activeIndex ||
+      this.#isDisabled(nextIndex)
+    ) {
+      return;
+    }
     event.preventDefault();
     this.setActiveIndex(nextIndex, true);
+  }
+
+  #isDisabled(index: number) {
+    const item = this.#items[index];
+    return (
+      item == null ||
+      item.hasAttribute('disabled') ||
+      item.getAttribute('aria-disabled') === 'true'
+    );
   }
 
   #syncTabIndex() {

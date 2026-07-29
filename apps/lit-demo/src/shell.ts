@@ -54,10 +54,15 @@ const routes: RouteConfig[] = [
   {
     path: '/examples/hide',
     enter: async () => {
-      await import('./views/hide-view');
+      window.history.replaceState(
+        window.history.state,
+        '',
+        '/examples/middleware#hide',
+      );
+      await import('./views/middleware-view');
       return true;
     },
-    render: () => html`<lit-hide-view></lit-hide-view>`,
+    render: () => html`<lit-middleware-view></lit-middleware-view>`,
   },
   {
     path: '/examples/middleware',
@@ -100,16 +105,16 @@ class FloatingUiDemo extends LitElement {
   render() {
     return html`
       <header class="masthead">
-        <div class="eyebrow"><span class="pulse"></span> floating-ui / lit adapter</div>
+        <div class="eyebrow"><span class="pulse"></span> floating-ui-plus / lit demo</div>
         <div class="header-row">
           <div>
-            <a class="brand-link" href="/" aria-label="Interaction lab home"><h1>Interaction<br /><em>lab</em></h1></a>
-            <p class="lede">A Light DOM field guide for things that appear,<br />move, and make room for people.</p>
+            <a class="brand-link" href="/" aria-label="Floating UI Plus home"><h1>Floating UI<br /><em>Plus</em></h1></a>
+            <p class="lede">Framework-neutral interactions and positioning,<br />with Light DOM bindings for Lit.</p>
           </div>
           <div class="coordinate-stamp" aria-label="Current demo status">
             <span class="stamp-label">LIVE SIGNAL</span>
             <strong>04</strong>
-            <span class="stamp-caption">Lit examples in orbit</span>
+            <span class="stamp-caption">@floating-ui-plus/web + @floating-ui-plus/lit</span>
           </div>
         </div>
         <nav class="route-nav" aria-label="Demo routes">
@@ -119,14 +124,13 @@ class FloatingUiDemo extends LitElement {
           <a href="/examples/menu">Menu</a>
           <a href="/examples/nested-menu">Nested menu</a>
           <a href="/examples/client-point">Cursor</a>
-          <a href="/examples/hide">Hide</a>
           <a href="/examples/middleware">Middleware</a>
           <a href="/examples/modal">Modal</a>
         </nav>
       </header>
       <main @floating-demo-action=${this.handleAction}>${this.router.outlet()}</main>
       <footer class="footer">
-        <span>floating-ui-plus</span><span>light DOM / native events / lit 3</span><span class="footer-status"><i></i> ${this.lastAction}</span>
+        <span>floating-ui-plus</span><span>@floating-ui-plus/web / @floating-ui-plus/lit / lit 3</span><span class="footer-status"><i></i> ${this.lastAction}</span>
       </footer>
     `;
   }

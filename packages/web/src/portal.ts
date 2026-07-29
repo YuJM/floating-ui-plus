@@ -8,9 +8,9 @@ export function createPortalNode(options: PortalNodeOptions = {}) {
   if (typeof document === 'undefined') return null;
   const root = options.root || document.body;
   if (options.id) {
-    const existing = root.querySelector<HTMLElement>(
-      `#${CSS.escape(options.id)}`,
-    );
+    const existing = Array.from(
+      root.querySelectorAll<HTMLElement>('[id]'),
+    ).find((element) => element.id === options.id);
     if (existing) return existing;
   }
 
