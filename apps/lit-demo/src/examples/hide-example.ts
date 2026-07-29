@@ -48,7 +48,7 @@ class LitHideExample extends LitElement {
         <h3>Clipping signal</h3>
         <p>Hide the panel only when the reference is clipped, or dim it once the panel escapes its clipping context.</p>
         <div class="card-action">
-          <div class="hide-viewport" tabindex="0" aria-label="Scrollable hide viewport" ${ref(this.setViewport)}>
+          <div class="hide-viewport" tabindex="0" aria-label="Vertically scrollable hide viewport" ${ref(this.setViewport)}>
             <div class="hide-track">
               <button
                 class="hide-reference"
