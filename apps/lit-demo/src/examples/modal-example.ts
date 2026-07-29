@@ -46,8 +46,8 @@ class LitModalExample extends LitElement {
         <button class="outline-button" ${this.floating.reference()}>Enter focus room <span aria-hidden="true">→</span></button>
         ${this.open
           ? this.floating.portal(floatingOverlay(html`
-              <div class="modal-anchor" ${this.floating.floating()}>
-                <section class="modal-panel" aria-labelledby="modal-heading">
+              <div class="modal-anchor">
+                <section class="modal-panel" aria-labelledby="modal-heading" ${this.floating.floating()}>
                   <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
                   <h3 id="modal-heading">You are inside<br />the focus trap.</h3>
                   <p>Press Escape or choose leave. Focus returns to the trigger because the close reason is known.</p>
