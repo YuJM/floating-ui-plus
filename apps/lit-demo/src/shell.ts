@@ -31,7 +31,7 @@ class FloatingUiDemo extends LitElement {
           <a href="/examples/modal">Modal</a>
         </nav>
       </header>
-      <main @floating-demo-action=${this.handleAction}><slot></slot></main>
+      <main id="outlet" @floating-demo-action=${this.handleAction}></main>
       <footer class="footer">
         <span>floating-ui-plus</span><span>light DOM / native events / lit 3</span><span class="footer-status"><i></i> ${this.lastAction}</span>
       </footer>
