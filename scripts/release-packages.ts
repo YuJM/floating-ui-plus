@@ -142,7 +142,13 @@ async function isPublished(pkg: PackageInfo) {
   if (result.exitCode === 0) return true;
 
   const output = `${result.stdout}\n${result.stderr}`;
-  if (output.includes('E404') || output.includes('404 Not Found')) return false;
+  if (
+    output.includes('E404') ||
+    output.includes('404 Not Found') ||
+    output.includes('No matching version found')
+  ) {
+    return false;
+  }
   throw new Error(`Unable to query npm for ${specifier}.\n${output.trim()}`);
 }
 
