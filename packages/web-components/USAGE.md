@@ -16,6 +16,11 @@ import '@floating-ui-plus/web-components';
 Import the package once on the client. It is safe to import during SSR; DOM
 behavior starts when elements connect.
 
+`<floating-root>` supplies the default dialog ARIA relationship for its
+reference and floating slots. Set `floating-role` for a tooltip, menu, listbox,
+or another supported pattern; name dialog content using `aria-label` or
+`aria-labelledby` with product-specific copy.
+
 ## Tooltip
 
 For a compact template, use the named slots on `floating-root`:

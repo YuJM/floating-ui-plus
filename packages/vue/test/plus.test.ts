@@ -160,6 +160,27 @@ describe('Floating UI Plus Vue adapter', () => {
     });
   });
 
+  test('gives declarative floating elements the default dialog ARIA contract', async () => {
+    const App = defineComponent(() => () =>
+      h(FloatingRoot, {open: true}, {
+        default: () => [
+          h(FloatingReference, {'data-testid': 'reference'}, {default: () => 'Open'}),
+          h(FloatingContent, {'data-testid': 'content'}, {default: () => 'Content'}),
+        ],
+      }),
+    );
+
+    const {getByTestId} = render(App);
+    await waitFor(() => {
+      const reference = getByTestId('reference');
+      const content = getByTestId('content');
+      expect(reference).toHaveAttribute('aria-haspopup', 'dialog');
+      expect(reference).toHaveAttribute('aria-expanded', 'true');
+      expect(reference).toHaveAttribute('aria-controls', content.id);
+      expect(content).toHaveAttribute('role', 'dialog');
+    });
+  });
+
   test('uses Vue Teleport and supports disabling it', async () => {
     const disabled = ref(false);
     const target = document.createElement('div');

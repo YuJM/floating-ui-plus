@@ -4,6 +4,7 @@ import {isElement} from '@floating-ui/utils/dom';
 import {withArrowOffset} from './arrow';
 import {createFloatingEvents} from './events';
 import {FloatingCoordinator} from './coordinator';
+import {role} from './interactions/role';
 import type {
   FloatingAttributes,
   FloatingContext,
@@ -83,7 +84,10 @@ export function createFloating(
   const data: FloatingData = {};
   const attributes: FloatingAttributes = {};
   const events = createFloatingEvents();
-  const plugins: FloatingPlugin[] = [];
+  // Every floating surface gets a baseline reference/content relationship.
+  // A later role() replaces this dialog contract; role({enabled: false}) opts
+  // out for a purely presentational surface.
+  const plugins: FloatingPlugin[] = [role()];
   const pluginCleanups: Array<() => void> = [];
   let mountedCleanup: (() => void) | undefined;
   let connected = false;
