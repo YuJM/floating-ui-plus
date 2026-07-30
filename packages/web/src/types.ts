@@ -6,6 +6,12 @@ import type {
   Strategy,
   VirtualElement,
 } from '@floating-ui/dom';
+import type {
+  FloatingDelayGroupOptions,
+  FloatingNodeOptions,
+} from './coordinator';
+import type {FloatingContextScope} from './contextScope';
+import type {FloatingList} from './list';
 
 export type OpenChangeReason =
   | 'outside-press'
@@ -66,6 +72,13 @@ export type FloatingStyles = Partial<CSSStyleDeclaration> & {
   transform?: string;
   willChange?: string;
 };
+
+export type FloatingPresenceState = 'mounted' | 'leaving' | 'unmounted';
+
+export interface FloatingPresence {
+  readonly state: FloatingPresenceState;
+  set(state: FloatingPresenceState): void;
+}
 
 export interface FloatingOpenChangeEvent {
   open: boolean;
@@ -136,11 +149,18 @@ export interface FloatingPlugin {
 
 export interface FloatingController {
   readonly context: FloatingContext;
+  readonly contextScope: FloatingContextScope;
   readonly elements: FloatingElements;
   readonly position: FloatingPosition;
   readonly floatingStyles: FloatingStyles;
+  readonly presence: FloatingPresence;
+  readonly list: FloatingList<unknown>;
   readonly plugins: readonly FloatingPlugin[];
   pipe(...plugins: FloatingPlugin[]): FloatingController;
+  node(options?: FloatingNodeOptions | null): FloatingController;
+  withList(list?: FloatingList<unknown>): FloatingController;
+  delayGroup(options?: FloatingDelayGroupOptions | null): FloatingController;
+  setContextParent(scope: FloatingContextScope | null): FloatingController;
   setReference(reference: Element | VirtualElement | null): void;
   setPositionReference(reference: ReferenceElement | null): void;
   setFloating(floating: HTMLElement | null): void;
@@ -148,6 +168,7 @@ export interface FloatingController {
   disconnect(): void;
   refresh(): void;
   update(): Promise<void>;
+  whenPositioned(): Promise<FloatingPosition>;
   destroy(): void;
 }
 

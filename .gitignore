@@ -3,5 +3,16 @@ dist
 coverage
 test-results
 playwright-report
+.vitest-attachments
+__screenshots__
 .DS_Store
 *.log
+.env
+.env.*
+!.env.example
+.astro
+*.tsbuildinfo
+*.local
+.cloudflare
+.wrangler
+.dev.vars*

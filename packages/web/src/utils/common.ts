@@ -1,8 +1,36 @@
 import {isElement, isHTMLElement} from '@floating-ui/utils/dom';
 
-import type {ValueOrGetter} from '../types';
+import type {FloatingStyles, ValueOrGetter} from '../types';
+import {FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE} from '../constants';
 
 export type Ref<T> = {current: T};
+
+const FLOATING_STYLE_KEYS = [
+  'position',
+  'left',
+  'top',
+  'right',
+  'bottom',
+  'transform',
+  'willChange',
+] as const;
+
+/** Applies a controller's complete positioning output to its floating surface. */
+export function applyFloatingStyles(
+  element: HTMLElement,
+  styles: FloatingStyles,
+) {
+  FLOATING_STYLE_KEYS.forEach((name) => {
+    const value = styles[name];
+    if (value == null || value === '') {
+      element.style.removeProperty(
+        name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
+      );
+    } else {
+      element.style[name] = value;
+    }
+  });
+}
 
 export type PossibleRef<T> =
   | ((value: T | null) => void)
@@ -88,7 +116,9 @@ export function getFloatingFocusElement(
 ): HTMLElement | null {
   if (!floating) return null;
   return (
-    floating.querySelector<HTMLElement>('[data-floating-ui-focusable]') ||
+    floating.querySelector<HTMLElement>(
+      `[${FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE}]`,
+    ) ||
     floating
   );
 }

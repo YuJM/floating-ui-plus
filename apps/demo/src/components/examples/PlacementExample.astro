@@ -1,0 +1,62 @@
+---
+const placements = [
+  'top-start',
+  'top',
+  'top-end',
+  'right-start',
+  'right',
+  'right-end',
+  'bottom-end',
+  'bottom',
+  'bottom-start',
+  'left-end',
+  'left',
+  'left-start',
+] as const;
+---
+
+<section
+  class="placement-view"
+  aria-labelledby="placement-title"
+  data-demo="placement"
+>
+  <div class="placement-copy">
+    <a class="back-link" href="/web-components">← All Web Components examples</a>
+    <span class="section-kicker">placement / 12 directions</span>
+    <h2 id="placement-title">
+      Choose a constant.<br /><span>Watch it move.</span>
+    </h2>
+    <p>
+      Every control passes a typed value from <code>PLACEMENT</code> into the
+      custom element property.
+    </p>
+    <div class="placement-readout" aria-live="polite">
+      <span>Selected constant</span>
+      <strong data-placement-constant>PLACEMENT.TOP</strong>
+      <code data-placement-value>top</code>
+    </div>
+  </div>
+
+  <div class="placement-stage" aria-label="Interactive placement selector">
+    {
+      placements.map((placement) => (
+        <button
+          type="button"
+          class:list={[
+            'placement-control',
+            {'is-selected': placement === 'top'},
+          ]}
+          data-placement-control={placement}
+          aria-pressed={placement === 'top'}
+          aria-label={`Place floating element at ${placement}`}
+        >
+          <span aria-hidden="true"></span>
+        </button>
+      ))
+    }
+    <floating-root data-placement-root open placement="top">
+      <div slot="reference" class="placement-reference">Reference</div>
+      <div slot="floating" class="placement-floating" role="status">top</div>
+    </floating-root>
+  </div>
+</section>

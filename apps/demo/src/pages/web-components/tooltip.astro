@@ -1,0 +1,14 @@
+---
+import ExampleRoute from '../../components/ExampleRoute.astro';
+import TooltipExample from '../../components/examples/TooltipExample.astro';
+import DemoLayout from '../../layouts/DemoLayout.astro';
+---
+
+<DemoLayout>
+  <ExampleRoute
+    kicker="tooltip route"
+    heading="Pointer and<br /><span>keyboard intent.</span>"
+  >
+    <TooltipExample />
+  </ExampleRoute>
+</DemoLayout>

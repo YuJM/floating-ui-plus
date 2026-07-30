@@ -8,6 +8,7 @@ import {
 } from 'tabbable';
 
 import {activeElement, getDocument} from './common';
+import {FLOATING_UI_PLUS_TABINDEX_ATTRIBUTE} from '../constants';
 
 export const getTabbableOptions = (): TabbableOptions & CheckOptions => ({
   getShadowRoot: false,
@@ -51,22 +52,25 @@ export function isOutsideEvent(event: FocusEvent, container?: Element | null) {
 
 export function disableFocusInside(container: HTMLElement) {
   focusable(container, getTabbableOptions()).forEach((element) => {
-    element.dataset.floatingUiTabindex = element.getAttribute('tabindex') ?? '';
+    element.setAttribute(
+      FLOATING_UI_PLUS_TABINDEX_ATTRIBUTE,
+      element.getAttribute('tabindex') ?? '',
+    );
     element.setAttribute('tabindex', '-1');
   });
 }
 
 export function enableFocusInside(container: HTMLElement) {
   container
-    .querySelectorAll<HTMLElement>('[data-floating-ui-tabindex]')
+    .querySelectorAll<HTMLElement>(`[${FLOATING_UI_PLUS_TABINDEX_ATTRIBUTE}]`)
     .forEach((element) => {
-      const value = element.dataset.floatingUiTabindex;
+      const value = element.getAttribute(FLOATING_UI_PLUS_TABINDEX_ATTRIBUTE);
       if (value) {
         element.setAttribute('tabindex', value);
       } else {
         element.removeAttribute('tabindex');
       }
-      delete element.dataset.floatingUiTabindex;
+      element.removeAttribute(FLOATING_UI_PLUS_TABINDEX_ATTRIBUTE);
     });
 }
 

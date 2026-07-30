@@ -1,0 +1,31 @@
+---
+const docs = [
+  ['01', 'offset', 'offset'],
+  ['02', 'shift', 'shift'],
+  ['03', 'flip', 'flip'],
+  ['04', 'arrow', 'arrow'],
+  ['05', 'size', 'size'],
+  ['06', 'autoPlacement', 'autoplacement'],
+  ['07', 'hide', 'hide'],
+  ['08', 'inline', 'inline'],
+] as const;
+
+interface Props {
+  index: number;
+}
+
+const [number, label, path] = docs[Astro.props.index];
+---
+
+<div class="middleware-title">
+  <span>{number}</span>
+  <h3>{label}</h3>
+  <a
+    href={`https://floating-ui.com/docs/${path}`}
+    target="_blank"
+    rel="noreferrer"
+    aria-label={`${label} middleware official documentation`}
+  >
+    (DOC)
+  </a>
+</div>

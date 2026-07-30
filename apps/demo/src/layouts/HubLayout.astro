@@ -1,0 +1,32 @@
+---
+import SeoHead from '../components/SeoHead.astro';
+import {getSeoMetadata} from '../seo';
+import '../hub.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  noindex?: boolean;
+}
+
+const {title, description, noindex} = Astro.props;
+const routeMetadata = getSeoMetadata(Astro.url.pathname);
+const metadata = {
+  ...routeMetadata,
+  ...(title ? {title} : {}),
+  ...(description ? {description} : {}),
+  ...(noindex !== undefined ? {noindex} : {}),
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <SeoHead metadata={metadata} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

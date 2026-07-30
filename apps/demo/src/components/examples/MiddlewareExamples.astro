@@ -1,0 +1,247 @@
+---
+import MiddlewareTitle from './MiddlewareTitle.astro';
+---
+
+<section
+  class="middleware-view"
+  aria-labelledby="middleware-title"
+  data-demo="middleware"
+>
+  <a class="back-link" href="/web-components">← All Web Components examples</a>
+  <div class="middleware-intro">
+    <span class="section-kicker">middleware lab</span>
+    <h2 id="middleware-title">Position with<br /><span>intent.</span></h2>
+    <p>
+      Each card keeps one or more <code>&lt;floating-root open&gt;</code>
+      elements inspectable.
+    </p>
+  </div>
+  <section class="middleware-grid" aria-label="Floating UI middleware examples">
+    <article class="middleware-card" data-middleware-example="offset">
+      <MiddlewareTitle index={0} />
+      <p>Compare the default position with a 10px gutter on the main axis.</p>
+      <div class="mw-comparison" aria-label="Offset comparison">
+        <div class="mw-static-stage">
+          <span class="mw-demo-label">0px</span>
+          <floating-root data-offset-root="0" open placement="top">
+            <button slot="reference" class="mw-reference mw-reference-static">
+              Reference
+            </button>
+            <div slot="floating" class="mw-panel mw-panel-cyan">Floating</div>
+          </floating-root>
+        </div>
+        <div class="mw-static-stage">
+          <span class="mw-demo-label">10px</span>
+          <floating-root data-offset-root="10" open placement="top">
+            <button slot="reference" class="mw-reference mw-reference-static">
+              Reference
+            </button>
+            <div slot="floating" class="mw-panel mw-panel-cyan">Floating</div>
+          </floating-root>
+        </div>
+      </div>
+      <code>offset(0) / offset(10)</code>
+    </article>
+
+    <article class="middleware-card" data-middleware-example="shift">
+      <MiddlewareTitle index={1} />
+      <p>Scroll horizontally. The panel shifts to remain visible.</p>
+      <div
+        class="mw-stage mw-stage-scroll-x mw-stage-shift"
+        tabindex="0"
+        aria-label="Horizontally scrollable shift demo"
+      >
+        <span class="mw-scroll-hint">scroll horizontally</span>
+        <div class="mw-track mw-track-wide">
+          <floating-root data-shift-root open placement="top">
+            <button slot="reference" class="mw-reference mw-reference-shift">
+              Reference
+            </button>
+            <div slot="floating" class="mw-panel mw-panel-lavender">
+              Still on top
+            </div>
+          </floating-root>
+        </div>
+      </div>
+      <code>{'shift({padding: 8})'}</code>
+    </article>
+
+    <article class="middleware-card" data-middleware-example="flip">
+      <MiddlewareTitle index={2} />
+      <p>Scroll up. The preferred bottom placement flips when space changes.</p>
+      <div
+        class="mw-stage mw-stage-scroll-y mw-stage-flip"
+        tabindex="0"
+        aria-label="Vertically scrollable flip demo"
+      >
+        <span class="mw-scroll-hint">scroll up</span>
+        <div class="mw-track mw-track-tall">
+          <floating-root data-flip-root open placement="bottom">
+            <button slot="reference" class="mw-reference mw-reference-flip">
+              Reference
+            </button>
+            <div slot="floating" class="mw-panel mw-panel-coral">
+              Final placement
+            </div>
+          </floating-root>
+        </div>
+      </div>
+      <code>placement="bottom" + flip()</code>
+    </article>
+
+    <article class="middleware-card" data-middleware-example="arrow">
+      <MiddlewareTitle index={3} />
+      <p>Scroll horizontally. The arrow targets the reference center.</p>
+      <div
+        class="mw-stage mw-stage-scroll-x mw-stage-arrow"
+        tabindex="0"
+        aria-label="Horizontally scrollable arrow demo"
+      >
+        <span class="mw-scroll-hint">scroll horizontally</span>
+        <div class="mw-track mw-track-wide">
+          <floating-root data-arrow-root open placement="top">
+            <button slot="reference" class="mw-reference mw-reference-arrow">
+              Reference
+            </button>
+            <div
+              slot="floating"
+              class="mw-panel mw-panel-ink mw-panel-arrow"
+            >
+              Floating
+              <floating-arrow class="mw-arrow"></floating-arrow>
+            </div>
+          </floating-root>
+        </div>
+      </div>
+      <code>{'shift() → arrow({element})'}</code>
+    </article>
+
+    <article class="middleware-card" data-middleware-example="size">
+      <MiddlewareTitle index={4} />
+      <p>Available height constrains the panel while content remains scrollable.</p>
+      <div
+        class="mw-stage mw-stage-scroll-y mw-stage-size"
+        tabindex="0"
+        aria-label="Vertically scrollable size demo"
+      >
+        <span class="mw-scroll-hint">scroll vertically</span>
+        <div class="mw-track mw-track-size">
+          <floating-root data-size-root open placement="bottom">
+            <button slot="reference" class="mw-reference mw-reference-size">
+              Reference
+            </button>
+            <div
+              slot="floating"
+              class="mw-panel mw-panel-paper mw-panel-size"
+            >
+              <strong>Floating content</strong>
+              <span>One</span><span>Two</span><span>Three</span>
+              <span>Four</span><span>Five</span>
+            </div>
+          </floating-root>
+        </div>
+      </div>
+      <code>{'size({apply: set maxWidth / maxHeight})'}</code>
+    </article>
+
+    <article
+      class="middleware-card"
+      data-middleware-example="auto-placement"
+    >
+      <MiddlewareTitle index={5} />
+      <p>The panel continuously chooses the side with the most space.</p>
+      <div
+        class="mw-stage mw-stage-scroll-y mw-stage-auto-placement"
+        tabindex="0"
+        aria-label="Vertically scrollable auto placement demo"
+      >
+        <span class="mw-scroll-hint">scroll vertically</span>
+        <div class="mw-track mw-track-tall">
+          <floating-root data-auto-placement-root open>
+            <button slot="reference" class="mw-reference mw-reference-auto">
+              Reference
+            </button>
+            <div slot="floating" class="mw-panel mw-panel-mint mw-panel-auto">
+              Final placement
+            </div>
+          </floating-root>
+        </div>
+      </div>
+      <code>{'autoPlacement({padding: 8})'}</code>
+    </article>
+
+    <article
+      id="hide"
+      class="middleware-card"
+      data-middleware-example="hide"
+    >
+      <MiddlewareTitle index={6} />
+      <p>The panel dims after escaping, then hides with its clipped reference.</p>
+      <div
+        class="mw-stage mw-stage-scroll-y mw-stage-hide"
+        tabindex="0"
+        aria-label="Vertically scrollable hide demo"
+      >
+        <span class="mw-scroll-hint">scroll up</span>
+        <div class="mw-track mw-track-tall">
+          <floating-root data-hide-root open placement="bottom">
+            <button slot="reference" class="mw-reference mw-reference-hide">
+              Reference
+            </button>
+            <div slot="floating" class="mw-panel mw-panel-paper mw-panel-hide">
+              Floating
+            </div>
+          </floating-root>
+        </div>
+      </div>
+      <div class="mw-state-readout" aria-live="polite">State: attached</div>
+      <code>{"hide() + hide({strategy: 'escaped'})"}</code>
+    </article>
+
+    <article class="middleware-card" data-middleware-example="inline">
+      <MiddlewareTitle index={7} />
+      <p>Compare a bounding box with the relevant client rect of an inline anchor.</p>
+      <div class="mw-inline-comparison" aria-label="Inline middleware comparison">
+        <div class="mw-inline-case">
+          <span class="mw-demo-label">without</span>
+          <floating-root data-inline-root="without" open placement="top">
+            <p>
+              Text before
+              <floating-reference>
+                <span class="mw-inline-reference">
+                  a reference that wraps over multiple lines
+                </span>
+              </floating-reference>
+              after.
+            </p>
+            <floating-content>
+              <div class="mw-panel mw-panel-paper mw-panel-inline">
+                Bounding box
+              </div>
+            </floating-content>
+          </floating-root>
+        </div>
+        <div class="mw-inline-case">
+          <span class="mw-demo-label">with inline()</span>
+          <floating-root data-inline-root="with" open placement="top">
+            <p>
+              Text before
+              <floating-reference>
+                <span class="mw-inline-reference">
+                  a reference that wraps over multiple lines
+                </span>
+              </floating-reference>
+              after.
+            </p>
+            <floating-content>
+              <div class="mw-panel mw-panel-ink mw-panel-inline">
+                Client rect
+              </div>
+            </floating-content>
+          </floating-root>
+        </div>
+      </div>
+      <code>inline() → offset(8)</code>
+    </article>
+  </section>
+</section>

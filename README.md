@@ -1,16 +1,20 @@
 # Floating UI Plus
 
-A Bun workspace monorepo containing framework-neutral Floating UI interactions
-and Light DOM bindings for Lit.
+A Bun workspace containing framework-neutral Floating UI interactions,
+Lit-powered Web Components, and Vue-native bindings.
 
 ## Packages
 
-- `@floating-ui-plus/web`: DOM interaction pipeline and web-standard utilities
-- `@floating-ui-plus/lit`: Light DOM Lit controllers and directives
+- `@floating-ui-plus/web`: DOM interaction pipeline, positioning, search,
+  focus, tree, list, portal, and transition services
+- `@floating-ui-plus/web-components`: Custom Elements for root/reference/content
+  composition, portals, overlays, focus, collections, trees, and composites
+- `@floating-ui-plus/vue`: Vue positioning, Teleport, focus, collection, and
+  interaction adapters
 
-`@floating-ui-plus/web` installs `@floating-ui/dom` and `@floating-ui/utils`
-as direct runtime dependencies, so applications do not need to add them
-separately.
+`@floating-ui-plus/web-components` uses Lit internally but exposes HTML
+attributes, JavaScript properties, DOM events, slots, and Custom Element
+methods. It does not publish Lit directives or reactive controllers.
 
 ## Development
 
@@ -22,48 +26,38 @@ bun run test
 bun run test:browser
 ```
 
-`test:browser` runs the Web and Lit suites through Vitest Browser Mode's
-Playwright provider, then runs the demo E2E suite. All Playwright-backed tests
-are headless by default and use the installed Chrome browser. They exercise the
-native DOM, CSS layout engine, focus, pointer, and keyboard behavior rather than
-JSDOM geometry.
+All packages are built with [tsdown](https://tsdown.dev/). Package `dev`
+scripts run `tsdown --watch --no-clean`.
 
-For local visual debugging only:
+`test:browser` runs the Web, Web Components, and Vue Vitest Browser suites,
+then the integrated demo E2E suite. Playwright uses the installed Chrome browser and
+exercises native layout, focus, pointer, and keyboard behavior.
 
-```sh
-bun run test:browser:headed
-```
+## Integrated Astro demo
 
-Both packages are built with [tsdown](https://tsdown.dev/). Their `dev` scripts
-run `tsdown --watch`.
+`apps/demo` uses Astro 7.1.4 and `@astrojs/vue` to demonstrate both package
+surfaces in one application:
 
-## Lit demo app
-
-`apps/lit-demo` is a real Light DOM Lit app that exercises every interaction
-plugin in a browser: tooltip hover/focus/safe polygon, a portaled popover,
-cursor-following virtual references, hide/clipping middleware strategies, a
-modal focus trap, and a roving-focus / typeahead menu.
-
-The demo uses Tailwind CSS v4's CSS-first configuration. Semantic color,
-typography, radius, shadow, and motion tokens live in
-`apps/lit-demo/src/styles.css` under `@theme`; reusable visual primitives live
-in `@layer components`. Playwright checks the generated tokens, responsive
-layout, middleware fixtures, and full nested-menu keyboard path in desktop and
-mobile Chrome.
-
-The `/examples/middleware` route demonstrates every DOM positioning middleware
-from the Floating UI middleware navigation.
+- `/web-components/*`: Lit-powered Custom Elements composed in `.astro`
+- `/vue/*`: Vue-native components hydrated as Astro islands
+- tooltip, popover, menus, client point, multilingual search, modal, all 12
+  placements, and all eight middleware examples on both surfaces
 
 ```sh
-bun run dev
+bun run dev:demo
 ```
 
-Open <http://127.0.0.1:5173>. The root `dev` script first builds
-`@floating-ui-plus/web` and `@floating-ui-plus/lit`, then runs Vite together with both
-`tsdown --watch --no-clean` processes. The initial build creates complete
-package output, while disabling watcher cleanup prevents Vite from resolving a
-package through a temporarily empty `dist`; later source changes rebuild
-automatically.
+Open <http://127.0.0.1:5173>.
 
-To run only the package watchers or only the demo server, use `bun run
-dev:packages` or `bun run dev:demo` respectively.
+Production browser tests build Astro, serve it with `astro preview`, and run
+the integrated hub and both framework surfaces in desktop and mobile Chrome.
+
+## Cloudflare deployment
+
+```sh
+bun run deploy:demo:dry-run
+bun run deploy:demo
+```
+
+The standalone `cf` CLI builds the app into Cloudflare Build Output and deploys
+one Worker with the Astro static assets.

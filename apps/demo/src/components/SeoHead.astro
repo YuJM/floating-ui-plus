@@ -1,0 +1,136 @@
+---
+import {
+  DEFAULT_SOCIAL_IMAGE,
+  SITE_NAME,
+  getBreadcrumbs,
+  normalizePathname,
+  type SeoMetadata,
+} from '../seo';
+
+interface Props {
+  metadata: SeoMetadata;
+  image?: string;
+}
+
+const {metadata, image = DEFAULT_SOCIAL_IMAGE} = Astro.props;
+const site = Astro.site ?? Astro.url;
+const pathname = normalizePathname(Astro.url.pathname);
+const canonical = new URL(pathname, site);
+const socialImage = new URL(image, site);
+const breadcrumbs = getBreadcrumbs(pathname);
+const robots = metadata.noindex
+  ? 'noindex, nofollow'
+  : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+
+const graph = metadata.noindex
+  ? undefined
+  : {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebSite',
+          '@id': `${site.href}#website`,
+          url: site.href,
+          name: SITE_NAME,
+          description:
+            'Interactive Floating UI Plus demos for Web Components and Vue.',
+          inLanguage: 'en',
+        },
+        {
+          '@type': metadata.schemaType ?? 'WebPage',
+          '@id': `${canonical.href}#webpage`,
+          url: canonical.href,
+          name: metadata.title,
+          description: metadata.description,
+          inLanguage: 'en',
+          isPartOf: {'@id': `${site.href}#website`},
+          ...(breadcrumbs.length > 0
+            ? {breadcrumb: {'@id': `${canonical.href}#breadcrumb`}}
+            : {}),
+        },
+        ...(breadcrumbs.length > 0
+          ? [
+              {
+                '@type': 'BreadcrumbList',
+                '@id': `${canonical.href}#breadcrumb`,
+                itemListElement: breadcrumbs.map((breadcrumb, index) => ({
+                  '@type': 'ListItem',
+                  position: index + 1,
+                  name: breadcrumb.name,
+                  item: new URL(breadcrumb.pathname, site).href,
+                })),
+              },
+            ]
+          : []),
+        ...(pathname === '/'
+          ? [
+              {
+                '@type': 'WebApplication',
+                '@id': `${site.href}#application`,
+                name: 'Floating UI Plus Interactive Demos',
+                url: site.href,
+                description: metadata.description,
+                applicationCategory: 'DeveloperApplication',
+                operatingSystem: 'Any',
+                browserRequirements: 'Requires a modern browser with JavaScript',
+                featureList: [
+                  'Web Components demos',
+                  'Vue component demos',
+                  'Accessible focus management',
+                  'Floating element positioning',
+                  'Multilingual fuzzy search',
+                ],
+              },
+            ]
+          : []),
+      ],
+    };
+
+const structuredData = graph
+  ? JSON.stringify(graph).replace(/</g, '\\u003c')
+  : undefined;
+---
+
+<title>{metadata.title}</title>
+<meta name="description" content={metadata.description} />
+<meta name="robots" content={robots} />
+<meta name="application-name" content={SITE_NAME} />
+<meta name="theme-color" content="#101a17" />
+<link rel="canonical" href={canonical} />
+<link rel="sitemap" href="/sitemap-index.xml" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="manifest" href="/site.webmanifest" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content={metadata.title} />
+<meta property="og:description" content={metadata.description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={socialImage} />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta
+  property="og:image:alt"
+  content="Floating UI Plus Web Components and Vue interactive demos"
+/>
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={metadata.title} />
+<meta name="twitter:description" content={metadata.description} />
+<meta name="twitter:image" content={socialImage} />
+<meta
+  name="twitter:image:alt"
+  content="Floating UI Plus Web Components and Vue interactive demos"
+/>
+
+{
+  structuredData && (
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={structuredData}
+    />
+  )
+}

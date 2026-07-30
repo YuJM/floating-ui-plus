@@ -1,0 +1,30 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "paths": {
+      "@floating-ui-plus/web-components": [
+        "./packages/web-components/src/index.ts"
+      ],
+      "@floating-ui-plus/web-components/*": [
+        "./packages/web-components/src/*"
+      ],
+      "@floating-ui-plus/vue": [
+        "./packages/vue/src/index.ts"
+      ],
+      "@floating-ui-plus/vue/*": [
+        "./packages/vue/src/*"
+      ]
+    },
+    "useDefineForClassFields": false,
+    "experimentalDecorators": true
+  },
+  "include": [
+    ".astro/types.d.ts",
+    "src/**/*",
+    "astro.config.ts",
+    "cloudflare.config.ts",
+    "wrangler.config.ts"
+  ],
+  "exclude": ["dist"]
+}

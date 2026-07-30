@@ -1,13 +1,27 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
-  "required": ["features", "excluded", "reactOnly"],
+  "required": [
+    "features",
+    "webComponents",
+    "vue",
+    "excluded",
+    "reactOnly"
+  ],
   "properties": {
+    "webComponents": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "vue": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
     "features": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
-        "required": ["web", "lit", "kind"]
+        "required": ["web", "webComponents", "kind"]
       }
     }
   }

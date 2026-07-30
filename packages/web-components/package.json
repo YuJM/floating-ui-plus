@@ -1,0 +1,38 @@
+{
+  "name": "@floating-ui-plus/web-components",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Lit-powered headless Floating UI custom elements",
+  "license": "MIT",
+  "sideEffects": true,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch --no-clean",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:browser": "TEST_ENV=browser vitest run",
+    "test:browser:headed": "PLAYWRIGHT_HEADLESS=false TEST_ENV=browser vitest run"
+  },
+  "dependencies": {
+    "@floating-ui-plus/web": "workspace:^",
+    "@lit/context": "^1.1.6",
+    "lit": "^3.3.3"
+  }
+}

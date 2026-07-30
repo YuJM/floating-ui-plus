@@ -1,0 +1,55 @@
+---
+import {multilingualSearchPrompts} from '../../../../shared/multilingual-destinations';
+---
+
+<article class="demo-card combobox-card" data-demo="combobox">
+  <div class="card-top">
+    <span class="number">F</span>
+    <span class="chip">framework-neutral search</span>
+  </div>
+  <h3>Multilingual combobox</h3>
+  <p>Search by city, country, local script, alias, or forgiving typo.</p>
+
+  <div class="combobox-shell">
+    <label class="combobox-label" for="destination-search">
+      Destination
+    </label>
+    <floating-root data-combobox-root placement="bottom-start">
+      <floating-reference>
+        <input
+          id="destination-search"
+          class="combobox-input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby="combobox-hints combobox-status"
+          placeholder="Search city or country…"
+        />
+      </floating-reference>
+      <floating-portal>
+        <floating-content>
+          <div
+            class="combobox-popup"
+            data-combobox-popup
+            aria-label="Destination suggestions"
+          ></div>
+        </floating-content>
+      </floating-portal>
+    </floating-root>
+    <span class="combobox-icon" aria-hidden="true">⌕</span>
+  </div>
+
+  <div id="combobox-hints" class="combobox-hints">
+    {
+      multilingualSearchPrompts.map(([sample, destination]) => (
+        <button type="button" data-search-sample={sample}>
+          <code>{sample}</code><span>→ {destination}</span>
+        </button>
+      ))
+    }
+  </div>
+  <p id="combobox-status" class="sr-only" aria-live="polite">
+    Destination suggestions closed
+  </p>
+  <code>SearchController + &lt;floating-root&gt; + listNavigation()</code>
+</article>

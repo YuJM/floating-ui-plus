@@ -1,0 +1,14 @@
+---
+import ExampleRoute from '../../components/ExampleRoute.astro';
+import ClientPointExample from '../../components/examples/ClientPointExample.astro';
+import DemoLayout from '../../layouts/DemoLayout.astro';
+---
+
+<DemoLayout>
+  <ExampleRoute
+    kicker="client point route"
+    heading="A reference<br /><span>without an element.</span>"
+  >
+    <ClientPointExample />
+  </ExampleRoute>
+</DemoLayout>

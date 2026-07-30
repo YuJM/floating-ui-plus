@@ -16,13 +16,20 @@ export type FloatingRole =
 export interface RoleOptions {
   enabled?: boolean | undefined;
   role?: FloatingRole | undefined;
+  activeIndex?: number | null | undefined;
+  getItemId?: ((index: number) => string) | undefined;
 }
 
 export function role(options: ValueOrGetter<RoleOptions> = {}): FloatingPlugin {
   const referenceId = createId('floating-ui-reference');
 
   function apply(context: Parameters<FloatingPlugin['connect']>[0]) {
-    const {enabled = true, role = 'dialog'} = getValue(options);
+    const {
+      activeIndex = null,
+      enabled = true,
+      getItemId,
+      role = 'dialog',
+    } = getValue(options);
     if (!enabled) {
       context.attributes.reference = {};
       context.attributes.floating = {};
@@ -55,7 +62,16 @@ export function role(options: ValueOrGetter<RoleOptions> = {}): FloatingPlugin {
           ? {id: referenceId, ...(context.nested ? {role: 'menuitem'} : {})}
           : {}),
         ...(role === 'select' ? {'aria-autocomplete': 'none'} : {}),
-        ...(role === 'combobox' ? {'aria-autocomplete': 'list'} : {}),
+        ...(role === 'combobox'
+          ? {
+              'aria-autocomplete': 'list',
+              'aria-activedescendant':
+                activeIndex == null
+                  ? undefined
+                  : getItemId?.(activeIndex) ??
+                    `${floatingId}-option-${activeIndex}`,
+            }
+          : {}),
       };
     }
 
@@ -66,9 +82,14 @@ export function role(options: ValueOrGetter<RoleOptions> = {}): FloatingPlugin {
     };
     context.attributes.item = (state: ItemState) => {
       if (role !== 'select' && role !== 'combobox') return {};
+      const itemId =
+        state.index == null
+          ? undefined
+          : getItemId?.(state.index) ??
+            `${floatingId}-option-${state.index}`;
       return {
         role: 'option',
-        ...(state.active ? {id: `${floatingId}-fui-option`} : {}),
+        ...(itemId ? {id: itemId} : {}),
         'aria-selected': state.selected ? 'true' : 'false',
       };
     };

@@ -1,0 +1,171 @@
+@import "tailwindcss";
+@source "./**/*.{vue,ts}";
+
+@theme {
+  --font-display: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  --color-vue-canvas: #effaf5;
+  --color-vue-ink: #173a32;
+  --color-vue-muted: #60766e;
+  --color-vue-line: rgb(23 58 50 / 16%);
+  --color-vue-green: #42b883;
+  --color-vue-deep: #35495e;
+  --color-vue-mint: #caefdf;
+  --color-vue-sky: #cfeef0;
+  --color-vue-cream: #f7ecc8;
+  --color-vue-leaf: #d7f0c6;
+  --color-vue-sand: #f7dfbd;
+}
+
+@layer base {
+  :root { color: var(--color-vue-ink); background: var(--color-vue-canvas); font-family: var(--font-display); font-synthesis: none; }
+  * { box-sizing: border-box; }
+  body { min-width: 320px; margin: 0; }
+  button { font: inherit; }
+  button:focus-visible, a:focus-visible { outline: 3px solid #42b883; outline-offset: 4px; }
+  h1, h2, h3, p { margin: 0; }
+}
+
+@layer components {
+  .vue-hero { position: relative; display: grid; min-height: 430px; grid-template-columns: 1fr 1fr; align-items: center; gap: 32px; overflow: hidden; border-radius: 26px; padding: 64px 70px; background: #173a32; color: #f7fffb; }
+  .vue-hero-grid { position: absolute; inset: 0; opacity: .14; background-image: linear-gradient(rgb(255 255 255 / .35) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .35) 1px, transparent 1px); background-size: 42px 42px; mask-image: linear-gradient(90deg, black, transparent 82%); }
+  .vue-kicker, .vue-card-top, .vue-panel-label, code, .vue-back-link { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; letter-spacing: .09em; text-transform: uppercase; }
+  .vue-hero h2, .vue-route-view h2, .vue-modal-strip h2 { margin-top: 18px; font-size: clamp(46px, 6.5vw, 84px); font-weight: 500; line-height: .9; letter-spacing: -.075em; }
+  .vue-hero h2 em, .vue-route-view h2:last-child, .vue-modal-strip h2 em { color: #70e2b1; font-style: normal; }
+  .vue-hero p { margin-top: 27px; color: #b9d4c9; font-size: 14px; line-height: 1.55; }
+  .vue-orbit { position: absolute; top: 50%; right: 11%; width: 320px; height: 320px; transform: translateY(-50%); }
+  .vue-orbit i { position: absolute; inset: 12%; border: 1px solid rgb(112 226 177 / .7); border-radius: 50%; transform: rotate(-24deg) skewX(-12deg); }
+  .vue-orbit i:nth-child(2) { inset: 28%; border-color: rgb(139 226 239 / .75); transform: rotate(56deg) skewX(-8deg); }
+  .vue-orbit i:nth-child(3) { top: 12%; left: 73%; width: 10px; height: 10px; inset: auto; border: 0; background: #f5c05f; box-shadow: 0 0 25px #f5c05f; }
+  .vue-orbit b { position: absolute; inset: 44%; border: 1px solid #42b883; border-radius: 999px; box-shadow: 0 0 0 10px rgb(66 184 131 / .09), 0 0 35px rgb(66 184 131 / .33); }
+  .vue-demo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 18px 0 74px; }
+  .vue-demo-card { display: flex; min-height: 350px; flex-direction: column; border: 1px solid transparent; border-radius: 18px; padding: 28px; }
+  .vue-placement-card { border-color: rgb(23 58 50 / .16); background: rgb(255 255 255 / .55); }
+  .vue-card-top { display: flex; align-items: center; justify-content: space-between; color: #4d665d; }
+  .vue-number { display: grid; width: 27px; height: 27px; place-items: center; border-radius: 999px; background: #173a32; color: white; }
+  .vue-demo-card h3 { margin-top: 36px; font-size: 28px; font-weight: 500; letter-spacing: -.055em; }
+  .vue-demo-card p { margin-top: 10px; color: #426057; font-size: 13px; line-height: 1.55; }
+  .vue-button { display: inline-flex; min-width: 168px; align-items: center; justify-content: space-between; gap: 24px; border: 0; border-radius: 10px; padding: 13px 15px; background: #42b883; color: #12342b; cursor: pointer; font-size: 12px; font-weight: 700; transition: transform .18s ease, box-shadow .18s ease; }
+  .vue-button:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgb(23 58 50 / .17); }
+  .vue-button span { color: #173a32; }
+  .vue-button-ink { background: #173a32; color: white; }.vue-button-ink span { color: #70e2b1; }
+  .vue-button-sky { background: #35495e; color: white; }.vue-button-sky span { color: #9ce9ee; }
+  .vue-button-outline { border: 1px solid #173a32; background: transparent; }
+  code { display: block; margin-top: 25px; color: #55746a; font-size: 9px; letter-spacing: .02em; text-transform: none; }
+  .vue-tooltip { z-index: 40; max-width: min(230px, calc(100vw - 24px)); border: 1px solid rgb(112 226 177 / .6); border-radius: 10px; padding: 10px 13px; background: #173a32; color: #f7fffb; box-shadow: 0 16px 34px rgb(23 58 50 / .28); font-size: 12px; }.vue-tooltip b { color: #70e2b1; }
+  .vue-popover { z-index: 40; width: 248px; border: 1px solid rgb(66 184 131 / .35); border-radius: 13px; padding: 18px; background: #fafffd; color: #173a32; box-shadow: 0 18px 42px rgb(23 58 50 / .24); }.vue-popover strong { display: block; margin-top: 12px; font-size: 17px; letter-spacing: -.03em; }.vue-popover p { margin-top: 7px; color: #60766e; font-size: 12px; line-height: 1.45; }.vue-panel-label { color: #48876f; font-size: 9px; }
+  .vue-text-button { margin-top: 14px; border: 0; padding: 0; background: transparent; color: #268e61; cursor: pointer; font-size: 12px; }
+  .vue-menu { z-index: 40; width: 230px; border: 1px solid rgb(112 226 177 / .26); border-radius: 13px; padding: 8px; background: #173a32; color: #effff7; box-shadow: 0 18px 44px rgb(23 58 50 / .27); }.vue-submenu { width: 205px; }.vue-menu-heading { padding: 10px 11px; color: #9dc7b6; font-family: ui-monospace, monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }.vue-menu-item { display: flex; width: 100%; justify-content: space-between; border: 0; border-radius: 8px; padding: 11px; background: transparent; color: inherit; cursor: pointer; text-align: left; font-size: 12px; }.vue-menu-item[data-active="true"], .vue-menu-item:hover, .vue-menu-item:focus-visible { outline: none; background: #2c594b; }.vue-menu-item kbd { color: #9ac8b5; font: 10px ui-monospace, monospace; }
+  .vue-cursor-field { position: relative; display: grid; min-height: 76px; place-items: center; overflow: hidden; border: 1px dashed rgb(23 58 50 / .44); border-radius: 10px; color: #45675b; cursor: crosshair; font: 11px ui-monospace, monospace; letter-spacing: .04em; }.vue-cursor-field i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #42b883; }.vue-cursor-field i:nth-child(1) { top: 16px; left: 18%; }.vue-cursor-field i:nth-child(2) { right: 21%; bottom: 18px; background: #35495e; }.vue-cursor-field i:nth-child(3) { top: 19px; right: 12%; background: #e3a444; }
+  .vue-modal-strip { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 36px; margin-bottom: 90px; border-top: 1px solid var(--color-vue-line); padding-top: 50px; }.vue-modal-strip p { max-width: 310px; color: #60766e; font-size: 14px; line-height: 1.55; }.vue-overlay { z-index: 60; display: grid; place-items: center; padding: 24px; background: rgb(11 39 32 / .58); backdrop-filter: blur(9px); }.vue-modal { width: min(460px, 100%); border-radius: 18px; padding: 32px; background: #fafffd; color: #173a32; box-shadow: 0 26px 90px rgb(0 0 0 / .28); }.vue-modal h3 { margin-top: 16px; font-size: 29px; letter-spacing: -.055em; }.vue-modal p { margin: 13px 0 22px; color: #60766e; line-height: 1.55; }
+  .vue-route-view { display: grid; grid-template-columns: minmax(220px, .9fr) minmax(280px, 1fr); align-items: center; gap: 30px 80px; min-height: 560px; padding-bottom: 96px; }.vue-route-view > .vue-back-link { grid-column: 1 / -1; }.vue-route-view > :last-child { width: min(100%, 390px); }.vue-back-link { color: #4d7969; text-decoration: none; }.vue-back-link:hover { color: #268e61; }
+  .vue-middleware-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-top: 54px; }
+  .vue-middleware-card { min-width: 0; min-height: 370px; border: 1px solid var(--color-vue-line); border-radius: 16px; padding: 24px; background: rgb(255 255 255 / .58); }
+  .vue-middleware-card > p { min-height: 36px; max-width: 390px; margin-top: 10px; color: #60766e; font-size: 12px; line-height: 1.45; }
+  .vue-middleware-card > code { margin-top: 18px; }
+  .vue-middleware-title { display: flex; align-items: baseline; gap: 13px; }
+  .vue-middleware-title span { color: #268e61; font: 10px ui-monospace, monospace; }
+  .vue-middleware-title h3 { margin: 0; font-size: 25px; font-weight: 500; letter-spacing: -.045em; }
+  .vue-middleware-title a { margin-left: auto; color: #268e61; font: 9px ui-monospace, monospace; letter-spacing: .07em; text-decoration: none; }
+  .vue-middleware-title a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .vue-mw-stage, .vue-mw-static-stage, .vue-mw-inline-case { border: 1px dashed rgb(23 58 50 / .32); border-radius: 10px; background: rgb(255 255 255 / .42); }
+  .vue-mw-stage { position: relative; width: 100%; min-width: 0; max-width: 100%; height: 180px; margin-top: 18px; scrollbar-width: thin; scrollbar-color: #42b883 transparent; }
+  .vue-mw-stage-scroll-x { overflow-x: auto; overflow-y: hidden; }
+  .vue-mw-stage-scroll-y { overflow-x: hidden; overflow-y: auto; }
+  .vue-mw-stage:focus-visible { outline: 3px solid #42b883; outline-offset: 3px; }
+  .vue-mw-track { position: relative; }
+  .vue-mw-track-wide { width: 920px; height: 179px; }
+  .vue-mw-track-tall { width: 100%; height: 420px; }
+  .vue-mw-stage-hide .vue-mw-track-tall { height: 520px; }
+  .vue-mw-track-size { width: 100%; height: 520px; }
+  .vue-mw-scroll-hint { position: absolute; top: 9px; left: 11px; z-index: 9; color: #60766e; font: 9px ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
+  .vue-mw-reference { position: absolute; z-index: 1; border: 1px solid #173a32; border-radius: 8px; padding: 8px 11px; background: #fafffd; color: #173a32; font-size: 11px; white-space: nowrap; }
+  .vue-mw-reference-static { top: 98px; left: 50%; transform: translateX(-50%); }
+  .vue-mw-reference-shift { top: 104px; left: 700px; transform: translateX(-50%); }
+  .vue-mw-reference-flip { top: 210px; left: 50%; transform: translateX(-50%); }
+  .vue-mw-reference-arrow { top: 104px; left: 700px; width: 132px; transform: translateX(-50%); }
+  .vue-mw-reference-size { top: 240px; left: 50%; width: 150px; transform: translateX(-50%); }
+  .vue-mw-reference-auto { top: 200px; left: 50%; transform: translateX(-50%); }
+  .vue-mw-reference-hide { top: 210px; left: 50%; transform: translateX(-50%); }
+  .vue-mw-panel { position: absolute; z-index: 5; min-width: 116px; border-radius: 8px; padding: 8px 10px; color: #173a32; font-size: 11px; line-height: 1.5; white-space: nowrap; box-shadow: 0 10px 20px rgb(23 58 50 / .16); }
+  .vue-mw-panel-green { background: #70e2b1; }
+  .vue-mw-panel-lime { background: #d7f0c6; }
+  .vue-mw-panel-coral { background: #f7c7ae; }
+  .vue-mw-panel-ink { background: #173a32; color: #f7fffb; }
+  .vue-mw-panel-paper { border: 1px solid rgb(23 58 50 / .2); background: #fafffd; }
+  .vue-mw-panel-mint { background: #caefdf; }
+  .vue-mw-panel-arrow { min-width: 148px; text-align: center; }
+  .vue-mw-arrow { position: absolute; width: 10px; height: 10px; background: #173a32; transform: rotate(45deg); }
+  .vue-mw-panel-size { display: grid; gap: 5px; width: 190px; min-width: 0; overflow: auto; box-sizing: border-box; white-space: normal; }
+  .vue-mw-panel-size strong { margin-bottom: 2px; }
+  .vue-mw-panel-size span { color: #60766e; }
+  .vue-mw-panel-auto { width: 260px; text-align: center; }
+  .vue-mw-panel-hide { transition: opacity .18s ease, visibility .18s ease; }
+  .vue-mw-panel-hide[data-escaped="true"] { opacity: .32; }
+  .vue-mw-panel-hide[data-reference-hidden="true"] { visibility: hidden; }
+  .vue-mw-state-readout { margin-top: 8px; color: #60766e; font: 9px ui-monospace, monospace; letter-spacing: .05em; text-transform: uppercase; }
+  .vue-mw-comparison, .vue-mw-inline-comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+  .vue-mw-static-stage { position: relative; height: 180px; overflow: hidden; }
+  .vue-mw-demo-label { position: absolute; top: 9px; left: 10px; color: #60766e; font: 9px ui-monospace, monospace; letter-spacing: .06em; text-transform: uppercase; }
+  .vue-mw-inline-case { position: relative; height: 180px; overflow: hidden; }
+  .vue-mw-inline-case p { position: absolute; top: 72px; left: 50%; width: 154px; color: #426057; font-size: 12px; line-height: 1.55; transform: translateX(-50%); }
+  .vue-mw-inline-reference { color: #268e61; text-decoration: underline; text-decoration-color: #42b883; text-decoration-thickness: 2px; }
+  .vue-mw-panel-inline { min-width: 96px; padding: 6px 8px; text-align: center; }
+  .vue-combobox-card { background: #dff5e9; }
+  .vue-combobox-card > p, .vue-combobox-card > code { color: #4e675e; }
+  .vue-combobox-shell { position: relative; margin-top: 24px; }
+  .vue-combobox-label { display: block; margin-bottom: 7px; color: #426057; font: 9px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  .vue-combobox-shell [data-floating-combobox-input] { width: 100%; border: 1px solid rgb(23 58 50 / .24); border-radius: 10px; padding: 13px 42px 13px 14px; outline: 0; background: #fafffd; color: #173a32; font-size: 14px; transition: border-color .16s ease, box-shadow .16s ease; }
+  .vue-combobox-shell [data-floating-combobox-input]::placeholder { color: #83978f; }
+  .vue-combobox-shell [data-floating-combobox-input]:focus { border-color: #268e61; box-shadow: 0 0 0 4px rgb(66 184 131 / .16); }
+  .vue-combobox-icon { position: absolute; right: 14px; bottom: 12px; color: #268e61; font-size: 19px; pointer-events: none; }
+  [data-floating-combobox-popup] { z-index: 60; width: min(400px, calc(100vw - 36px)); overflow: hidden; border: 1px solid rgb(23 58 50 / .18); border-radius: 12px; padding: 6px; background: #fafffd; box-shadow: 0 22px 55px rgb(23 58 50 / .22); }
+  [data-floating-combobox-option] { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 58px; border-radius: 8px; padding: 9px 11px; color: #173a32; cursor: default; }
+  [data-floating-combobox-option][data-active="true"] { background: #caefdf; box-shadow: inset 3px 0 #42b883; }
+  [data-floating-combobox-option] > span:first-child { display: grid; gap: 3px; }
+  [data-floating-combobox-option] strong { font-size: 16px; letter-spacing: -.025em; }
+  [data-floating-combobox-option] small { color: #60766e; font-size: 10px; }
+  .vue-language-badge { flex: none; border: 1px solid rgb(38 142 97 / .2); border-radius: 999px; padding: 4px 7px; background: #effaf5; color: #268e61; font: 9px ui-monospace, monospace; }
+  .vue-combobox-empty { padding: 23px 14px; color: #60766e; font-size: 12px; text-align: center; }
+  .vue-combobox-hints { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+  .vue-combobox-hints button { display: flex; align-items: center; justify-content: space-between; gap: 6px; border: 0; border-radius: 7px; padding: 7px 8px; background: rgb(255 255 255 / .68); color: #4e675e; cursor: pointer; font-size: 9px; }
+  .vue-combobox-hints button:hover { background: #fafffd; color: #173a32; }
+  .vue-combobox-hints code { margin: 0; color: #176b49; font-size: 9px; }
+  .vue-placement-view { display: grid; min-height: 680px; grid-template-columns: minmax(250px, .7fr) minmax(540px, 1.3fr); align-items: center; gap: 64px; padding: 28px 0 100px; }
+  .vue-placement-copy { align-self: start; padding-top: 42px; }
+  .vue-placement-copy .vue-kicker { display: block; margin-top: 54px; color: #268e61; }
+  .vue-placement-copy h2 { margin-top: 18px; font-size: clamp(48px, 6vw, 78px); font-weight: 500; line-height: .9; letter-spacing: -.075em; }
+  .vue-placement-copy h2 em { color: #42b883; font-style: normal; }
+  .vue-placement-copy > p { max-width: 390px; margin-top: 25px; color: #60766e; font-size: 14px; line-height: 1.6; }
+  .vue-placement-copy > p code { display: inline; margin: 0; color: #268e61; font-size: .86em; }
+  .vue-placement-readout { display: grid; gap: 7px; margin-top: 38px; border-left: 2px solid #42b883; padding: 3px 0 3px 18px; }
+  .vue-placement-readout span { color: #60766e; font: 9px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  .vue-placement-readout strong { color: #173a32; font: 13px ui-monospace, monospace; }
+  .vue-placement-readout code { margin: 0; color: #268e61; font-size: 11px; }
+  .vue-placement-stage { position: relative; width: 100%; min-width: 0; aspect-ratio: 1.08; border: 1px solid var(--color-vue-line); border-radius: 24px; background: rgb(255 255 255 / .58); }
+  .vue-placement-reference { position: absolute; top: 50%; left: 50%; display: grid; width: 176px; height: 176px; place-items: center; border: 2px dashed #173a32; border-radius: 12px; background: #fafffd; font-size: 17px; font-weight: 600; transform: translate(-50%, -50%); }
+  .vue-placement-floating { z-index: 8; min-width: 116px; border-radius: 9px; padding: 10px 13px; background: #173a32; color: #f7fffb; box-shadow: 0 15px 30px rgb(23 58 50 / .22); font: 12px ui-monospace, monospace; text-align: center; }
+  .vue-placement-control { position: absolute; z-index: 2; display: grid; width: 44px; height: 44px; place-items: center; border: 0; padding: 0; background: transparent; cursor: pointer; transform: translate(-50%, -50%); }
+  .vue-placement-control > span { display: block; width: 22px; height: 22px; border: 1px solid #173a32; border-radius: 999px; background: #fafffd; transition: background .16s ease, box-shadow .16s ease, transform .16s ease; }
+  .vue-placement-control:hover > span { transform: scale(1.12); }
+  .vue-placement-control:focus-visible { outline: 0; }
+  .vue-placement-control:focus-visible > span { box-shadow: 0 0 0 4px rgb(66 184 131 / .22); }
+  .vue-placement-control.is-selected > span { border-color: #173a32; background: #173a32; box-shadow: 0 0 0 5px rgb(66 184 131 / .16); }
+  .vue-placement-control[data-placement-control="top-start"] { top: 10%; left: 31%; }
+  .vue-placement-control[data-placement-control="top"] { top: 10%; left: 50%; }
+  .vue-placement-control[data-placement-control="top-end"] { top: 10%; left: 69%; }
+  .vue-placement-control[data-placement-control="right-start"] { top: 31%; left: 88%; }
+  .vue-placement-control[data-placement-control="right"] { top: 50%; left: 88%; }
+  .vue-placement-control[data-placement-control="right-end"] { top: 69%; left: 88%; }
+  .vue-placement-control[data-placement-control="bottom-end"] { top: 90%; left: 69%; }
+  .vue-placement-control[data-placement-control="bottom"] { top: 90%; left: 50%; }
+  .vue-placement-control[data-placement-control="bottom-start"] { top: 90%; left: 31%; }
+  .vue-placement-control[data-placement-control="left-end"] { top: 69%; left: 12%; }
+  .vue-placement-control[data-placement-control="left"] { top: 50%; left: 12%; }
+  .vue-placement-control[data-placement-control="left-start"] { top: 31%; left: 12%; }
+  .vue-surface-enter-active, .vue-surface-leave-active { transition: opacity .16s ease, transform .16s ease; }.vue-surface-enter-from, .vue-surface-leave-to { opacity: 0; transform: translateY(-4px) scale(.985); }
+}
+
+@media (max-width: 900px) { .vue-placement-view { grid-template-columns: 1fr; gap: 36px; }.vue-placement-copy { padding-top: 0; }.vue-placement-stage { width: min(100%, 640px); justify-self: center; } }
+@media (max-width: 800px) { .vue-hero { min-height: 500px; grid-template-columns: 1fr; padding: 42px 28px; }.vue-orbit { right: -100px; top: 64%; }.vue-demo-grid, .vue-middleware-grid { grid-template-columns: 1fr; }.vue-route-view { grid-template-columns: 1fr; min-height: 0; gap: 26px; padding-bottom: 70px; }.vue-route-view > :last-child { width: 100%; }.vue-modal-strip { grid-template-columns: 1fr; gap: 24px; } }
+@media (max-width: 520px) { .vue-hero { border-radius: 18px; }.vue-demo-card { min-height: 310px; }.vue-orbit { transform: scale(.75) translateY(-50%); }.vue-middleware-grid { grid-template-columns: 1fr; }.vue-placement-stage { aspect-ratio: .86; }.vue-placement-reference { width: 136px; height: 136px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; scroll-behavior: auto !important; } }

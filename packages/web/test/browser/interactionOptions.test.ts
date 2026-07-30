@@ -6,6 +6,7 @@ import {
   clientPoint,
   createFloating,
   dismiss,
+  FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE,
   focus,
   FloatingTree,
   hover,
@@ -623,6 +624,36 @@ describe('role option parity', () => {
     harness.controller.destroy();
   });
 
+  test('combobox connects stable option ids with aria-activedescendant', () => {
+    let activeIndex: number | null = 1;
+    const harness = createHarness({
+      open: true,
+      plugins: [role(() => ({role: 'combobox', activeIndex}))],
+    });
+    harness.controller.refresh();
+    const item = harness.controller.context.attributes.item;
+    const attributes =
+      typeof item === 'function'
+        ? item({active: true, index: 1, selected: false})
+        : {};
+
+    expect(attributes.id).toMatch(/-option-1$/);
+    expect(
+      harness.controller.context.attributes.reference![
+        'aria-activedescendant'
+      ],
+    ).toBe(attributes.id);
+
+    activeIndex = null;
+    harness.controller.refresh();
+    expect(
+      harness.controller.context.attributes.reference![
+        'aria-activedescendant'
+      ],
+    ).toBeUndefined();
+    harness.controller.destroy();
+  });
+
   test('uses an explicit floating focus element id and clears when disabled', () => {
     let enabled = true;
     const harness = createHarness({
@@ -630,7 +661,7 @@ describe('role option parity', () => {
       plugins: [role(() => ({enabled, role: 'dialog'}))],
     });
     const focusElement = document.createElement('div');
-    focusElement.dataset.floatingUiFocusable = '';
+    focusElement.setAttribute(FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE, '');
     focusElement.id = 'custom-focus-id';
     harness.floating.append(focusElement);
     harness.controller.refresh();
@@ -766,6 +797,67 @@ describe('typeahead option parity', () => {
     fireEvent.keyDown(harness.floating, {key: 'z'});
     expect(onTypingChange).toHaveBeenLastCalledWith(false);
     harness.controller.destroy();
+  });
+
+  test('matches a completed Hangul composition exactly once', () => {
+    const {harness, onMatch, onTypingChange} = createTypeaheadHarness({
+      list: ['서울', '東京', '北京'],
+    });
+
+    fireEvent.compositionStart(harness.floating);
+    fireEvent.keyDown(harness.floating, {
+      key: 'ㅅ',
+      isComposing: true,
+      keyCode: 229,
+    });
+    expect(onMatch).not.toHaveBeenCalled();
+
+    fireEvent.compositionEnd(harness.floating, {data: '서을'});
+    expect(onMatch).toHaveBeenCalledOnce();
+    expect(onMatch).toHaveBeenLastCalledWith(0);
+    expect(onTypingChange).toHaveBeenCalledWith(true);
+    harness.controller.destroy();
+  });
+
+  test('uses multilingual fuzzy matching by default', () => {
+    const {harness, onMatch} = createTypeaheadHarness({
+      list: ['Seoul', 'Beijing', 'Tokyo'],
+    });
+
+    for (const key of 'bejing') {
+      fireEvent.keyDown(harness.floating, {key});
+    }
+
+    expect(onMatch).toHaveBeenLastCalledWith(1);
+    harness.controller.destroy();
+  });
+
+  test.each([
+    ['ｶﾀｶﾅ', ['カタカナ', 'ひらがな'], 0],
+    ['北京', ['上海', '北京'], 1],
+  ] as const)(
+    'normalizes the completed IME value %s',
+    (value, list, expectedIndex) => {
+      const {harness, onMatch} = createTypeaheadHarness({
+        list: [...list],
+      });
+      fireEvent.compositionStart(harness.floating);
+      fireEvent.compositionEnd(harness.floating, {data: value});
+      expect(onMatch).toHaveBeenCalledOnce();
+      expect(onMatch).toHaveBeenLastCalledWith(expectedIndex);
+      harness.controller.destroy();
+    },
+  );
+
+  test('cleans up an unfinished composition and timeout state', () => {
+    vi.useFakeTimers();
+    const {harness, onTypingChange, onMatch} = createTypeaheadHarness();
+    fireEvent.compositionStart(harness.floating);
+    expect(onTypingChange).toHaveBeenLastCalledWith(true);
+    harness.controller.destroy();
+    vi.advanceTimersByTime(200);
+    expect(onTypingChange).toHaveBeenLastCalledWith(false);
+    expect(onMatch).not.toHaveBeenCalled();
   });
 });
 

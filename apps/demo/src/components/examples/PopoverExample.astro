@@ -1,0 +1,32 @@
+<article class="demo-card popover-card" data-demo="popover">
+  <div class="card-top">
+    <span class="number">B</span><span class="chip">named slots</span>
+  </div>
+  <h3>Anchored popover</h3>
+  <p>The trigger and panel are composed declaratively through named slots.</p>
+  <div class="card-action">
+    <floating-root
+      data-popover-root
+      interactions="click dismiss"
+      floating-role="dialog"
+      placement="bottom-start"
+    >
+      <floating-reference>
+        <button class="coral-button">
+          Open coordinates <span aria-hidden="true">＋</span>
+        </button>
+      </floating-reference>
+      <floating-portal>
+        <floating-content>
+          <div class="popover-panel">
+            <span class="panel-kicker">REFERENCE / 42.8°</span>
+            <strong>Portal, still connected.</strong>
+            <p>ARIA and outside-press behavior are owned by the component.</p>
+            <button class="text-button" data-close-popover>Close panel</button>
+          </div>
+        </floating-content>
+      </floating-portal>
+    </floating-root>
+  </div>
+  <code>&lt;floating-portal&gt; + &lt;floating-content&gt;</code>
+</article>

@@ -2,7 +2,9 @@ import {defineConfig} from 'tsdown';
 
 export default defineConfig({
   entry: {
+    fuzzy: 'src/fuzzy.ts',
     index: 'src/index.ts',
+    search: 'src/search.ts',
     utils: 'src/utils.ts',
   },
   format: ['esm', 'cjs'],

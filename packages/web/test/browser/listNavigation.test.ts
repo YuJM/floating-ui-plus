@@ -306,7 +306,7 @@ describe('listNavigation parity', () => {
     harness.controller.destroy();
   });
 
-  test('uses caller scrollIntoView options', () => {
+  test('uses caller scrollIntoView options after positioning can settle', async () => {
     const scrollIntoView = vi.fn();
     const harness = createListHarness({
       open: true,
@@ -318,6 +318,8 @@ describe('listNavigation parity', () => {
 
     fireEvent.keyDown(harness.floating, {key: 'ArrowDown'});
 
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     expect(scrollIntoView).toHaveBeenCalledWith({
       block: 'center',
       inline: 'nearest',

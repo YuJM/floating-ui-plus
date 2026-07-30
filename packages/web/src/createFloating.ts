@@ -2,6 +2,7 @@ import {computePosition} from '@floating-ui/dom';
 import {isElement} from '@floating-ui/utils/dom';
 
 import {createFloatingEvents} from './events';
+import {FloatingCoordinator} from './coordinator';
 import type {
   FloatingAttributes,
   FloatingContext,
@@ -10,6 +11,8 @@ import type {
   FloatingElements,
   FloatingOptions,
   FloatingOptionsSource,
+  FloatingPresence,
+  FloatingPresenceState,
   FloatingPlugin,
   FloatingPosition,
   FloatingStyles,
@@ -92,6 +95,24 @@ export function createFloating(
     null,
     resolveOptions(optionsSource).transform !== false,
   );
+  let presenceState: FloatingPresenceState = 'unmounted';
+  const positionedResolvers = new Set<(position: FloatingPosition) => void>();
+
+  function resolvePositioned() {
+    if (presenceState !== 'mounted' || !position.isPositioned) return;
+    positionedResolvers.forEach((resolve) => resolve(position));
+    positionedResolvers.clear();
+  }
+
+  const presence: FloatingPresence = {
+    get state() {
+      return presenceState;
+    },
+    set(state) {
+      presenceState = state;
+      resolvePositioned();
+    },
+  };
 
   const context: FloatingContext = {
     get open() {
@@ -122,6 +143,7 @@ export function createFloating(
       return update();
     },
   };
+  let coordinator: FloatingCoordinator;
 
   function cleanupPlugins() {
     pluginCleanups
@@ -211,6 +233,7 @@ export function createFloating(
       options.transform !== false,
     );
     events.emit('positionchange', position);
+    resolvePositioned();
   }
 
   function setReference(reference: Element | ReferenceElement | null) {
@@ -224,6 +247,9 @@ export function createFloating(
 
   const controller: FloatingController = {
     context,
+    get contextScope() {
+      return coordinator.scope;
+    },
     elements,
     get position() {
       return position;
@@ -231,12 +257,32 @@ export function createFloating(
     get floatingStyles() {
       return floatingStyles;
     },
+    presence,
+    get list() {
+      return coordinator.list;
+    },
     plugins,
     pipe(...nextPlugins) {
       plugins.push(...nextPlugins);
       if (connected) {
         connectPlugins();
       }
+      return controller;
+    },
+    node(options) {
+      coordinator.node(options);
+      return controller;
+    },
+    withList(list) {
+      coordinator.withList(list);
+      return controller;
+    },
+    delayGroup(options) {
+      coordinator.delayGroup(options);
+      return controller;
+    },
+    setContextParent(scope) {
+      coordinator.setParentScope(scope);
       return controller;
     },
     setReference,
@@ -252,6 +298,7 @@ export function createFloating(
     connect() {
       if (destroyed || connected) return;
       connected = true;
+      coordinator.connect();
       attachPositioning();
       connectPlugins();
     },
@@ -261,6 +308,7 @@ export function createFloating(
       attachRequestId++;
       cleanupMounted();
       cleanupPlugins();
+      coordinator.disconnect();
     },
     refresh() {
       if (destroyed) return;
@@ -269,18 +317,29 @@ export function createFloating(
         position = {...position, isPositioned: false};
       }
       plugins.forEach((plugin) => plugin.update?.(context));
+      coordinator.refresh();
       void update();
     },
     update,
+    whenPositioned() {
+      if (presenceState === 'mounted' && position.isPositioned) {
+        return Promise.resolve(position);
+      }
+      return new Promise((resolve) => positionedResolvers.add(resolve));
+    },
     destroy() {
       controller.disconnect();
       destroyed = true;
       requestId++;
+      presence.set('unmounted');
+      positionedResolvers.clear();
       elements.reference = null;
       elements.domReference = null;
       elements.floating = null;
+      coordinator.destroy();
     },
   };
+  coordinator = new FloatingCoordinator(controller);
 
   return controller;
 }

@@ -2,6 +2,7 @@ import {createFocusTrap} from 'focus-trap';
 import type {FocusTrap} from 'focus-trap';
 
 import type {FloatingPlugin, OpenChangeReason, ValueOrGetter} from './types';
+import {FLOATING_UI_PLUS_FOCUS_GUARD_ATTRIBUTE} from './constants';
 import {
   activeElement,
   contains,
@@ -127,7 +128,7 @@ export function focusManager(
             const button = floating.ownerDocument.createElement('button');
             button.type = 'button';
             button.textContent = label;
-            button.setAttribute('data-floating-ui-focus-guard', '');
+            button.setAttribute(FLOATING_UI_PLUS_FOCUS_GUARD_ATTRIBUTE, '');
             Object.assign(button.style, {
               position: 'fixed',
               width: '1px',

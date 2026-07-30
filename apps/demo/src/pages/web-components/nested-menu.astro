@@ -1,0 +1,14 @@
+---
+import ExampleRoute from '../../components/ExampleRoute.astro';
+import NestedMenuExample from '../../components/examples/NestedMenuExample.astro';
+import DemoLayout from '../../layouts/DemoLayout.astro';
+---
+
+<DemoLayout>
+  <ExampleRoute
+    kicker="floating tree route"
+    heading="Menus that know<br /><span>their descendants.</span>"
+  >
+    <NestedMenuExample />
+  </ExampleRoute>
+</DemoLayout>
