@@ -1,10 +1,14 @@
+---
+import {TOOLTIP_ARROW} from '../../example-config';
+---
+
 <article class="demo-card tooltip-card" data-demo="tooltip">
   <div class="card-top">
     <span class="number">A</span><span class="chip">hover + focus</span>
   </div>
   <h3>Signal tooltip</h3>
   <p>
-    One custom element wires pointer intent, keyboard focus, dismissal, and
+    One floating surface wires pointer intent, keyboard focus, dismissal, and
     descriptive ARIA.
   </p>
   <div class="card-action">
@@ -19,10 +23,65 @@
       </floating-reference>
       <floating-transition>
         <floating-content>
-          <div class="tooltip">Positioned by <b>autoUpdate</b></div>
+          <div class="tooltip">
+            Positioned by <b>autoUpdate</b>
+            <floating-arrow
+              class="tooltip-arrow"
+              width={TOOLTIP_ARROW.width}
+              height={TOOLTIP_ARROW.height}
+            ></floating-arrow>
+          </div>
         </floating-content>
       </floating-transition>
     </floating-root>
   </div>
-  <code>&lt;floating-reference&gt; + &lt;floating-content&gt;</code>
+  <code>hover() → focus() → dismiss()</code>
 </article>
+
+<script>
+  import {
+    arrow,
+    dismiss,
+    flip,
+    focus,
+    hover,
+    offset,
+    role,
+    safePolygon,
+    shift,
+  } from '@floating-ui-plus/web-components';
+  import {TOOLTIP_ARROW} from '../../example-config';
+  import {
+    configureFloating,
+    emitExampleAction,
+    floatingRoot,
+    initializeExample,
+    onFloatingOpenChange,
+  } from './example-client';
+
+  initializeExample('tooltip', (scope) => {
+    const floating = floatingRoot(scope, '[data-tooltip-root]');
+    const arrowElement =
+      floating.querySelector<HTMLElement>('floating-arrow');
+    configureFloating(floating, {
+      middleware: [
+        offset(TOOLTIP_ARROW.gap),
+        flip(),
+        shift({padding: 12}),
+        ...(arrowElement ? [arrow({element: arrowElement})] : []),
+      ],
+      plugins: [
+        hover({handleClose: safePolygon({buffer: 4})}),
+        focus(),
+        dismiss(),
+        role({role: 'tooltip'}),
+      ],
+    });
+    onFloatingOpenChange(floating, ({open}) => {
+      emitExampleAction(
+        scope,
+        open ? 'Tooltip opened from pointer or focus' : 'Tooltip closed',
+      );
+    });
+  });
+</script>

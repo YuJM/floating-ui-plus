@@ -23,3 +23,59 @@
   </div>
   <code>&lt;floating-root&gt; + clientPoint()</code>
 </article>
+
+<script>
+  import {
+    clientPoint,
+    dismiss,
+    flip,
+    hover,
+    offset,
+    role,
+    shift,
+  } from '@floating-ui-plus/web-components';
+  import {
+    configureFloating,
+    emitExampleAction,
+    floatingRoot,
+    initializeExample,
+    onFloatingOpenChange,
+  } from './example-client';
+
+  initializeExample('client-point', (scope) => {
+    const floating = floatingRoot(scope, '[data-client-point-root]');
+    const field = scope.querySelector<HTMLElement>('.cursor-field');
+    const label = scope.querySelector<HTMLElement>('[data-pointer-label]');
+    if (!field || !label) return;
+
+    configureFloating(floating, {
+      middleware: [offset(16), flip(), shift({padding: 18})],
+      plugins: [
+        hover({move: true}),
+        clientPoint(),
+        dismiss(),
+        role({role: 'tooltip'}),
+      ],
+    });
+
+    let frame: number | null = null;
+    let nextLabel = label.textContent ?? '';
+    field.addEventListener('mousemove', (event) => {
+      const bounds = field.getBoundingClientRect();
+      nextLabel = `${Math.round(event.clientX - bounds.left)} × ${Math.round(event.clientY - bounds.top)}`;
+      if (frame != null) return;
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        label.textContent = nextLabel;
+      });
+    });
+    onFloatingOpenChange(floating, ({open}) => {
+      emitExampleAction(
+        scope,
+        open
+          ? 'Cursor reference is now tracking the pointer'
+          : 'Cursor reference released',
+      );
+    });
+  });
+</script>

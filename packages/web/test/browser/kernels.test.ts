@@ -14,9 +14,11 @@ import {
   FloatingList,
   FloatingTransition,
   FloatingTree,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
   FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
   getArrowStyles,
+  getArrowTransform,
   lockScroll,
   NextDelayGroup,
   provideFloatingContext,
@@ -34,6 +36,15 @@ afterEach(() => {
 
 describe('arrow styles', () => {
   test.each([
+    ['top', 'rotate(180deg)'],
+    ['right', 'rotate(-90deg)'],
+    ['bottom', 'rotate(0deg)'],
+    ['left', 'rotate(90deg)'],
+  ] as const)('rotates a default arrow for %s placement', (placement, transform) => {
+    expect(getArrowTransform(placement)).toBe(transform);
+  });
+
+  test.each([
     ['top', 'bottom'],
     ['right', 'left'],
     ['bottom', 'top'],
@@ -43,7 +54,7 @@ describe('arrow styles', () => {
     staticSide,
   ) => {
     const element = document.createElement('div');
-    Object.defineProperty(element, 'offsetWidth', {value: 12});
+    element.setAttribute(FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE, '6');
 
     const styles = getArrowStyles(
       placement,
@@ -51,10 +62,11 @@ describe('arrow styles', () => {
       {element},
     );
 
+    const usesHorizontalAxis = placement === 'top' || placement === 'bottom';
     expect(styles).toMatchObject({
       position: 'absolute',
-      left: '8px',
-      top: '4px',
+      left: usesHorizontalAxis ? '8px' : '',
+      top: usesHorizontalAxis ? '' : '4px',
       [staticSide]: '-6px',
     });
   });
@@ -65,8 +77,32 @@ describe('arrow styles', () => {
       getArrowStyles('bottom-start', {}, {element, staticOffset: 10}).top,
     ).toBe('10px');
     expect(
+      getArrowStyles('bottom-start', {}, {element, staticOffset: '-9'}).top,
+    ).toBe('-9px');
+    expect(
       getArrowStyles('bottom-end', {}, {element, staticOffset: '15%'}).top,
     ).toBe('15%');
+  });
+
+  test('only applies automatic rotation when requested', () => {
+    const element = document.createElement('div');
+
+    expect(getArrowStyles('top', {}, {element}).transform).toBeUndefined();
+    expect(
+      getArrowStyles('top', {}, {element, rotate: true}).transform,
+    ).toBe('rotate(180deg)');
+  });
+
+  test('clears the previous static side when placement changes', () => {
+    const element = document.createElement('div');
+    element.setAttribute(FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE, '6');
+
+    expect(
+      getArrowStyles('top', {arrow: {x: 8, centerOffset: 0}}, {element}),
+    ).toMatchObject({top: '', bottom: '-6px'});
+    expect(
+      getArrowStyles('bottom', {arrow: {x: 8, centerOffset: 0}}, {element}),
+    ).toMatchObject({top: '-6px', bottom: ''});
   });
 });
 

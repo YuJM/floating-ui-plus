@@ -107,3 +107,67 @@
     </floating-root>
   </floating-tree>
 </section>
+
+<script>
+  import {
+    click,
+    dismiss,
+    flip,
+    offset,
+    role,
+    shift,
+  } from '@floating-ui-plus/web-components';
+  import {
+    closeFloating,
+    configureFloating,
+    emitExampleAction,
+    floatingRoot,
+    initializeExample,
+    onFloatingOpenChange,
+  } from './example-client';
+
+  initializeExample('modal', (scope) => {
+    const floating = floatingRoot(scope, '[data-modal-root]');
+    const tooltip = floatingRoot(scope, '[data-modal-tooltip-root]');
+    const popover = floatingRoot(scope, '[data-modal-popover-root]');
+    const nestedModal = floatingRoot(scope, '[data-nested-modal-root]');
+
+    configureFloating(floating, {
+      middleware: [offset(20), shift({padding: 24})],
+      plugins: [
+        click(),
+        // The backdrop owns the whole viewport. Nested surfaces dismiss first.
+        dismiss({outsidePress: false}),
+        role({role: 'dialog'}),
+      ],
+    });
+    tooltip.middleware = [offset(12), flip(), shift({padding: 12})];
+    popover.middleware = [offset(12), flip(), shift({padding: 18})];
+    configureFloating(nestedModal, {
+      middleware: [offset(20), shift({padding: 24})],
+      plugins: [
+        click(),
+        dismiss({outsidePress: false}),
+        role({role: 'dialog'}),
+      ],
+    });
+
+    scope
+      .querySelector('[data-close-modal]')
+      ?.addEventListener('click', (event) => closeFloating(floating, event));
+    scope
+      .querySelector('[data-close-modal-popover]')
+      ?.addEventListener('click', (event) => closeFloating(popover, event));
+    scope
+      .querySelector('[data-close-nested-modal]')
+      ?.addEventListener('click', (event) =>
+        closeFloating(nestedModal, event),
+      );
+    onFloatingOpenChange(floating, ({open}) => {
+      emitExampleAction(
+        scope,
+        open ? 'Modal trap activated' : 'Modal closed and focus restored',
+      );
+    });
+  });
+</script>

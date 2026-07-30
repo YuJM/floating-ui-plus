@@ -18,14 +18,14 @@ export const MIDDLEWARE_EXAMPLES = [
     number: '03',
     title: 'Flip',
     docsPath: 'flip',
-    description: 'Scroll up. The preferred bottom placement flips to top when bottom space disappears.',
+    description: 'Scroll up. Flip chooses the available side while shift keeps the panel inside the boundary.',
   },
   {
     id: 'arrow',
     number: '04',
     title: 'Arrow',
     docsPath: 'arrow',
-    description: 'Scroll horizontally. The square arrow keeps pointing toward the reference center.',
+    description: 'Scroll horizontally. Floating UI Plus adds the arrow height to the requested visual gap.',
   },
   {
     id: 'size',
@@ -39,7 +39,7 @@ export const MIDDLEWARE_EXAMPLES = [
     number: '06',
     title: 'Auto placement',
     docsPath: 'autoplacement',
-    description: 'Scroll vertically. The panel continuously chooses the side with the most available space.',
+    description: 'Scroll vertically. Auto placement chooses the roomiest side while shift keeps it inside the boundary.',
   },
   {
     id: 'hide',
@@ -56,6 +56,13 @@ export const MIDDLEWARE_EXAMPLES = [
     description: 'Compare the detached bounding box with the relevant client rect of a wrapped inline anchor.',
   },
 ] as const;
+
+export const MIDDLEWARE_ARROW = {
+  width: 14,
+  height: 7,
+  gap: 3,
+  staticOffset: -7,
+} as const;
 
 export type MiddlewareExampleId = (typeof MIDDLEWARE_EXAMPLES)[number]['id'];
 

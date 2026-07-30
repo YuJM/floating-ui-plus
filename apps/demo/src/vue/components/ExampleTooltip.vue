@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {
+  FloatingArrow,
   FloatingPortal,
+  arrow,
   autoUpdate,
   dismiss,
   flip,
@@ -13,15 +15,24 @@ import {
   useFloating,
   vFloating,
 } from '@floating-ui-plus/vue';
-import {ref} from 'vue';
+import type {Middleware} from '@floating-ui-plus/vue';
+import {computed, ref, shallowRef} from 'vue';
+import {TOOLTIP_ARROW} from '../../example-config';
 
 const open = ref(false);
 const reference = ref<HTMLElement | null>(null);
 const floatingElement = ref<HTMLElement | null>(null);
+const arrowElement = shallowRef<SVGSVGElement | null>(null);
+const middleware = computed<Middleware[]>(() => [
+  offset(TOOLTIP_ARROW.gap),
+  flip(),
+  shift({padding: 12}),
+  ...(arrowElement.value ? [arrow({element: arrowElement.value})] : []),
+]);
 const floating = useFloating(reference, floatingElement, {
   open,
   placement: 'top',
-  middleware: [offset(14), flip(), shift({padding: 12})],
+  middleware,
   whileElementsMounted: autoUpdate,
   onOpenChange: (next) => (open.value = next),
 }).pipe(
@@ -33,25 +44,39 @@ const floating = useFloating(reference, floatingElement, {
 </script>
 
 <template>
-  <article class="vue-demo-card bg-vue-mint">
-    <div class="vue-card-top"><span class="vue-number">A</span><span>hover + focus</span></div>
+  <article class="demo-card tooltip-card">
+    <div class="card-top">
+      <span class="number">A</span><span class="chip">hover + focus</span>
+    </div>
     <h3>Signal tooltip</h3>
-    <p>Pointer intent, keyboard focus, safe polygon, dismissal, and ARIA in one reactive pipeline.</p>
-    <div class="mt-auto pt-7">
-      <button ref="reference" class="vue-button" v-bind="floating.referenceAttrs">Inspect signal <span>↗</span></button>
+    <p>
+      One floating surface wires pointer intent, keyboard focus, dismissal, and
+      descriptive ARIA.
+    </p>
+    <div class="card-action">
+      <button ref="reference" class="ink-button" v-bind="floating.referenceAttrs">
+        Inspect signal <span aria-hidden="true">↗</span>
+      </button>
       <FloatingPortal v-if="open" :active="open" :context-scope="floating.contextScope">
         <Transition name="vue-surface">
           <div
             ref="floatingElement"
-            class="vue-tooltip"
+            class="tooltip"
             v-floating="floating"
             v-bind="floating.floatingAttrs"
           >
             Positioned by <b>autoUpdate</b>
+            <FloatingArrow
+              class="tooltip-arrow"
+              :floating="floating"
+              :width="TOOLTIP_ARROW.width"
+              :height="TOOLTIP_ARROW.height"
+              @element-change="arrowElement = $event"
+            />
           </div>
         </Transition>
       </FloatingPortal>
     </div>
-    <code>hover(safePolygon()) → focus() → dismiss()</code>
+    <code>hover() → focus() → dismiss()</code>
   </article>
 </template>

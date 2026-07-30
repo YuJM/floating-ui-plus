@@ -2,7 +2,10 @@ import {
   createPortalBridge,
   focusManager,
   getContextArrowStyles,
+  registerFloatingArrow,
   lockScroll,
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
   FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
   type FloatingContextScope,
@@ -185,6 +188,7 @@ export const FloatingOverlay = defineComponent({
 export const FloatingArrow = defineComponent({
   name: 'FloatingArrow',
   inheritAttrs: false,
+  emits: ['element-change'],
   props: {
     context: {
       type: Object as PropType<FloatingContext>,
@@ -196,29 +200,60 @@ export const FloatingArrow = defineComponent({
       type: [String, Number] as PropType<string | number | null>,
       default: null,
     },
+    rotation: {
+      type: String as PropType<'auto' | 'none'>,
+      default: 'auto',
+    },
   },
-  setup(props, {attrs, slots}) {
+  setup(props, {attrs, emit, slots}) {
     const context = resolveContext(props.context, props.floating);
     if (!context) {
       throw new Error('FloatingArrow requires a FloatingRoot, floating, or context prop.');
     }
+    const arrowContext: FloatingContext = context;
     const element = shallowRef<SVGSVGElement | null>(null);
     const revision = shallowRef(0);
     let unsubscribe: (() => void) | undefined;
+    let unregisterArrow: (() => void) | undefined;
 
     onMounted(() => {
       unsubscribe = context.events.on('positionchange', () => {
         revision.value++;
       });
     });
-    onBeforeUnmount(() => unsubscribe?.());
+    onBeforeUnmount(() => {
+      unsubscribe?.();
+      unregisterArrow?.();
+      emit('element-change', null);
+    });
+
+    function syncArrowRegistration() {
+      unregisterArrow?.();
+      unregisterArrow = element.value
+        ? registerFloatingArrow(arrowContext, {
+            element: element.value as unknown as HTMLElement,
+            height: props.height,
+          })
+        : undefined;
+    }
+
+    function setElement(value: unknown) {
+      const next = value instanceof SVGSVGElement ? value : null;
+      if (element.value === next) return;
+      element.value = next;
+      syncArrowRegistration();
+      emit('element-change', next);
+    }
+
+    watch(() => props.height, syncArrowRegistration);
 
     const styles = computed(() => {
       revision.value;
       if (!element.value) return {position: 'absolute' as const};
       return getContextArrowStyles(context, {
         element: element.value as unknown as HTMLElement,
-        staticOffset: props.staticOffset ?? -(props.width / 2),
+        staticOffset: props.staticOffset ?? -props.height,
+        rotate: props.rotation !== 'none',
       });
     });
 
@@ -227,8 +262,10 @@ export const FloatingArrow = defineComponent({
         'svg',
         mergeProps(
           {
-            ref: element,
+            ref: setElement,
             'aria-hidden': 'true',
+            [FLOATING_UI_PLUS_ARROW_ATTRIBUTE]: '',
+            [FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE]: String(props.height),
             width: props.width,
             height: props.height,
             viewBox: `0 0 ${props.width} ${props.height}`,

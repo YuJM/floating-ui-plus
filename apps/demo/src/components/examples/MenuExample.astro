@@ -47,3 +47,83 @@ import {MENU_LABELS} from '../../example-data';
   </div>
   <code>plugins = [click(), listNavigation(), typeahead()]</code>
 </article>
+
+<script>
+  import {
+    click,
+    dismiss,
+    flip,
+    listNavigation,
+    offset,
+    role,
+    shift,
+    typeahead,
+  } from '@floating-ui-plus/web-components';
+  import {
+    activeItems,
+    closeFloating,
+    configureFloating,
+    emitExampleAction,
+    floatingRoot,
+    initializeExample,
+    onFloatingOpenChange,
+  } from './example-client';
+
+  initializeExample('menu', (scope) => {
+    const floating = floatingRoot(scope, '[data-menu-root]');
+    const items = [
+      ...scope.querySelectorAll<HTMLElement>('[data-menu-item]'),
+    ];
+    const labels = items.map((item) => item.dataset.label ?? null);
+    const listRef = {current: items as Array<HTMLElement | null>};
+    const labelRef = {current: labels};
+    const active = activeItems(
+      items,
+      () => floating.controller.refresh(),
+    );
+
+    configureFloating(floating, {
+      middleware: [offset(8), flip(), shift({padding: 18})],
+      plugins: [
+        click(),
+        dismiss(),
+        role({role: 'menu'}),
+        listNavigation(() => ({
+          listRef,
+          activeIndex: active.value,
+          loop: true,
+          onNavigate: active.set,
+        })),
+        typeahead({
+          listRef: labelRef,
+          get activeIndex() {
+            return active.value;
+          },
+          onMatch: (index) => {
+            active.set(index);
+            if (index != null) {
+              items[index]?.focus({preventScroll: true});
+            }
+          },
+        }),
+      ],
+    });
+
+    items.forEach((item, index) => {
+      item.addEventListener('click', (event) => {
+        active.set(index);
+        emitExampleAction(scope, `${labels[index]} selected`);
+        closeFloating(floating, event);
+      });
+    });
+    onFloatingOpenChange(floating, ({open}) => {
+      if (!open) active.set(null);
+      emitExampleAction(
+        scope,
+        open
+          ? 'Menu opened · arrows and typeahead are active'
+          : 'Menu closed',
+      );
+    });
+  });
+</script>

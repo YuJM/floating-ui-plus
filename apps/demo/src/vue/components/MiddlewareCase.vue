@@ -4,6 +4,7 @@ import {
   autoUpdate,
   arrow,
   flip,
+  FloatingArrow,
   hide,
   inline,
   offset,
@@ -19,8 +20,8 @@ import {
   nextTick,
   onMounted,
   shallowRef,
-  type CSSProperties,
 } from 'vue';
+import {MIDDLEWARE_ARROW} from '../../middleware-registry';
 
 type MiddlewareKind =
   | 'offset'
@@ -47,6 +48,10 @@ const secondaryReference = shallowRef<HTMLElement | null>(null);
 const secondaryFloating = shallowRef<HTMLElement | null>(null);
 const arrowElement = shallowRef<HTMLElement | null>(null);
 
+function setArrowElement(element: SVGSVGElement | null) {
+  arrowElement.value = element;
+}
+
 const boundary = () => stage.value ?? undefined;
 
 const primaryMiddleware = computed<Middleware[]>(() => {
@@ -69,10 +74,15 @@ const primaryMiddleware = computed<Middleware[]>(() => {
           padding: 8,
           rootBoundary: 'document',
         }),
+        shift({
+          boundary: boundary(),
+          padding: 8,
+          rootBoundary: 'document',
+        }),
       ];
     case 'arrow':
       return [
-        offset(10),
+        offset(MIDDLEWARE_ARROW.gap),
         shift({
           boundary: boundary(),
           padding: 8,
@@ -100,6 +110,11 @@ const primaryMiddleware = computed<Middleware[]>(() => {
     case 'auto':
       return [
         autoPlacement({
+          boundary: boundary(),
+          padding: 8,
+          rootBoundary: 'document',
+        }),
+        shift({
           boundary: boundary(),
           padding: 8,
           rootBoundary: 'document',
@@ -147,31 +162,6 @@ const secondary = useFloating(secondaryReference, secondaryFloating, {
   whileElementsMounted: autoUpdate,
 });
 
-const arrowStyles = computed<CSSProperties>(() => {
-  const side = primary.placement.value.split('-')[0] as
-    | 'top'
-    | 'right'
-    | 'bottom'
-    | 'left';
-  const staticSide = {
-    top: 'bottom',
-    right: 'left',
-    bottom: 'top',
-    left: 'right',
-  }[side];
-  const data = primary.middlewareData.value.arrow as
-    | {x?: number; y?: number}
-    | undefined;
-
-  return {
-    left: data?.x == null ? undefined : `${data.x}px`,
-    top: data?.y == null ? undefined : `${data.y}px`,
-    right: '',
-    bottom: '',
-    [staticSide]: '-5px',
-  };
-});
-
 const hideData = computed(() => {
   return (primary.middlewareData.value.hide ?? {}) as {
     referenceHidden?: boolean;
@@ -194,13 +184,13 @@ const codeLabel = computed(() => {
     case 'shift':
       return 'shift({padding: 8})';
     case 'flip':
-      return "placement: 'bottom', middleware: [flip()]";
+      return "placement: 'bottom', middleware: [flip(), shift()]";
     case 'arrow':
-      return 'shift() → arrow({element})';
+      return 'offset(GAP) → shift() → arrow({element})';
     case 'size':
       return 'size({apply: set maxWidth / maxHeight})';
     case 'auto':
-      return 'autoPlacement({padding: 8})';
+      return 'autoPlacement({padding: 8}) → shift({padding: 8})';
     case 'hide':
       return "hide() + hide({strategy: 'escaped'})";
     case 'inline':
@@ -367,12 +357,14 @@ onMounted(async () => {
             <span>One</span><span>Two</span><span>Three</span><span>Four</span><span>Five</span>
           </template>
           <template v-else>Floating</template>
-          <i
+          <FloatingArrow
             v-if="kind === 'arrow'"
-            ref="arrowElement"
             class="vue-mw-arrow"
-            :style="arrowStyles"
-            aria-hidden="true"
+            :floating="primary"
+            :width="MIDDLEWARE_ARROW.width"
+            :height="MIDDLEWARE_ARROW.height"
+            :static-offset="MIDDLEWARE_ARROW.staticOffset"
+            @element-change="setArrowElement"
           />
         </div>
       </div>

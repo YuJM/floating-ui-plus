@@ -1,5 +1,6 @@
 import {expect, test} from 'playwright/test';
 import axe from 'axe-core';
+import {MIDDLEWARE_ARROW} from '../../src/middleware-registry';
 
 test('opens Teleport-backed nested menus', async ({page}) => {
   await page.goto('/nested-menu?framework=vue');
@@ -26,7 +27,9 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await page.goto('/modal?framework=vue');
   const trigger = page.getByRole('button', {name: /Enter focus room/});
   await trigger.click();
-  const dialog = page.getByRole('dialog', {name: /Focus room/});
+  const dialog = page.getByRole('dialog', {
+    name: /You are inside the focus trap/,
+  });
   await expect(dialog).toBeVisible();
 
   const hintTrigger = page.getByRole('button', {name: 'Show placement hint'});
@@ -112,6 +115,41 @@ test('routes to individual Vue examples and the middleware lab', async ({
   await expect(
     page.locator('[data-kind="flip"] .vue-mw-panel'),
   ).toHaveAttribute('data-placement', 'top');
+  await flipStage.evaluate((element) => {
+    element.scrollTop = 160;
+    element.dispatchEvent(new Event('scroll'));
+  });
+  const flipPanel = page.locator('[data-kind="flip"] .vue-mw-panel');
+  await expect(flipPanel).toHaveAttribute('data-placement', 'bottom');
+  const [flipStageBox, flipPanelBox] = await Promise.all([
+    flipStage.boundingBox(),
+    flipPanel.boundingBox(),
+  ]);
+  expect(flipPanelBox!.x).toBeGreaterThanOrEqual(flipStageBox!.x + 7);
+  expect(flipPanelBox!.x + flipPanelBox!.width).toBeLessThanOrEqual(
+    flipStageBox!.x + flipStageBox!.width - 7,
+  );
+
+  const autoStage = page.locator('[data-kind="auto"] .vue-mw-stage');
+  const autoPanel = page.locator('[data-kind="auto"] .vue-mw-panel');
+  await autoStage.evaluate((element) => {
+    element.scrollTop = 40;
+    element.dispatchEvent(new Event('scroll'));
+  });
+  await expect(autoPanel).toHaveAttribute('data-placement', 'top');
+  await autoStage.evaluate((element) => {
+    element.scrollTop = 190;
+    element.dispatchEvent(new Event('scroll'));
+  });
+  await expect(autoPanel).toHaveAttribute('data-placement', 'bottom');
+  const [autoStageBox, autoPanelBox] = await Promise.all([
+    autoStage.boundingBox(),
+    autoPanel.boundingBox(),
+  ]);
+  expect(autoPanelBox!.x).toBeGreaterThanOrEqual(autoStageBox!.x + 7);
+  expect(autoPanelBox!.x + autoPanelBox!.width).toBeLessThanOrEqual(
+    autoStageBox!.x + autoStageBox!.width - 7,
+  );
 
   const hideStage = page.locator('[data-kind="hide"] .vue-mw-stage');
   await hideStage.evaluate((element) => {
@@ -122,9 +160,26 @@ test('routes to individual Vue examples and the middleware lab', async ({
     page.locator('[data-kind="hide"] .vue-mw-panel'),
   ).toHaveAttribute('data-reference-hidden', 'true');
 
-  await expect(
-    page.locator('[data-kind="arrow"] .vue-mw-arrow'),
-  ).toBeVisible();
+  const arrowCard = page.locator('[data-kind="arrow"]');
+  const arrowPanel = arrowCard.locator('.vue-mw-panel');
+  const arrowElement = arrowCard.locator('.vue-mw-arrow');
+  const arrowReference = arrowCard.locator('.vue-mw-reference');
+  await expect(arrowElement).toBeVisible();
+  await expect(arrowPanel).toHaveAttribute('data-placement', 'top');
+  const [arrowPanelBox, arrowBox, arrowReferenceBox] = await Promise.all([
+    arrowPanel.boundingBox(),
+    arrowElement.boundingBox(),
+    arrowReference.boundingBox(),
+  ]);
+  const panelToReferenceGap =
+    arrowReferenceBox!.y - (arrowPanelBox!.y + arrowPanelBox!.height);
+  const arrowTipToReferenceGap =
+    arrowReferenceBox!.y - (arrowBox!.y + arrowBox!.height);
+  expect(panelToReferenceGap).toBeCloseTo(
+    MIDDLEWARE_ARROW.height + MIDDLEWARE_ARROW.gap,
+    0,
+  );
+  expect(arrowTipToReferenceGap).toBeCloseTo(MIDDLEWARE_ARROW.gap, 0);
   await expect(
     page.locator('[data-kind="inline"] .vue-mw-panel'),
   ).toHaveCount(2);
@@ -190,7 +245,7 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
   await expect(popup).toHaveCSS('position', 'absolute');
   expect(
     await popup.evaluate((element) =>
-      Boolean(element.closest('[data-floating-ui-plus-portal]')),
+      Boolean(element.closest('[data-fup-portal]')),
     ),
   ).toBe(true);
 

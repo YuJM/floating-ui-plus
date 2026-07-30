@@ -1,5 +1,6 @@
 import {expect, test} from 'playwright/test';
 import axe from 'axe-core';
+import {MIDDLEWARE_ARROW} from '../../src/middleware-registry';
 
 test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   page,
@@ -254,7 +255,7 @@ test('all middleware fixtures expose their observable behavior', async ({
   await expect(page.locator('.middleware-title a')).toHaveCount(8);
   await expect(
     page.getByRole('link', {
-      name: 'autoPlacement middleware official documentation',
+      name: 'Auto placement middleware official documentation',
     }),
   ).toHaveAttribute('href', 'https://floating-ui.com/docs/autoplacement');
   expect(
@@ -311,15 +312,78 @@ test('all middleware fixtures expose their observable behavior', async ({
     element.scrollTop = 160;
   });
   await expect(flipPanel).toHaveAttribute('data-placement', /^bottom/);
+  const [flipStageBox, flipPanelBox] = await Promise.all([
+    flipStage.boundingBox(),
+    flipPanel.boundingBox(),
+  ]);
+  expect(flipPanelBox!.x).toBeGreaterThanOrEqual(flipStageBox!.x + 7);
+  expect(flipPanelBox!.x + flipPanelBox!.width).toBeLessThanOrEqual(
+    flipStageBox!.x + flipStageBox!.width - 7,
+  );
 
   const arrowStage = page.locator('.mw-stage-arrow');
   const arrow = arrowStage.locator('.mw-arrow');
   await expect(arrow).toHaveAttribute('style', /(?:left|top):/);
+  await expect(arrowStage.locator('.mw-panel-arrow')).toHaveAttribute(
+    'data-placement',
+    /^top/,
+  );
+  await expect
+    .poll(() =>
+      arrow.evaluate((element) => ({
+        top: (element as HTMLElement).style.top,
+        bottom: (element as HTMLElement).style.bottom,
+      })),
+    )
+    .toEqual({top: '', bottom: '-7px'});
+  const arrowRoot = arrowStage.locator('floating-root');
+  await arrowRoot.evaluate(async (element) => {
+    const root = element as HTMLElement & {
+      placement: string;
+      updateComplete: Promise<unknown>;
+      updatePosition(): Promise<unknown>;
+    };
+    root.placement = 'bottom';
+    await root.updateComplete;
+    await root.updatePosition();
+  });
+  await expect(arrowStage.locator('.mw-panel-arrow')).toHaveAttribute(
+    'data-placement',
+    /^bottom/,
+  );
+  await expect
+    .poll(() =>
+      arrow.evaluate((element) => ({
+        top: (element as HTMLElement).style.top,
+        bottom: (element as HTMLElement).style.bottom,
+        transform: (element as HTMLElement).style.transform,
+      })),
+    )
+    .toEqual({top: '-7px', bottom: '', transform: 'rotate(0deg)'});
+  await arrowRoot.evaluate(async (element) => {
+    const root = element as HTMLElement & {
+      placement: string;
+      updateComplete: Promise<unknown>;
+      updatePosition(): Promise<unknown>;
+    };
+    root.placement = 'top';
+    await root.updateComplete;
+    await root.updatePosition();
+  });
   const [arrowPanelBox, arrowBox, arrowReferenceBox] = await Promise.all([
     arrowStage.locator('.mw-panel-arrow').boundingBox(),
     arrow.boundingBox(),
     arrowStage.locator('button').boundingBox(),
   ]);
+  const panelToReferenceGap =
+    arrowReferenceBox!.y - (arrowPanelBox!.y + arrowPanelBox!.height);
+  const arrowTipToReferenceGap =
+    arrowReferenceBox!.y - (arrowBox!.y + arrowBox!.height);
+  expect(panelToReferenceGap).toBeCloseTo(
+    MIDDLEWARE_ARROW.height + MIDDLEWARE_ARROW.gap,
+    0,
+  );
+  expect(arrowTipToReferenceGap).toBeCloseTo(MIDDLEWARE_ARROW.gap, 0);
   expect(arrowBox!.x).toBeGreaterThanOrEqual(arrowPanelBox!.x - 3);
   expect(arrowBox!.x + arrowBox!.width).toBeLessThanOrEqual(
     arrowPanelBox!.x + arrowPanelBox!.width + 3,
@@ -353,6 +417,14 @@ test('all middleware fixtures expose their observable behavior', async ({
     element.scrollTop = 190;
   });
   await expect(autoPanel).toHaveAttribute('data-placement', /^bottom/);
+  const [autoStageBox, autoPanelBox] = await Promise.all([
+    autoStage.boundingBox(),
+    autoPanel.boundingBox(),
+  ]);
+  expect(autoPanelBox!.x).toBeGreaterThanOrEqual(autoStageBox!.x + 7);
+  expect(autoPanelBox!.x + autoPanelBox!.width).toBeLessThanOrEqual(
+    autoStageBox!.x + autoStageBox!.width - 7,
+  );
 
   const hideStage = page.locator('.mw-stage-hide');
   const hidePanel = hideStage.locator('.mw-panel-hide');

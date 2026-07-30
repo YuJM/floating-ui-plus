@@ -1,5 +1,21 @@
 # @floating-ui/vue
 
+## 0.3.0
+
+### Minor Changes
+
+- Shorten generated DOM markers to the `data-fup-*` namespace and expose a
+  shared arrow marker across the framework-neutral, Web Components, and Vue
+  packages. Vue's default arrow now also exposes its rendered SVG element for
+  middleware composition while retaining slot-based visual customization.
+
+### Patch Changes
+
+- fix arrow
+- Updated dependencies
+- Updated dependencies
+  - @floating-ui-plus/web@0.3.0
+
 ## 0.2.2
 
 ### Patch Changes

@@ -1,6 +1,7 @@
 import {computePosition} from '@floating-ui/dom';
 import {isElement} from '@floating-ui/utils/dom';
 
+import {withArrowOffset} from './arrow';
 import {createFloatingEvents} from './events';
 import {FloatingCoordinator} from './coordinator';
 import type {
@@ -215,7 +216,7 @@ export function createFloating(
     const currentRequest = ++requestId;
     const options = resolveOptions(optionsSource);
     const result = await computePosition(reference, floating, {
-      middleware: options.middleware,
+      middleware: withArrowOffset(options.middleware, context.data.arrow),
       placement: options.placement,
       strategy: options.strategy,
       platform: options.platform,

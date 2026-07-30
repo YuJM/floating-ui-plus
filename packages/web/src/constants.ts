@@ -38,12 +38,18 @@ export const PLACEMENTS = Object.freeze([
 export type PlacementConstant = (typeof PLACEMENT)[keyof typeof PLACEMENT];
 
 /** Prefix for DOM markers emitted by Floating UI Plus. */
-export const FLOATING_UI_PLUS_DATA_ATTRIBUTE = 'data-floating-ui-plus';
+export const FLOATING_UI_PLUS_DATA_ATTRIBUTE = 'data-fup';
 
 export const FLOATING_UI_PLUS_PORTAL_ATTRIBUTE =
   `${FLOATING_UI_PLUS_DATA_ATTRIBUTE}-portal`;
 export const FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE =
   `${FLOATING_UI_PLUS_DATA_ATTRIBUTE}-overlay`;
+/** DOM marker for the default arrow UI across all adapters. */
+export const FLOATING_UI_PLUS_ARROW_ATTRIBUTE =
+  `${FLOATING_UI_PLUS_DATA_ATTRIBUTE}-arrow`;
+/** Explicit main-axis depth used by the Arrow-aware offset composition. */
+export const FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE =
+  `${FLOATING_UI_PLUS_ARROW_ATTRIBUTE}-height`;
 export const FLOATING_UI_PLUS_FOCUS_GUARD_ATTRIBUTE =
   `${FLOATING_UI_PLUS_DATA_ATTRIBUTE}-focus-guard`;
 export const FLOATING_UI_PLUS_TABINDEX_ATTRIBUTE =
@@ -52,9 +58,11 @@ export const FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE =
   `${FLOATING_UI_PLUS_DATA_ATTRIBUTE}-focusable`;
 
 /** Context keys shared by trees, collections, delay groups, and portals. */
-export const FLOATING_CONTEXT_SCOPE = '@floating-ui-plus/context/scope';
-export const FLOATING_TREE_CONTEXT = '@floating-ui-plus/context/tree';
-export const FLOATING_NODE_CONTEXT = '@floating-ui-plus/context/node';
-export const FLOATING_LIST_CONTEXT = '@floating-ui-plus/context/list';
+const FLOATING_CONTEXT_PREFIX = '@floating-ui-plus/context';
+
+export const FLOATING_CONTEXT_SCOPE = `${FLOATING_CONTEXT_PREFIX}/scope`;
+export const FLOATING_TREE_CONTEXT = `${FLOATING_CONTEXT_PREFIX}/tree`;
+export const FLOATING_NODE_CONTEXT = `${FLOATING_CONTEXT_PREFIX}/node`;
+export const FLOATING_LIST_CONTEXT = `${FLOATING_CONTEXT_PREFIX}/list`;
 export const FLOATING_DELAY_GROUP_CONTEXT =
-  '@floating-ui-plus/context/delay-group';
+  `${FLOATING_CONTEXT_PREFIX}/delay-group`;

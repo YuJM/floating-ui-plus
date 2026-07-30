@@ -9,7 +9,11 @@ import {noChange, nothing, render} from 'lit';
 import {
   applyFloatingStyles,
   createPortalNodeController,
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+  getArrowMainAxisSize,
   getContextArrowStyles,
+  registerFloatingArrow,
   type ArrowOptions,
   type FloatingController,
   type FloatingList,
@@ -34,6 +38,7 @@ class FloatingElementDirective extends AsyncDirective {
   #binding: ElementBinding | null = null;
   #attributes = new Set<string>();
   #itemCleanup: (() => void) | null = null;
+  #arrowCleanup: (() => void) | null = null;
 
   constructor(partInfo: PartInfo) {
     super(partInfo);
@@ -94,6 +99,22 @@ class FloatingElementDirective extends AsyncDirective {
       }
       applyFloatingStyles(element, binding.controller.floatingStyles);
     } else if (binding.kind === 'arrow' && element instanceof HTMLElement) {
+      element.setAttribute(FLOATING_UI_PLUS_ARROW_ATTRIBUTE, '');
+      const height =
+        binding.arrowOptions?.height ??
+        getArrowMainAxisSize(
+          element,
+          binding.controller.context.position.placement,
+        );
+      element.setAttribute(
+        FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+        String(height),
+      );
+      this.#arrowCleanup?.();
+      this.#arrowCleanup = registerFloatingArrow(
+        binding.controller.context,
+        {element, height},
+      );
       ['position', 'left', 'top', 'right', 'bottom', 'transform'].forEach(
         (name) => element.style.removeProperty(name),
       );
@@ -130,6 +151,8 @@ class FloatingElementDirective extends AsyncDirective {
     if (!this.#binding || !this.#element) return;
     this.#itemCleanup?.();
     this.#itemCleanup = null;
+    this.#arrowCleanup?.();
+    this.#arrowCleanup = null;
     this.#attributes = setAttributes(this.#element, {}, this.#attributes);
     if (
       this.#binding.kind === 'reference' &&

@@ -94,3 +94,183 @@ import {
   </div>
   <code>&lt;floating-tree&gt; + &lt;floating-node&gt;</code>
 </article>
+
+<script>
+  import {
+    click,
+    dismiss,
+    flip,
+    hover,
+    listNavigation,
+    offset,
+    role,
+    safePolygon,
+    shift,
+    typeahead,
+  } from '@floating-ui-plus/web-components';
+  import {
+    activeItems,
+    closeFloating,
+    configureFloating,
+    emitExampleAction,
+    floatingRoot,
+    initializeExample,
+    onFloatingOpenChange,
+  } from './example-client';
+
+  initializeExample('nested-menu', (scope) => {
+    const parent = floatingRoot(scope, '[data-nested-root]');
+    const child = floatingRoot(scope, '[data-projects-root]');
+    const parentItems = [
+      ...scope.querySelectorAll<HTMLElement>('[data-root-menu-item]'),
+    ];
+    const childItems = [
+      ...scope.querySelectorAll<HTMLElement>('[data-project-menu-item]'),
+    ];
+    const parentRef = {
+      current: parentItems as Array<HTMLElement | null>,
+    };
+    const childRef = {
+      current: childItems as Array<HTMLElement | null>,
+    };
+    const parentLabels = {
+      current: parentItems.map((item) => item.dataset.label ?? null),
+    };
+    const childLabels = {
+      current: childItems.map((item) => item.dataset.label ?? null),
+    };
+    const parentActive = activeItems(
+      parentItems,
+      () => parent.controller.refresh(),
+    );
+    const childActive = activeItems(
+      childItems,
+      () => child.controller.refresh(),
+    );
+
+    configureFloating(parent, {
+      middleware: [offset(8), flip(), shift({padding: 18})],
+      plugins: [
+        click(),
+        dismiss(() => ({
+          escapeKey: !child.open,
+          outsidePress: (event) =>
+            !(event.target instanceof Element) ||
+            !event.target.closest('.nested-menu-submenu'),
+        })),
+        role({role: 'menu'}),
+        listNavigation(() => ({
+          listRef: parentRef,
+          activeIndex: parentActive.value,
+          loop: true,
+          onNavigate: parentActive.set,
+        })),
+        typeahead({
+          listRef: parentLabels,
+          get activeIndex() {
+            return parentActive.value;
+          },
+          onMatch: (index) => {
+            parentActive.set(index);
+            if (index != null) {
+              parentItems[index]?.focus({preventScroll: true});
+            }
+          },
+        }),
+      ],
+    });
+    configureFloating(child, {
+      middleware: [
+        offset({mainAxis: 6, alignmentAxis: -6}),
+        flip(),
+        shift({padding: 18}),
+      ],
+      plugins: [
+        click(),
+        hover({
+          move: false,
+          delay: {open: 80, close: 120},
+          handleClose: safePolygon(),
+        }),
+        dismiss(),
+        role({role: 'menu'}),
+        listNavigation(() => ({
+          listRef: childRef,
+          activeIndex: childActive.value,
+          nested: true,
+          loop: true,
+          onNavigate: childActive.set,
+        })),
+        typeahead({
+          listRef: childLabels,
+          get activeIndex() {
+            return childActive.value;
+          },
+          onMatch: (index) => {
+            childActive.set(index);
+            if (index != null) {
+              childItems[index]?.focus({preventScroll: true});
+            }
+          },
+        }),
+      ],
+    });
+
+    const childTrigger = parentItems[1];
+    childTrigger?.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      child.controller.context.onOpenChange(true, event, 'click');
+      queueMicrotask(() => {
+        childActive.set(0);
+        childItems[0]?.focus({preventScroll: true});
+      });
+    });
+    parentItems.forEach((item, index) => {
+      if (index === 1) return;
+      item.addEventListener('click', (event) => {
+        emitExampleAction(scope, `${item.dataset.label} selected`);
+        closeFloating(parent, event);
+      });
+    });
+    childItems.forEach((item) => {
+      item.addEventListener('click', (event) => {
+        emitExampleAction(scope, `Moved to ${item.dataset.label}`);
+        closeFloating(parent, event);
+      });
+    });
+    onFloatingOpenChange(parent, ({open, reason}) => {
+      if (!open) {
+        parentActive.set(null);
+        child.open = false;
+        if (reason === 'escape-key') {
+          queueMicrotask(() => {
+            const reference = parent.referenceElement;
+            if (reference instanceof HTMLElement) {
+              reference.focus({preventScroll: true});
+            }
+          });
+        }
+      }
+      emitExampleAction(
+        scope,
+        open ? 'Nested menu opened' : 'Nested menu closed',
+      );
+    });
+    onFloatingOpenChange(child, ({open, reason}) => {
+      if (!open) {
+        childActive.set(null);
+        if (reason === 'escape-key' || reason === 'focus-out') {
+          window.setTimeout(
+            () => childTrigger?.focus({preventScroll: true}),
+            0,
+          );
+        }
+      }
+      emitExampleAction(
+        scope,
+        open ? 'Project submenu opened' : 'Project submenu closed',
+      );
+    });
+  });
+</script>

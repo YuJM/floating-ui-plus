@@ -4,6 +4,9 @@ import {renderToString} from '@vue/server-renderer';
 import {afterEach, vi} from 'vitest';
 
 import {
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+  FloatingArrow,
   FloatingOverlay,
   FloatingPortal,
   FloatingContent,
@@ -23,6 +26,31 @@ import {
 afterEach(() => cleanup());
 
 describe('Floating UI Plus Vue adapter', () => {
+  test('marks the default arrow SVG with the shared arrow attribute', async () => {
+    const App = defineComponent(() => () =>
+      h(
+        FloatingRoot,
+        {open: true},
+        {
+          default: () => [
+            h(FloatingReference, {}, {default: () => 'Reference'}),
+            h(FloatingContent, {}, {default: () => h(FloatingArrow)}),
+          ],
+        },
+      ),
+    );
+
+    const {container} = render(App);
+    await nextTick();
+
+    expect(container.innerHTML).toContain(
+      `${FLOATING_UI_PLUS_ARROW_ATTRIBUTE}=""`,
+    );
+    expect(container.innerHTML).toContain(
+      `${FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE}="7"`,
+    );
+  });
+
   test('connects generic search state to Vue lifecycle', async () => {
     const source = createFuzzySearchSource(
       [
