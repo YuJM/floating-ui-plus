@@ -1,0 +1,41 @@
+<section class="modal-strip" aria-labelledby="modal-title" data-demo="modal">
+  <div>
+    <span class="section-kicker">02 / contain</span>
+    <h2 id="modal-title">A modal should<br /><span>make space.</span></h2>
+  </div>
+  <p>
+    Open this one to feel the shared focus trap, inert neighbors, Escape
+    dismissal, and focus restoration.
+  </p>
+  <floating-root data-modal-root placement="bottom">
+    <floating-reference>
+      <button class="outline-button">
+        Enter focus room <span aria-hidden="true">→</span>
+      </button>
+    </floating-reference>
+    <floating-portal>
+      <floating-overlay lock-scroll>
+        <floating-focus-manager
+          modal
+          return-focus
+          outside-elements-inert
+        >
+          <floating-content>
+            <section class="modal-panel" aria-labelledby="modal-heading">
+              <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
+              <h3 id="modal-heading">You are inside<br />the focus trap.</h3>
+              <p>
+                Press Escape or choose leave. Focus returns to the trigger
+                because the close reason is known.
+              </p>
+              <div class="modal-actions">
+                <button class="coral-button" data-close-modal>Leave room</button>
+                <span class="modal-hint">ESC to dismiss</span>
+              </div>
+            </section>
+          </floating-content>
+        </floating-focus-manager>
+      </floating-overlay>
+    </floating-portal>
+  </floating-root>
+</section>

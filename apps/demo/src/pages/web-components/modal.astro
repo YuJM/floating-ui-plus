@@ -1,0 +1,14 @@
+---
+import ExampleRoute from '../../components/ExampleRoute.astro';
+import ModalExample from '../../components/examples/ModalExample.astro';
+import DemoLayout from '../../layouts/DemoLayout.astro';
+---
+
+<DemoLayout title="Modal · Floating UI Plus">
+  <ExampleRoute
+    kicker="modal route"
+    heading="Focus has<br /><span>a boundary.</span>"
+  >
+    <ModalExample />
+  </ExampleRoute>
+</DemoLayout>

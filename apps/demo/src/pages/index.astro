@@ -1,0 +1,51 @@
+---
+import HubLayout from '../layouts/HubLayout.astro';
+---
+
+<HubLayout>
+  <main class="hub">
+    <span class="hub-kicker">floating-ui-plus / integrated laboratory</span>
+    <h1 class="hub-title">
+      One kernel.<br /><em>Two surfaces.</em>
+    </h1>
+    <p class="hub-intro">
+      Web Components and Vue now live in one Astro 7 application. Choose the
+      rendering surface; positioning, interactions, search, focus, and
+      collections continue to share the same framework-neutral Web kernel.
+    </p>
+
+    <section class="hub-grid" aria-label="Choose a framework demo">
+      <a class="hub-card hub-card-wc" href="/web-components">
+        <span class="hub-framework">01 / custom elements</span>
+        <h2>Web Components</h2>
+        <p>
+          Lit-powered custom elements composed directly in Astro HTML, with
+          portals, trees, lists, focus management, and transitions.
+        </p>
+        <span class="hub-meta">
+          <span>@floating-ui-plus/web-components</span>
+          <span class="hub-arrow">Open lab ↗</span>
+        </span>
+      </a>
+
+      <a class="hub-card hub-card-vue" href="/vue">
+        <span class="hub-framework">02 / Astro islands</span>
+        <h2>Vue</h2>
+        <p>
+          Vue-native Composition API, Teleport, Transition, and reactive
+          positioning hydrated as focused islands inside Astro pages.
+        </p>
+        <span class="hub-meta">
+          <span>@floating-ui-plus/vue</span>
+          <span class="hub-arrow">Open lab ↗</span>
+        </span>
+      </a>
+    </section>
+
+    <footer class="hub-footer">
+      <span>Astro 7.1.4</span>
+      <span>Web Components + Vue 3</span>
+      <span>Cloudflare Workers ready</span>
+    </footer>
+  </main>
+</HubLayout>

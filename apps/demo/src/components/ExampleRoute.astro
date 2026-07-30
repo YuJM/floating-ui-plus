@@ -1,0 +1,17 @@
+---
+interface Props {
+  heading: string;
+  kicker: string;
+}
+
+const {heading, kicker} = Astro.props;
+---
+
+<section class="route-view">
+  <a class="back-link" href="/web-components">← All Web Components examples</a>
+  <div class="route-copy">
+    <span class="section-kicker">{kicker}</span>
+    <h2 set:html={heading} />
+  </div>
+  <slot />
+</section>

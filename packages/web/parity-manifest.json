@@ -2,8 +2,59 @@
   "$schema": "./parity-manifest.schema.json",
   "reactPackage": "@floating-ui/react",
   "webPackage": "@floating-ui-plus/web",
-  "litPackage": "@floating-ui-plus/lit",
+  "webComponentsPackage": "@floating-ui-plus/web-components",
   "vuePackage": "@floating-ui-plus/vue",
+  "webComponents": {
+    "Composite": "FloatingCompositeElement",
+    "CompositeItem": "FloatingCompositeItemElement",
+    "FloatingArrow": "FloatingArrowElement",
+    "FloatingDelayGroup": "FloatingDelayGroupElement",
+    "useDelayGroup": "FloatingDelayGroupElement.group",
+    "useDelayGroupContext": "Lit Context",
+    "NextFloatingDelayGroup": "NextFloatingDelayGroupElement",
+    "useNextDelayGroup": "NextFloatingDelayGroupElement.group",
+    "FloatingFocusManager": "FloatingFocusManagerElement",
+    "FloatingList": "FloatingListElement",
+    "useListItem": "FloatingListItemElement",
+    "FloatingOverlay": "FloatingOverlayElement",
+    "FloatingPortal": "FloatingPortalElement",
+    "useFloatingPortalNode": "FloatingPortalElement",
+    "FloatingNode": "FloatingNodeElement",
+    "FloatingTree": "FloatingTreeElement",
+    "useFloatingNodeId": "FloatingNodeElement.nodeId",
+    "useFloatingParentNodeId": "Lit Context",
+    "useFloatingTree": "FloatingTreeElement.tree",
+    "useClick": "click",
+    "useClientPoint": "clientPoint",
+    "useDismiss": "dismiss",
+    "useFloating": "FloatingRootElement",
+    "useFloatingRootContext": "Lit Context",
+    "useFocus": "focus",
+    "useHover": "hover",
+    "useId": "native element ids",
+    "useInteractions": "FloatingRootElement.plugins",
+    "useListNavigation": "listNavigation",
+    "useMergeRefs": "FloatingReferenceElement + FloatingContentElement",
+    "useRole": "role",
+    "useTransitionStatus": "FloatingTransitionElement",
+    "useTransitionStyles": "FloatingTransitionElement",
+    "useTypeahead": "typeahead",
+    "safePolygon": "safePolygon",
+    "arrow": "arrow",
+    "autoPlacement": "autoPlacement",
+    "autoUpdate": "autoUpdate",
+    "computePosition": "computePosition",
+    "detectOverflow": "detectOverflow",
+    "flip": "flip",
+    "getOverflowAncestors": "getOverflowAncestors",
+    "hide": "hide",
+    "inline": "inline",
+    "limitShift": "limitShift",
+    "offset": "offset",
+    "platform": "platform",
+    "shift": "shift",
+    "size": "size"
+  },
   "vue": {
     "Composite": "Composite",
     "CompositeItem": "CompositeItem",
@@ -58,185 +109,189 @@
   "features": {
     "Composite": {
       "web": "CompositeController",
-      "lit": "item()",
+      "webComponents": "FloatingCompositeElement",
       "kind": "adapter"
     },
     "CompositeItem": {
       "web": "CompositeController",
-      "lit": "item()",
+      "webComponents": "FloatingCompositeItemElement",
       "kind": "adapter"
     },
     "FloatingArrow": {
       "web": "getArrowStyles",
-      "lit": "arrow()",
+      "webComponents": "FloatingArrowElement",
       "kind": "adapter"
     },
     "FloatingDelayGroup": {
       "web": "DelayGroup",
-      "lit": "DelayGroup",
+      "webComponents": "FloatingDelayGroupElement",
       "kind": "kernel"
     },
     "useDelayGroup": {
       "web": "DelayGroup",
-      "lit": "DelayGroup",
+      "webComponents": "FloatingDelayGroupElement.group",
       "kind": "kernel"
     },
     "useDelayGroupContext": {
       "web": "Context Protocol",
-      "lit": "Context Protocol",
+      "webComponents": "Lit Context",
       "kind": "adapter"
     },
     "NextFloatingDelayGroup": {
       "web": "NextDelayGroup",
-      "lit": "NextDelayGroup",
+      "webComponents": "NextFloatingDelayGroupElement",
       "kind": "kernel"
     },
     "useNextDelayGroup": {
       "web": "NextDelayGroup",
-      "lit": "NextDelayGroup",
+      "webComponents": "NextFloatingDelayGroupElement.group",
       "kind": "kernel"
     },
     "FloatingFocusManager": {
       "web": "focusManager",
-      "lit": "focusManager",
+      "webComponents": "FloatingFocusManagerElement",
       "kind": "plugin"
     },
     "FloatingList": {
       "web": "FloatingList",
-      "lit": "FloatingList",
+      "webComponents": "FloatingListElement",
       "kind": "kernel"
     },
     "useListItem": {
       "web": "FloatingList.register",
-      "lit": "item()",
+      "webComponents": "FloatingListItemElement",
       "kind": "adapter"
     },
     "FloatingOverlay": {
       "web": "createOverlayElement",
-      "lit": "floatingOverlay",
+      "webComponents": "FloatingOverlayElement",
       "kind": "adapter"
     },
     "FloatingPortal": {
       "web": "createPortalNodeController",
-      "lit": "portal()",
+      "webComponents": "FloatingPortalElement",
       "kind": "adapter"
     },
     "useFloatingPortalNode": {
       "web": "createPortalNodeController",
-      "lit": "portal()",
+      "webComponents": "FloatingPortalElement",
       "kind": "adapter"
     },
     "FloatingNode": {
       "web": "FloatingTree.register",
-      "lit": "FloatingTree.register",
+      "webComponents": "FloatingNodeElement",
       "kind": "kernel"
     },
     "FloatingTree": {
       "web": "FloatingTree",
-      "lit": "FloatingTree",
+      "webComponents": "FloatingTreeElement",
       "kind": "kernel"
     },
     "useFloatingNodeId": {
       "web": "FloatingTree.register",
-      "lit": "FloatingTree.register",
+      "webComponents": "FloatingNodeElement.nodeId",
       "kind": "adapter"
     },
     "useFloatingParentNodeId": {
       "web": "Context Protocol",
-      "lit": "Context Protocol",
+      "webComponents": "Lit Context",
       "kind": "adapter"
     },
     "useFloatingTree": {
       "web": "FloatingTree",
-      "lit": "FloatingTree",
+      "webComponents": "FloatingTreeElement.tree",
       "kind": "adapter"
     },
-    "useClick": {"web": "click", "lit": "click", "kind": "plugin"},
+    "useClick": {"web": "click", "webComponents": "click", "kind": "plugin"},
     "useClientPoint": {
       "web": "clientPoint",
-      "lit": "clientPoint",
+      "webComponents": "clientPoint",
       "kind": "plugin"
     },
-    "useDismiss": {"web": "dismiss", "lit": "dismiss", "kind": "plugin"},
+    "useDismiss": {"web": "dismiss", "webComponents": "dismiss", "kind": "plugin"},
     "useFloating": {
       "web": "createFloating",
-      "lit": "FloatingController",
+      "webComponents": "FloatingRootElement",
       "kind": "adapter"
     },
     "useFloatingRootContext": {
       "web": "createFloating.context",
-      "lit": "FloatingController.context",
+      "webComponents": "Lit Context",
       "kind": "kernel"
     },
-    "useFocus": {"web": "focus", "lit": "focus", "kind": "plugin"},
-    "useHover": {"web": "hover", "lit": "hover", "kind": "plugin"},
-    "useId": {"web": "createId", "lit": "createId", "kind": "utility"},
-    "useInteractions": {"web": "pipe", "lit": "pipe", "kind": "pipeline"},
+    "useFocus": {"web": "focus", "webComponents": "focus", "kind": "plugin"},
+    "useHover": {"web": "hover", "webComponents": "hover", "kind": "plugin"},
+    "useId": {"web": "createId", "webComponents": "createId", "kind": "utility"},
+    "useInteractions": {
+      "web": "pipe",
+      "webComponents": "FloatingRootElement.plugins",
+      "kind": "pipeline"
+    },
     "useListNavigation": {
       "web": "listNavigation",
-      "lit": "listNavigation",
+      "webComponents": "listNavigation",
       "kind": "plugin"
     },
     "useMergeRefs": {
       "web": "mergeRefs",
-      "lit": "directives",
+      "webComponents": "FloatingReferenceElement + FloatingContentElement",
       "kind": "utility"
     },
-    "useRole": {"web": "role", "lit": "role", "kind": "plugin"},
+    "useRole": {"web": "role", "webComponents": "role", "kind": "plugin"},
     "useTransitionStatus": {
       "web": "FloatingTransition",
-      "lit": "FloatingTransition",
+      "webComponents": "FloatingTransitionElement",
       "kind": "kernel"
     },
     "useTransitionStyles": {
       "web": "FloatingTransition",
-      "lit": "FloatingTransition",
+      "webComponents": "FloatingTransitionElement",
       "kind": "kernel"
     },
-    "useTypeahead": {"web": "typeahead", "lit": "typeahead", "kind": "plugin"},
+    "useTypeahead": {"web": "typeahead", "webComponents": "typeahead", "kind": "plugin"},
     "safePolygon": {
       "web": "safePolygon",
-      "lit": "safePolygon",
+      "webComponents": "safePolygon",
       "kind": "plugin"
     },
-    "arrow": {"web": "arrow", "lit": "arrow", "kind": "positioning"},
+    "arrow": {"web": "arrow", "webComponents": "arrow", "kind": "positioning"},
     "autoPlacement": {
       "web": "autoPlacement",
-      "lit": "autoPlacement",
+      "webComponents": "autoPlacement",
       "kind": "positioning"
     },
     "autoUpdate": {
       "web": "autoUpdate",
-      "lit": "autoUpdate",
+      "webComponents": "autoUpdate",
       "kind": "positioning"
     },
     "computePosition": {
       "web": "computePosition",
-      "lit": "computePosition",
+      "webComponents": "computePosition",
       "kind": "positioning"
     },
     "detectOverflow": {
       "web": "detectOverflow",
-      "lit": "detectOverflow",
+      "webComponents": "detectOverflow",
       "kind": "positioning"
     },
-    "flip": {"web": "flip", "lit": "flip", "kind": "positioning"},
+    "flip": {"web": "flip", "webComponents": "flip", "kind": "positioning"},
     "getOverflowAncestors": {
       "web": "getOverflowAncestors",
-      "lit": "getOverflowAncestors",
+      "webComponents": "getOverflowAncestors",
       "kind": "positioning"
     },
-    "hide": {"web": "hide", "lit": "hide", "kind": "positioning"},
-    "inline": {"web": "inline", "lit": "inline", "kind": "positioning"},
+    "hide": {"web": "hide", "webComponents": "hide", "kind": "positioning"},
+    "inline": {"web": "inline", "webComponents": "inline", "kind": "positioning"},
     "limitShift": {
       "web": "limitShift",
-      "lit": "limitShift",
+      "webComponents": "limitShift",
       "kind": "positioning"
     },
-    "offset": {"web": "offset", "lit": "offset", "kind": "positioning"},
-    "platform": {"web": "platform", "lit": "platform", "kind": "positioning"},
-    "shift": {"web": "shift", "lit": "shift", "kind": "positioning"},
-    "size": {"web": "size", "lit": "size", "kind": "positioning"}
+    "offset": {"web": "offset", "webComponents": "offset", "kind": "positioning"},
+    "platform": {"web": "platform", "webComponents": "platform", "kind": "positioning"},
+    "shift": {"web": "shift", "webComponents": "shift", "kind": "positioning"},
+    "size": {"web": "size", "webComponents": "size", "kind": "positioning"}
   },
   "excluded": {
     "inner": "deprecated",

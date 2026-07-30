@@ -13,8 +13,8 @@
     "paths": {
       "@floating-ui-plus/web": ["./packages/web/src/index.ts"],
       "@floating-ui-plus/web/*": ["./packages/web/src/*"],
-      "@floating-ui-plus/lit": ["./packages/lit/src/index.ts"],
-      "@floating-ui-plus/lit/*": ["./packages/lit/src/*"],
+      "@floating-ui-plus/web-components": ["./packages/web-components/src/index.ts"],
+      "@floating-ui-plus/web-components/*": ["./packages/web-components/src/*"],
       "@floating-ui-plus/vue": ["./packages/vue/src/index.ts"],
       "@floating-ui-plus/vue/*": ["./packages/vue/src/*"]
     }

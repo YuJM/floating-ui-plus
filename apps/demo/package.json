@@ -1,0 +1,32 @@
+{
+  "name": "floating-ui-plus-demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1 --port 5173",
+    "preview": "astro preview --host 127.0.0.1 --port 5173",
+    "build": "astro check && astro build",
+    "typecheck": "astro check",
+    "test": "playwright test --config playwright.config.ts",
+    "test:headed": "playwright test --config playwright.config.ts --headed",
+    "test:ui": "playwright test --config playwright.config.ts --ui",
+    "deploy:dry-run": "cf deploy --mode production --dry-run",
+    "deploy": "cf deploy --mode production"
+  },
+  "dependencies": {
+    "@astrojs/vue": "7.0.1",
+    "@floating-ui-plus/vue": "workspace:^",
+    "@floating-ui-plus/web-components": "workspace:^",
+    "astro": "7.1.4",
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@tailwindcss/vite": "^4.3.3",
+    "playwright": "^1.50.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "wrangler": "4.102.0"
+  }
+}

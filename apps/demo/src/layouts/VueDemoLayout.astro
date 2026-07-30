@@ -1,0 +1,121 @@
+---
+import '../vue/styles.css';
+
+interface Props {
+  title?: string;
+}
+
+const {title = 'Floating UI Plus Vue demo'} = Astro.props;
+
+const links = [
+  ['/vue', 'Overview'],
+  ['/vue/examples/tooltip', 'Tooltip'],
+  ['/vue/examples/popover', 'Popover'],
+  ['/vue/examples/menu', 'Menu'],
+  ['/vue/examples/nested-menu', 'Nested menu'],
+  ['/vue/examples/client-point', 'Cursor'],
+  ['/vue/examples/combobox', 'Combobox'],
+  ['/vue/placement', 'Placement'],
+  ['/vue/middleware', 'Middleware'],
+  ['/vue/examples/modal', 'Modal'],
+] as const;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Vue-native Floating UI Plus components demonstrated as Astro islands."
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="min-h-screen overflow-hidden bg-vue-canvas text-vue-ink">
+      <header class="mx-auto w-[min(1180px,calc(100%-4rem))] py-10 sm:py-14">
+        <div
+          class="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.12em] text-vue-muted"
+        >
+          <i
+            class="h-2 w-2 rounded-full bg-vue-green shadow-[0_0_0_5px_rgb(66_184_131_/_16%)]"
+          ></i>
+          floating-ui-plus / vue islands
+        </div>
+        <div class="mt-7 flex items-end justify-between gap-8">
+          <div>
+            <a
+              class="no-underline"
+              href="/vue"
+              aria-label="Floating UI Plus Vue demo home"
+            >
+              <h1
+                class="font-display text-[clamp(4rem,10.3vw,8.9rem)] font-medium leading-[.78] tracking-[-.09em] text-vue-ink"
+              >
+                Floating UI<br />
+                <em class="not-italic text-vue-green">Plus</em>
+                <span
+                  class="ml-[.25em] align-middle text-[.24em] uppercase tracking-[.04em] text-vue-deep"
+                >
+                  Vue demo
+                </span>
+              </h1>
+            </a>
+            <p class="mt-6 max-w-md text-sm leading-6 text-vue-muted">
+              Reactive positioning and interaction pipelines, hydrated as Vue
+              islands inside one Astro application.
+            </p>
+          </div>
+          <div
+            class="hidden min-w-40 border-l border-vue-line px-4 py-3 sm:grid"
+          >
+            <span
+              class="font-mono text-[10px] uppercase tracking-[.1em] text-vue-muted"
+              >islands</span
+            >
+            <strong class="mt-1 text-5xl font-medium tracking-[-.1em]"
+              >02</strong
+            >
+            <span
+              class="mt-2 font-mono text-[9px] uppercase tracking-[.08em] text-vue-muted"
+              >astro + vue</span
+            >
+          </div>
+        </div>
+        <nav
+          class="mt-8 flex flex-wrap gap-x-5 gap-y-2 border-t border-vue-line pt-4"
+          aria-label="Vue demo routes"
+        >
+          <a
+            href="/"
+            class="font-mono text-[10px] uppercase tracking-[.07em] text-vue-muted no-underline transition hover:text-vue-green"
+            >Frameworks</a
+          >
+          {
+            links.map(([href, label]) => (
+              <a
+                href={href}
+                class="font-mono text-[10px] uppercase tracking-[.07em] text-vue-muted no-underline transition hover:text-vue-green"
+              >
+                {label}
+              </a>
+            ))
+          }
+        </nav>
+      </header>
+
+      <main class="mx-auto w-[min(1180px,calc(100%-4rem))]">
+        <slot />
+      </main>
+
+      <footer
+        class="mx-auto flex w-[min(1180px,calc(100%-4rem))] flex-wrap justify-between gap-4 py-8 font-mono text-[10px] uppercase tracking-[.07em] text-vue-muted"
+      >
+        <span>floating-ui-plus</span>
+        <span>@floating-ui-plus/web / @floating-ui-plus/vue / Astro 7</span>
+        <span class="text-vue-green">● Vue island ready</span>
+      </footer>
+    </div>
+  </body>
+</html>

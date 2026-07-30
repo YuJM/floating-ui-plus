@@ -1,0 +1,25 @@
+---
+import '../hub.css';
+
+interface Props {
+  title?: string;
+}
+
+const {title = 'Floating UI Plus demos'} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="One Astro demo application for Floating UI Plus Web Components and Vue."
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

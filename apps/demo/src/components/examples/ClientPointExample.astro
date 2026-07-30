@@ -1,0 +1,25 @@
+<article class="demo-card client-point-card" data-demo="client-point">
+  <div class="card-top">
+    <span class="number">D</span><span class="chip">virtual reference</span>
+  </div>
+  <h3>Cursor signal</h3>
+  <p>
+    Move across the field. A virtual reference follows the pointer instead of
+    the whole element.
+  </p>
+  <div class="card-action">
+    <floating-root data-client-point-root placement="top">
+      <floating-reference>
+        <div class="cursor-field" tabindex="0">
+          <span data-pointer-label>Awaiting pointer</span>
+          <i aria-hidden="true"></i><i aria-hidden="true"></i>
+          <i aria-hidden="true"></i>
+        </div>
+      </floating-reference>
+      <floating-content>
+        <div class="cursor-tooltip">Pointer is the <b>reference</b></div>
+      </floating-content>
+    </floating-root>
+  </div>
+  <code>&lt;floating-root&gt; + clientPoint()</code>
+</article>
