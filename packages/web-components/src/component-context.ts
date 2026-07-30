@@ -17,6 +17,8 @@ export interface FloatingCompositeContext {
 
 export interface FloatingComponentContext {
   root?: FloatingRootElement | undefined;
+  open?: boolean | undefined;
+  portalTarget?: Element | undefined;
   tree?: FloatingTree | undefined;
   parentNodeId: string | null;
   contextScope?: FloatingContextScope | undefined;
@@ -28,6 +30,8 @@ export interface FloatingComponentContext {
 export const floatingComponentContext =
   createContext<FloatingComponentContext>({
     root: undefined,
+    open: undefined,
+    portalTarget: undefined,
     tree: undefined,
     parentNodeId: null,
     contextScope: undefined,

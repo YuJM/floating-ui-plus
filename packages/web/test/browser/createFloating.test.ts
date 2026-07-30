@@ -119,4 +119,36 @@ describe('createFloating pipeline', () => {
     parent.destroy();
     expect(getDocumentTrapStack(document)).toHaveLength(0);
   });
+
+  test('returns focus when a closed manager disconnects before its microtask', async () => {
+    let open = true;
+    const reference = document.createElement('button');
+    const element = document.createElement('div');
+    element.innerHTML = '<button>Inside</button>';
+    document.body.append(reference, element);
+    reference.focus();
+    const floating = createFloating(() => ({
+      open,
+      onOpenChange(next: boolean) {
+        open = next;
+      },
+    })).pipe(
+      focusManager({
+        tabbableOptions: {displayCheck: 'none'},
+      }),
+    );
+    floating.setReference(reference);
+    floating.setFloating(element);
+    floating.connect();
+    await Promise.resolve();
+    const inside = element.querySelector('button')!;
+    inside.focus();
+    expect(document.activeElement).toBe(inside);
+
+    floating.context.onOpenChange(false, undefined, 'escape-key');
+    floating.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(document.activeElement).toBe(reference);
+  });
 });

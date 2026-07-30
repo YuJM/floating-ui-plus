@@ -1,5 +1,12 @@
 import {cleanup, fireEvent, render, waitFor} from '@testing-library/vue';
-import {createSSRApp, defineComponent, h, nextTick, ref} from 'vue';
+import {
+  createSSRApp,
+  defineComponent,
+  h,
+  nextTick,
+  onMounted,
+  ref,
+} from 'vue';
 import {renderToString} from '@vue/server-renderer';
 import {afterEach, vi} from 'vitest';
 
@@ -203,6 +210,60 @@ describe('Floating UI Plus Vue adapter', () => {
     await nextTick();
     expect(container).toContainElement(getByTestId('content'));
     target.remove();
+  });
+
+  test('mounts client portal content once after the target is ready', async () => {
+    let mountCount = 0;
+    const Content = defineComponent({
+      setup() {
+        onMounted(() => mountCount++);
+        return () => h('div', {'data-testid': 'content'}, 'Portaled');
+      },
+    });
+    const App = defineComponent(() => () =>
+      h(FloatingPortal, null, {default: () => h(Content)}),
+    );
+
+    render(App);
+    await nextTick();
+    await nextTick();
+
+    expect(mountCount).toBe(1);
+  });
+
+  test('appends a nested portal to its logical parent portal', async () => {
+    const App = defineComponent(() => () =>
+      h(
+        FloatingPortal,
+        null,
+        {
+          default: () => [
+            h('div', {'data-testid': 'parent-content'}, 'Parent'),
+            h(
+              FloatingPortal,
+              null,
+              {
+                default: () =>
+                  h('div', {'data-testid': 'child-content'}, 'Child'),
+              },
+            ),
+          ],
+        },
+      ),
+    );
+
+    const {getByTestId} = render(App);
+    await nextTick();
+    await nextTick();
+    const parentPortal = getByTestId('parent-content').closest(
+      '[data-fup-portal]',
+    );
+    const childPortal = getByTestId('child-content').closest(
+      '[data-fup-portal]',
+    );
+    expect(parentPortal).not.toBeNull();
+    expect(childPortal).not.toBe(parentPortal);
+    expect(childPortal?.parentElement).toBe(parentPortal);
   });
 
   test('attaches after a selector target appears in a later Vue update', async () => {

@@ -69,8 +69,9 @@ const FloatingRootBase = c(
       () => ({
         ...inheritedContext,
         root: host as FloatingRootElement,
+        open: host.open,
       }),
-      [host, inheritedContext],
+      [host, host.open, inheritedContext],
     );
 
     useProvider(floatingComponentContext, contextValue);

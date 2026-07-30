@@ -7,6 +7,7 @@ import {
   useMemo,
   useProvider,
   useRef,
+  useSlot,
   useState,
 } from 'atomico';
 import {
@@ -61,14 +62,47 @@ function getPortalRuntime(host: FloatingPortalElement) {
   return runtime;
 }
 
-function restorePortal(host: FloatingPortalElement, runtime: PortalRuntime) {
+function restorePortalChildren(
+  host: FloatingPortalElement,
+  runtime: PortalRuntime,
+) {
   const targetElement = runtime.targetElement;
   if (!targetElement) return;
   while (targetElement.firstChild) {
     movePortalNode(host, targetElement.firstChild);
   }
+}
+
+function destroyPortal(host: FloatingPortalElement, runtime: PortalRuntime) {
+  const targetElement = runtime.targetElement;
+  if (!targetElement) return;
+  restorePortalChildren(host, runtime);
   targetElement.remove();
   runtime.targetElement = undefined;
+}
+
+function getDirectNestedPortals(
+  host: FloatingPortalElement,
+  nodes: Node[],
+) {
+  const portals: FloatingPortalElement[] = [];
+  for (const node of nodes) {
+    if (!(node instanceof Element)) continue;
+    const candidates = [
+      ...(node.matches('floating-portal')
+        ? [node as FloatingPortalElement]
+        : []),
+      ...Array.from(
+        node.querySelectorAll<FloatingPortalElement>('floating-portal'),
+      ),
+    ];
+    for (const portal of candidates) {
+      if (portal.parentElement?.closest('floating-portal') === host) {
+        portals.push(portal);
+      }
+    }
+  }
+  return portals;
 }
 
 interface FloatingPortalTargetHost extends HTMLElement {
@@ -77,7 +111,14 @@ interface FloatingPortalTargetHost extends HTMLElement {
 
 const FloatingPortalTargetBase = c(() => {
   const host = useHost<FloatingPortalTargetHost>().current;
-  useProvider(floatingComponentContext, host.contextValue);
+  const contextValue = useMemo(
+    () => ({
+      ...host.contextValue,
+      portalTarget: host,
+    }),
+    [host, host.contextValue],
+  );
+  useProvider(floatingComponentContext, contextValue);
   useEffect(() => {
     const scope = host.contextValue.contextScope;
     if (!scope) return;
@@ -95,6 +136,8 @@ const FloatingPortalTargetBase = c(() => {
 export class FloatingPortalTargetElement extends FloatingPortalTargetBase {
   #contextValue: FloatingComponentContext = {
     root: undefined,
+    open: undefined,
+    portalTarget: undefined,
     tree: undefined,
     parentNodeId: null,
     contextScope: undefined,
@@ -127,46 +170,56 @@ const FloatingPortalBase = c(
       () => getPortalRuntime(host as FloatingPortalElement),
       [],
     );
+    const portalSlot = useRef<HTMLSlotElement>();
+    const portalChildren = useSlot<Node>(portalSlot);
     const [providerReady, setProviderReady] = useState(false);
     const componentContext = useContext(floatingComponentContext);
     const capturedContext = useRef(componentContext);
     if (componentContext.root !== undefined) {
       capturedContext.current = componentContext;
     }
-    const targetReady =
-      capturedContext.current.root !== undefined &&
-      typeof capturedContext.current.root.open === 'boolean';
+    const targetReady = capturedContext.current.root !== undefined;
 
     useEffect(() => {
       host.setAttribute(FLOATING_UI_PLUS_PORTAL_ATTRIBUTE, '');
     }, []);
-    useEffect(() => {
-      if (!targetReady) return;
-      const observer = new MutationObserver(() => {
-        void (host as FloatingPortalElement).update();
-      });
-      observer.observe(host, {childList: true});
-      return () => observer.disconnect();
-    }, [host, targetReady]);
 
     useLayoutEffect(() => {
-      // A portal must not move before the nearest root context, including its
-      // open state, has actually arrived. `false` is a valid received value.
+      // Mount portal content once its logical context is ready. Open state
+      // controls visibility through the floating surface and overlay so the
+      // Atomico subtree is not disconnected during an interaction.
       if (host.disabled || !targetReady) {
-        restorePortal(host as FloatingPortalElement, runtime);
+        destroyPortal(host as FloatingPortalElement, runtime);
         setProviderReady(false);
+        return;
+      }
+      const explicitTarget =
+        host.hasAttribute('to') && host.to
+          ? host.ownerDocument.querySelector(host.to)
+          : null;
+      const parentPortal = host.parentElement?.closest(
+        'floating-portal',
+      ) as FloatingPortalElement | null;
+      const parentPortalTarget =
+        parentPortal && !parentPortal.disabled
+          ? getPortalRuntime(parentPortal).targetElement
+          : undefined;
+      if (parentPortal && !parentPortal.disabled && !parentPortalTarget) {
         return;
       }
       const target =
         host.target ??
-        (host.to ? host.ownerDocument.querySelector(host.to) : null) ??
+        explicitTarget ??
+        parentPortalTarget ??
+        host.parentElement?.closest('floating-portal-target') ??
+        capturedContext.current.portalTarget ??
         host.ownerDocument.body;
       if (!target) return;
       if (
         runtime.targetElement &&
         runtime.targetElement.parentElement !== target
       ) {
-        restorePortal(host as FloatingPortalElement, runtime);
+        destroyPortal(host as FloatingPortalElement, runtime);
         setProviderReady(false);
       }
       if (!runtime.targetElement) {
@@ -184,32 +237,47 @@ const FloatingPortalBase = c(
       }
       runtime.targetElement.contextValue = capturedContext.current;
       if (!providerReady) return;
-      for (const child of Array.from(host.childNodes)) {
+      const nestedPortals = getDirectNestedPortals(
+        host as FloatingPortalElement,
+        portalChildren,
+      );
+      for (const child of portalChildren) {
         movePortalNode(runtime.targetElement, child);
+      }
+      // A nested portal belongs after its parent's rendered content. Equal
+      // layer values can then rely on normal DOM paint order.
+      for (const nestedPortal of nestedPortals) {
+        const nestedTarget = getPortalRuntime(nestedPortal).targetElement;
+        if (nestedTarget) {
+          runtime.targetElement.append(nestedTarget);
+        } else {
+          void nestedPortal.update();
+        }
       }
     }, [
       runtime,
       providerReady,
       targetReady,
+      portalChildren,
       host.disabled,
       host.target,
       host.to,
       capturedContext.current,
     ]);
 
-    useEffect(
-      () => () => {
-        restorePortal(host as FloatingPortalElement, runtime);
-      },
-      [runtime],
-    );
-
-    if (!targetReady) return null;
-
     return (
       <host shadowDom>
-        <style>{contentsStyles}</style>
-        {host.disabled ? <slot /> : null}
+        <style>{`
+          ${contentsStyles}
+
+          slot[hidden] {
+            display: none;
+          }
+        `}</style>
+        <slot
+          ref={portalSlot}
+          hidden={!host.disabled && !targetReady}
+        />
       </host>
     );
   },
@@ -228,6 +296,19 @@ const FloatingPortalBase = c(
 /** Teleports its children while re-providing the nearest contexts. */
 export class FloatingPortalElement extends FloatingPortalBase {
   #target: Element | null = null;
+
+  disconnectedCallback() {
+    (
+      FloatingPortalBase.prototype as unknown as {
+        disconnectedCallback(): void;
+      }
+    ).disconnectedCallback.call(this);
+    queueMicrotask(() => {
+      if (!this.isConnected) {
+        destroyPortal(this, getPortalRuntime(this));
+      }
+    });
+  }
 
   get updateComplete() {
     return this.updated;
