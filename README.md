@@ -62,9 +62,28 @@ The deployment command publishes the demo as a Worker with static assets.
 
 Published packages are versioned with [Changesets](https://github.com/changesets/changesets).
 Add a changeset with `bun run changeset` whenever a change affects a published
-package. Before publishing, run `bun run version` to apply the queued version
-and changelog updates, then run `bun run build`, `bun run test`, and
-`bun run release`.
+package. npm package releases are performed only from a maintainer's local
+checkout. Cloudflare Pages deployment is a separate process and must not run
+`npm publish` or `changeset publish`.
+
+Prepare and publish a release:
+
+```sh
+bun run version
+git add .changeset packages bun.lock
+git commit -m "release: 패키지 버전 업데이트"
+git push origin main
+npm login
+bun run release:packages:check
+bun run release:packages
+git push --follow-tags
+```
+
+The publish command requires a clean `main` checkout that matches
+`origin/main`, verifies npm authentication, typechecks, runs package unit and
+browser tests, builds every package, previews each package archive, and asks
+for confirmation before publishing. `bun run release:packages:check` performs
+the same validation without publishing anything.
 
 See [`.changeset/README.md`](./.changeset/README.md) for the team workflow and
 versioning rules.

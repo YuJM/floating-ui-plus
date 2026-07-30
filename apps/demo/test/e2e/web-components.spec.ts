@@ -112,19 +112,63 @@ test('nested menu preserves the complete keyboard path', async ({page}) => {
   await expect(trigger).toBeFocused();
 });
 
-test('modal component manages focus, scroll lock, and Escape cleanup', async ({
-  page,
-}) => {
+test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => {
   await page.goto('/web-components');
   const trigger = page.getByRole('button', {name: /Enter focus room/});
   await trigger.click();
 
-  const dialog = page.getByRole('dialog');
+  const dialog = page
+    .locator('.modal-panel')
+    .filter({hasText: 'Nested surfaces keep their own dismissal step.'});
+  const hintTrigger = page.getByRole('button', {name: 'Show placement hint'});
+  const popoverTrigger = page.getByRole('button', {name: 'Open room details'});
+  const nestedDialogTrigger = page.getByRole('button', {
+    name: 'Open nested dialog',
+  });
+
   await expect(dialog).toBeVisible();
   await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
-  await expect(page.getByRole('button', {name: 'Leave room'})).toBeFocused();
+  await expect(hintTrigger).toBeFocused();
+
+  await hintTrigger.hover();
+  const tooltip = page.locator('.tooltip').filter({
+    hasText: 'This tooltip stays inside the dialog.',
+  });
+  await expect(tooltip).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(tooltip).toBeHidden();
+  await expect(dialog).toBeVisible();
+
+  await popoverTrigger.click();
+  const popover = page.locator('.popover-panel').filter({
+    hasText: 'Details stay above the dialog.',
+  });
+  await expect(popover).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+  await expect(dialog).toBeVisible();
+
+  await popoverTrigger.click();
+  await expect(popover).toBeVisible();
+  await page.mouse.click(5, 5);
+  await expect(popover).toBeHidden();
+  await expect(dialog).toBeVisible();
 
   await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+
+  await nestedDialogTrigger.click();
+  const nestedDialog = page.locator('.nested-modal-panel');
+  await expect(nestedDialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(nestedDialog).toBeHidden();
+  await expect(dialog).toBeVisible();
+
+  await page.getByRole('button', {name: 'Leave room'}).click();
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
   await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');

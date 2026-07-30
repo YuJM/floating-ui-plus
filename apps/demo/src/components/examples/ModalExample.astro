@@ -7,35 +7,110 @@
     Open this one to feel the shared focus trap, inert neighbors, Escape
     dismissal, and focus restoration.
   </p>
-  <floating-root data-modal-root placement="bottom">
-    <floating-reference>
-      <button class="outline-button">
-        Enter focus room <span aria-hidden="true">→</span>
-      </button>
-    </floating-reference>
-    <floating-portal>
-      <floating-overlay lock-scroll>
-        <floating-focus-manager
-          modal
-          return-focus
-          outside-elements-inert
-        >
-          <floating-content>
-            <section class="modal-panel" aria-labelledby="modal-heading">
-              <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
-              <h3 id="modal-heading">You are inside<br />the focus trap.</h3>
-              <p>
-                Press Escape or choose leave. Focus returns to the trigger
-                because the close reason is known.
-              </p>
-              <div class="modal-actions">
-                <button class="coral-button" data-close-modal>Leave room</button>
-                <span class="modal-hint">ESC to dismiss</span>
-              </div>
-            </section>
-          </floating-content>
-        </floating-focus-manager>
-      </floating-overlay>
-    </floating-portal>
-  </floating-root>
+  <floating-tree>
+    <floating-root data-modal-root placement="bottom">
+      <floating-node node-id="focus-room">
+        <floating-reference>
+          <button class="outline-button">
+            Enter focus room <span aria-hidden="true">→</span>
+          </button>
+        </floating-reference>
+        <floating-portal>
+          <floating-overlay lock-scroll>
+            <floating-focus-manager
+              modal
+              return-focus
+              outside-elements-inert
+            >
+              <floating-content>
+                <section
+                  class="modal-panel"
+                  aria-label="Focus room"
+                  aria-labelledby="modal-heading"
+                >
+                  <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
+                  <h3 id="modal-heading">You are inside<br />the focus trap.</h3>
+                  <p>
+                    Nested surfaces keep their own dismissal step. Escape
+                    closes the topmost surface before this room.
+                  </p>
+                  <div class="modal-nested-actions">
+                    <floating-root
+                      data-modal-tooltip-root
+                      interactions="hover focus dismiss"
+                      floating-role="tooltip"
+                      placement="top"
+                    >
+                      <floating-node node-id="focus-room-tooltip">
+                        <floating-reference>
+                          <button class="text-button">Show placement hint</button>
+                        </floating-reference>
+                        <floating-content>
+                          <div class="tooltip">This tooltip stays inside the dialog.</div>
+                        </floating-content>
+                      </floating-node>
+                    </floating-root>
+                    <floating-root
+                      data-modal-popover-root
+                      interactions="click dismiss"
+                      floating-role="dialog"
+                      placement="bottom-start"
+                    >
+                      <floating-node node-id="focus-room-popover">
+                        <floating-reference>
+                          <button class="text-button">Open room details</button>
+                        </floating-reference>
+                        <floating-portal>
+                          <floating-content>
+                            <section class="popover-panel" aria-label="Room details">
+                              <span class="panel-kicker">NESTED PORTAL</span>
+                              <strong>Details stay above the dialog.</strong>
+                              <p>Escape and outside press dismiss only this panel first.</p>
+                              <button class="text-button" data-close-modal-popover>
+                                Close details
+                              </button>
+                            </section>
+                          </floating-content>
+                        </floating-portal>
+                      </floating-node>
+                    </floating-root>
+                    <floating-root data-nested-modal-root placement="bottom">
+                      <floating-node node-id="focus-room-child-dialog">
+                        <floating-reference>
+                          <button class="text-button">Open nested dialog</button>
+                        </floating-reference>
+                        <floating-portal>
+                          <floating-overlay lock-scroll>
+                            <floating-focus-manager modal return-focus>
+                              <floating-content>
+                                <section
+                                  class="modal-panel nested-modal-panel"
+                                  aria-label="Nested dialog"
+                                >
+                                  <span class="panel-kicker">SECOND LAYER</span>
+                                  <h3>One more<br />focus boundary.</h3>
+                                  <p>Close this layer to resume the parent dialog.</p>
+                                  <button class="coral-button" data-close-nested-modal>
+                                    Return to focus room
+                                  </button>
+                                </section>
+                              </floating-content>
+                            </floating-focus-manager>
+                          </floating-overlay>
+                        </floating-portal>
+                      </floating-node>
+                    </floating-root>
+                  </div>
+                  <div class="modal-actions">
+                    <button class="coral-button" data-close-modal>Leave room</button>
+                    <span class="modal-hint">ESC closes the top layer</span>
+                  </div>
+                </section>
+              </floating-content>
+            </floating-focus-manager>
+          </floating-overlay>
+        </floating-portal>
+      </floating-node>
+    </floating-root>
+  </floating-tree>
 </section>

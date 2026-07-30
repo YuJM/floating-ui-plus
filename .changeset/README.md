@@ -39,17 +39,34 @@ bun run version
 This updates package versions, internal workspace dependency ranges where
 needed, and package changelogs. Review and commit those generated changes.
 
-Then verify and publish:
+Commit the generated version and changelog changes before publishing:
 
 ```sh
-bun run build
-bun run test
-bun run release
+git add .changeset packages bun.lock
+git commit -m "release: 패키지 버전 업데이트"
+git push origin main
 ```
 
-`bun run release` runs `changeset publish` and publishes only packages with a
-new version. It uses the registry and authentication configured for the release
-environment; it does not configure credentials itself.
+Authenticate with npm using the maintainer account and run the local checks:
+
+```sh
+npm login
+bun run release:packages:check
+```
+
+When the package list and archives are correct, publish from a clean `main`
+checkout:
+
+```sh
+bun run release:packages
+git push --follow-tags
+```
+
+The publish script requires local `main` to match `origin/main`, verifies npm
+authentication, typechecks, runs package unit and browser tests, builds the
+packages, previews every package archive, and lists versions that are not yet
+present on npm. It then requires an explicit confirmation before running
+`changeset publish`. npm may request a 2FA code during publication.
 
 ## Versioning policy
 

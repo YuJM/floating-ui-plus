@@ -350,6 +350,9 @@ function initializeNestedMenu(scope: DemoScope) {
 
 function initializeModal(scope: DemoScope) {
   const floating = root(scope, '[data-modal-root]');
+  const tooltip = root(scope, '[data-modal-tooltip-root]');
+  const popover = root(scope, '[data-modal-popover-root]');
+  const nestedModal = root(scope, '[data-nested-modal-root]');
   configure(floating, {
     middleware: [offset(20), shift({padding: 24})],
     plugins: [
@@ -358,9 +361,25 @@ function initializeModal(scope: DemoScope) {
       role({role: 'dialog'}),
     ],
   });
+  tooltip.middleware = [offset(12), flip(), shift({padding: 12})];
+  popover.middleware = [offset(12), flip(), shift({padding: 18})];
+  configure(nestedModal, {
+    middleware: [offset(20), shift({padding: 24})],
+    plugins: [click(), dismiss(), role({role: 'dialog'})],
+  });
   scope.querySelector('[data-close-modal]')?.addEventListener('click', (event) => {
     close(floating, event);
   });
+  scope
+    .querySelector('[data-close-modal-popover]')
+    ?.addEventListener('click', (event) => {
+      close(popover, event);
+    });
+  scope
+    .querySelector('[data-close-nested-modal]')
+    ?.addEventListener('click', (event) => {
+      close(nestedModal, event);
+    });
   onOpenChange(floating, ({open}) => {
     emit(
       scope,

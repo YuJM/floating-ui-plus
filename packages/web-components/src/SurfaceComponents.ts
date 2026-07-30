@@ -11,7 +11,12 @@ import {
   type FloatingPlugin,
 } from '@floating-ui-plus/web';
 
-import {floatingRootContext} from './component-context';
+import {
+  floatingContextScopeContext,
+  floatingParentNodeContext,
+  floatingRootContext,
+  floatingTreeContext,
+} from './component-context';
 import type {FloatingRootElement} from './FloatingRootElement';
 
 const contentsStyles = css`
@@ -40,15 +45,38 @@ export class FloatingPortalElement extends LitElement {
   readonly #rootProvider = new ContextProvider(this, {
     context: floatingRootContext,
   });
+  readonly #treeProvider = new ContextProvider(this, {
+    context: floatingTreeContext,
+  });
+  readonly #parentNodeProvider = new ContextProvider(this, {
+    context: floatingParentNodeContext,
+  });
+  readonly #scopeProvider = new ContextProvider(this, {
+    context: floatingContextScopeContext,
+  });
   readonly #rootConsumer = new ContextConsumer(this, {
     context: floatingRootContext,
     subscribe: true,
     callback: (root) => {
       this.#root = root;
       this.#rootProvider.setValue(root);
+      this.#scopeProvider.setValue(root.controller.contextScope);
+      const syncParentNode = () => {
+        this.#parentNodeProvider.setValue(
+          (root.controller.context.data.nodeId as string | undefined) ?? null,
+        );
+      };
+      syncParentNode();
+      queueMicrotask(syncParentNode);
     },
   });
-
+  readonly #treeConsumer = new ContextConsumer(this, {
+    context: floatingTreeContext,
+    subscribe: true,
+    callback: (tree) => {
+      this.#treeProvider.setValue(tree);
+    },
+  });
   constructor() {
     super();
     this.to = 'body';

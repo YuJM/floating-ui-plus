@@ -317,6 +317,53 @@ describe('portal and overlay services', () => {
     portal.destroy();
   });
 
+  test('keeps multiple open portal nodes isolated and closes one without affecting the other', () => {
+    const root = document.createElement('section');
+    const firstScope = createFloatingContextScope();
+    const secondScope = createFloatingContextScope();
+    firstScope.provide('portal', 'first');
+    secondScope.provide('portal', 'second');
+    document.body.append(root);
+
+    const firstPortal = createPortalNodeController({
+      id: 'first-portal',
+      root,
+      contextScope: firstScope,
+    });
+    const secondPortal = createPortalNodeController({
+      id: 'second-portal',
+      root,
+      contextScope: secondScope,
+    });
+
+    const firstNode = firstPortal.connect()!;
+    const secondNode = secondPortal.connect()!;
+    const firstContent = document.createElement('button');
+    const secondContent = document.createElement('button');
+    firstNode.append(firstContent);
+    secondNode.append(secondContent);
+
+    expect(
+      root.querySelectorAll(`[${FLOATING_UI_PLUS_PORTAL_ATTRIBUTE}]`),
+    ).toHaveLength(2);
+    expect(firstNode).not.toBe(secondNode);
+    expect(requestFloatingContext(firstContent, 'portal')).toBe('first');
+    expect(requestFloatingContext(secondContent, 'portal')).toBe('second');
+
+    firstPortal.disconnect();
+
+    expect(firstNode.isConnected).toBe(false);
+    expect(requestFloatingContext(firstContent, 'portal')).toBeUndefined();
+    expect(secondNode.isConnected).toBe(true);
+    expect(requestFloatingContext(secondContent, 'portal')).toBe('second');
+    expect(
+      root.querySelectorAll(`[${FLOATING_UI_PLUS_PORTAL_ATTRIBUTE}]`),
+    ).toHaveLength(1);
+
+    firstPortal.destroy();
+    secondPortal.destroy();
+  });
+
   test('reuses and preserves a consumer-owned deferred portal node', () => {
     const root = document.createElement('section');
     const existing = document.createElement('div');

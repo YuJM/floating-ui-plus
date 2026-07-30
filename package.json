@@ -24,7 +24,9 @@
     "dev:demo": "bun run --filter floating-ui-plus-demo dev",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "changeset publish",
+    "release:packages:check": "bun scripts/release-packages.ts --check",
+    "release:packages": "bun scripts/release-packages.ts --publish",
+    "release": "bun run release:packages",
     "deploy:demo:dry-run": "bun run --filter floating-ui-plus-demo deploy:dry-run",
     "deploy:demo": "bun run --filter floating-ui-plus-demo deploy"
   },
