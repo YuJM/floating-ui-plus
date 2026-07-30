@@ -41,11 +41,28 @@ the same common UI patterns:
 - nested menus, lists, keyboard composites, and focus management
 - multilingual search, all placements, and middleware examples
 
+Run the complete development environment from the repository root:
+
+```sh
+bun run dev
+```
+
+It builds the package `dist` outputs once, then starts every package watcher
+and the Astro demo. Open <http://127.0.0.1:5173>.
+
+When package watchers are already running, start only the demo with:
+
 ```sh
 bun run dev:demo
 ```
 
-Open <http://127.0.0.1:5173>.
+In a new checkout with no package `dist` outputs, build packages before
+starting the demo alone:
+
+```sh
+bun run build:packages
+bun run dev:demo
+```
 
 Browser tests exercise both surfaces in desktop and mobile Chrome.
 
