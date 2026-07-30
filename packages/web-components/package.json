@@ -1,6 +1,6 @@
 {
   "name": "@floating-ui-plus/web-components",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/web-components/",
   "description": "Lit-powered headless Floating UI custom elements",
