@@ -1,4 +1,4 @@
-import {npmPackageDefinitions, type NpmPackageInfo} from '../../src/npm-packages';
+import {npmPackageDefinitions, type NpmPackageInfo} from '../../apps/demo/src/npm-packages';
 
 interface FunctionContext {
   request: Request;
