@@ -40,7 +40,7 @@ function track(event: MouseEvent) {
     <div class="mt-auto pt-7">
       <div ref="reference" class="vue-cursor-field" tabindex="0" v-bind="floating.referenceAttrs" @mousemove="track"><i /><i /><i /><span>{{ label }}</span></div>
       <FloatingPortal v-if="open" :active="open" :context-scope="floating.contextScope">
-        <div ref="floatingElement" v-floating="floating" class="vue-tooltip" v-bind="floating.floatingAttrs">Pointer is the <b>reference</b></div>
+        <div ref="floatingElement" v-floating="floating" class="cursor-tooltip" v-bind="floating.floatingAttrs">Pointer is the <b>reference</b></div>
       </FloatingPortal>
     </div>
     <code>hover() → clientPoint() → dismiss()</code>
