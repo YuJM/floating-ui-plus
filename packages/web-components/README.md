@@ -2,6 +2,8 @@
 
 Custom Elements for accessible floating interfaces. Use this package when your
 application is HTML-first or needs framework-independent UI primitives.
+The elements are implemented with Atomico while exposing standard Custom
+Element APIs to consumers.
 
 ## Why this package exists
 

@@ -17,15 +17,21 @@ import {
   Teleport,
   computed,
   defineComponent,
+  getCurrentInstance,
   h,
+  inject,
   mergeProps,
   onBeforeUnmount,
   onMounted,
   onScopeDispose,
   onUpdated,
+  provide,
   shallowRef,
+  ssrContextKey,
   watch,
+  type InjectionKey,
   type PropType,
+  type ShallowRef,
 } from 'vue';
 
 import type {UseFloatingReturn} from './types';
@@ -38,13 +44,16 @@ function resolveContext(
   return context ?? floating?.context ?? useFloatingRoot()?.context;
 }
 
+const PortalRootKey: InjectionKey<ShallowRef<HTMLElement | null>> =
+  Symbol('FloatingPortalRoot');
+
 export const FloatingPortal = defineComponent({
   name: 'FloatingPortal',
   inheritAttrs: false,
   props: {
     to: {
-      type: [String, Object] as PropType<string | Element>,
-      default: 'body',
+      type: [String, Object] as PropType<string | Element | undefined>,
+      default: undefined,
     },
     disabled: Boolean,
     active: Boolean,
@@ -53,6 +62,9 @@ export const FloatingPortal = defineComponent({
   },
   setup(props, {attrs, slots}) {
     const injected = useFloatingRoot();
+    const instance = getCurrentInstance();
+    const parentPortalRoot = inject(PortalRootKey, null);
+    const isServerRendering = inject(ssrContextKey, null) !== null;
     const mounted = shallowRef(false);
     const teleportTarget = shallowRef<Element | null>(null);
     const portalRoot = shallowRef<HTMLElement | null>(null);
@@ -60,6 +72,7 @@ export const FloatingPortal = defineComponent({
       contextScope: props.contextScope,
       target: () => portalRoot.value,
     });
+    provide(PortalRootKey, portalRoot);
 
     function setPortalRoot(element: unknown) {
       portalRoot.value =
@@ -75,7 +88,9 @@ export const FloatingPortal = defineComponent({
         return;
       }
       const nextTarget =
-        typeof props.to === 'string'
+        props.to === undefined
+          ? parentPortalRoot?.value ?? document.body
+          : typeof props.to === 'string'
           ? document.querySelector(props.to)
           : props.to;
       teleportTarget.value = nextTarget ?? null;
@@ -92,7 +107,7 @@ export const FloatingPortal = defineComponent({
       {immediate: true},
     );
     watch(
-      () => props.to,
+      [() => props.to, () => parentPortalRoot?.value],
       () => refreshTeleportTarget(),
       {flush: 'post'},
     );
@@ -113,22 +128,19 @@ export const FloatingPortal = defineComponent({
       // explicit state signal keeps the Teleport render effect reactive when
       // consumers conditionally render a floating surface inside the slot.
       props.active;
+      if (isServerRendering || typeof document === 'undefined') {
+        return slots.default?.();
+      }
+      if (!mounted.value) {
+        return instance?.vnode.el ? slots.default?.() : null;
+      }
       const children = slots.default?.();
-      if (!mounted.value || typeof document === 'undefined') return children;
       const target = teleportTarget.value;
       const teleportProps = {
         to: target ?? document.body,
         disabled: props.disabled || !target,
         defer: true,
       };
-      const contextScope = props.contextScope ?? props.floating?.contextScope ?? injected?.contextScope;
-      if (!contextScope) {
-        return h(
-          Teleport as any,
-          teleportProps,
-          children,
-        );
-      }
       return h(
         Teleport as any,
         teleportProps,

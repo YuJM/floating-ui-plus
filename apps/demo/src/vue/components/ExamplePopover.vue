@@ -36,11 +36,11 @@ const floating = useFloating(reference, floatingElement, {
       <FloatingPortal v-if="open" :active="open" :context-scope="floating.contextScope">
         <Transition name="vue-surface">
           <FloatingFocusManager :context="floating.context" :options="{modal: false, initialFocus: -1}">
-            <section ref="floatingElement" v-floating="floating" class="vue-popover" v-bind="floating.floatingAttrs">
-              <span class="vue-panel-label">REFERENCE / 42.8°</span>
+            <section ref="floatingElement" v-floating="floating" class="popover-panel" v-bind="floating.floatingAttrs">
+              <span class="panel-kicker">REFERENCE / 42.8°</span>
               <strong>Teleport, still connected.</strong>
               <p>Outside press and ARIA keep working after the DOM move.</p>
-              <button class="vue-text-button" @click="open = false">Close panel</button>
+              <button class="text-button" @click="open = false">Close panel</button>
             </section>
           </FloatingFocusManager>
         </Transition>

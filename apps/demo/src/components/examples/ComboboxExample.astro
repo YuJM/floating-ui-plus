@@ -199,6 +199,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
     });
 
     search.subscribe(render);
+    void search.refresh();
     input.addEventListener('focus', () => {
       floating.open = true;
     });

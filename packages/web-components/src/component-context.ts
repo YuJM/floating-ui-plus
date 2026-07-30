@@ -1,4 +1,4 @@
-import {createContext} from '@lit/context';
+import {createContext} from 'atomico';
 import type {
   CompositeController,
   DelayGroup,
@@ -15,24 +15,27 @@ export interface FloatingCompositeContext {
   sync(): void;
 }
 
-export const floatingRootContext = createContext<FloatingRootElement>(
-  Symbol('floating-root'),
-);
-export const floatingTreeContext = createContext<FloatingTree>(
-  Symbol('floating-tree'),
-);
-export const floatingParentNodeContext = createContext<string | null>(
-  Symbol('floating-parent-node'),
-);
-export const floatingContextScopeContext = createContext<FloatingContextScope>(
-  Symbol('floating-context-scope'),
-);
-export const floatingListContext = createContext<FloatingList<unknown>>(
-  Symbol('floating-list'),
-);
-export const floatingDelayGroupContext = createContext<DelayGroup>(
-  Symbol('floating-delay-group'),
-);
-export const floatingCompositeContext = createContext<FloatingCompositeContext>(
-  Symbol('floating-composite'),
-);
+export interface FloatingComponentContext {
+  root?: FloatingRootElement | undefined;
+  open?: boolean | undefined;
+  portalTarget?: Element | undefined;
+  tree?: FloatingTree | undefined;
+  parentNodeId: string | null;
+  contextScope?: FloatingContextScope | undefined;
+  list?: FloatingList<unknown> | undefined;
+  delayGroup?: DelayGroup | undefined;
+  composite?: FloatingCompositeContext | undefined;
+}
+
+export const floatingComponentContext =
+  createContext<FloatingComponentContext>({
+    root: undefined,
+    open: undefined,
+    portalTarget: undefined,
+    tree: undefined,
+    parentNodeId: null,
+    contextScope: undefined,
+    list: undefined,
+    delayGroup: undefined,
+    composite: undefined,
+  });

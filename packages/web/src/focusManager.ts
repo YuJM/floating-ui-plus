@@ -54,6 +54,20 @@ export function getDocumentTrapStack(document: Document): FocusTrap[] {
   return stack;
 }
 
+function returnFocus(target: HTMLElement) {
+  const focus = () => {
+    if (target.isConnected) {
+      target.focus({preventScroll: true});
+    }
+  };
+  const win = target.ownerDocument.defaultView;
+  if (win) {
+    win.setTimeout(focus, 0);
+  } else {
+    enqueueMicrotask(focus);
+  }
+}
+
 export function focusManager(
   options: ValueOrGetter<FocusManagerOptions> = {},
 ): FloatingPlugin {
@@ -63,6 +77,7 @@ export function focusManager(
   let removeListeners: (() => void) | null = null;
   let dismissButtons: HTMLElement[] = [];
   let wasOpen = false;
+  let returnFocusScheduled = false;
   let closeReason: OpenChangeReason | undefined;
   let closeEvent: Event | undefined;
 
@@ -100,9 +115,9 @@ export function focusManager(
             current.returnFocus !== false &&
             previouslyFocused
           ) {
-            (returnTarget || reference || previouslyFocused).focus({
-              preventScroll: true,
-            });
+            const target = returnTarget || reference || previouslyFocused;
+            returnFocusScheduled = true;
+            returnFocus(target);
           }
           if (wasActive) previouslyFocused = null;
           return;
@@ -262,10 +277,44 @@ export function focusManager(
         if (!event.open) {
           closeReason = event.reason;
           closeEvent = event.event;
+        } else {
+          returnFocusScheduled = false;
+          closeReason = undefined;
+          closeEvent = undefined;
         }
         enqueueMicrotask(sync);
       });
       return () => {
+        const current = getValue(options);
+        const wasActive = wasOpen;
+        const closedThisTurn = closeReason !== undefined;
+        // Conditional renderers can unmount the manager in the same turn that
+        // closes the surface. Finish the closed-state sync before discarding
+        // the captured return target.
+        if (wasActive && (!context.open || current.enabled === false)) {
+          sync();
+        }
+        const reference = context.elements.domReference as HTMLElement | null;
+        const outsideFocusable =
+          closeReason === 'outside-press' &&
+          closeEvent?.target instanceof HTMLElement &&
+          closeEvent.target.tabIndex >= 0;
+        if (
+          (wasActive || closedThisTurn) &&
+          !returnFocusScheduled &&
+          current.returnFocus !== false &&
+          closeReason !== 'focus-out' &&
+          !outsideFocusable
+        ) {
+          const target =
+            resolveElement(current.returnFocus) ||
+            reference ||
+            previouslyFocused;
+          if (target) {
+            returnFocusScheduled = true;
+            returnFocus(target);
+          }
+        }
         unsubscribe();
         removeListeners?.();
         dismissButtons.forEach((element) => element.remove());

@@ -7,6 +7,7 @@ import {
   FloatingCompositeElement,
   FloatingContentElement,
   FloatingListElement,
+  FloatingPortalElement,
   FloatingReferenceElement,
   FloatingRootElement,
   offset,
@@ -85,7 +86,7 @@ describe('FloatingRootElement', () => {
     expect(root.controller.elements.reference).toBe(replacement);
   });
 
-  test('composes reference and content components through Lit Context', async () => {
+  test('composes reference and content components through Atomico context', async () => {
     const root = document.createElement('floating-root');
     root.interactions = 'click dismiss';
     root.floatingRole = 'dialog';
@@ -109,6 +110,88 @@ describe('FloatingRootElement', () => {
     await root.updateComplete;
     expect(root.open).toBe(true);
     expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
+  });
+
+  test('waits for root context without depending on open state', async () => {
+    const standaloneParent = document.createElement('div');
+    const standalone = document.createElement('floating-portal');
+    standalone.innerHTML = '<button>Not ready</button>';
+    standaloneParent.append(standalone);
+    document.body.append(standaloneParent);
+    await standalone.updateComplete;
+
+    expect(standalone.parentElement).toBe(standaloneParent);
+    expect(standalone.shadowRoot?.querySelector('slot')?.hidden).toBe(true);
+    expect(document.querySelector('floating-portal-target')).toBeNull();
+
+    const root = document.createElement('floating-root');
+    root.innerHTML =
+      '<floating-reference><button>Reference</button></floating-reference>';
+    const portal = document.createElement('floating-portal');
+    portal.innerHTML =
+      '<floating-content><section>Ready while closed</section></floating-content>';
+    root.append(portal);
+    document.body.append(root);
+    await root.updateComplete;
+    await portal.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(portal).toBeInstanceOf(FloatingPortalElement);
+      expect(portal.parentElement).toBe(root);
+      const target = document.body.querySelector(
+        'floating-portal-target',
+      );
+      expect(target?.shadowRoot?.querySelector('slot')).toBeInstanceOf(
+        HTMLSlotElement,
+      );
+      expect(target?.querySelector('floating-content')).not.toBeNull();
+    });
+    expect(root.open).toBe(false);
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(
+        document.querySelector('floating-portal-target section'),
+      );
+      expect(root.floatingElement?.hidden).toBe(true);
+    });
+
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(
+        document.querySelector('floating-portal-target section'),
+      );
+      expect(root.floatingElement?.hidden).toBe(false);
+      expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
+    });
+  });
+
+  test('appends a nested portal to its logical parent portal', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Reference</button></floating-reference>
+      <floating-portal>
+        <floating-content>
+          <section data-parent-content>
+            <floating-portal>
+              <div data-child-content>Child</div>
+            </floating-portal>
+          </section>
+        </floating-content>
+      </floating-portal>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      const parentContent = document.querySelector('[data-parent-content]');
+      const childContent = document.querySelector('[data-child-content]');
+      const parentPortal = parentContent?.closest('floating-portal-target');
+      const childPortal = childContent?.closest('floating-portal-target');
+      expect(parentPortal).not.toBeNull();
+      expect(childPortal).not.toBe(parentPortal);
+      expect(childPortal?.parentElement).toBe(parentPortal);
+      expect(parentPortal?.lastElementChild).toBe(childPortal);
+    });
   });
 
   test('provides ordered list and composite components', async () => {

@@ -145,6 +145,7 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
     hasText: 'This tooltip stays inside the dialog.',
   });
   await expect(tooltip).toBeVisible();
+  await expect(tooltip).toHaveCSS('z-index', '30');
   await page.keyboard.press('Escape');
   await expect(tooltip).toBeHidden();
   await expect(dialog).toBeVisible();
@@ -154,6 +155,13 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
     hasText: 'Details stay above the dialog.',
   });
   await expect(popover).toBeVisible();
+  await expect(popover).toHaveCSS('z-index', '20');
+  expect(
+    await popover.evaluate((element) => {
+      const portal = element.closest('floating-portal-target');
+      return portal?.parentElement?.matches('floating-portal-target');
+    }),
+  ).toBe(true);
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
@@ -174,6 +182,20 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
   await nestedDialogTrigger.click();
   const nestedDialog = page.locator('.nested-modal-panel');
   await expect(nestedDialog).toBeVisible();
+  const nestedOverlay = page
+    .locator('floating-overlay.demo-overlay')
+    .filter({has: nestedDialog});
+  await expect(nestedOverlay).toHaveCSS('z-index', '20');
+  expect(
+    await nestedOverlay.evaluate((element) => {
+      const portal = element.closest('floating-portal-target');
+      const parentPortal = portal?.parentElement;
+      return (
+        parentPortal?.matches('floating-portal-target') &&
+        parentPortal.lastElementChild === portal
+      );
+    }),
+  ).toBe(true);
   await page.keyboard.press('Escape');
   await expect(nestedDialog).toBeHidden();
   await expect(dialog).toBeVisible();
@@ -504,6 +526,9 @@ test('multilingual combobox keeps input focus and renders results', async ({
     'true',
   );
   const input = page.getByRole('combobox', {name: 'Destination'});
+
+  await input.focus();
+  await expect(page.getByRole('option')).toHaveCount(4);
 
   for (const [query, expected] of [
     ['서을', '서울'],

@@ -31,11 +31,24 @@ test('traps modal focus and closes on Escape', async ({page}) => {
     name: /You are inside the focus trap/,
   });
   await expect(dialog).toBeVisible();
+  const dialogBox = await dialog.boundingBox();
+  const viewport = page.viewportSize();
+  expect(dialogBox).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(
+    Math.abs(dialogBox!.x + dialogBox!.width / 2 - viewport!.width / 2),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(dialogBox!.y + dialogBox!.height / 2 - viewport!.height / 2),
+  ).toBeLessThanOrEqual(1);
 
   const hintTrigger = page.getByRole('button', {name: 'Show placement hint'});
   await hintTrigger.hover();
   const tooltip = page.getByRole('tooltip');
   await expect(tooltip).toBeVisible();
+  await expect(tooltip).toHaveCSS('z-index', '30');
+  await expect(tooltip).toHaveCSS('background-color', 'rgb(23, 58, 50)');
+  await expect(tooltip).toHaveCSS('padding', '10px 13px');
   await page.keyboard.press('Escape');
   await expect(tooltip).toBeHidden();
   await expect(dialog).toBeVisible();
@@ -43,15 +56,52 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await page.getByRole('button', {name: 'Open room details'}).click();
   const popover = page.getByRole('dialog', {name: 'Room details'});
   await expect(popover).toBeVisible();
+  await expect(popover).toHaveCSS('z-index', '20');
+  expect(
+    await popover.evaluate((element) => {
+      const portal = element.closest('[data-fup-portal]');
+      return portal?.parentElement?.matches('[data-fup-portal]');
+    }),
+  ).toBe(true);
+  await page.getByRole('button', {name: 'Close details'}).click();
+  await expect(popover).toBeHidden();
+  await page.getByRole('button', {name: 'Open room details'}).click();
+  await expect(popover).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
 
-  await page.getByRole('button', {name: 'Open nested dialog'}).click();
+  const nestedDialogTrigger = page.getByRole('button', {
+    name: 'Open nested dialog',
+  });
+  await nestedDialogTrigger.click();
   const nestedDialog = page.getByRole('dialog', {name: 'Nested dialog'});
   await expect(nestedDialog).toBeVisible();
+  const nestedDialogBox = await nestedDialog.boundingBox();
+  expect(nestedDialogBox).not.toBeNull();
+  expect(
+    Math.abs(
+      nestedDialogBox!.x + nestedDialogBox!.width / 2 - viewport!.width / 2,
+    ),
+  ).toBeLessThanOrEqual(1);
+  expect(
+    Math.abs(
+      nestedDialogBox!.y + nestedDialogBox!.height / 2 - viewport!.height / 2,
+    ),
+  ).toBeLessThanOrEqual(1);
+  const nestedOverlay = page.locator('.demo-overlay').filter({
+    has: nestedDialog,
+  });
+  await expect(nestedOverlay).toHaveCSS('z-index', '20');
+  expect(
+    await nestedOverlay.evaluate((element) => {
+      const portal = element.closest('[data-fup-portal]');
+      return portal?.parentElement?.matches('[data-fup-portal]');
+    }),
+  ).toBe(true);
   await page.keyboard.press('Escape');
   await expect(nestedDialog).toBeHidden();
+  await expect(nestedDialogTrigger).toBeFocused();
   await expect(dialog).toBeVisible();
 
   await page.keyboard.press('Escape');
@@ -222,6 +272,9 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
 }) => {
   await page.goto('/combobox?framework=vue');
   const input = page.getByRole('combobox', {name: 'Destination'});
+
+  await input.focus();
+  await expect(page.getByRole('option')).toHaveCount(4);
 
   for (const [query, expected] of [
     ['서을', '서울'],

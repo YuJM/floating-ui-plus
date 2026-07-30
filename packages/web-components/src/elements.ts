@@ -9,6 +9,7 @@ import {
   FloatingFocusManagerElement,
   FloatingOverlayElement,
   FloatingPortalElement,
+  FloatingPortalTargetElement,
   FloatingTransitionElement,
 } from './SurfaceComponents';
 import {
@@ -28,6 +29,7 @@ const floatingElements = [
   ['floating-content', FloatingContentElement],
   ['floating-item', FloatingItemElement],
   ['floating-portal', FloatingPortalElement],
+  ['floating-portal-target', FloatingPortalTargetElement],
   ['floating-overlay', FloatingOverlayElement],
   ['floating-arrow', FloatingArrowElement],
   ['floating-focus-manager', FloatingFocusManagerElement],

@@ -66,13 +66,13 @@ function bindItem(index: number, element: Element | null) {
       <button ref="reference" class="vue-button vue-button-ink" v-bind="floating.referenceAttrs">Open navigator <span>⌄</span></button>
       <FloatingPortal v-if="open" :active="open" :context-scope="floating.contextScope">
         <Transition name="vue-surface">
-          <div ref="floatingElement" v-floating="floating" class="vue-menu" v-bind="floating.floatingAttrs">
-            <div class="vue-menu-heading">Jump to a field</div>
+          <div ref="floatingElement" v-floating="floating" class="menu-panel" v-bind="floating.floatingAttrs">
+            <div class="menu-heading">Jump to a field</div>
             <button
               v-for="(label, index) in labels"
               :key="label"
               :ref="(element) => bindItem(index, element as Element | null)"
-              class="vue-menu-item"
+              class="menu-item"
               role="menuitem"
               :data-active="activeIndex === index"
               :tabindex="activeIndex === index ? 0 : -1"

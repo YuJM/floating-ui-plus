@@ -105,24 +105,28 @@ checkout. Cloudflare Pages deployment is a separate process and must not run
 native `bun publish`, which resolves workspace dependency protocols to semver
 ranges in the published manifest.
 
-Prepare and publish a release:
+Prepare and publish a release from the intended release branch:
 
 ```sh
 bun run version
 git add .changeset packages bun.lock
 git commit -m "release: 패키지 버전 업데이트"
-git push origin main
 npm login
 bun run release:packages:check
 bun run release:packages
-git push --follow-tags
 ```
 
-The publish command requires a clean `main` checkout that matches
-`origin/main`, verifies npm authentication, typechecks, runs package unit and
-browser tests, builds every package, previews each package archive, and asks
-for confirmation before publishing. `bun run release:packages:check` performs
-the same validation without publishing anything.
+The release commands expect `bun run version` to have consumed every pending
+Changeset and written the current versions to the package changelogs. The
+publish command may run from any branch and does not require that branch to
+match a remote; it only requires a clean worktree so the reviewed files are
+exactly the files being published. It also verifies npm authentication,
+typechecks, runs package unit and browser tests, builds every package, previews
+each package archive, and asks for confirmation before publishing.
+`bun run release:packages:check` performs the package, authentication, test,
+build, archive, and npm-version validation without publishing anything.
+Pushing the release commit or any manually created tags is a separate
+maintainer action and is not a publication prerequisite.
 
 See [`.changeset/README.md`](./.changeset/README.md) for the team workflow and
 versioning rules.

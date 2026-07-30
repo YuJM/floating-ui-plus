@@ -1,5 +1,6 @@
 import {fileURLToPath} from 'node:url';
 import {createInterface} from 'node:readline/promises';
+import {readdir} from 'node:fs/promises';
 
 type Mode = 'check' | 'publish';
 
@@ -30,7 +31,7 @@ Usage:
   bun scripts/release-packages.ts --publish
 
 --check    Validate authentication, tests, builds, archives, and npm versions.
---publish  Run the same checks, require a clean worktree, then publish.
+--publish  Run the same checks from any clean checkout, then publish.
 `);
 }
 
@@ -97,15 +98,53 @@ async function readPackages(): Promise<PackageInfo[]> {
   );
 }
 
-async function assertCleanWorktree() {
-  // Publishing must use exactly the committed package manifests and lockfile.
-  const status = await capture(['git', 'status', '--porcelain']);
+export function findPendingChangesets(fileNames: string[]) {
+  return fileNames
+    .filter((fileName) => fileName.endsWith('.md') && fileName !== 'README.md')
+    .sort();
+}
+
+async function assertVersionedReleasePlan(packages: PackageInfo[]) {
+  const changesetDirectory = `${rootDirectory}/.changeset`;
+  const pendingChangesets = findPendingChangesets(
+    await readdir(changesetDirectory),
+  );
+
+  if (pendingChangesets.length > 0) {
+    throw new Error(
+      'Pending changesets have not been applied. Run `bun run version`, review '
+        + 'the generated package versions and changelogs, then commit them.\n'
+        + pendingChangesets.map((fileName) => `  - .changeset/${fileName}`).join('\n'),
+    );
+  }
+
+  for (const pkg of packages) {
+    const changelog = await Bun.file(
+      `${rootDirectory}/${pkg.directory}/CHANGELOG.md`,
+    ).text();
+    if (!changelog.includes(`## ${pkg.version}`)) {
+      throw new Error(
+        `${pkg.name}@${pkg.version} is missing from ${pkg.directory}/CHANGELOG.md. `
+          + 'Run `bun run version` and review the generated release files.',
+      );
+    }
+  }
+
+  console.log('✓ changesets applied to package versions and changelogs');
+}
+
+export function validatePublishWorktree(status: string) {
   if (status) {
     throw new Error(
       'Publishing requires a clean worktree. Commit or stash every change first.',
     );
   }
+}
 
+async function assertCleanWorktree() {
+  const status = await capture(['git', 'status', '--porcelain']);
+  validatePublishWorktree(status);
+  console.log('✓ clean release worktree');
 }
 
 async function assertNpmAuthentication() {
@@ -136,9 +175,6 @@ async function isPublished(pkg: PackageInfo) {
 }
 
 async function runVerification(packages: PackageInfo[]) {
-  console.log('\nChecking release plan...');
-  await run(['bun', 'run', 'changeset', 'status']);
-
   console.log('\nTypechecking...');
   await run(['bun', 'run', 'typecheck']);
 
@@ -196,14 +232,17 @@ async function confirmPublish(packages: PackageInfo[]) {
   }
 }
 
-async function main() {
+export async function main() {
   const mode = parseMode(Bun.argv.slice(2));
   if (!mode) return;
 
   if (mode === 'publish') await assertCleanWorktree();
-  await assertNpmAuthentication();
-
   const packages = await readPackages();
+
+  console.log('\nChecking versioned release plan...');
+  await assertVersionedReleasePlan(packages);
+
+  await assertNpmAuthentication();
   await runVerification(packages);
   const pendingPackages = await findPendingPackages(packages);
 
@@ -231,10 +270,12 @@ async function main() {
     );
   }
   console.log('\nPackage publication completed.');
-  console.log('Push the generated release tags with `git push --follow-tags`.');
+  console.log('Push the release commit or any manual tags separately if desired.');
 }
 
-await main().catch((error) => {
-  console.error(`\nRelease failed: ${(error as Error).message}`);
-  process.exitCode = 1;
-});
+if (import.meta.main) {
+  await main().catch((error) => {
+    console.error(`\nRelease failed: ${(error as Error).message}`);
+    process.exitCode = 1;
+  });
+}

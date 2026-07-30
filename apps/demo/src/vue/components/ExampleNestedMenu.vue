@@ -140,13 +140,13 @@ function bindRootItem(index: number, element: unknown) {
           <button ref="rootReference" class="vue-button vue-button-ink" v-bind="root.referenceAttrs">Open actions <span>⌄</span></button>
           <FloatingPortal v-if="rootOpen" :active="rootOpen" :context-scope="root.contextScope">
             <Transition name="vue-surface">
-              <div ref="rootFloating" v-floating="root" class="vue-menu" data-testid="actions-menu" v-bind="root.floatingAttrs">
-                <div class="vue-menu-heading">Tree coordinated actions</div>
+              <div ref="rootFloating" v-floating="root" class="menu-panel" data-testid="actions-menu" v-bind="root.floatingAttrs">
+                <div class="menu-heading">Tree coordinated actions</div>
                 <button
                   v-for="(label, index) in rootLabels"
                   :key="label"
                   :ref="(element) => bindRootItem(index, element)"
-                  class="vue-menu-item"
+                  class="menu-item"
                   role="menuitem"
                   :data-active="rootActive === index"
                   :tabindex="rootActive === index ? 0 : -1"
@@ -164,9 +164,9 @@ function bindRootItem(index: number, element: unknown) {
         <FloatingNode :controller="projects" id="vue-nested-projects">
           <FloatingPortal v-if="projectsOpen" :active="projectsOpen" :context-scope="projects.contextScope">
             <Transition name="vue-surface">
-              <div ref="projectFloating" v-floating="projects" class="vue-menu vue-submenu" data-testid="project-menu" v-bind="projects.floatingAttrs">
-                <div class="vue-menu-heading">Choose a project</div>
-                <button v-for="(label, index) in projectLabels" :key="label" :ref="(element) => (projectItems.current[index] = element as HTMLElement | null)" class="vue-menu-item" role="menuitem" :data-active="projectActive === index" :tabindex="projectActive === index ? 0 : -1" v-bind="projects.getItemAttrs({active: projectActive === index, index})" @click="projectsOpen = false">
+              <div ref="projectFloating" v-floating="projects" class="menu-panel nested-menu-submenu" data-testid="project-menu" v-bind="projects.floatingAttrs">
+                <div class="menu-heading">Choose a project</div>
+                <button v-for="(label, index) in projectLabels" :key="label" :ref="(element) => (projectItems.current[index] = element as HTMLElement | null)" class="menu-item" role="menuitem" :data-active="projectActive === index" :tabindex="projectActive === index ? 0 : -1" v-bind="projects.getItemAttrs({active: projectActive === index, index})" @click="projectsOpen = false">
                   <span>{{ label }}</span><kbd>{{ index + 1 }}</kbd>
                 </button>
               </div>
