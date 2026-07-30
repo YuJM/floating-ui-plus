@@ -1,6 +1,8 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
 
 import {
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FloatingArrowElement,
   FloatingCompositeElement,
   FloatingContentElement,
@@ -32,6 +34,12 @@ describe('FloatingRootElement', () => {
     expect(root.floatingElement).toBe(root.querySelector('section'));
     expect(root.floatingElement?.hidden).toBe(false);
     expect(root.floatingElement?.style.position).toBe('absolute');
+    expect(root.referenceElement?.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(root.referenceElement?.getAttribute('aria-expanded')).toBe('true');
+    expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
+    expect(root.referenceElement?.getAttribute('aria-controls')).toBe(
+      root.floatingElement?.id,
+    );
   });
 
   test('maps click interactions to reflected state and a DOM event', async () => {
@@ -170,6 +178,56 @@ describe('FloatingRootElement', () => {
     expect(
       arrow?.shadowRoot?.querySelector('svg')?.getAttribute('viewBox'),
     ).toBe('0 0 18 9');
+    expect(arrow?.shadowRoot?.querySelector('slot')).toBeInstanceOf(
+      HTMLSlotElement,
+    );
+    const path = arrow?.shadowRoot?.querySelector('path');
+    if (typeof path?.getBBox === 'function') {
+      expect(path.getBBox().width).toBe(18);
+    } else {
+      expect(path?.getAttribute('d')).toBe('M0 9L9 0L18 9Z');
+    }
     expect(arrow?.getAttribute('aria-hidden')).toBe('true');
+    expect(arrow?.hasAttribute(FLOATING_UI_PLUS_ARROW_ATTRIBUTE)).toBe(true);
+    expect(
+      arrow?.getAttribute(FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE),
+    ).toBe('9');
+  });
+
+  test('updates the arrow side and rotation when placement changes', async () => {
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <button slot="reference">Reference</button>
+      <section slot="floating">
+        Floating
+        <floating-arrow width="18" height="9" static-offset="-9"></floating-arrow>
+      </section>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    const arrow = root.querySelector('floating-arrow')!;
+    await arrow.updateComplete;
+
+    const cases = [
+      ['top', 'bottom', 'rotate(180deg)'],
+      ['right', 'left', 'rotate(-90deg)'],
+      ['bottom', 'top', 'rotate(0deg)'],
+      ['left', 'right', 'rotate(90deg)'],
+    ] as const;
+
+    for (const [placement, staticSide, transform] of cases) {
+      root.placement = placement;
+      await root.updateComplete;
+      await root.updatePosition();
+
+      await vi.waitFor(() => {
+        expect(arrow.style[staticSide]).toBe('-9px');
+        expect(arrow.style.transform).toBe(transform);
+      });
+      for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+        if (side !== staticSide) expect(arrow.style[side]).toBe('');
+      }
+    }
   });
 });

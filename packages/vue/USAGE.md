@@ -12,6 +12,12 @@ bun add @floating-ui-plus/vue
 Vue `3.3` or later is a peer dependency. Imports are SSR-safe; positioning and
 native event listeners connect after mount.
 
+`useFloating()` and `FloatingRoot` supply the default dialog ARIA relationship.
+Bind `referenceAttrs` and `floatingAttrs` (or use `FloatingReference` and
+`FloatingContent`) to receive it. Override the pattern with
+`role({role: 'tooltip' | 'menu' | 'select' | ...})`, and give dialog content a
+product-specific accessible name with `aria-label` or `aria-labelledby`.
+
 ## Composition API: tooltip
 
 Use `useFloating()` when you control the elements directly, need a virtual

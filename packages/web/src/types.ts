@@ -104,7 +104,13 @@ export interface FloatingData {
   openEvent?: Event | undefined;
   typing?: boolean | undefined;
   pointerType?: string | undefined;
+  arrow?: FloatingArrowSlot | undefined;
   [key: string]: unknown;
+}
+
+export interface FloatingArrowSlot {
+  element: HTMLElement;
+  height: number;
 }
 
 export type FloatingElementKey = 'reference' | 'floating' | 'item';

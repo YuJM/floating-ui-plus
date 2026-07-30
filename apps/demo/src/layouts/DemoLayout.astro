@@ -94,7 +94,6 @@ const metadata = {
     <script>
       import '@floating-ui-plus/web-components';
       import {resolveFramework} from '../demo-registry';
-      import {initializeDemos} from '../scripts/initialize-demos';
 
       function initializeIntegratedDemo() {
         const framework = resolveFramework(
@@ -113,10 +112,6 @@ const metadata = {
           const target = link.dataset.frameworkSwitch;
           link.setAttribute('aria-current', target === framework ? 'page' : 'false');
         });
-
-        if (framework === 'web-components') {
-          initializeDemos();
-        }
       }
 
       const runIntegratedDemo = () => initializeIntegratedDemo();

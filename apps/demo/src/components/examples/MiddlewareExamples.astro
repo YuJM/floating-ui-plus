@@ -1,6 +1,9 @@
 ---
 import MiddlewareTitle from './MiddlewareTitle.astro';
-import {MIDDLEWARE_EXAMPLES} from '../../middleware-registry';
+import {
+  MIDDLEWARE_ARROW,
+  MIDDLEWARE_EXAMPLES,
+} from '../../middleware-registry';
 
 const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, autoExample, hideExample, inlineExample] = MIDDLEWARE_EXAMPLES;
 ---
@@ -76,7 +79,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
           </floating-root>
         </div>
       </div>
-      <code>placement="bottom" + flip()</code>
+      <code>placement="bottom" + flip() → shift()</code>
     </article>
 
     <article class="middleware-card" data-middleware-example="arrow">
@@ -98,12 +101,17 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
               class="mw-panel mw-panel-ink mw-panel-arrow"
             >
               Floating
-              <floating-arrow class="mw-arrow"></floating-arrow>
+              <floating-arrow
+                class="mw-arrow"
+                width={MIDDLEWARE_ARROW.width}
+                height={MIDDLEWARE_ARROW.height}
+                static-offset={MIDDLEWARE_ARROW.staticOffset}
+              ></floating-arrow>
             </div>
           </floating-root>
         </div>
       </div>
-      <code>{'shift() → arrow({element})'}</code>
+      <code>{'offset(GAP) → shift() → arrow({element})'}</code>
     </article>
 
     <article class="middleware-card" data-middleware-example="size">
@@ -157,7 +165,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
           </floating-root>
         </div>
       </div>
-      <code>{'autoPlacement({padding: 8})'}</code>
+      <code>{'autoPlacement({padding: 8}) → shift({padding: 8})'}</code>
     </article>
 
     <article
@@ -235,3 +243,202 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     </article>
   </section>
 </section>
+
+<script>
+  import {
+    arrow,
+    autoPlacement,
+    flip,
+    hide,
+    inline,
+    offset,
+    shift,
+    size,
+  } from '@floating-ui-plus/web-components';
+  import {MIDDLEWARE_ARROW} from '../../middleware-registry';
+  import {
+    floatingRoot,
+    initializeExample,
+  } from './example-client';
+
+  initializeExample('middleware', (scope) => {
+    const offsetZero = floatingRoot(scope, '[data-offset-root="0"]');
+    const offsetTen = floatingRoot(scope, '[data-offset-root="10"]');
+    offsetZero.middleware = [offset(0)];
+    offsetTen.middleware = [offset(10)];
+
+    const shiftStage =
+      scope.querySelector<HTMLElement>('.mw-stage-shift');
+    const shiftRoot = floatingRoot(scope, '[data-shift-root]');
+    shiftRoot.middleware = [
+      shift({
+        boundary: shiftStage ?? undefined,
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+    ];
+
+    const flipStage = scope.querySelector<HTMLElement>('.mw-stage-flip');
+    const flipRoot = floatingRoot(scope, '[data-flip-root]');
+    flipRoot.middleware = [
+      offset(8),
+      flip({
+        boundary: flipStage ?? undefined,
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+      shift({
+        boundary: flipStage ?? undefined,
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+    ];
+
+    const arrowStage =
+      scope.querySelector<HTMLElement>('.mw-stage-arrow');
+    const arrowRoot = floatingRoot(scope, '[data-arrow-root]');
+    const arrowElement =
+      scope.querySelector<HTMLElement>('floating-arrow');
+    arrowRoot.middleware = [
+      offset(MIDDLEWARE_ARROW.gap),
+      shift({
+        boundary: arrowStage ?? undefined,
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+      ...(arrowElement
+        ? [arrow({element: arrowElement, padding: 8})]
+        : []),
+    ];
+
+    const sizeStage = scope.querySelector<HTMLElement>('.mw-stage-size');
+    const sizeRoot = floatingRoot(scope, '[data-size-root]');
+    sizeRoot.middleware = [
+      offset(8),
+      size({
+        boundary: sizeStage ?? undefined,
+        padding: 8,
+        rootBoundary: 'document',
+        apply({availableWidth, availableHeight, elements}) {
+          Object.assign(elements.floating.style, {
+            maxWidth: `${Math.max(0, availableWidth)}px`,
+            maxHeight: `${Math.max(0, availableHeight)}px`,
+          });
+        },
+      }),
+    ];
+
+    const autoStage = scope.querySelector<HTMLElement>(
+      '.mw-stage-auto-placement',
+    );
+    const autoRoot = floatingRoot(scope, '[data-auto-placement-root]');
+    autoRoot.middleware = [
+      autoPlacement({
+        boundary: autoStage ?? undefined,
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+      shift({
+        boundary: autoStage ?? undefined,
+        padding: 8,
+        rootBoundary: 'document',
+      }),
+    ];
+
+    const hideStage = scope.querySelector<HTMLElement>('.mw-stage-hide');
+    const hideRoot = floatingRoot(scope, '[data-hide-root]');
+    hideRoot.middleware = [
+      offset(8),
+      hide({
+        boundary: hideStage ?? undefined,
+        rootBoundary: 'document',
+      }),
+      hide({
+        boundary: hideStage ?? undefined,
+        strategy: 'escaped',
+        rootBoundary: 'document',
+      }),
+    ];
+
+    const withoutInline = floatingRoot(
+      scope,
+      '[data-inline-root="without"]',
+    );
+    const withInline = floatingRoot(scope, '[data-inline-root="with"]');
+    withoutInline.middleware = [offset(8)];
+    withInline.middleware = [inline(), offset(8)];
+
+    const syncObservableState = async () => {
+      await Promise.all([
+        flipRoot.updatePosition(),
+        autoRoot.updatePosition(),
+        hideRoot.updatePosition(),
+      ]);
+      const flipPanel = flipRoot.floatingElement;
+      const autoPanel = autoRoot.floatingElement;
+      if (flipPanel) {
+        flipPanel.dataset.placement =
+          flipRoot.controller.position.placement;
+        flipPanel.textContent =
+          `Final: ${flipRoot.controller.position.placement}`;
+      }
+      if (autoPanel) {
+        autoPanel.dataset.placement =
+          autoRoot.controller.position.placement;
+        autoPanel.textContent =
+          `Final: ${autoRoot.controller.position.placement}`;
+      }
+      const data = hideRoot.controller.position.middlewareData.hide as
+        | {referenceHidden?: boolean; escaped?: boolean}
+        | undefined;
+      const referenceHidden = Boolean(data?.referenceHidden);
+      const escaped = Boolean(data?.escaped);
+      const panel = hideRoot.floatingElement;
+      panel?.setAttribute(
+        'data-reference-hidden',
+        String(referenceHidden),
+      );
+      panel?.setAttribute('data-escaped', String(escaped));
+      const readout = scope.querySelector<HTMLElement>(
+        '[data-middleware-example="hide"] .mw-state-readout',
+      );
+      if (readout) {
+        readout.textContent = `State: ${
+          referenceHidden
+            ? 'reference hidden'
+            : escaped
+              ? 'floating escaped'
+              : 'attached'
+        }`;
+      }
+    };
+
+    [flipStage, autoStage, hideStage].forEach((stage) => {
+      stage?.addEventListener('scroll', () =>
+        void syncObservableState(),
+      );
+    });
+    requestAnimationFrame(() => {
+      if (shiftStage) shiftStage.scrollLeft = 360;
+      if (flipStage) flipStage.scrollTop = 160;
+      if (arrowStage) arrowStage.scrollLeft = 520;
+      if (sizeStage) sizeStage.scrollTop = 210;
+      if (autoStage) autoStage.scrollTop = 130;
+      if (hideStage) hideStage.scrollTop = 160;
+      void Promise.all([
+        shiftRoot.updatePosition(),
+        arrowRoot.updatePosition(),
+        sizeRoot.updatePosition(),
+        withoutInline.updatePosition(),
+        withInline.updatePosition(),
+        syncObservableState(),
+      ]);
+    });
+
+    if (window.location.hash === '#hide') {
+      requestAnimationFrame(() => {
+        scope.querySelector('#hide')?.scrollIntoView({block: 'center'});
+      });
+    }
+  });
+</script>

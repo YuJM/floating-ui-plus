@@ -4,6 +4,9 @@ import {renderToString} from '@vue/server-renderer';
 import {afterEach, vi} from 'vitest';
 
 import {
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+  FloatingArrow,
   FloatingOverlay,
   FloatingPortal,
   FloatingContent,
@@ -23,6 +26,31 @@ import {
 afterEach(() => cleanup());
 
 describe('Floating UI Plus Vue adapter', () => {
+  test('marks the default arrow SVG with the shared arrow attribute', async () => {
+    const App = defineComponent(() => () =>
+      h(
+        FloatingRoot,
+        {open: true},
+        {
+          default: () => [
+            h(FloatingReference, {}, {default: () => 'Reference'}),
+            h(FloatingContent, {}, {default: () => h(FloatingArrow)}),
+          ],
+        },
+      ),
+    );
+
+    const {container} = render(App);
+    await nextTick();
+
+    expect(container.innerHTML).toContain(
+      `${FLOATING_UI_PLUS_ARROW_ATTRIBUTE}=""`,
+    );
+    expect(container.innerHTML).toContain(
+      `${FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE}="7"`,
+    );
+  });
+
   test('connects generic search state to Vue lifecycle', async () => {
     const source = createFuzzySearchSource(
       [
@@ -129,6 +157,27 @@ describe('Floating UI Plus Vue adapter', () => {
     await fireEvent.keyDown(document, {key: 'Escape'});
     await waitFor(() => {
       expect(() => getByTestId('floating')).toThrow();
+    });
+  });
+
+  test('gives declarative floating elements the default dialog ARIA contract', async () => {
+    const App = defineComponent(() => () =>
+      h(FloatingRoot, {open: true}, {
+        default: () => [
+          h(FloatingReference, {'data-testid': 'reference'}, {default: () => 'Open'}),
+          h(FloatingContent, {'data-testid': 'content'}, {default: () => 'Content'}),
+        ],
+      }),
+    );
+
+    const {getByTestId} = render(App);
+    await waitFor(() => {
+      const reference = getByTestId('reference');
+      const content = getByTestId('content');
+      expect(reference).toHaveAttribute('aria-haspopup', 'dialog');
+      expect(reference).toHaveAttribute('aria-expanded', 'true');
+      expect(reference).toHaveAttribute('aria-controls', content.id);
+      expect(content).toHaveAttribute('role', 'dialog');
     });
   });
 

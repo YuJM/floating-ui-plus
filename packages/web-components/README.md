@@ -61,6 +61,51 @@ For complete templates and programmatic configuration, see the
 For a small tooltip, `floating-root` also supports `reference` and `floating`
 named slots.
 
+## Arrow defaults and customization
+
+`floating-arrow` provides a default SVG triangle. Its sizing, separation, and
+automatic placement rotation
+from the floating surface are its own properties, rather than properties on
+the parent surface. It is marked with the exported
+`FLOATING_UI_PLUS_ARROW_ATTRIBUTE` (`data-fup-arrow`):
+
+```html
+<floating-arrow width="14" height="7" static-offset="-7"></floating-arrow>
+```
+
+`floating-arrow` publishes its height to the Plus controller. The number passed
+to `offset()` is therefore the desired visual gap; the Arrow height is added
+automatically:
+
+```ts
+const GAP = 3;
+
+root.middleware = [
+  offset(GAP),
+  shift({padding: 8}),
+  arrow({element: root.querySelector('floating-arrow')!}),
+];
+```
+
+Use `width`, `height`, and `static-offset` as element properties when values
+are dynamic. The default SVG exposes `svg` and `path` parts. The component's
+default slot accepts a complete custom SVG, so applications can replace its
+appearance without changing positioning:
+
+```html
+<floating-arrow width="18" height="9" static-offset="-9">
+  <svg viewBox="0 0 18 9" aria-hidden="true">
+    <path d="M0 9L9 0L18 9Z"></path>
+  </svg>
+</floating-arrow>
+```
+
+Set `rotation="none"` when a custom SVG already points in its final direction.
+
+```css
+floating-arrow::part(path) { fill: rebeccapurple; }
+```
+
 ## Configure JavaScript values as properties
 
 Attributes are ideal for strings and booleans. Assign middleware, plugins,

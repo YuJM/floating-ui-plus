@@ -1,8 +1,10 @@
 import {computePosition} from '@floating-ui/dom';
 import {isElement} from '@floating-ui/utils/dom';
 
+import {withArrowOffset} from './arrow';
 import {createFloatingEvents} from './events';
 import {FloatingCoordinator} from './coordinator';
+import {role} from './interactions/role';
 import type {
   FloatingAttributes,
   FloatingContext,
@@ -82,7 +84,10 @@ export function createFloating(
   const data: FloatingData = {};
   const attributes: FloatingAttributes = {};
   const events = createFloatingEvents();
-  const plugins: FloatingPlugin[] = [];
+  // Every floating surface gets a baseline reference/content relationship.
+  // A later role() replaces this dialog contract; role({enabled: false}) opts
+  // out for a purely presentational surface.
+  const plugins: FloatingPlugin[] = [role()];
   const pluginCleanups: Array<() => void> = [];
   let mountedCleanup: (() => void) | undefined;
   let connected = false;
@@ -215,7 +220,7 @@ export function createFloating(
     const currentRequest = ++requestId;
     const options = resolveOptions(optionsSource);
     const result = await computePosition(reference, floating, {
-      middleware: options.middleware,
+      middleware: withArrowOffset(options.middleware, context.data.arrow),
       placement: options.placement,
       strategy: options.strategy,
       platform: options.platform,

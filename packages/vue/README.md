@@ -74,6 +74,44 @@ Use the component layer for ordinary popovers, menus, and dialogs:
 `FloatingRoot` provides the controller to its descendants. Pass a `floating`
 prop when an element belongs to a controller owned elsewhere.
 
+## Arrow defaults and customization
+
+`FloatingArrow` supplies the default SVG triangle with its own `width`,
+`height`, `staticOffset`, and `rotation` props. Replace its default slot to use your own
+path while retaining the same positioning output. Its root SVG is marked with
+the exported `FLOATING_UI_PLUS_ARROW_ATTRIBUTE`
+(`data-fup-arrow`):
+
+```vue
+<FloatingArrow :floating="floating" :width="18" :height="9" :static-offset="-9">
+  <path d="M0 9L9 0L18 9Z" fill="rebeccapurple" />
+</FloatingArrow>
+```
+
+`FloatingArrow` publishes its height to the Plus controller. The number passed
+to `offset()` is therefore the desired visual gap; the Arrow height is added
+automatically:
+
+```ts
+const GAP = 3;
+
+const middleware = computed(() => [
+  offset(GAP),
+  shift({padding: 8}),
+  ...(arrowElement.value ? [arrow({element: arrowElement.value})] : []),
+]);
+```
+
+Pass `rotation="none"` when the custom path already points in its final direction.
+
+For a fully custom element, keep rendering and styling in your component and
+apply the framework-neutral `getArrowStyles(placement, middlewareData,
+{element})` result to that element. This is the headless path; the arrow's
+shape, color, and markup remain application-owned.
+
+When the default component is used with `arrow({element})`, listen for
+`@element-change` to receive its SVG element for that middleware option.
+
 ## Search, collections, and portals
 
 `useSearch()` connects the generic request controller to Vue lifecycle. It is

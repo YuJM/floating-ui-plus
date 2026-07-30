@@ -55,6 +55,43 @@ Your renderer applies the reactive attributes and positioning output from the
 controller. Call `disconnect()` when the surface is temporarily removed and
 `destroy()` when its owner is disposed.
 
+## Arrow spacing
+
+Upstream `arrow()` positions an application-owned arrow without changing
+`offset()`. Floating UI Plus composes the two when the Arrow renderer is marked
+with `data-fup-arrow`: the number passed to `offset()` remains the visual gap,
+and the Arrow height is added automatically.
+
+```ts
+import {
+  arrow,
+  offset,
+  registerFloatingArrow,
+  shift,
+} from '@floating-ui-plus/web';
+
+const GAP = 3;
+
+const middleware = [
+  offset(GAP),
+  shift({padding: 8}),
+  arrow({element: arrowElement}),
+];
+```
+
+The supplied Web Components and Vue Arrow components register their element and
+height with the shared `FloatingContext`. A custom renderer can do the same:
+
+```ts
+const unregisterArrow = registerFloatingArrow(controller.context, {
+  element: arrowElement,
+  height: 7,
+});
+```
+
+Call `unregisterArrow()` when the renderer unmounts. Without a registered Arrow
+slot, upstream `offset()` semantics remain unchanged.
+
 ## Choose the right primitive
 
 | Need | Use |

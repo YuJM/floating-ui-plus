@@ -16,6 +16,28 @@ afterEach(() => {
 });
 
 describe('createFloating pipeline', () => {
+  test('provides the default dialog ARIA relationship without a role plugin', () => {
+    const reference = document.createElement('button');
+    const floatingElement = document.createElement('div');
+    document.body.append(reference, floatingElement);
+    const floating = createFloating({open: true});
+
+    floating.setReference(reference);
+    floating.setFloating(floatingElement);
+    floating.connect();
+
+    expect(floating.context.attributes.reference).toMatchObject({
+      'aria-expanded': 'true',
+      'aria-haspopup': 'dialog',
+      'aria-controls': floating.context.floatingId,
+    });
+    expect(floating.context.attributes.floating).toMatchObject({
+      id: floating.context.floatingId,
+      role: 'dialog',
+    });
+    floating.destroy();
+  });
+
   test('injects one context and runs native interactions in order', () => {
     const reference = document.createElement('button');
     const floatingElement = document.createElement('div');

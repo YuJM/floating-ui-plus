@@ -254,9 +254,20 @@ export class FloatingRootElement extends LitElement {
     const arrowElement =
       this.#floatingElement.querySelector<HTMLElement>('floating-arrow');
     if (arrowElement) {
+      const arrowOptions = arrowElement as HTMLElement & {
+        height?: number;
+        staticOffset?: string | number | null;
+        rotation?: 'auto' | 'none';
+      };
       Object.assign(
         arrowElement.style,
-        getContextArrowStyles(context, {element: arrowElement}),
+        getContextArrowStyles(context, {
+          element: arrowElement,
+          staticOffset:
+            arrowOptions.staticOffset ??
+            -(arrowOptions.height ?? arrowElement.offsetHeight),
+          rotate: arrowOptions.rotation !== 'none',
+        }),
       );
     }
   }

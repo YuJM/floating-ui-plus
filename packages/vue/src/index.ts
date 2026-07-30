@@ -22,6 +22,8 @@ export {
   createFuzzySearch,
   createFuzzySearchSource,
   createSearch,
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   createOverlayElement,
   createPortalBridge,
   createPortalNode,

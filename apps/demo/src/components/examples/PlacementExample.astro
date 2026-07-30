@@ -24,3 +24,43 @@ import {DEFAULT_PLACEMENT, PLACEMENT_OPTIONS} from '../../example-data';
       <div slot="floating" class="placement-floating" role="status">{DEFAULT_PLACEMENT}</div>
     </floating-root>
 </div>
+
+<script>
+  import {offset, type Placement} from '@floating-ui-plus/web-components';
+  import {
+    floatingRoot,
+    initializeExample,
+  } from './example-client';
+
+  initializeExample('placement', (scope) => {
+    const floating = floatingRoot(scope, '[data-placement-root]');
+    floating.middleware = [offset(18)];
+    const panel = scope.querySelector<HTMLElement>('.placement-floating');
+    const constant = scope.querySelector<HTMLElement>(
+      '[data-placement-constant]',
+    );
+    const value = scope.querySelector<HTMLElement>('[data-placement-value]');
+    const controls = [
+      ...scope.querySelectorAll<HTMLButtonElement>(
+        '[data-placement-control]',
+      ),
+    ];
+
+    controls.forEach((button) => {
+      button.addEventListener('click', () => {
+        const placement = button.dataset.placementControl as Placement;
+        floating.placement = placement;
+        controls.forEach((control) => {
+          const selected = control === button;
+          control.classList.toggle('is-selected', selected);
+          control.setAttribute('aria-pressed', String(selected));
+        });
+        const name = placement.toUpperCase().replace('-', '_');
+        if (constant) constant.textContent = `PLACEMENT.${name}`;
+        if (value) value.textContent = placement;
+        if (panel) panel.textContent = placement;
+        void floating.updatePosition();
+      });
+    });
+  });
+</script>

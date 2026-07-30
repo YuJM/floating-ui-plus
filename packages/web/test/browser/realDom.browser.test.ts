@@ -1,7 +1,16 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
 import {userEvent} from 'vitest/browser';
 
-import {click, createFloating, dismiss, offset} from '../../src';
+import {
+  arrow,
+  click,
+  createFloating,
+  dismiss,
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+  offset,
+  registerFloatingArrow,
+} from '../../src';
 
 const runsInRealBrowser = !navigator.userAgent.includes('jsdom');
 
@@ -107,5 +116,71 @@ describe.skipIf(!runsInRealBrowser)('real browser DOM', () => {
     expect(floatingRect.width).toBeCloseTo(80, 0);
     expect(floatingRect.height).toBeCloseTo(30, 0);
     floating.destroy();
+  });
+
+  test('adds a marked Arrow height to the user-requested visual gap', async () => {
+    document.body.style.margin = '0';
+
+    async function measureGap(markArrow: boolean) {
+      const reference = document.createElement('button');
+      const floatingElement = document.createElement('div');
+      const arrowElement = document.createElement('span');
+      Object.assign(reference.style, {
+        position: 'fixed',
+        left: '240px',
+        top: '180px',
+        width: '120px',
+        height: '40px',
+      });
+      Object.assign(floatingElement.style, {
+        width: '80px',
+        height: '30px',
+      });
+      Object.assign(arrowElement.style, {
+        position: 'absolute',
+        width: '14px',
+        height: '7px',
+      });
+      if (markArrow) {
+        arrowElement.setAttribute(FLOATING_UI_PLUS_ARROW_ATTRIBUTE, '');
+        arrowElement.setAttribute(
+          FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+          '7',
+        );
+      }
+      floatingElement.append(arrowElement);
+      document.body.replaceChildren(reference, floatingElement);
+
+      const floating = createFloating({
+        open: true,
+        placement: 'top',
+        strategy: 'fixed',
+        middleware: [offset(3), arrow({element: arrowElement})],
+      });
+      floating.setReference(reference);
+      floating.setFloating(floatingElement);
+      const unregisterArrow = markArrow
+        ? registerFloatingArrow(floating.context, {
+            element: arrowElement,
+            height: 7,
+          })
+        : undefined;
+      floating.connect();
+      await floating.update();
+      Object.assign(floatingElement.style, floating.floatingStyles);
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
+
+      const referenceRect = reference.getBoundingClientRect();
+      const floatingRect = floatingElement.getBoundingClientRect();
+      const gap = referenceRect.top - floatingRect.bottom;
+      unregisterArrow?.();
+      floating.destroy();
+      return gap;
+    }
+
+    await expect(measureGap(true)).resolves.toBeCloseTo(10, 0);
+    await expect(measureGap(false)).resolves.toBeCloseTo(3, 0);
   });
 });

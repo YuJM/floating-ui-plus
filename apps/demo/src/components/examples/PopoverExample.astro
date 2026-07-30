@@ -30,3 +30,30 @@
   </div>
   <code>&lt;floating-portal&gt; + &lt;floating-content&gt;</code>
 </article>
+
+<script>
+  import {flip, offset, shift} from '@floating-ui-plus/web-components';
+  import {
+    closeFloating,
+    emitExampleAction,
+    floatingRoot,
+    initializeExample,
+    onFloatingOpenChange,
+  } from './example-client';
+
+  initializeExample('popover', (scope) => {
+    const floating = floatingRoot(scope, '[data-popover-root]');
+    floating.middleware = [offset(12), flip(), shift({padding: 18})];
+    scope
+      .querySelector('[data-close-popover]')
+      ?.addEventListener('click', (event) => closeFloating(floating, event));
+    onFloatingOpenChange(floating, ({open}) => {
+      emitExampleAction(
+        scope,
+        open
+          ? 'Popover opened from its custom element'
+          : 'Popover dismissed',
+      );
+    });
+  });
+</script>

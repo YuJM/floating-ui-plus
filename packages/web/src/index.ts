@@ -55,6 +55,8 @@ export {
   PLACEMENT,
   PLACEMENTS,
   FLOATING_UI_PLUS_DATA_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
+  FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FLOATING_UI_PLUS_FOCUSABLE_ATTRIBUTE,
   FLOATING_UI_PLUS_FOCUS_GUARD_ATTRIBUTE,
   FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
@@ -82,7 +84,14 @@ export * from './interactions';
 
 export {focusManager, getDocumentTrapStack} from './focusManager';
 export type {FocusManagerOptions, FocusTarget} from './focusManager';
-export {getArrowStyles, getContextArrowStyles} from './arrow';
+export {
+  getArrowStyles,
+  getArrowTransform,
+  getContextArrowStyles,
+  getArrowMainAxisSize,
+  registerFloatingArrow,
+  withArrowOffset,
+} from './arrow';
 export type {ArrowOptions, ArrowStyles} from './arrow';
 export {
   createPortalBridge,

@@ -52,6 +52,14 @@ temporarily, and `destroy()` when its owner is gone for good.
 
 ## Add interactions
 
+Every `createFloating()` controller starts with the dialog ARIA relationship:
+the reference receives `aria-expanded`, `aria-haspopup`, and `aria-controls`,
+and the floating element receives a stable `id` and `role="dialog"`. Use
+`role({role: 'tooltip' | 'menu' | 'select' | ...})` for a more specific
+pattern, or `role({enabled: false})` for a purely presentational surface.
+Provide dialog content's meaningful name from product context with `aria-label`
+or `aria-labelledby`.
+
 Pass interaction plugins to `.pipe()` according to the UI pattern.
 
 | Pattern | Typical plugins |

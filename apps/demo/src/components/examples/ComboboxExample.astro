@@ -53,3 +53,186 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   </p>
   <code>SearchController + &lt;floating-root&gt; + listNavigation()</code>
 </article>
+
+<script>
+  import {
+    SearchController,
+    createFuzzySearchSource,
+    dismiss,
+    flip,
+    listNavigation,
+    offset,
+    role,
+    shift,
+  } from '@floating-ui-plus/web-components';
+  import {
+    multilingualDestinations,
+    multilingualSearchKeys,
+    type MultilingualDestination,
+  } from '../../multilingual-destinations';
+  import {
+    configureFloating,
+    emitExampleAction,
+    floatingRoot,
+    initializeExample,
+    onFloatingOpenChange,
+  } from './example-client';
+
+  function createEmptyOption(message: string) {
+    const element = document.createElement('div');
+    element.className = 'combobox-empty';
+    element.role = 'option';
+    element.setAttribute('aria-disabled', 'true');
+    element.textContent = message;
+    return element;
+  }
+
+  initializeExample('combobox', (scope) => {
+    const floating = floatingRoot(scope, '[data-combobox-root]');
+    const input =
+      scope.querySelector<HTMLInputElement>('#destination-search');
+    const popup = scope.querySelector<HTMLElement>('[data-combobox-popup]');
+    const status = scope.querySelector<HTMLElement>('#combobox-status');
+    if (!input || !popup || !status) return;
+
+    const source = createFuzzySearchSource(multilingualDestinations, {
+      keys: multilingualSearchKeys,
+      threshold: 0.35,
+    });
+    const search = new SearchController<MultilingualDestination>({
+      source,
+      getItemKey: (item) => item.id,
+      debounceMs: 0,
+    });
+    const listRef = {current: [] as Array<HTMLElement | null>};
+    let activeIndex: number | null = null;
+    let selected: MultilingualDestination | null = null;
+
+    const optionId = (index: number) =>
+      `destination-option-${search.items[index]?.id ?? index}`;
+    const setActive = (index: number | null) => {
+      activeIndex = index;
+      if (index == null) {
+        input.removeAttribute('aria-activedescendant');
+      } else {
+        input.setAttribute('aria-activedescendant', optionId(index));
+      }
+      listRef.current.forEach((item, itemIndex) => {
+        if (!item) return;
+        item.dataset.active = String(itemIndex === index);
+      });
+      floating.controller.refresh();
+    };
+    const select = (item: MultilingualDestination) => {
+      selected = item;
+      input.value = item.label;
+      search.setQuery(item.label);
+      setActive(null);
+      floating.open = false;
+      emitExampleAction(scope, `${item.label} selected`);
+    };
+    const render = () => {
+      popup.replaceChildren();
+      if (search.loading) {
+        popup.append(createEmptyOption('Searching…'));
+      } else if (search.error) {
+        popup.append(createEmptyOption('Search failed.'));
+      } else if (!search.items.length) {
+        popup.append(
+          createEmptyOption(`No destination found for “${search.query}”`),
+        );
+      } else {
+        search.items.forEach((item, index) => {
+          const option = document.createElement('div');
+          option.id = optionId(index);
+          option.className = 'combobox-option';
+          option.role = 'option';
+          option.dataset.active = String(activeIndex === index);
+          option.setAttribute(
+            'aria-selected',
+            String(selected?.id === item.id),
+          );
+          option.innerHTML =
+            `<span><strong>${item.label}</strong><small>${item.region}</small></span>` +
+            `<span class="language-badge">${item.language}</span>`;
+          option.addEventListener('mousedown', (event) =>
+            event.preventDefault(),
+          );
+          option.addEventListener('click', () => select(item));
+          popup.append(option);
+        });
+      }
+      listRef.current = [
+        ...popup.querySelectorAll<HTMLElement>(
+          '[role="option"]:not([aria-disabled="true"])',
+        ),
+      ];
+      status.textContent = floating.open
+        ? search.items.length
+          ? `${search.items.length} destinations available`
+          : `No destinations found for ${search.query}`
+        : selected
+          ? `${selected.label} selected`
+          : 'Destination suggestions closed';
+      floating.controller.refresh();
+    };
+
+    configureFloating(floating, {
+      middleware: [offset(8), flip(), shift({padding: 18})],
+      plugins: [
+        dismiss(),
+        role(() => ({
+          role: 'combobox',
+          activeIndex,
+          getItemId: optionId,
+        })),
+        listNavigation(() => ({
+          listRef,
+          activeIndex,
+          virtual: true,
+          loop: true,
+          allowEscape: true,
+          focusItemOnOpen: false,
+          onNavigate: setActive,
+        })),
+      ],
+    });
+
+    search.subscribe(render);
+    input.addEventListener('focus', () => {
+      floating.open = true;
+    });
+    input.addEventListener('input', () => {
+      setActive(null);
+      floating.open = true;
+      search.setQuery(input.value);
+    });
+    input.addEventListener('compositionstart', () =>
+      search.startComposition(),
+    );
+    input.addEventListener('compositionend', () =>
+      search.endComposition(input.value),
+    );
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' || activeIndex == null) return;
+      const item = search.items[activeIndex];
+      if (!item) return;
+      event.preventDefault();
+      select(item);
+    });
+    scope
+      .querySelectorAll<HTMLElement>('[data-search-sample]')
+      .forEach((button) => {
+        button.addEventListener('click', () => {
+          input.value = button.dataset.searchSample ?? '';
+          floating.open = true;
+          search.setQuery(input.value);
+          input.focus();
+        });
+      });
+    onFloatingOpenChange(floating, ({open}) => {
+      if (!open) setActive(null);
+      render();
+    });
+  });
+</script>

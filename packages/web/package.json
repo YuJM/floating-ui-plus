@@ -1,6 +1,6 @@
 {
   "name": "@floating-ui-plus/web",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/",
   "description": "Framework-neutral Floating UI controllers for positioning, interactions, focus management, portals, and search",
