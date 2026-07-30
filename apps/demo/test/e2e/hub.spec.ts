@@ -1,5 +1,30 @@
 import {expect, test} from 'playwright/test';
 
+test('loads published package information once when the hub opens', async ({page}) => {
+  let packageRequests = 0;
+  await page.route('**/api/npm-packages', async (route) => {
+    packageRequests += 1;
+    await route.fulfill({
+      json: [
+        {
+          name: '@floating-ui-plus/web',
+          version: '9.9.9',
+          description: 'Fresh package metadata from npm',
+        },
+      ],
+    });
+  });
+
+  await page.goto('/');
+
+  const webPackage = page.locator('[data-npm-package="@floating-ui-plus/web"]');
+  await expect(webPackage.getByText('v9.9.9')).toBeVisible();
+  await expect(webPackage.locator('[data-npm-package-description]')).toHaveText(
+    'Fresh package metadata from npm',
+  );
+  expect(packageRequests).toBe(1);
+});
+
 test('integrated demo selects an example and preserves it while switching implementations', async ({page}) => {
   await page.goto('/');
 
