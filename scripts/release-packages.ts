@@ -126,9 +126,9 @@ async function assertPublishCheckout() {
 }
 
 async function assertNpmAuthentication() {
-  const result = await execute(['npm', 'whoami'], {capture: true});
+  const result = await execute(['bun', 'pm', 'whoami'], {capture: true});
   if (result.exitCode !== 0) {
-    throw new Error('npm authentication failed. Run `npm login` and try again.');
+    throw new Error('npm authentication failed. Run `bunx npm login` and try again.');
   }
   console.log('✓ npm authentication');
 }
@@ -136,7 +136,7 @@ async function assertNpmAuthentication() {
 async function isPublished(pkg: PackageInfo) {
   const specifier = `${pkg.name}@${pkg.version}`;
   const result = await execute(
-    ['npm', 'view', specifier, 'version', '--json'],
+    ['bun', 'pm', 'view', specifier, 'version', '--json'],
     {capture: true},
   );
   if (result.exitCode === 0) return true;
@@ -173,6 +173,10 @@ async function runVerification(packages: PackageInfo[]) {
     console.log(`\n${pkg.name}@${pkg.version}`);
     await run(
       ['bun', 'pm', 'pack', '--dry-run'],
+      `${rootDirectory}/${pkg.directory}`,
+    );
+    await run(
+      ['bun', 'publish', '--dry-run', '--access', 'public'],
       `${rootDirectory}/${pkg.directory}`,
     );
   }
@@ -230,7 +234,13 @@ async function main() {
   }
 
   await confirmPublish(pendingPackages);
-  await run(['bun', 'run', 'changeset', 'publish']);
+  for (const pkg of pendingPackages) {
+    console.log(`\nPublishing ${pkg.name}@${pkg.version} with Bun...`);
+    await run(
+      ['bun', 'publish', '--access', 'public', '--tolerate-republish'],
+      `${rootDirectory}/${pkg.directory}`,
+    );
+  }
   console.log('\nPackage publication completed.');
   console.log('Push the generated release tags with `git push --follow-tags`.');
 }

@@ -45,7 +45,9 @@ contract changes for affected packages in the same Changeset.
 npm packages are released only from a maintainer's local checkout. Cloudflare
 Pages deployment is independent and must not publish npm packages. Do not add
 npm publication to Pages build commands, GitHub Actions, or another CI system
-unless the user explicitly changes this policy.
+unless the user explicitly changes this policy. Use `bun publish` through the
+release script; do not use `npm publish` or `changeset publish`, because Bun
+resolves workspace protocols in the registry manifest.
 
 Do not run `bun run version`, `bun run release:packages`,
 `changeset publish`, `npm publish`, or `git push --follow-tags` unless the user

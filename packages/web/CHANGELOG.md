@@ -1,5 +1,11 @@
 # @floating-ui-plus/web
 
+## 0.2.1
+
+### Patch Changes
+
+- fix dependencies
+
 ## 0.2.0
 
 ### Minor Changes

@@ -81,7 +81,9 @@ Published packages are versioned with [Changesets](https://github.com/changesets
 Add a changeset with `bun run changeset` whenever a change affects a published
 package. npm package releases are performed only from a maintainer's local
 checkout. Cloudflare Pages deployment is a separate process and must not run
-`npm publish` or `changeset publish`.
+`npm publish` or `changeset publish`. The local release script uses Bun's
+native `bun publish`, which resolves workspace dependency protocols to semver
+ranges in the published manifest.
 
 Prepare and publish a release:
 

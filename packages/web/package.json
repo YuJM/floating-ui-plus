@@ -1,6 +1,6 @@
 {
   "name": "@floating-ui-plus/web",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/",
   "description": "Framework-agnostic positioning and interaction primitives for the web",

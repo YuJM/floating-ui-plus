@@ -65,8 +65,10 @@ git push --follow-tags
 The publish script requires local `main` to match `origin/main`, verifies npm
 authentication, typechecks, runs package unit and browser tests, builds the
 packages, previews every package archive, and lists versions that are not yet
-present on npm. It then requires an explicit confirmation before running
-`changeset publish`. npm may request a 2FA code during publication.
+present on npm. It then requires an explicit confirmation before publishing
+each package with `bun publish`, which resolves workspace dependency protocols
+to semver ranges in the registry manifest. npm may request a 2FA code during
+publication.
 
 ## Versioning policy
 
