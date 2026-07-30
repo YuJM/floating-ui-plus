@@ -1,0 +1,16 @@
+{
+  "name": "Floating UI Plus Demos",
+  "short_name": "Floating UI Plus",
+  "description": "Interactive Web Components and Vue demos for Floating UI Plus.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f3ea",
+  "theme_color": "#101a17",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

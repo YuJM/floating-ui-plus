@@ -1,11 +1,20 @@
 ---
+import SeoHead from '../components/SeoHead.astro';
+import {getSeoMetadata} from '../seo';
 import '../vue/styles.css';
 
 interface Props {
   title?: string;
+  description?: string;
 }
 
-const {title = 'Floating UI Plus Vue demo'} = Astro.props;
+const {title, description} = Astro.props;
+const routeMetadata = getSeoMetadata(Astro.url.pathname);
+const metadata = {
+  ...routeMetadata,
+  ...(title ? {title} : {}),
+  ...(description ? {description} : {}),
+};
 
 const links = [
   ['/vue', 'Overview'],
@@ -26,11 +35,7 @@ const links = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
-    <meta
-      name="description"
-      content="Vue-native Floating UI Plus components demonstrated as Astro islands."
-    />
-    <title>{title}</title>
+    <SeoHead metadata={metadata} />
   </head>
   <body>
     <div class="min-h-screen overflow-hidden bg-vue-canvas text-vue-ink">

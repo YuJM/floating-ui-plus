@@ -3,7 +3,7 @@ import VueDemoLayout from '../../layouts/VueDemoLayout.astro';
 import MiddlewareView from '../../vue/views/MiddlewareView.vue';
 ---
 
-<VueDemoLayout title="Middleware · Floating UI Plus Vue">
+<VueDemoLayout>
   <MiddlewareView client:only="vue">
     <p slot="fallback">Loading Vue middleware examples…</p>
   </MiddlewareView>

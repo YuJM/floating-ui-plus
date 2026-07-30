@@ -15,6 +15,7 @@
     "deploy": "cf deploy --mode production"
   },
   "dependencies": {
+    "@astrojs/sitemap": "3.7.3",
     "@astrojs/vue": "7.0.1",
     "@floating-ui-plus/vue": "workspace:^",
     "@floating-ui-plus/web-components": "workspace:^",
