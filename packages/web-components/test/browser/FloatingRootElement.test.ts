@@ -7,6 +7,7 @@ import {
   FloatingCompositeElement,
   FloatingContentElement,
   FloatingListElement,
+  FloatingPortalElement,
   FloatingReferenceElement,
   FloatingRootElement,
   offset,
@@ -85,7 +86,7 @@ describe('FloatingRootElement', () => {
     expect(root.controller.elements.reference).toBe(replacement);
   });
 
-  test('composes reference and content components through Lit Context', async () => {
+  test('composes reference and content components through Atomico context', async () => {
     const root = document.createElement('floating-root');
     root.interactions = 'click dismiss';
     root.floatingRole = 'dialog';
@@ -109,6 +110,54 @@ describe('FloatingRootElement', () => {
     await root.updateComplete;
     expect(root.open).toBe(true);
     expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
+  });
+
+  test('waits for root open context before rendering and moving a portal', async () => {
+    const standaloneParent = document.createElement('div');
+    const standalone = document.createElement('floating-portal');
+    standalone.innerHTML = '<button>Not ready</button>';
+    standaloneParent.append(standalone);
+    document.body.append(standaloneParent);
+    await standalone.updateComplete;
+
+    expect(standalone.parentElement).toBe(standaloneParent);
+    expect(standalone.shadowRoot).toBeNull();
+
+    const root = document.createElement('floating-root');
+    root.innerHTML =
+      '<floating-reference><button>Reference</button></floating-reference>';
+    const portal = document.createElement('floating-portal');
+    portal.innerHTML =
+      '<floating-content><section>Ready while closed</section></floating-content>';
+    root.append(portal);
+    document.body.append(root);
+    await root.updateComplete;
+    await portal.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(portal).toBeInstanceOf(FloatingPortalElement);
+      expect(portal.parentElement).toBe(root);
+      const target = document.body.querySelector(
+        'floating-portal-target',
+      );
+      expect(target?.shadowRoot?.querySelector('slot')).toBeInstanceOf(
+        HTMLSlotElement,
+      );
+      expect(target?.querySelector('floating-content')).not.toBeNull();
+    });
+    expect(root.open).toBe(false);
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(
+        document.querySelector('floating-portal-target section'),
+      );
+    });
+
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement?.hidden).toBe(false);
+      expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
+    });
   });
 
   test('provides ordered list and composite components', async () => {
