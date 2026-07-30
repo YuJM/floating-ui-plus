@@ -1,12 +1,10 @@
-# Floating UI Plus · integrated demo
+# Floating UI Plus demo
 
-One Astro 7 application for both `@floating-ui-plus/web-components` and
-`@floating-ui-plus/vue`.
+Explore the same floating-interface patterns with
+`@floating-ui-plus/web-components` and `@floating-ui-plus/vue`.
 
-Astro owns the document, layout, and file-based routes. Web Components are
-composed directly in `.astro` markup. Vue examples are browser-only Astro
-islands because the Floating UI interaction pipeline connects to `window`
-during component setup.
+Use it to compare tooltips, popovers, menus, cursor-following surfaces,
+search, placements, middleware, and modal focus management.
 
 ## Run
 
@@ -15,9 +13,6 @@ bun run --filter floating-ui-plus-demo dev
 ```
 
 Open <http://127.0.0.1:5173>.
-
-The app pins Astro `7.1.4`, uses `@astrojs/vue`, and builds one static output
-directory containing both frameworks.
 
 ## Routes
 
@@ -29,9 +24,7 @@ directory containing both frameworks.
 - `/vue/placement`
 - `/vue/middleware`
 
-Both surfaces include tooltip, popover, menu, nested menu, client-point,
-multilingual combobox, all 12 placements, eight middleware fixtures, and a
-focus-managed modal.
+Every gallery includes a working interaction, not just a static example.
 
 ## Verification
 
@@ -41,14 +34,12 @@ bun run --filter floating-ui-plus-demo build
 bun run --filter floating-ui-plus-demo test
 ```
 
-Playwright builds the packages and Astro app, serves the production output,
-and runs the hub, Web Components, and Vue suites in desktop and mobile Chrome.
+Playwright builds the packages, serves the production output, and runs the
+hub, Web Components, and Vue suites in desktop and mobile Chrome.
 
 ## Cloudflare
 
-The application is deployed as a Cloudflare Worker with static assets.
-`cloudflare.config.ts` and `wrangler.config.ts` describe the Build Output API
-contract consumed by the standalone `cf` CLI.
+The application deploys as a Cloudflare Worker with static assets.
 
 ```sh
 bun run deploy:demo:dry-run

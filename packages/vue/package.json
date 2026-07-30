@@ -2,6 +2,7 @@
   "name": "@floating-ui-plus/vue",
   "version": "0.1.0",
   "type": "module",
+  "homepage": "https://fup.polcaneli.com/vue/",
   "description": "Vue positioning, interactions, and floating components powered by Floating UI Plus",
   "publishConfig": {
     "access": "public"
@@ -19,7 +20,8 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "USAGE.md"
   ],
   "scripts": {
     "test": "vitest run",

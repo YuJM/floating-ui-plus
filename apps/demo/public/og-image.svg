@@ -13,5 +13,5 @@
   <text x="64" y="386" fill="#101a17" font-family="DejaVu Sans, sans-serif" font-size="38" font-weight="600">Web Components + Vue</text>
   <text x="64" y="440" fill="#54625d" font-family="DejaVu Sans, sans-serif" font-size="25">Accessible positioning, interactions, focus, and search.</text>
   <path d="M64 506h690" stroke="#c7cec9"/>
-  <text x="64" y="550" fill="#54625d" font-family="DejaVu Sans Mono, monospace" font-size="18">ASTRO 7  ·  LIT 3  ·  VUE 3</text>
+  <text x="64" y="550" fill="#54625d" font-family="DejaVu Sans Mono, monospace" font-size="18">POSITIONING  ·  INTERACTIONS  ·  FOCUS</text>
 </svg>

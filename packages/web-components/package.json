@@ -2,11 +2,13 @@
   "name": "@floating-ui-plus/web-components",
   "version": "0.1.0",
   "type": "module",
+  "homepage": "https://fup.polcaneli.com/web-components/",
   "description": "Lit-powered headless Floating UI custom elements",
   "license": "MIT",
   "sideEffects": true,
   "files": [
-    "dist"
+    "dist",
+    "USAGE.md"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

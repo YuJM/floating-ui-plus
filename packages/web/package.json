@@ -2,11 +2,13 @@
   "name": "@floating-ui-plus/web",
   "version": "0.1.0",
   "type": "module",
+  "homepage": "https://fup.polcaneli.com/",
   "description": "Framework-agnostic positioning and interaction primitives for the web",
   "license": "MIT",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "USAGE.md"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

@@ -1,20 +1,19 @@
 # Floating UI Plus
 
-A Bun workspace containing framework-neutral Floating UI interactions,
-Lit-powered Web Components, and Vue-native bindings.
+A positioning and interaction toolkit for the web. Choose a framework-neutral
+controller, Custom Elements, or Vue components without changing the underlying
+interaction model.
 
 ## Packages
 
-- `@floating-ui-plus/web`: DOM interaction pipeline, positioning, search,
-  focus, tree, list, portal, and transition services
-- `@floating-ui-plus/web-components`: Custom Elements for root/reference/content
-  composition, portals, overlays, focus, collections, trees, and composites
-- `@floating-ui-plus/vue`: Vue positioning, Teleport, focus, collection, and
-  interaction adapters
+- [`@floating-ui-plus/web`](./packages/web): framework-neutral positioning,
+  interactions, search, focus, and collection controllers
+- [`@floating-ui-plus/web-components`](./packages/web-components): Custom
+  Elements for HTML-first applications
+- [`@floating-ui-plus/vue`](./packages/vue): Vue composables and declarative
+  floating components
 
-`@floating-ui-plus/web-components` uses Lit internally but exposes HTML
-attributes, JavaScript properties, DOM events, slots, and Custom Element
-methods. It does not publish Lit directives or reactive controllers.
+Read each package README for installation and framework-specific examples.
 
 ## Development
 
@@ -33,15 +32,14 @@ scripts run `tsdown --watch --no-clean`.
 then the integrated demo E2E suite. Playwright uses the installed Chrome browser and
 exercises native layout, focus, pointer, and keyboard behavior.
 
-## Integrated Astro demo
+## Demo
 
-`apps/demo` uses Astro 7.1.4 and `@astrojs/vue` to demonstrate both package
-surfaces in one application:
+The [demo](./apps/demo) lets you compare the Custom Elements and Vue APIs for
+the same common UI patterns:
 
-- `/web-components/*`: Lit-powered Custom Elements composed in `.astro`
-- `/vue/*`: Vue-native components hydrated as Astro islands
-- tooltip, popover, menus, client point, multilingual search, modal, all 12
-  placements, and all eight middleware examples on both surfaces
+- tooltips, popovers, menus, cursor-following surfaces, and modals
+- nested menus, lists, keyboard composites, and focus management
+- multilingual search, all placements, and middleware examples
 
 ```sh
 bun run dev:demo
@@ -49,8 +47,7 @@ bun run dev:demo
 
 Open <http://127.0.0.1:5173>.
 
-Production browser tests build Astro, serve it with `astro preview`, and run
-the integrated hub and both framework surfaces in desktop and mobile Chrome.
+Browser tests exercise both surfaces in desktop and mobile Chrome.
 
 ## Cloudflare deployment
 
@@ -59,5 +56,4 @@ bun run deploy:demo:dry-run
 bun run deploy:demo
 ```
 
-The standalone `cf` CLI builds the app into Cloudflare Build Output and deploys
-one Worker with the Astro static assets.
+The deployment command publishes the demo as a Worker with static assets.
