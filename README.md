@@ -57,3 +57,14 @@ bun run deploy:demo
 ```
 
 The deployment command publishes the demo as a Worker with static assets.
+
+## Package releases
+
+Published packages are versioned with [Changesets](https://github.com/changesets/changesets).
+Add a changeset with `bun run changeset` whenever a change affects a published
+package. Before publishing, run `bun run version` to apply the queued version
+and changelog updates, then run `bun run build`, `bun run test`, and
+`bun run release`.
+
+See [`.changeset/README.md`](./.changeset/README.md) for the team workflow and
+versioning rules.
