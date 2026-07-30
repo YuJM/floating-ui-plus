@@ -34,11 +34,10 @@ describe('FloatingRootElement', () => {
     expect(root.floatingElement).toBe(root.querySelector('section'));
     expect(root.floatingElement?.hidden).toBe(false);
     expect(root.floatingElement?.style.position).toBe('absolute');
-    expect(root.referenceElement).toHaveAttribute('aria-haspopup', 'dialog');
-    expect(root.referenceElement).toHaveAttribute('aria-expanded', 'true');
-    expect(root.floatingElement).toHaveAttribute('role', 'dialog');
-    expect(root.referenceElement).toHaveAttribute(
-      'aria-controls',
+    expect(root.referenceElement?.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(root.referenceElement?.getAttribute('aria-expanded')).toBe('true');
+    expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
+    expect(root.referenceElement?.getAttribute('aria-controls')).toBe(
       root.floatingElement?.id,
     );
   });
