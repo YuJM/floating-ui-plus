@@ -89,10 +89,11 @@ test('publishes crawl controls, sitemap, manifest, and a noindex 404', async ({
   const sitemap = await request.get('/sitemap-0.xml');
   expect(sitemap.ok()).toBe(true);
   const sitemapSource = await sitemap.text();
-  expect(sitemapSource).toContain(`${DEFAULT_SITE}/web-components/tooltip`);
-  expect(sitemapSource).toContain(`${DEFAULT_SITE}/vue/examples/tooltip`);
+  expect(sitemapSource).toContain(`${DEFAULT_SITE}/tooltip`);
+  expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/tooltip?framework=vue`);
   expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/404`);
-  expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/web-components/hide`);
+  expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/web-components`);
+  expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/vue`);
 
   const manifest = await request.get('/site.webmanifest');
   expect(manifest.ok()).toBe(true);
@@ -107,4 +108,14 @@ test('publishes crawl controls, sitemap, manifest, and a noindex 404', async ({
     'content',
     'noindex, nofollow',
   );
+
+  for (const legacyRoute of [
+    '/web-components/tooltip',
+    '/vue/tooltip',
+    '/vue/examples/tooltip',
+  ]) {
+    const legacyResponse = await page.goto(legacyRoute);
+    expect(legacyResponse?.status()).toBe(404);
+    expect(page.url()).toMatch(new RegExp(`${legacyRoute}$`));
+  }
 });

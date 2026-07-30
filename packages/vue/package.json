@@ -1,9 +1,9 @@
 {
   "name": "@floating-ui-plus/vue",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
-  "homepage": "https://fup.polcaneli.com/vue/",
-  "description": "Vue positioning, interactions, and floating components powered by Floating UI Plus",
+  "homepage": "https://fup.polcaneli.com/",
+  "description": "Vue Floating UI composables and components for interactions, focus management, portals, collections, and search",
   "publishConfig": {
     "access": "public"
   },
@@ -41,15 +41,27 @@
     "directory": "packages/vue"
   },
   "keywords": [
+    "floating-ui",
+    "floating-ui-plus",
     "tooltip",
     "popover",
     "dropdown",
     "menu",
+    "dialog",
     "popup",
     "positioning",
     "vue",
     "focus",
-    "interactions"
+    "focus-management",
+    "interactions",
+    "portal",
+    "teleport",
+    "combobox",
+    "search",
+    "fuzzy-search",
+    "collections",
+    "headless-ui",
+    "accessibility"
   ],
   "dependencies": {
     "@floating-ui-plus/web": "workspace:^",

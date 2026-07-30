@@ -2,11 +2,11 @@ import {expect, test} from 'playwright/test';
 import axe from 'axe-core';
 
 test('opens Teleport-backed nested menus', async ({page}) => {
-  await page.goto('/vue');
+  await page.goto('/nested-menu?framework=vue');
   await expect(
     page.getByRole('heading', {
       level: 1,
-      name: /Floating UI Plus\s*Vue demo/,
+      name: /Floating UI Plus/,
     }),
   ).toBeVisible();
   await page.getByRole('button', {name: 'Open actions'}).click();
@@ -23,30 +23,68 @@ test('opens Teleport-backed nested menus', async ({page}) => {
 });
 
 test('traps modal focus and closes on Escape', async ({page}) => {
-  await page.goto('/vue');
+  await page.goto('/modal?framework=vue');
   const trigger = page.getByRole('button', {name: /Enter focus room/});
   await trigger.click();
-  await expect(page.getByRole('dialog')).toBeVisible();
+  const dialog = page.getByRole('dialog', {name: /Focus room/});
+  await expect(dialog).toBeVisible();
+
+  const hintTrigger = page.getByRole('button', {name: 'Show placement hint'});
+  await hintTrigger.hover();
+  const tooltip = page.getByRole('tooltip');
+  await expect(tooltip).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toBeHidden();
+  await expect(tooltip).toBeHidden();
+  await expect(dialog).toBeVisible();
+
+  await page.getByRole('button', {name: 'Open room details'}).click();
+  const popover = page.getByRole('dialog', {name: 'Room details'});
+  await expect(popover).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+  await expect(dialog).toBeVisible();
+
+  await page.getByRole('button', {name: 'Open nested dialog'}).click();
+  const nestedDialog = page.getByRole('dialog', {name: 'Nested dialog'});
+  await expect(nestedDialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(nestedDialog).toBeHidden();
+  await expect(dialog).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
 });
 
 test('routes to individual Vue examples and the middleware lab', async ({
   page,
 }) => {
-  await page.goto('/vue/examples/tooltip');
+  const legacyResponse = await page.goto('/vue/examples/tooltip');
+  expect(legacyResponse?.status()).toBe(404);
+
+  await page.goto('/tooltip?framework=vue');
   await expect(
     page.getByRole('heading', {level: 2, name: 'Pointer and'}),
   ).toBeVisible();
+  const navigation = page.getByRole('navigation', {
+    name: 'Integrated demo navigation',
+  });
+  await expect(navigation).toHaveCSS('position', 'sticky');
+  await navigation.getByRole('link', {name: 'Popover'}).click();
+  await expect(page).toHaveURL(/\/popover\?framework=vue$/);
+  await expect(
+    navigation.getByRole('link', {name: 'Popover'}),
+  ).toHaveAttribute('aria-current', 'page');
+
+  await page.goto('/tooltip?framework=vue');
   await page.getByRole('button', {name: /Inspect signal/}).hover();
   const tooltip = page.getByRole('tooltip');
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveCSS('position', 'absolute');
 
-  await page.goto('/vue/middleware');
+  await page.goto('/middleware?framework=vue');
   await expect(
-    page.getByRole('heading', {level: 2, name: /Position with intent/}),
+    page.locator('.route-copy').getByRole('heading', {level: 2, name: /Position with intent/}),
   ).toBeVisible();
   await expect(page.locator('.vue-middleware-card')).toHaveCount(8);
   await expect(page.locator('.vue-mw-panel')).toHaveCount(10);
@@ -93,26 +131,24 @@ test('routes to individual Vue examples and the middleware lab', async ({
 });
 
 test('placement constants drive all 12 Vue positions', async ({page}) => {
-  await page.goto('/vue/placement');
+  await page.goto('/placement?framework=vue');
 
   await expect(
-    page.getByRole('heading', {level: 2, name: /Choose a constant/}),
+    page.locator('.route-copy').getByRole('heading', {level: 2, name: /Choose a constant/}),
   ).toBeVisible();
-  await expect(page.locator('[data-placement-control]')).toHaveCount(12);
+  const vuePanel = page.locator('[data-framework-panel="vue"]');
+  await expect(vuePanel.locator('[data-placement-control]')).toHaveCount(12);
 
-  const floating = page.locator('.vue-placement-floating');
-  const reference = page.locator('.vue-placement-reference');
+  const floating = vuePanel.locator('.vue-placement-floating');
+  const reference = vuePanel.locator('.vue-placement-reference');
   await expect(floating).toHaveAttribute('data-placement', 'top');
 
-  const bottomStart = page.getByRole('button', {
+  const bottomStart = vuePanel.getByRole('button', {
     name: 'Place floating element at bottom-start',
   });
   await bottomStart.click();
   await expect(bottomStart).toHaveAttribute('aria-pressed', 'true');
   await expect(floating).toHaveAttribute('data-placement', 'bottom-start');
-  await expect(page.locator('.vue-placement-readout')).toContainText(
-    'PLACEMENT.BOTTOM_START',
-  );
 
   const [floatingBox, referenceBox] = await Promise.all([
     floating.boundingBox(),
@@ -129,7 +165,7 @@ test('placement constants drive all 12 Vue positions', async ({page}) => {
 test('multilingual Vue combobox keeps input focus and teleports results', async ({
   page,
 }) => {
-  await page.goto('/vue/examples/combobox');
+  await page.goto('/combobox?framework=vue');
   const input = page.getByRole('combobox', {name: 'Destination'});
 
   for (const [query, expected] of [

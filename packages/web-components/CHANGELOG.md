@@ -1,5 +1,13 @@
 # @floating-ui-plus/web-components
 
+## 0.2.2
+
+### Patch Changes
+
+- update info
+- Updated dependencies
+  - @floating-ui-plus/web@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,5 +1,5 @@
 ---
-const labels = ['North star', 'Orbit map', 'Signal log', 'Field notes'];
+import {MENU_LABELS} from '../../example-data';
 ---
 
 <article class="demo-card menu-card" data-demo="menu">
@@ -24,7 +24,7 @@ const labels = ['North star', 'Orbit map', 'Signal log', 'Field notes'];
             <div class="menu-heading">Jump to a field</div>
             <floating-list>
               {
-                labels.map((label, index) => (
+                MENU_LABELS.map((label, index) => (
                   <floating-list-item label={label}>
                     <button
                       class="menu-item"

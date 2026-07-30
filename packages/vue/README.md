@@ -4,6 +4,13 @@ Vue composables and components for positioned, interactive surfaces. It keeps
 the familiar `@floating-ui/vue` positioning API and adds the shared Plus
 interaction, focus, collection, search, and portal model.
 
+## Why this package exists
+
+Floating UI Plus uses Floating UI as its base and closes the gap between its
+mature React experience and other frameworks. Vue receives the same reusable
+interaction, focus, collection, portal, and search behavior while components
+keep control of their own markup and accessibility semantics.
+
 ## Install
 
 ```sh

@@ -20,7 +20,7 @@ import {
   multilingualSearchKeys,
   multilingualSearchPrompts,
   type MultilingualDestination,
-} from '../../../../shared/multilingual-destinations';
+} from '../../multilingual-destinations';
 
 const source = createFuzzySearchSource(multilingualDestinations, {
   keys: multilingualSearchKeys,

@@ -7,18 +7,24 @@ import {
   click,
   dismiss,
   flip,
+  hover,
   listNavigation,
   offset,
   role,
+  safePolygon,
   shift,
   typeahead,
   useFloating,
   vFloating,
 } from '@floating-ui-plus/vue';
 import {nextTick, ref} from 'vue';
+import {
+  NESTED_MENU_PROJECT_LABELS,
+  NESTED_MENU_ROOT_LABELS,
+} from '../../example-data';
 
-const rootLabels = ['New note', 'Move to project', 'Archive'];
-const projectLabels = ['Atlas', 'Field research', 'Signals'];
+const rootLabels = NESTED_MENU_ROOT_LABELS;
+const projectLabels = NESTED_MENU_PROJECT_LABELS;
 const rootOpen = ref(false);
 const projectsOpen = ref(false);
 const rootActive = ref<number | null>(null);
@@ -60,7 +66,10 @@ const root = useFloating(rootReference, rootFloating, {
   typeahead(() => ({
     listRef: rootText,
     activeIndex: rootActive.value,
-    onMatch: (index) => rootItems.current[index]?.focus({preventScroll: true}),
+    onMatch: (index) => {
+      rootActive.value = index;
+      rootItems.current[index]?.focus({preventScroll: true});
+    },
   })),
 );
 
@@ -77,6 +86,11 @@ const projects = useFloating(projectReference, projectFloating, {
   },
 }).pipe(
   click(),
+  hover({
+    move: false,
+    delay: {open: 80, close: 120},
+    handleClose: safePolygon(),
+  }),
   dismiss(),
   role({role: 'menu'}),
   listNavigation(() => ({
@@ -89,7 +103,10 @@ const projects = useFloating(projectReference, projectFloating, {
   typeahead(() => ({
     listRef: projectText,
     activeIndex: projectActive.value,
-    onMatch: (index) => projectItems.current[index]?.focus({preventScroll: true}),
+    onMatch: (index) => {
+      projectActive.value = index;
+      projectItems.current[index]?.focus({preventScroll: true});
+    },
   })),
 );
 
@@ -97,7 +114,10 @@ function openProjects(event: KeyboardEvent) {
   if (event.key === 'ArrowRight') {
     event.preventDefault();
     projectsOpen.value = true;
-    nextTick(() => projectItems.current[0]?.focus({preventScroll: true}));
+    nextTick(() => {
+      projectActive.value = 0;
+      projectItems.current[0]?.focus({preventScroll: true});
+    });
   }
 }
 

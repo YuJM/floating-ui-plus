@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import {
-  PLACEMENT,
-  PLACEMENTS,
   offset,
   useFloating,
   vFloating,
   type Placement,
 } from '@floating-ui-plus/vue';
 import {shallowRef} from 'vue';
+import {DEFAULT_PLACEMENT, PLACEMENT_OPTIONS} from '../../example-data';
 
-const selectedPlacement = shallowRef<Placement>(PLACEMENT.TOP);
+const selectedPlacement = shallowRef<Placement>(DEFAULT_PLACEMENT);
 const reference = shallowRef<HTMLElement | null>(null);
 const floating = shallowRef<HTMLElement | null>(null);
 const positioning = useFloating(reference, floating, {
@@ -19,29 +18,9 @@ const positioning = useFloating(reference, floating, {
 </script>
 
 <template>
-  <section class="vue-placement-view" aria-labelledby="vue-placement-title">
-    <div class="vue-placement-copy">
-      <a class="vue-back-link" href="/vue">← All Vue examples</a>
-      <span class="vue-kicker">placement / 12 directions</span>
-      <h2 id="vue-placement-title">Choose a constant.<br /><em>Watch it move.</em></h2>
-      <p>
-        Every control passes a typed value from <code>PLACEMENT</code> into the
-        reactive Vue positioning pipeline.
-      </p>
-      <div class="vue-placement-readout" aria-live="polite">
-        <span>Selected constant</span>
-        <strong>
-          PLACEMENT.{{
-            selectedPlacement.toUpperCase().replace('-', '_')
-          }}
-        </strong>
-        <code>{{ selectedPlacement }}</code>
-      </div>
-    </div>
-
-    <div class="vue-placement-stage" aria-label="Interactive placement selector">
+  <div class="vue-placement-stage" aria-label="Interactive placement selector">
       <button
-        v-for="placement in PLACEMENTS"
+        v-for="placement in PLACEMENT_OPTIONS"
         :key="placement"
         type="button"
         class="vue-placement-control"
@@ -64,6 +43,5 @@ const positioning = useFloating(reference, floating, {
       >
         {{ positioning.placement.value }}
       </div>
-    </div>
-  </section>
+  </div>
 </template>

@@ -1,49 +1,78 @@
 ---
-import HubLayout from '../layouts/HubLayout.astro';
+import {EXAMPLES} from '../demo-registry';
+import {ArrowRight, Layers, Search, Workflow} from 'lucide-astro';
+import {siNpm} from 'simple-icons';
+import DemoLayout from '../layouts/DemoLayout.astro';
+import {getNpmPackages} from '../npm-packages';
+
+const npmPackages = await getNpmPackages();
 ---
 
-<HubLayout>
-  <main class="hub">
-    <span class="hub-kicker">floating-ui-plus / integrated laboratory</span>
-    <h1 class="hub-title">
-      One kernel.<br /><em>Two surfaces.</em>
-    </h1>
-    <p class="hub-intro">
-      Compare two ways to build the same floating interfaces. Positioning,
-      interactions, search, focus, and collections follow one shared model.
-    </p>
-
-    <section class="hub-grid" aria-label="Choose a framework demo">
-      <a class="hub-card hub-card-wc" href="/web-components">
-        <span class="hub-framework">01 / custom elements</span>
-        <h2>Web Components</h2>
-        <p>
-          Custom elements for portals, trees, lists, focus management, and
-          transitions.
-        </p>
-        <span class="hub-meta">
-          <span>@floating-ui-plus/web-components</span>
-          <span class="hub-arrow">Open lab ↗</span>
-        </span>
-      </a>
-
-      <a class="hub-card hub-card-vue" href="/vue">
-        <span class="hub-framework">02 / reactive components</span>
-        <h2>Vue</h2>
-        <p>
-          Composition API, portals, transitions, and reactive positioning.
-        </p>
-        <span class="hub-meta">
-          <span>@floating-ui-plus/vue</span>
-          <span class="hub-arrow">Open lab ↗</span>
-        </span>
-      </a>
-    </section>
-
-    <footer class="hub-footer">
-      <span>Positioning</span>
-      <span>Interactions</span>
-      <span>Accessible focus</span>
-    </footer>
-  </main>
-</HubLayout>
+<DemoLayout>
+  <section class="demo-overview" aria-labelledby="demo-overview-title">
+    <div class="demo-overview-copy">
+      <h2 id="demo-overview-title"><Layers aria-hidden="true" size={32} strokeWidth={1.5} /> Choose an<br /><span>interaction.</span></h2>
+      <p>
+        Each route keeps one interaction in view. Switch its implementation
+        between Web Components and Vue without leaving the example.
+      </p>
+    </div>
+    <div class="demo-example-list" aria-label="Examples">
+      {
+        EXAMPLES.map((example) => (
+          <a
+            class="demo-example-link"
+            href={`/${example.id}?framework=web-components`}
+            data-example-link={example.id}
+          >
+            <strong>{example.label}</strong>
+            <span>{example.description} <ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} /></span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+  <section class="npm-releases" aria-labelledby="npm-releases-title">
+    <div class="npm-releases-copy">
+      <h2 id="npm-releases-title">Install the <span>implementation you ship.</span></h2>
+      <p>Published package versions are read from npm when this demo is built.</p>
+    </div>
+    <div class="npm-package-list" aria-label="Published npm packages">
+      {
+        npmPackages.map((pkg) => (
+          <a class="npm-package-link" href={pkg.href} target="_blank" rel="noreferrer">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d={siNpm.path} /></svg>
+            <span class="npm-package-copy">
+              <strong>{pkg.name}</strong>
+              <small>{pkg.description ?? `Open ${pkg.label} on npm`}</small>
+            </span>
+            <span class="npm-package-version">{pkg.version ? `v${pkg.version}` : 'npm'}</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+  <section class="why-plus" aria-labelledby="why-plus-title">
+    <div>
+      <h2 id="why-plus-title">Positioning is only<br /><span>the beginning.</span></h2>
+    </div>
+    <div class="why-plus-copy">
+      <p>
+        Floating UI Plus is built on Floating UI. It brings the interaction
+        layer that is especially complete in React to Web Components and Vue.
+      </p>
+      <div class="why-plus-points">
+        <article>
+          <Workflow aria-hidden="true" size={22} strokeWidth={1.7} />
+          <h3>Shared interaction model</h3>
+          <p>Open state, dismissal, focus, collections, nested surfaces, and portals behave consistently across frameworks.</p>
+        </article>
+        <article>
+          <Search aria-hidden="true" size={22} strokeWidth={1.7} />
+          <h3>Search beyond typeahead</h3>
+          <p>Use async, cancellation-aware, multilingual fuzzy search while keeping your own input, options, and ARIA.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+</DemoLayout>

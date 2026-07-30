@@ -4,6 +4,21 @@ A positioning and interaction toolkit for the web. Choose a framework-neutral
 controller, Custom Elements, or Vue components without changing the underlying
 interaction model.
 
+## Why Floating UI Plus
+
+Floating UI Plus is built on the positioning engine and middleware of
+[Floating UI](https://floating-ui.com/). Its React package offers a mature
+composition experience, but other frameworks often need to assemble more of
+the interaction layer themselves. We made Plus to bring that missing layer to
+framework-neutral, Web Components, and Vue applications without turning the
+core into a React-only abstraction.
+
+Plus keeps Floating UI's placement model while adding reusable controllers for
+open state, dismissal, focus management, nested collections, portals, and
+multilingual fuzzy or asynchronous search. Applications still own their
+markup, semantics, and rendering; Plus supplies the behavior that should work
+the same in every framework.
+
 ## Packages
 
 - [`@floating-ui-plus/web`](./packages/web): framework-neutral positioning,
@@ -40,6 +55,11 @@ the same common UI patterns:
 - tooltips, popovers, menus, cursor-following surfaces, and modals
 - nested menus, lists, keyboard composites, and focus management
 - multilingual search, all placements, and middleware examples
+
+Each example uses one public route and the `framework` query selects its
+implementation: `/tooltip` defaults to Web Components, while
+`/tooltip?framework=vue` shows the Vue version. Invalid or omitted query values
+fall back to Web Components.
 
 Run the complete development environment from the repository root:
 

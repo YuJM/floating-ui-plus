@@ -7,7 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: 'http://127.0.0.1:4173',
     headless: true,
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
@@ -32,10 +32,10 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "bun run build:packages && bun run --filter floating-ui-plus-demo build && bun run --filter floating-ui-plus-demo preview",
+      "bun run build:packages && bun run --filter floating-ui-plus-demo build && bun run --filter floating-ui-plus-demo preview -- --port 4173",
     cwd: '../..',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
+    url: 'http://127.0.0.1:4173',
+    reuseExistingServer: false,
     timeout: 60_000,
     gracefulShutdown: {signal: 'SIGTERM', timeout: 1_000},
     stdout: 'ignore',

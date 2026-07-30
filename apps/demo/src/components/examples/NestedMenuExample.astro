@@ -1,6 +1,8 @@
 ---
-const rootLabels = ['New note', 'Move to project', 'Archive'];
-const projectLabels = ['Atlas', 'Field research', 'Signals'];
+import {
+  NESTED_MENU_PROJECT_LABELS,
+  NESTED_MENU_ROOT_LABELS,
+} from '../../example-data';
 ---
 
 <article class="demo-card nested-menu-card" data-demo="nested-menu">
@@ -30,9 +32,9 @@ const projectLabels = ['Atlas', 'Field research', 'Signals'];
                 tabindex="-1"
                 data-root-menu-item
                 data-index="0"
-                data-label={rootLabels[0]}
+                data-label={NESTED_MENU_ROOT_LABELS[0]}
               >
-                <span>{rootLabels[0]}</span><kbd>1</kbd>
+                <span>{NESTED_MENU_ROOT_LABELS[0]}</span><kbd>1</kbd>
               </button>
               <floating-root data-projects-root placement="right-start">
                 <floating-node node-id="projects">
@@ -44,9 +46,9 @@ const projectLabels = ['Atlas', 'Field research', 'Signals'];
                       aria-haspopup="menu"
                       data-root-menu-item
                       data-index="1"
-                      data-label={rootLabels[1]}
+                      data-label={NESTED_MENU_ROOT_LABELS[1]}
                     >
-                      <span>{rootLabels[1]}</span>
+                      <span>{NESTED_MENU_ROOT_LABELS[1]}</span>
                       <kbd aria-hidden="true">→</kbd>
                     </button>
                   </floating-reference>
@@ -57,7 +59,7 @@ const projectLabels = ['Atlas', 'Field research', 'Signals'];
                     >
                       <div class="menu-heading">Choose a project</div>
                       {
-                        projectLabels.map((label, index) => (
+                        NESTED_MENU_PROJECT_LABELS.map((label, index) => (
                           <button
                             class="menu-item"
                             role="menuitem"
@@ -80,9 +82,9 @@ const projectLabels = ['Atlas', 'Field research', 'Signals'];
                 tabindex="-1"
                 data-root-menu-item
                 data-index="2"
-                data-label={rootLabels[2]}
+                data-label={NESTED_MENU_ROOT_LABELS[2]}
               >
-                <span>{rootLabels[2]}</span><kbd>3</kbd>
+                <span>{NESTED_MENU_ROOT_LABELS[2]}</span><kbd>3</kbd>
               </button>
             </div>
           </floating-content>

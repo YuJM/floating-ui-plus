@@ -1,25 +1,15 @@
 ---
 import MiddlewareTitle from './MiddlewareTitle.astro';
+import {MIDDLEWARE_EXAMPLES} from '../../middleware-registry';
+
+const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, autoExample, hideExample, inlineExample] = MIDDLEWARE_EXAMPLES;
 ---
 
-<section
-  class="middleware-view"
-  aria-labelledby="middleware-title"
-  data-demo="middleware"
->
-  <a class="back-link" href="/web-components">← All Web Components examples</a>
-  <div class="middleware-intro">
-    <span class="section-kicker">middleware lab</span>
-    <h2 id="middleware-title">Position with<br /><span>intent.</span></h2>
-    <p>
-      Each card keeps one or more <code>&lt;floating-root open&gt;</code>
-      elements inspectable.
-    </p>
-  </div>
+<section class="middleware-view" data-demo="middleware">
   <section class="middleware-grid" aria-label="Floating UI middleware examples">
     <article class="middleware-card" data-middleware-example="offset">
-      <MiddlewareTitle index={0} />
-      <p>Compare the default position with a 10px gutter on the main axis.</p>
+      <MiddlewareTitle id={offsetExample.id} />
+      <p>{offsetExample.description}</p>
       <div class="mw-comparison" aria-label="Offset comparison">
         <div class="mw-static-stage">
           <span class="mw-demo-label">0px</span>
@@ -44,8 +34,8 @@ import MiddlewareTitle from './MiddlewareTitle.astro';
     </article>
 
     <article class="middleware-card" data-middleware-example="shift">
-      <MiddlewareTitle index={1} />
-      <p>Scroll horizontally. The panel shifts to remain visible.</p>
+      <MiddlewareTitle id={shiftExample.id} />
+      <p>{shiftExample.description}</p>
       <div
         class="mw-stage mw-stage-scroll-x mw-stage-shift"
         tabindex="0"
@@ -67,8 +57,8 @@ import MiddlewareTitle from './MiddlewareTitle.astro';
     </article>
 
     <article class="middleware-card" data-middleware-example="flip">
-      <MiddlewareTitle index={2} />
-      <p>Scroll up. The preferred bottom placement flips when space changes.</p>
+      <MiddlewareTitle id={flipExample.id} />
+      <p>{flipExample.description}</p>
       <div
         class="mw-stage mw-stage-scroll-y mw-stage-flip"
         tabindex="0"
@@ -90,8 +80,8 @@ import MiddlewareTitle from './MiddlewareTitle.astro';
     </article>
 
     <article class="middleware-card" data-middleware-example="arrow">
-      <MiddlewareTitle index={3} />
-      <p>Scroll horizontally. The arrow targets the reference center.</p>
+      <MiddlewareTitle id={arrowExample.id} />
+      <p>{arrowExample.description}</p>
       <div
         class="mw-stage mw-stage-scroll-x mw-stage-arrow"
         tabindex="0"
@@ -117,8 +107,8 @@ import MiddlewareTitle from './MiddlewareTitle.astro';
     </article>
 
     <article class="middleware-card" data-middleware-example="size">
-      <MiddlewareTitle index={4} />
-      <p>Available height constrains the panel while content remains scrollable.</p>
+      <MiddlewareTitle id={sizeExample.id} />
+      <p>{sizeExample.description}</p>
       <div
         class="mw-stage mw-stage-scroll-y mw-stage-size"
         tabindex="0"
@@ -148,8 +138,8 @@ import MiddlewareTitle from './MiddlewareTitle.astro';
       class="middleware-card"
       data-middleware-example="auto-placement"
     >
-      <MiddlewareTitle index={5} />
-      <p>The panel continuously chooses the side with the most space.</p>
+      <MiddlewareTitle id={autoExample.id} />
+      <p>{autoExample.description}</p>
       <div
         class="mw-stage mw-stage-scroll-y mw-stage-auto-placement"
         tabindex="0"
@@ -175,8 +165,8 @@ import MiddlewareTitle from './MiddlewareTitle.astro';
       class="middleware-card"
       data-middleware-example="hide"
     >
-      <MiddlewareTitle index={6} />
-      <p>The panel dims after escaping, then hides with its clipped reference.</p>
+      <MiddlewareTitle id={hideExample.id} />
+      <p>{hideExample.description}</p>
       <div
         class="mw-stage mw-stage-scroll-y mw-stage-hide"
         tabindex="0"
@@ -199,8 +189,8 @@ import MiddlewareTitle from './MiddlewareTitle.astro';
     </article>
 
     <article class="middleware-card" data-middleware-example="inline">
-      <MiddlewareTitle index={7} />
-      <p>Compare a bounding box with the relevant client rect of an inline anchor.</p>
+      <MiddlewareTitle id={inlineExample.id} />
+      <p>{inlineExample.description}</p>
       <div class="mw-inline-comparison" aria-label="Inline middleware comparison">
         <div class="mw-inline-case">
           <span class="mw-demo-label">without</span>

@@ -1,19 +1,26 @@
 ---
 import SeoHead from '../components/SeoHead.astro';
+import {Box} from 'lucide-astro';
+import {siVuedotjs} from 'simple-icons';
+import {EXAMPLES, type ExampleId} from '../demo-registry';
 import {getSeoMetadata} from '../seo';
 import '../styles.css';
+import '../vue/styles.css';
 
 interface Props {
   title?: string;
   description?: string;
+  example?: ExampleId;
+  noindex?: boolean;
 }
 
-const {title, description} = Astro.props;
+const {title, description, example, noindex} = Astro.props;
 const routeMetadata = getSeoMetadata(Astro.url.pathname);
 const metadata = {
   ...routeMetadata,
   ...(title ? {title} : {}),
   ...(description ? {description} : {}),
+  ...(noindex !== undefined ? {noindex} : {}),
 };
 ---
 
@@ -23,77 +30,102 @@ const metadata = {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <SeoHead metadata={metadata} />
+    <script is:inline>
+      document.documentElement.dataset.framework =
+        new URL(window.location.href).searchParams.get('framework') === 'vue'
+          ? 'vue'
+          : 'web-components';
+    </script>
   </head>
   <body>
-    <header class="masthead">
-      <div class="eyebrow">
-        <span class="pulse"></span> floating-ui-plus / web components
-      </div>
-      <div class="header-row">
+    <floating-ui-demo>
+    <header class="masthead container mx-auto px-5 sm:px-8">
+      <div class="header-row flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <a
             class="brand-link"
-            href="/web-components"
-            aria-label="Floating UI Plus Web Components demo home"
+            href="/"
+            aria-label="Floating UI Plus demo home"
           >
             <h1>
               Floating UI<br /><em>Plus</em>
-              <span class="framework-title">Web Components</span>
             </h1>
           </a>
           <p class="lede">
-            Custom elements for precise positioning and dependable<br
-            />keyboard, pointer, and focus interactions.
+            Explore the same floating interaction in Web Components and Vue.
           </p>
         </div>
-        <div class="coordinate-stamp" aria-label="Current demo status">
-          <span class="stamp-label">LIVE SIGNAL</span>
-          <strong>07</strong>
-          <span class="stamp-caption">
-            Interactive components
-          </span>
+        <div class="framework-switch" role="group" aria-label="Framework implementation">
+          <strong>Choose a framework</strong>
+          <div class="framework-switch-options">
+            <a data-framework-switch="web-components" href={`/${example ?? ''}?framework=web-components`}>
+              <Box aria-hidden="true" size={15} strokeWidth={1.8} />
+              <span>Web Components</span>
+            </a>
+            <a data-framework-switch="vue" href={`/${example ?? ''}?framework=vue`}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+                <path d={siVuedotjs.path} />
+              </svg>
+              <span>Vue</span>
+            </a>
+          </div>
         </div>
       </div>
-      <nav class="route-nav" aria-label="Demo routes">
-        <a href="/">Frameworks</a>
-        <a href="/web-components">All examples</a>
-        <a href="/web-components/tooltip">Tooltip</a>
-        <a href="/web-components/popover">Popover</a>
-        <a href="/web-components/menu">Menu</a>
-        <a href="/web-components/nested-menu">Nested menu</a>
-        <a href="/web-components/client-point">Cursor</a>
-        <a href="/web-components/combobox">Combobox</a>
-        <a href="/web-components/placement">Placement</a>
-        <a href="/web-components/middleware">Middleware</a>
-        <a href="/web-components/modal">Modal</a>
-      </nav>
     </header>
-    <main>
+    <nav class="integrated-nav container mx-auto px-5 sm:px-8" aria-label="Integrated demo navigation">
+      <div class="integrated-nav-row">
+        <a href="/" class="integrated-nav-home" aria-current={example ? undefined : 'page'}>All examples</a>
+        {
+          EXAMPLES.map((item) => (
+            <a
+              href={`/${item.id}?framework=web-components`}
+              data-example-link={item.id}
+              aria-current={example === item.id ? 'page' : undefined}
+            >
+              {item.label}
+            </a>
+          ))
+        }
+      </div>
+      </nav>
+    <main class="container mx-auto px-5 sm:px-8">
       <slot />
     </main>
-    <footer class="footer">
-      <span>floating-ui-plus</span>
-      <span>@floating-ui-plus/web-components</span>
-      <span class="footer-status">
-        <i></i>
-        <span id="demo-status">Choose an example route</span>
-      </span>
-    </footer>
     <script>
       import '@floating-ui-plus/web-components';
+      import {resolveFramework} from '../demo-registry';
       import {initializeDemos} from '../scripts/initialize-demos';
 
-      document.addEventListener('floating-demo-action', (event) => {
-        const status = document.querySelector('#demo-status');
-        if (
-          status &&
-          event instanceof CustomEvent &&
-          typeof event.detail === 'string'
-        ) {
-          status.textContent = event.detail;
+      function initializeIntegratedDemo() {
+        const framework = resolveFramework(
+          new URL(window.location.href).searchParams.get('framework'),
+        );
+        document.documentElement.dataset.framework = framework;
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute('content', framework === 'vue' ? '#effaf5' : '#edf3ff');
+
+        document.querySelectorAll<HTMLAnchorElement>('[data-example-link]').forEach((link) => {
+          const example = link.dataset.exampleLink;
+          if (example) link.href = `/${example}?framework=${framework}`;
+        });
+        document.querySelectorAll<HTMLAnchorElement>('[data-framework-switch]').forEach((link) => {
+          const target = link.dataset.frameworkSwitch;
+          link.setAttribute('aria-current', target === framework ? 'page' : 'false');
+        });
+
+        if (framework === 'web-components') {
+          initializeDemos();
         }
-      });
-      initializeDemos();
+      }
+
+      const runIntegratedDemo = () => initializeIntegratedDemo();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runIntegratedDemo, {once: true});
+      } else {
+        runIntegratedDemo();
+      }
     </script>
+    </floating-ui-demo>
   </body>
 </html>

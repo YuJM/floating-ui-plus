@@ -16,13 +16,12 @@ Open <http://127.0.0.1:5173>.
 
 ## Routes
 
-- `/`: integrated framework selector
-- `/web-components`: complete Web Components gallery
-- `/web-components/:primitive`: Web Components example routes
-- `/vue`: complete Vue island gallery
-- `/vue/examples/:primitive`: Vue component example routes
-- `/vue/placement`
-- `/vue/middleware`
+- `/`: integrated example selector
+- `/:example`: one floating-interface example
+- `?framework=web-components` (default) or `?framework=vue`: implementation switch
+
+For example, use `/tooltip`, `/tooltip?framework=vue`, or
+`/middleware?framework=web-components`.
 
 Every gallery includes a working interaction, not just a static example.
 

@@ -14,7 +14,7 @@ export default defineConfig({
     sitemap({
       filter: (page) => {
         const pathname = new URL(page).pathname;
-        return pathname !== '/404' && pathname !== '/web-components/hide';
+        return pathname !== '/404';
       },
     }),
   ],

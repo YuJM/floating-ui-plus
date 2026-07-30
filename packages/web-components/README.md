@@ -3,6 +3,13 @@
 Custom Elements for accessible floating interfaces. Use this package when your
 application is HTML-first or needs framework-independent UI primitives.
 
+## Why this package exists
+
+Floating UI Plus builds on Floating UI's positioning engine and brings the
+interaction layer—dismissal, focus, trees, collections, portals, and search—to
+Custom Elements. It offers comparable behavior outside React while keeping the
+HTML and ARIA structure in your application.
+
 ## Install
 
 ```sh

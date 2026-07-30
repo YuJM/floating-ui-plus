@@ -2,16 +2,23 @@
 interface Props {
   heading: string;
   kicker: string;
+  description: string;
+  variant?: 'default' | 'wide' | 'full';
 }
 
-const {heading, kicker} = Astro.props;
+const {heading, kicker, description, variant = 'default'} = Astro.props;
 ---
 
-<section class="route-view">
-  <a class="back-link" href="/web-components">← All Web Components examples</a>
+<section class:list={[
+  'route-view',
+  'grid grid-cols-1 gap-8 py-12 lg:grid-cols-2 lg:gap-x-20 lg:py-16',
+  `route-view--${variant}`,
+]}>
+  <a class="back-link" href="/">← All examples</a>
   <div class="route-copy">
     <span class="section-kicker">{kicker}</span>
     <h2 set:html={heading} />
+    <p>{description}</p>
   </div>
   <slot />
 </section>

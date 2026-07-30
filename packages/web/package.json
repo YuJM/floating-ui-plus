@@ -1,9 +1,25 @@
 {
   "name": "@floating-ui-plus/web",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/",
-  "description": "Framework-agnostic positioning and interaction primitives for the web",
+  "description": "Framework-neutral Floating UI controllers for positioning, interactions, focus management, portals, and search",
+  "keywords": [
+    "floating-ui",
+    "floating-ui-plus",
+    "positioning",
+    "tooltip",
+    "popover",
+    "menu",
+    "dialog",
+    "focus-management",
+    "interactions",
+    "portal",
+    "search",
+    "fuzzy-search",
+    "framework-agnostic",
+    "headless-ui"
+  ],
   "license": "MIT",
   "sideEffects": false,
   "files": [

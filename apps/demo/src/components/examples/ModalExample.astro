@@ -1,12 +1,5 @@
-<section class="modal-strip" aria-labelledby="modal-title" data-demo="modal">
-  <div>
-    <span class="section-kicker">02 / contain</span>
-    <h2 id="modal-title">A modal should<br /><span>make space.</span></h2>
-  </div>
-  <p>
-    Open this one to feel the shared focus trap, inert neighbors, Escape
-    dismissal, and focus restoration.
-  </p>
+<section class="modal-demo" aria-label="Modal focus management example" data-demo="modal">
+  <p>Open the focus room to test focus trapping, inert neighbors, and layered Escape dismissal.</p>
   <floating-tree>
     <floating-root data-modal-root placement="bottom">
       <floating-node node-id="focus-room">
@@ -16,13 +9,13 @@
           </button>
         </floating-reference>
         <floating-portal>
-          <floating-overlay lock-scroll>
+          <floating-overlay class="demo-overlay" lock-scroll>
             <floating-focus-manager
               modal
               return-focus
               outside-elements-inert
             >
-              <floating-content>
+              <floating-content class="modal-anchor">
                 <section
                   class="modal-panel"
                   aria-label="Focus room"
@@ -80,9 +73,9 @@
                           <button class="text-button">Open nested dialog</button>
                         </floating-reference>
                         <floating-portal>
-                          <floating-overlay lock-scroll>
+                          <floating-overlay class="demo-overlay" lock-scroll>
                             <floating-focus-manager modal return-focus>
-                              <floating-content>
+                              <floating-content class="modal-anchor">
                                 <section
                                   class="modal-panel nested-modal-panel"
                                   aria-label="Nested dialog"

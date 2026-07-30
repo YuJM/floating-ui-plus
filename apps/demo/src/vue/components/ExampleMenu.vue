@@ -14,8 +14,9 @@ import {
   vFloating,
 } from '@floating-ui-plus/vue';
 import {ref} from 'vue';
+import {MENU_LABELS} from '../../example-data';
 
-const labels = ['North star', 'Orbit map', 'Signal log', 'Field notes'];
+const labels = MENU_LABELS;
 const open = ref(false);
 const activeIndex = ref<number | null>(null);
 const reference = ref<HTMLElement | null>(null);

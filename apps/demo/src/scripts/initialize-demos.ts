@@ -7,6 +7,7 @@ import {
   clientPoint,
   createFuzzySearchSource,
   dismiss,
+  focus,
   flip,
   hide,
   hover,
@@ -17,6 +18,7 @@ import {
   safePolygon,
   shift,
   size,
+  typeahead,
   type FloatingOpenChangeDetail,
   type FloatingPlugin,
   type Placement,
@@ -26,12 +28,12 @@ import {
   multilingualDestinations,
   multilingualSearchKeys,
   type MultilingualDestination,
-} from '../../../shared/multilingual-destinations';
+} from '../multilingual-destinations';
 
 type DemoScope = HTMLElement;
 
 function root(scope: ParentNode, selector: string) {
-  const element = scope.querySelector(selector);
+  const element = scope.querySelector(selector) ?? document.querySelector(selector);
   if (!(element instanceof HTMLElement) || element.localName !== 'floating-root') {
     throw new Error(`Missing FloatingRootElement for ${selector}`);
   }
@@ -76,9 +78,34 @@ function onOpenChange(
   });
 }
 
+function activeItems(items: HTMLElement[], refresh: () => void) {
+  let index: number | null = null;
+  return {
+    get value() {
+      return index;
+    },
+    set(next: number | null) {
+      index = next;
+      items.forEach((item, itemIndex) => {
+        item.tabIndex = itemIndex === next ? 0 : -1;
+        item.dataset.active = String(itemIndex === next);
+      });
+      refresh();
+    },
+  };
+}
+
 function initializeTooltip(scope: DemoScope) {
   const floating = root(scope, '[data-tooltip-root]');
-  floating.middleware = [offset(14), flip(), shift({padding: 12})];
+  configure(floating, {
+    middleware: [offset(14), flip(), shift({padding: 12})],
+    plugins: [
+      hover({handleClose: safePolygon({buffer: 4})}),
+      focus(),
+      dismiss(),
+      role({role: 'tooltip'}),
+    ],
+  });
   onOpenChange(floating, ({open}) => {
     emit(scope, open ? 'Tooltip opened from pointer or focus' : 'Tooltip closed');
   });
@@ -103,16 +130,7 @@ function initializeMenu(scope: DemoScope) {
   const labels = items.map((item) => item.dataset.label ?? null);
   const listRef = {current: items as Array<HTMLElement | null>};
   const labelRef = {current: labels};
-  let activeIndex: number | null = null;
-
-  const updateActive = (index: number | null) => {
-    activeIndex = index;
-    items.forEach((item, itemIndex) => {
-      item.tabIndex = itemIndex === index ? 0 : -1;
-      item.dataset.active = String(itemIndex === index);
-    });
-    floating.controller.refresh();
-  };
+  const active = activeItems(items, () => floating.controller.refresh());
 
   configure(floating, {
     middleware: [offset(8), flip(), shift({padding: 18})],
@@ -122,53 +140,35 @@ function initializeMenu(scope: DemoScope) {
       role({role: 'menu'}),
       listNavigation(() => ({
         listRef,
-        activeIndex,
-        selectedIndex: 0,
+        activeIndex: active.value,
         loop: true,
-        onNavigate: updateActive,
+        onNavigate: active.set,
       })),
-      typeaheadPlugin(labelRef, () => activeIndex, (index) => {
-        updateActive(index);
-        if (index != null) items[index]?.focus({preventScroll: true});
+      typeahead({
+        listRef: labelRef,
+        get activeIndex() {
+          return active.value;
+        },
+        onMatch: (index) => {
+          active.set(index);
+          if (index != null) items[index]?.focus({preventScroll: true});
+        },
       }),
     ],
   });
 
   items.forEach((item, index) => {
     item.addEventListener('click', (event) => {
-      updateActive(index);
+      active.set(index);
       emit(scope, `${labels[index]} selected`);
       close(floating, event);
     });
   });
   onOpenChange(floating, ({open}) => {
-    if (!open) updateActive(null);
+    if (!open) active.set(null);
     emit(scope, open ? 'Menu opened · arrows and typeahead are active' : 'Menu closed');
   });
 }
-
-function typeaheadPlugin(
-  listRef: {current: Array<string | null>},
-  activeIndex: () => number | null,
-  onMatch: (index: number | null) => void,
-) {
-  // Importing lazily through the public barrel keeps this helper typed without
-  // exposing a Lit directive API.
-  return importTypeahead()({
-    listRef,
-    get activeIndex() {
-      return activeIndex();
-    },
-    onMatch,
-  });
-}
-
-// Kept as a small indirection so all interaction creation remains in one file.
-function importTypeahead() {
-  return requireTypeahead;
-}
-
-import {typeahead as requireTypeahead} from '@floating-ui-plus/web-components';
 
 function initializeClientPoint(scope: DemoScope) {
   const floating = root(scope, '[data-client-point-root]');
@@ -224,25 +224,14 @@ function initializeNestedMenu(scope: DemoScope) {
   const childLabels = {
     current: childItems.map((item) => item.dataset.label ?? null),
   };
-  let parentActive: number | null = null;
-  let childActive: number | null = null;
-
-  const setParentActive = (index: number | null) => {
-    parentActive = index;
-    parentItems.forEach((item, itemIndex) => {
-      item.tabIndex = itemIndex === index ? 0 : -1;
-      item.dataset.active = String(itemIndex === index);
-    });
-    parent.controller.refresh();
-  };
-  const setChildActive = (index: number | null) => {
-    childActive = index;
-    childItems.forEach((item, itemIndex) => {
-      item.tabIndex = itemIndex === index ? 0 : -1;
-      item.dataset.active = String(itemIndex === index);
-    });
-    child.controller.refresh();
-  };
+  const parentActive = activeItems(
+    parentItems,
+    () => parent.controller.refresh(),
+  );
+  const childActive = activeItems(
+    childItems,
+    () => child.controller.refresh(),
+  );
 
   configure(parent, {
     middleware: [offset(8), flip(), shift({padding: 18})],
@@ -257,13 +246,19 @@ function initializeNestedMenu(scope: DemoScope) {
       role({role: 'menu'}),
       listNavigation(() => ({
         listRef: parentRef,
-        activeIndex: parentActive,
+        activeIndex: parentActive.value,
         loop: true,
-        onNavigate: setParentActive,
+        onNavigate: parentActive.set,
       })),
-      typeaheadPlugin(parentLabels, () => parentActive, (index) => {
-        setParentActive(index);
-        if (index != null) parentItems[index]?.focus({preventScroll: true});
+      typeahead({
+        listRef: parentLabels,
+        get activeIndex() {
+          return parentActive.value;
+        },
+        onMatch: (index) => {
+          parentActive.set(index);
+          if (index != null) parentItems[index]?.focus({preventScroll: true});
+        },
       }),
     ],
   });
@@ -284,14 +279,20 @@ function initializeNestedMenu(scope: DemoScope) {
       role({role: 'menu'}),
       listNavigation(() => ({
         listRef: childRef,
-        activeIndex: childActive,
+        activeIndex: childActive.value,
         nested: true,
         loop: true,
-        onNavigate: setChildActive,
+        onNavigate: childActive.set,
       })),
-      typeaheadPlugin(childLabels, () => childActive, (index) => {
-        setChildActive(index);
-        if (index != null) childItems[index]?.focus({preventScroll: true});
+      typeahead({
+        listRef: childLabels,
+        get activeIndex() {
+          return childActive.value;
+        },
+        onMatch: (index) => {
+          childActive.set(index);
+          if (index != null) childItems[index]?.focus({preventScroll: true});
+        },
       }),
     ],
   });
@@ -302,7 +303,7 @@ function initializeNestedMenu(scope: DemoScope) {
     event.preventDefault();
     child.controller.context.onOpenChange(true, event, 'click');
     queueMicrotask(() => {
-      setChildActive(0);
+      childActive.set(0);
       childItems[0]?.focus({preventScroll: true});
     });
   });
@@ -321,7 +322,7 @@ function initializeNestedMenu(scope: DemoScope) {
   });
   onOpenChange(parent, ({open, reason}) => {
     if (!open) {
-      setParentActive(null);
+      parentActive.set(null);
       child.open = false;
       if (reason === 'escape-key') {
         queueMicrotask(() => {
@@ -336,7 +337,7 @@ function initializeNestedMenu(scope: DemoScope) {
   });
   onOpenChange(child, ({open, reason}) => {
     if (!open) {
-      setChildActive(null);
+      childActive.set(null);
       if (reason === 'escape-key' || reason === 'focus-out') {
         window.setTimeout(
           () => childTrigger?.focus({preventScroll: true}),
@@ -357,7 +358,9 @@ function initializeModal(scope: DemoScope) {
     middleware: [offset(20), shift({padding: 24})],
     plugins: [
       click(),
-      dismiss(),
+      // The backdrop owns the whole viewport. Keep the parent dialog open
+      // while a nested popover handles an outside press on its own.
+      dismiss({outsidePress: false}),
       role({role: 'dialog'}),
     ],
   });
@@ -365,7 +368,7 @@ function initializeModal(scope: DemoScope) {
   popover.middleware = [offset(12), flip(), shift({padding: 18})];
   configure(nestedModal, {
     middleware: [offset(20), shift({padding: 24})],
-    plugins: [click(), dismiss(), role({role: 'dialog'})],
+    plugins: [click(), dismiss({outsidePress: false}), role({role: 'dialog'})],
   });
   scope.querySelector('[data-close-modal]')?.addEventListener('click', (event) => {
     close(floating, event);
@@ -711,7 +714,7 @@ export function initializeDemos(rootNode: ParentNode = document) {
     const name = scope.dataset.demo;
     const initialize = name ? initializers[name] : undefined;
     if (!initialize) return;
-    scope.dataset.initialized = 'true';
     initialize(scope);
+    scope.dataset.initialized = 'true';
   });
 }

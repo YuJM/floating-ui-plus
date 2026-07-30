@@ -1,9 +1,24 @@
 {
   "name": "@floating-ui-plus/web-components",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
-  "homepage": "https://fup.polcaneli.com/web-components/",
-  "description": "Lit-powered headless Floating UI custom elements",
+  "homepage": "https://fup.polcaneli.com/",
+  "description": "Floating UI custom elements with interactions, focus management, portals, collections, and search",
+  "keywords": [
+    "floating-ui",
+    "floating-ui-plus",
+    "web-components",
+    "custom-elements",
+    "lit",
+    "tooltip",
+    "popover",
+    "menu",
+    "dialog",
+    "focus-management",
+    "portal",
+    "headless-ui",
+    "accessibility"
+  ],
   "license": "MIT",
   "sideEffects": true,
   "files": [

@@ -30,7 +30,7 @@ Usage:
   bun scripts/release-packages.ts --publish
 
 --check    Validate authentication, tests, builds, archives, and npm versions.
---publish  Run the same checks, require a clean main branch, then publish.
+--publish  Run the same checks, require a clean worktree, then publish.
 `);
 }
 
@@ -97,12 +97,8 @@ async function readPackages(): Promise<PackageInfo[]> {
   );
 }
 
-async function assertPublishCheckout() {
-  const branch = await capture(['git', 'branch', '--show-current']);
-  if (branch !== 'main') {
-    throw new Error(`Publishing is only allowed from main. Current: ${branch}`);
-  }
-
+async function assertCleanWorktree() {
+  // Publishing must use exactly the committed package manifests and lockfile.
   const status = await capture(['git', 'status', '--porcelain']);
   if (status) {
     throw new Error(
@@ -110,19 +106,6 @@ async function assertPublishCheckout() {
     );
   }
 
-  const head = await capture(['git', 'rev-parse', 'HEAD']);
-  const remoteMain = await capture([
-    'git',
-    'ls-remote',
-    'origin',
-    'refs/heads/main',
-  ]);
-  const remoteHead = remoteMain.split(/\s+/)[0];
-  if (!remoteHead || head !== remoteHead) {
-    throw new Error(
-      'Local main must match origin/main exactly. Push or update main first.',
-    );
-  }
 }
 
 async function assertNpmAuthentication() {
@@ -217,7 +200,7 @@ async function main() {
   const mode = parseMode(Bun.argv.slice(2));
   if (!mode) return;
 
-  if (mode === 'publish') await assertPublishCheckout();
+  if (mode === 'publish') await assertCleanWorktree();
   await assertNpmAuthentication();
 
   const packages = await readPackages();

@@ -5,6 +5,13 @@ when you want Floating UI positioning plus coordinated open state,
 interactions, focus management, collections, portals, or search—while keeping
 your own framework, markup, ARIA, and rendering.
 
+## Why this package exists
+
+It builds on Floating UI's positioning primitives and fills the framework-neutral
+interaction layer that is more readily available in its React integration:
+coordinated open state, dismissal, focus, collections, portals, and robust
+search. Your application continues to own UI semantics and rendering.
+
 ## Install
 
 ```sh
