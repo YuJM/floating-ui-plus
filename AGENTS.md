@@ -60,17 +60,18 @@ The maintainer release flow is:
 bun run version
 git add .changeset packages bun.lock
 git commit -m "release: 패키지 버전 업데이트"
-git push origin main
 npm login
 bun run release:packages:check
 bun run release:packages
-git push --follow-tags
 ```
 
-The publish script requires a clean `main` checkout matching `origin/main`,
-checks npm authentication, typechecks, runs package unit and browser tests,
-builds every package, previews package archives, and asks for explicit
-confirmation before publication.
+Pushing the release commit or manually created tags is a separate maintainer
+action and is not a prerequisite for npm publication.
+
+The publish script may run from any branch and does not require that branch to
+match a remote. It requires a clean worktree, checks npm authentication,
+typechecks, runs package unit and browser tests, builds every package, previews
+package archives, and asks for explicit confirmation before publication.
 
 `bun run release:packages:check` is the non-publishing validation command. It
 may query npm and launch browser tests, but it does not publish packages.

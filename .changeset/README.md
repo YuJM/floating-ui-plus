@@ -30,7 +30,7 @@ this directory; commit it with the implementation.
 
 ## Prepare a release
 
-On the release branch, apply every pending changeset:
+On the intended release branch, apply every pending changeset:
 
 ```sh
 bun run version
@@ -44,7 +44,6 @@ Commit the generated version and changelog changes before publishing:
 ```sh
 git add .changeset packages bun.lock
 git commit -m "release: 패키지 버전 업데이트"
-git push origin main
 ```
 
 Authenticate with npm using the maintainer account and run the local checks:
@@ -54,21 +53,27 @@ npm login
 bun run release:packages:check
 ```
 
-When the package list and archives are correct, publish from a clean `main`
+When the package list and archives are correct, publish from the clean release
 checkout:
 
 ```sh
 bun run release:packages
-git push --follow-tags
 ```
 
-The publish script requires local `main` to match `origin/main`, verifies npm
-authentication, typechecks, runs package unit and browser tests, builds the
-packages, previews every package archive, and lists versions that are not yet
-present on npm. It then requires an explicit confirmation before publishing
-each package with `bun publish`, which resolves workspace dependency protocols
-to semver ranges in the registry manifest. npm may request a 2FA code during
-publication.
+The publish script may run from any branch and does not require that branch to
+match a remote. It requires a clean worktree, verifies npm authentication,
+typechecks, runs package unit and browser tests, builds the packages, previews
+every package archive, and lists versions that are not yet present on npm. It
+then requires an explicit confirmation before publishing each package with
+`bun publish`, which resolves workspace dependency protocols to semver ranges
+in the registry manifest. npm may request a 2FA code during publication. The
+release checks verify that `bun run version` has consumed all pending Changeset
+files; they do not run `changeset status`, because that command compares a
+versioned release branch with `main` and reports the already consumed
+Changesets as missing.
+
+Pushing the release commit or any manually created tags is a separate
+maintainer action and is not required before npm publication.
 
 ## Versioning policy
 
