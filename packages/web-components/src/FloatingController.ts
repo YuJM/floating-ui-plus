@@ -169,6 +169,12 @@ export class FloatingRootRuntime {
     this.engine.setFloating(floating);
     this.engine.presence.set(floating ? 'mounted' : 'unmounted');
     this.syncBindings();
+    if (floating && this.#host.open) {
+      this.engine.context.events.emit('openchange', {
+        open: true,
+        nested: this.engine.context.nested,
+      });
+    }
   }
 
   syncBindings() {

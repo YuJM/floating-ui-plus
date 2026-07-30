@@ -9,7 +9,9 @@ import {
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   offset,
+  platform,
   registerFloatingArrow,
+  type Platform,
 } from '../../src';
 
 const runsInRealBrowser = !navigator.userAgent.includes('jsdom');
@@ -115,6 +117,44 @@ describe.skipIf(!runsInRealBrowser)('real browser DOM', () => {
     expect(floatingRect.y).toBeCloseTo(232, 0);
     expect(floatingRect.width).toBeCloseTo(80, 0);
     expect(floatingRect.height).toBeCloseTo(30, 0);
+    floating.destroy();
+  });
+
+  test('ignores a stale measurement when its element unmounts', async () => {
+    const reference = document.createElement('button');
+    const floatingElement = document.createElement('div');
+    document.body.append(reference, floatingElement);
+
+    let continueMeasurement!: () => void;
+    let measurementStarted!: () => void;
+    const measurementGate = new Promise<void>((resolve) => {
+      continueMeasurement = resolve;
+    });
+    const started = new Promise<void>((resolve) => {
+      measurementStarted = resolve;
+    });
+    const delayedPlatform: Platform = {
+      ...platform,
+      async getElementRects(args) {
+        measurementStarted();
+        await measurementGate;
+        return platform.getElementRects(args);
+      },
+    };
+    const floating = createFloating({
+      open: true,
+      platform: delayedPlatform,
+    });
+    floating.setReference(reference);
+    floating.setFloating(floatingElement);
+
+    const update = floating.update();
+    await started;
+    floating.setFloating(null);
+    floatingElement.remove();
+    continueMeasurement();
+
+    await expect(update).resolves.toBeUndefined();
     floating.destroy();
   });
 

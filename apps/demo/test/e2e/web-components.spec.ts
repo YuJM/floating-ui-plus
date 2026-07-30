@@ -19,6 +19,35 @@ test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   )).toBe(0);
 });
 
+test('keeps portal template content inert across refresh until it opens', async ({
+  page,
+}) => {
+  await page.goto('/popover');
+  await page.reload();
+  await expect(page.locator('[data-demo="popover"]')).toHaveAttribute(
+    'data-initialized',
+    'true',
+  );
+
+  const trigger = page.getByRole('button', {name: /Open coordinates/});
+  const panel = page.locator('.popover-panel');
+  await expect(panel).toHaveCount(0);
+  expect(
+    await page.locator('[data-popover-content]').evaluate((content) => {
+      const template = content.querySelector('template');
+      return Boolean(template?.content.querySelector('.popover-panel'));
+    }),
+  ).toBe(true);
+
+  await trigger.click();
+  await expect(panel).toBeVisible();
+  await page.getByRole('button', {name: 'Close panel'}).click();
+  await expect(panel).toHaveCount(0);
+
+  await trigger.click();
+  await expect(panel).toBeVisible();
+});
+
 test('menu starts roving focus at the first item after opening with a pointer', async ({
   page,
 }) => {

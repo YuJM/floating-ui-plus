@@ -45,10 +45,12 @@ manager, overlay, list, or other composition.
   <floating-reference><button>Actions</button></floating-reference>
   <floating-portal>
     <floating-content>
-      <floating-list>
-        <floating-list-item label="Edit"><button role="menuitem">Edit</button></floating-list-item>
-        <floating-list-item label="Duplicate"><button role="menuitem">Duplicate</button></floating-list-item>
-      </floating-list>
+      <template>
+        <floating-list>
+          <floating-list-item label="Edit"><button role="menuitem">Edit</button></floating-list-item>
+          <floating-list-item label="Duplicate"><button role="menuitem">Duplicate</button></floating-list-item>
+        </floating-list>
+      </template>
     </floating-content>
   </floating-portal>
 </floating-root>
@@ -57,6 +59,40 @@ manager, overlay, list, or other composition.
 `floating-list-item` registers its first child with the nearest
 `floating-list`. Add `floating-tree` and `floating-node` around related roots
 when menus can nest.
+
+### Conditional native templates
+
+Put a direct native `<template>` inside `floating-content` when closed content
+must not be parsed into the live document, upgraded, or painted. The template
+remains an inert blueprint. `floating-content` clones its `content` into Light
+DOM when the nearest root opens and removes that clone when it closes.
+
+```ts
+import type {FloatingContentElement} from '@floating-ui-plus/web-components';
+
+const content = document.querySelector<FloatingContentElement>(
+  'floating-content',
+)!;
+
+// The inert blueprint remains available while the rendered clone is mounted.
+const blueprint = content.content;
+
+// Delegate events from fresh clones through the stable component host.
+content.addEventListener('click', (event) => {
+  if (
+    event.target instanceof Element &&
+    event.target.closest('[data-close]')
+  ) {
+    // Close the floating root.
+  }
+});
+```
+
+Listeners attached directly to nodes inside `content` are not copied by
+`cloneNode()`. Delegate them from `floating-content`, or initialize each
+rendered clone when it mounts. Direct, non-template children remain supported;
+after the component upgrades they are slotted and bound only while open. Use a
+native template when preventing pre-upgrade paint is required.
 
 ## Modal dialog
 
@@ -71,7 +107,9 @@ the document scroll lock.
     <floating-overlay lock-scroll>
       <floating-focus-manager modal return-focus outside-elements-inert>
         <floating-content>
-          <section aria-label="Account settings">…</section>
+          <template>
+            <section aria-label="Account settings">…</section>
+          </template>
         </floating-content>
       </floating-focus-manager>
     </floating-overlay>

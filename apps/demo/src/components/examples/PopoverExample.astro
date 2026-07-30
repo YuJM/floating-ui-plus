@@ -17,13 +17,15 @@
         </button>
       </floating-reference>
       <floating-portal>
-        <floating-content>
-          <div class="popover-panel">
-            <span class="panel-kicker">REFERENCE / 42.8°</span>
-            <strong>Portal, still connected.</strong>
-            <p>ARIA and outside-press behavior are owned by the component.</p>
-            <button class="text-button" data-close-popover>Close panel</button>
-          </div>
+        <floating-content data-popover-content>
+          <template>
+            <div class="popover-panel">
+              <span class="panel-kicker">REFERENCE / 42.8°</span>
+              <strong>Portal, still connected.</strong>
+              <p>ARIA and outside-press behavior are owned by the component.</p>
+              <button class="text-button" data-close-popover>Close panel</button>
+            </div>
+          </template>
         </floating-content>
       </floating-portal>
     </floating-root>
@@ -36,6 +38,7 @@
   import {
     closeFloating,
     emitExampleAction,
+    floatingContent,
     floatingRoot,
     initializeExample,
     onFloatingOpenChange,
@@ -43,10 +46,16 @@
 
   initializeExample('popover', (scope) => {
     const floating = floatingRoot(scope, '[data-popover-root]');
+    const content = floatingContent(scope, '[data-popover-content]');
     floating.middleware = [offset(12), flip(), shift({padding: 18})];
-    scope
-      .querySelector('[data-close-popover]')
-      ?.addEventListener('click', (event) => closeFloating(floating, event));
+    content.addEventListener('click', (event) => {
+      if (
+        event.target instanceof Element &&
+        event.target.closest('[data-close-popover]')
+      ) {
+        closeFloating(floating, event);
+      }
+    });
     onFloatingOpenChange(floating, ({open}) => {
       emitExampleAction(
         scope,

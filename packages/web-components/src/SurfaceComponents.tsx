@@ -9,19 +9,18 @@ import {
   useRef,
   useSlot,
   useState,
-} from 'atomico';
+} from "atomico";
 import {
   FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
   FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
   focusManager,
   lockScroll,
-} from '@floating-ui-plus/web';
+} from "@floating-ui-plus/web";
 
 import {
   floatingComponentContext,
   type FloatingComponentContext,
-} from './component-context';
-import type {FloatingRootElement} from './FloatingRootElement';
+} from "./component-context";
 
 const contentsStyles = `
   :host,
@@ -43,7 +42,7 @@ function movePortalNode(parent: Element, node: Node) {
   if (
     node.isConnected &&
     parent.isConnected &&
-    typeof statePreservingParent.moveBefore === 'function'
+    typeof statePreservingParent.moveBefore === "function"
   ) {
     statePreservingParent.moveBefore(node, null);
     return;
@@ -56,7 +55,7 @@ const portalRuntimes = new WeakMap<FloatingPortalElement, PortalRuntime>();
 function getPortalRuntime(host: FloatingPortalElement) {
   let runtime = portalRuntimes.get(host);
   if (!runtime) {
-    runtime = {targetElement: undefined};
+    runtime = { targetElement: undefined };
     portalRuntimes.set(host, runtime);
   }
   return runtime;
@@ -81,23 +80,20 @@ function destroyPortal(host: FloatingPortalElement, runtime: PortalRuntime) {
   runtime.targetElement = undefined;
 }
 
-function getDirectNestedPortals(
-  host: FloatingPortalElement,
-  nodes: Node[],
-) {
+function getDirectNestedPortals(host: FloatingPortalElement, nodes: Node[]) {
   const portals: FloatingPortalElement[] = [];
   for (const node of nodes) {
     if (!(node instanceof Element)) continue;
     const candidates = [
-      ...(node.matches('floating-portal')
+      ...(node.matches("floating-portal")
         ? [node as FloatingPortalElement]
         : []),
       ...Array.from(
-        node.querySelectorAll<FloatingPortalElement>('floating-portal'),
+        node.querySelectorAll<FloatingPortalElement>("floating-portal"),
       ),
     ];
     for (const portal of candidates) {
-      if (portal.parentElement?.closest('floating-portal') === host) {
+      if (portal.parentElement?.closest("floating-portal") === host) {
         portals.push(portal);
       }
     }
@@ -181,7 +177,7 @@ const FloatingPortalBase = c(
     const targetReady = capturedContext.current.root !== undefined;
 
     useEffect(() => {
-      host.setAttribute(FLOATING_UI_PLUS_PORTAL_ATTRIBUTE, '');
+      host.setAttribute(FLOATING_UI_PLUS_PORTAL_ATTRIBUTE, "");
     }, []);
 
     useLayoutEffect(() => {
@@ -194,11 +190,11 @@ const FloatingPortalBase = c(
         return;
       }
       const explicitTarget =
-        host.hasAttribute('to') && host.to
+        host.hasAttribute("to") && host.to
           ? host.ownerDocument.querySelector(host.to)
           : null;
       const parentPortal = host.parentElement?.closest(
-        'floating-portal',
+        "floating-portal",
       ) as FloatingPortalElement | null;
       const parentPortalTarget =
         parentPortal && !parentPortal.disabled
@@ -211,7 +207,7 @@ const FloatingPortalBase = c(
         host.target ??
         explicitTarget ??
         parentPortalTarget ??
-        host.parentElement?.closest('floating-portal-target') ??
+        host.parentElement?.closest("floating-portal-target") ??
         capturedContext.current.portalTarget ??
         host.ownerDocument.body;
       if (!target) return;
@@ -224,7 +220,7 @@ const FloatingPortalBase = c(
       }
       if (!runtime.targetElement) {
         runtime.targetElement = host.ownerDocument.createElement(
-          'floating-portal-target',
+          "floating-portal-target",
         ) as FloatingPortalTargetElement;
         runtime.targetElement.contextValue = capturedContext.current;
         target.append(runtime.targetElement);
@@ -274,16 +270,13 @@ const FloatingPortalBase = c(
             display: none;
           }
         `}</style>
-        <slot
-          ref={portalSlot}
-          hidden={!host.disabled && !targetReady}
-        />
+        <slot ref={portalSlot} hidden={!host.disabled && !targetReady} />
       </host>
     );
   },
   {
     props: {
-      to: {type: String, value: (): string => 'body'},
+      to: { type: String, value: (): string => "body" },
       disabled: {
         type: Boolean,
         value: (): boolean => false,
@@ -344,7 +337,7 @@ const FloatingOverlayBase = c(
     };
 
     useEffect(() => {
-      host.setAttribute(FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE, '');
+      host.setAttribute(FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE, "");
     }, []);
 
     useEffect(() => {
@@ -354,7 +347,7 @@ const FloatingOverlayBase = c(
         syncLock();
       };
       sync(root.open);
-      return root.controller.context.events.on('openchange', ({open}) => {
+      return root.controller.context.events.on("openchange", ({ open }) => {
         sync(open);
       });
     }, [root]);
@@ -394,7 +387,7 @@ const FloatingOverlayBase = c(
         type: Boolean,
         value: (): boolean => false,
         reflect: true,
-        attr: 'lock-scroll',
+        attr: "lock-scroll",
       },
     },
   },
@@ -463,17 +456,17 @@ const FloatingFocusManagerBase = c(
       initialFocus: {
         type: Number,
         value: (): number => 0,
-        attr: 'initial-focus',
+        attr: "initial-focus",
       },
       returnFocus: {
         type: Boolean,
         value: (): boolean => true,
-        attr: 'return-focus',
+        attr: "return-focus",
       },
       outsideElementsInert: {
         type: Boolean,
         value: (): boolean => false,
-        attr: 'outside-elements-inert',
+        attr: "outside-elements-inert",
       },
     },
   },
@@ -492,9 +485,9 @@ const FloatingTransitionBase = c(() => {
 
   useEffect(() => {
     if (!root) return;
-    host.dataset.status = root.open ? 'open' : 'closed';
-    return root.controller.context.events.on('openchange', ({open}) => {
-      host.dataset.status = open ? 'open' : 'close';
+    host.dataset.status = root.open ? "open" : "closed";
+    return root.controller.context.events.on("openchange", ({ open }) => {
+      host.dataset.status = open ? "open" : "close";
     });
   }, [root]);
 
@@ -515,10 +508,10 @@ export class FloatingTransitionElement extends FloatingTransitionBase {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'floating-portal': FloatingPortalElement;
-    'floating-portal-target': FloatingPortalTargetElement;
-    'floating-overlay': FloatingOverlayElement;
-    'floating-focus-manager': FloatingFocusManagerElement;
-    'floating-transition': FloatingTransitionElement;
+    "floating-portal": FloatingPortalElement;
+    "floating-portal-target": FloatingPortalTargetElement;
+    "floating-overlay": FloatingOverlayElement;
+    "floating-focus-manager": FloatingFocusManagerElement;
+    "floating-transition": FloatingTransitionElement;
   }
 }

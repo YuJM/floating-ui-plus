@@ -1,4 +1,5 @@
 import type {
+  FloatingContentElement,
   FloatingOpenChangeDetail,
   FloatingPlugin,
   FloatingRootElement,
@@ -23,6 +24,54 @@ export function floatingRoot(scope: ParentNode, selector: string) {
     throw new Error(`Missing FloatingRootElement for ${selector}`);
   }
   return element as FloatingRootElement;
+}
+
+export function floatingContent(scope: ParentNode, selector: string) {
+  const ownerDocument =
+    scope instanceof Document ? scope : scope.ownerDocument ?? document;
+  const element =
+    scope.querySelector(selector) ?? ownerDocument.querySelector(selector);
+  if (
+    !(element instanceof HTMLElement) ||
+    element.localName !== 'floating-content'
+  ) {
+    throw new Error(`Missing FloatingContentElement for ${selector}`);
+  }
+  return element as FloatingContentElement;
+}
+
+export function floatingTemplateContent(element: FloatingContentElement) {
+  const template =
+    element.template ??
+    Array.from(element.children).find(
+      (child): child is HTMLTemplateElement =>
+        child instanceof HTMLTemplateElement,
+    ) ??
+    null;
+  const content = template?.content;
+  if (!content) {
+    throw new Error('FloatingContentElement requires a direct template child');
+  }
+  return content;
+}
+
+export function onFloatingContentMount(
+  element: FloatingContentElement,
+  listener: () => void,
+) {
+  const sync = () => {
+    if (
+      Array.from(element.children).some(
+        (child) => !(child instanceof HTMLTemplateElement),
+      )
+    ) {
+      listener();
+    }
+  };
+  const observer = new MutationObserver(sync);
+  observer.observe(element, {childList: true});
+  sync();
+  return () => observer.disconnect();
 }
 
 export function configureFloating(

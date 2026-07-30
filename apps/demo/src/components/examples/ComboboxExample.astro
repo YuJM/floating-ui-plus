@@ -27,12 +27,14 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
         />
       </floating-reference>
       <floating-portal>
-        <floating-content>
-          <div
-            class="combobox-popup"
-            data-combobox-popup
-            aria-label="Destination suggestions"
-          ></div>
+        <floating-content data-combobox-content>
+          <template>
+            <div
+              class="combobox-popup"
+              data-combobox-popup
+              aria-label="Destination suggestions"
+            ></div>
+          </template>
         </floating-content>
       </floating-portal>
     </floating-root>
@@ -73,8 +75,10 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   import {
     configureFloating,
     emitExampleAction,
+    floatingContent,
     floatingRoot,
     initializeExample,
+    onFloatingContentMount,
     onFloatingOpenChange,
   } from './example-client';
 
@@ -89,11 +93,12 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
 
   initializeExample('combobox', (scope) => {
     const floating = floatingRoot(scope, '[data-combobox-root]');
+    const content = floatingContent(scope, '[data-combobox-content]');
     const input =
       scope.querySelector<HTMLInputElement>('#destination-search');
-    const popup = scope.querySelector<HTMLElement>('[data-combobox-popup]');
     const status = scope.querySelector<HTMLElement>('#combobox-status');
-    if (!input || !popup || !status) return;
+    if (!input || !status) return;
+    let popup: HTMLElement | null = null;
 
     const source = createFuzzySearchSource(multilingualDestinations, {
       keys: multilingualSearchKeys,
@@ -132,13 +137,15 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
       emitExampleAction(scope, `${item.label} selected`);
     };
     const render = () => {
-      popup.replaceChildren();
+      const currentPopup = popup;
+      if (!currentPopup) return;
+      currentPopup.replaceChildren();
       if (search.loading) {
-        popup.append(createEmptyOption('Searching…'));
+        currentPopup.append(createEmptyOption('Searching…'));
       } else if (search.error) {
-        popup.append(createEmptyOption('Search failed.'));
+        currentPopup.append(createEmptyOption('Search failed.'));
       } else if (!search.items.length) {
-        popup.append(
+        currentPopup.append(
           createEmptyOption(`No destination found for “${search.query}”`),
         );
       } else {
@@ -159,11 +166,11 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
             event.preventDefault(),
           );
           option.addEventListener('click', () => select(item));
-          popup.append(option);
+          currentPopup.append(option);
         });
       }
       listRef.current = [
-        ...popup.querySelectorAll<HTMLElement>(
+        ...currentPopup.querySelectorAll<HTMLElement>(
           '[role="option"]:not([aria-disabled="true"])',
         ),
       ];
@@ -198,6 +205,10 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
       ],
     });
 
+    onFloatingContentMount(content, () => {
+      popup = content.querySelector<HTMLElement>('[data-combobox-popup]');
+      render();
+    });
     search.subscribe(render);
     void search.refresh();
     input.addEventListener('focus', () => {

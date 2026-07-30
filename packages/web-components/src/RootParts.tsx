@@ -3,14 +3,15 @@ import {
   useContext,
   useHost,
   useLayoutEffect,
+  useNodes,
   useRef,
   useSlot,
-} from 'atomico';
-import type {ItemState} from '@floating-ui-plus/web';
-import {setAttributes} from '@floating-ui-plus/web/utils';
+} from "atomico";
+import type { ItemState } from "@floating-ui-plus/web";
+import { setAttributes } from "@floating-ui-plus/web/utils";
 
-import {floatingComponentContext} from './component-context';
-import type {FloatingRootElement} from './FloatingRootElement';
+import { floatingComponentContext } from "./component-context";
+import type { FloatingRootElement } from "./FloatingRootElement";
 
 const contentsStyles = `
   :host,
@@ -24,10 +25,7 @@ function useRootPart(
 ) {
   const root = useContext(floatingComponentContext).root;
   const slot = useRef<HTMLSlotElement>();
-  const children = useSlot<Element>(
-    slot,
-    (node) => node instanceof Element,
-  );
+  const children = useSlot<Element>(slot, (node) => node instanceof Element);
   const element = children[0] ?? null;
 
   useLayoutEffect(() => {
@@ -67,21 +65,79 @@ export class FloatingReferenceElement extends FloatingReferenceBase {
 }
 
 const FloatingContentBase = c(() => {
-  const slot = useRootPart((root, element) => {
-    root.setFloatingElement(element instanceof HTMLElement ? element : null);
-  });
+  const host = useHost<HTMLElement>().current;
+  const root = useContext(floatingComponentContext).root;
+  const children = useNodes<Node>();
+  const template =
+    children.find(
+      (node): node is HTMLTemplateElement =>
+        node instanceof HTMLTemplateElement,
+    ) ?? null;
+  const element =
+    (root?.open &&
+      children.find(
+        (node): node is HTMLElement =>
+          node instanceof HTMLElement &&
+          !(node instanceof HTMLTemplateElement),
+      )) ||
+    null;
+  const templateNodes = useRef<Node[]>([]);
+
+  useLayoutEffect(() => {
+    if (!template || !root?.open) return;
+
+    const content = template.content.cloneNode(true) as DocumentFragment;
+    templateNodes.current = Array.from(content.childNodes);
+    host.append(content);
+
+    return () => {
+      for (const node of templateNodes.current) {
+        if (node.parentNode === host) {
+          host.removeChild(node);
+        }
+      }
+      templateNodes.current = [];
+    };
+  }, [host, root, root?.open, template]);
+
+  useLayoutEffect(() => {
+    if (root) root.setFloatingElement(element);
+    return () => {
+      if (root && element) root.setFloatingElement(null);
+    };
+  }, [root, element]);
+
   return (
     <host shadowDom>
       <style>{contentsStyles}</style>
-      <slot ref={slot} />
+      {root?.open && <slot />}
     </host>
   );
 });
 
-/** Binds its first child to the nearest floating root surface. */
+/**
+ * Binds its first rendered child to the nearest floating root surface.
+ *
+ * A direct native template keeps its contents inert while the root is closed.
+ * A fresh clone moves into the light DOM while open and is removed when closed,
+ * matching conditional rendering semantics.
+ */
 export class FloatingContentElement extends FloatingContentBase {
   get updateComplete() {
     return this.updated;
+  }
+
+  get template() {
+    return (
+      Array.from(this.children).find(
+        (element): element is HTMLTemplateElement =>
+          element instanceof HTMLTemplateElement,
+      ) ?? null
+    );
+  }
+
+  get content() {
+    return this.template?.content ?? null;
   }
 }
 
@@ -90,10 +146,7 @@ const FloatingItemBase = c(
     const host = useHost<FloatingItemHost>().current;
     const root = useContext(floatingComponentContext).root;
     const slot = useRef<HTMLSlotElement>();
-    const children = useSlot<Element>(
-      slot,
-      (node) => node instanceof Element,
-    );
+    const children = useSlot<Element>(slot, (node) => node instanceof Element);
     const element = children[0] ?? null;
     const bound = useRef<Element | null>(null);
     const attributes = useRef(new Set<string>());
@@ -111,13 +164,13 @@ const FloatingItemBase = c(
       const state: ItemState = {
         active: host.active,
         selected: host.selected,
-        ...(host.index == null ? {} : {index: host.index}),
+        ...(host.index == null ? {} : { index: host.index }),
       };
       attributes.current = setAttributes(
         element,
-        typeof itemAttributes === 'function'
+        typeof itemAttributes === "function"
           ? itemAttributes(state)
-          : itemAttributes ?? {},
+          : (itemAttributes ?? {}),
         attributes.current,
       );
     };
@@ -142,10 +195,10 @@ const FloatingItemBase = c(
   },
   {
     props: {
-      active: {type: Boolean, value: (): boolean => false, reflect: true},
-      selected: {type: Boolean, value: (): boolean => false, reflect: true},
-      index: {type: Number},
-      label: {type: String},
+      active: { type: Boolean, value: (): boolean => false, reflect: true },
+      selected: { type: Boolean, value: (): boolean => false, reflect: true },
+      index: { type: Number },
+      label: { type: String },
     },
   },
 );
@@ -171,8 +224,8 @@ export class FloatingItemElement extends FloatingItemBase {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'floating-reference': FloatingReferenceElement;
-    'floating-content': FloatingContentElement;
-    'floating-item': FloatingItemElement;
+    "floating-reference": FloatingReferenceElement;
+    "floating-content": FloatingContentElement;
+    "floating-item": FloatingItemElement;
   }
 }

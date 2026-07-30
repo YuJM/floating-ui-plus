@@ -104,15 +104,134 @@ describe('FloatingRootElement', () => {
     expect(reference).toBeInstanceOf(FloatingReferenceElement);
     expect(content).toBeInstanceOf(FloatingContentElement);
     expect(root.referenceElement).toBe(root.querySelector('button'));
-    expect(root.floatingElement).toBe(root.querySelector('section'));
+    expect(root.floatingElement).toBeNull();
+    expect(content?.shadowRoot?.querySelector('slot')).toBeNull();
 
     root.querySelector('button')?.click();
     await root.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(root.querySelector('section'));
+      expect(content?.shadowRoot?.querySelector('slot')).not.toBeNull();
+    });
     expect(root.open).toBe(true);
     expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
   });
 
-  test('waits for root context without depending on open state', async () => {
+  test('uses a native template as an inert conditional blueprint', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-content>
+        <template>
+          <section data-template-panel>
+            Content
+            <button data-template-action>Action</button>
+          </section>
+        </template>
+      </floating-content>
+    `;
+    const content = root.querySelector('floating-content');
+    const template = content?.template;
+    const panel = template?.content.querySelector<HTMLElement>(
+      '[data-template-panel]',
+    );
+    const listener = vi.fn();
+    content?.addEventListener('click', (event) => {
+      if (
+        event.target instanceof Element &&
+        event.target.matches('[data-template-action]')
+      ) {
+        listener();
+      }
+    });
+
+    document.body.append(root);
+    await root.updateComplete;
+    await content?.updateComplete;
+
+    expect(content).toBeInstanceOf(FloatingContentElement);
+    expect(content?.content).toBe(template?.content);
+    expect(panel?.isConnected).toBe(false);
+    expect(document.querySelector('[data-template-panel]')).toBeNull();
+    expect(root.floatingElement).toBeNull();
+
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      const firstPanel = document.querySelector('[data-template-panel]');
+      expect(root.floatingElement).toBe(firstPanel);
+      expect(firstPanel).not.toBe(panel);
+    });
+    const firstPanel = document.querySelector('[data-template-panel]');
+    firstPanel
+      ?.querySelector<HTMLButtonElement>('[data-template-action]')
+      ?.click();
+    expect(listener).toHaveBeenCalledOnce();
+
+    root.open = false;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBeNull();
+      expect(panel?.isConnected).toBe(false);
+      expect(template?.content.querySelector('[data-template-panel]')).toBe(
+        panel,
+      );
+    });
+
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      const secondPanel = document.querySelector('[data-template-panel]');
+      expect(root.floatingElement).toBe(secondPanel);
+      expect(secondPanel).not.toBe(firstPanel);
+      expect(secondPanel).not.toBe(panel);
+    });
+    const secondPanel = document.querySelector('[data-template-panel]');
+    secondPanel
+      ?.querySelector<HTMLButtonElement>('[data-template-action]')
+      ?.click();
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  test('keeps template-backed portal content out of the document until open', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-portal>
+        <floating-content>
+          <template>
+            <section data-template-portal>Portal content</section>
+          </template>
+        </floating-content>
+      </floating-portal>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('floating-portal-target')).not.toBeNull();
+    });
+    expect(document.querySelector('[data-template-portal]')).toBeNull();
+    expect(root.floatingElement).toBeNull();
+
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      const panel = document.querySelector('[data-template-portal]');
+      expect(panel).not.toBeNull();
+      expect(panel?.closest('floating-portal-target')).not.toBeNull();
+      expect(root.floatingElement).toBe(panel);
+    });
+
+    root.open = false;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      expect(document.querySelector('[data-template-portal]')).toBeNull();
+      expect(root.floatingElement).toBeNull();
+    });
+  });
+
+  test('waits for root context and binds direct content only when open', async () => {
     const standaloneParent = document.createElement('div');
     const standalone = document.createElement('floating-portal');
     standalone.innerHTML = '<button>Not ready</button>';
@@ -147,12 +266,12 @@ describe('FloatingRootElement', () => {
       expect(target?.querySelector('floating-content')).not.toBeNull();
     });
     expect(root.open).toBe(false);
-    await vi.waitFor(() => {
-      expect(root.floatingElement).toBe(
-        document.querySelector('floating-portal-target section'),
-      );
-      expect(root.floatingElement?.hidden).toBe(true);
-    });
+    expect(root.floatingElement).toBeNull();
+    expect(
+      document
+        .querySelector('floating-portal-target floating-content')
+        ?.shadowRoot?.querySelector('slot'),
+    ).toBeNull();
 
     root.open = true;
     await root.updateComplete;

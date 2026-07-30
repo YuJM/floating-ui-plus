@@ -219,12 +219,18 @@ export function createFloating(
 
     const currentRequest = ++requestId;
     const options = resolveOptions(optionsSource);
-    const result = await computePosition(reference, floating, {
-      middleware: withArrowOffset(options.middleware, context.data.arrow),
-      placement: options.placement,
-      strategy: options.strategy,
-      platform: options.platform,
-    });
+    let result: Awaited<ReturnType<typeof computePosition>>;
+    try {
+      result = await computePosition(reference, floating, {
+        middleware: withArrowOffset(options.middleware, context.data.arrow),
+        placement: options.placement,
+        strategy: options.strategy,
+        platform: options.platform,
+      });
+    } catch (error) {
+      if (currentRequest !== requestId || destroyed) return;
+      throw error;
+    }
 
     if (currentRequest !== requestId || destroyed) return;
 
@@ -242,6 +248,7 @@ export function createFloating(
   }
 
   function setReference(reference: Element | ReferenceElement | null) {
+    requestId++;
     elements.reference = reference;
     if (isElement(reference) || reference === null) {
       elements.domReference = reference;
@@ -292,10 +299,12 @@ export function createFloating(
     },
     setReference,
     setPositionReference(reference) {
+      requestId++;
       elements.reference = reference;
       attachPositioning();
     },
     setFloating(floating) {
+      requestId++;
       elements.floating = floating;
       attachPositioning();
       connectPlugins();
@@ -311,6 +320,7 @@ export function createFloating(
       if (!connected) return;
       connected = false;
       attachRequestId++;
+      requestId++;
       cleanupMounted();
       cleanupPlugins();
       coordinator.disconnect();
