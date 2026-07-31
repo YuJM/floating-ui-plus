@@ -1,6 +1,6 @@
 ---
-import {ArrowRight, Boxes, Check, Component, ExternalLink, Layers, Search, Workflow} from 'lucide-astro';
-import {siNpm} from 'simple-icons';
+import {ArrowRight, Check, ExternalLink, Layers, Search, Workflow} from 'lucide-astro';
+import {siNpm, siVuedotjs, siWebcomponentsdotorg} from 'simple-icons';
 import {getRelativeLocaleUrl} from 'astro:i18n';
 import * as m from '../paraglide/messages';
 import DemoLayout from '../layouts/DemoLayout.astro';
@@ -17,11 +17,11 @@ const corePackage = npmPackages.find((pkg) => pkg.id === 'web');
 const packageCopy = {
   'web-components': {
     description: m.packages_web_components_copy(undefined, options),
-    icon: Component,
+    icon: siWebcomponentsdotorg,
   },
   vue: {
     description: m.packages_vue_copy(undefined, options),
-    icon: Boxes,
+    icon: siVuedotjs,
   },
 };
 ---
@@ -63,9 +63,8 @@ const packageCopy = {
       <div class="npm-app-package-grid">
         {appPackages.map((pkg) => {
           const copy = packageCopy[pkg.id as 'web-components' | 'vue'];
-          const Icon = copy.icon;
           return <a class="npm-package-link npm-package-link--recommended" href={pkg.href} target="_blank" rel="noreferrer" data-npm-package={pkg.name}>
-            <span class="npm-package-icon"><Icon aria-hidden="true" size={22} strokeWidth={1.8} /></span>
+            <span class:list={['npm-package-icon', `npm-package-icon--${pkg.id}`]}><svg aria-hidden="true" viewBox="0 0 24 24"><path d={copy.icon.path} /></svg></span>
             <span class="npm-package-copy"><strong>{pkg.label}</strong><small>{copy.description}</small><code>{pkg.name}</code></span>
             <span class="npm-package-meta"><span class="npm-package-version" data-npm-package-version>{pkg.version ? `v${pkg.version}` : 'npm'}</span><ExternalLink aria-hidden="true" size={15} strokeWidth={1.8} /></span>
           </a>;
