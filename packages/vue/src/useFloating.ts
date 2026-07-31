@@ -85,6 +85,63 @@ export function useFloating<T extends ReferenceElement = ReferenceElement>(
         }
       : {}),
   }));
+  const registeredPluginEntries = new Map<
+    symbol,
+    {
+      plugins: FloatingPlugin[];
+      cleanups: Array<() => void>;
+    }
+  >();
+  let registeredPluginContext:
+    | Parameters<NonNullable<FloatingPlugin['connect']>>[0]
+    | null = null;
+  let registeredPluginBridgeInstalled = false;
+
+  function cleanupRegisteredEntry(
+    entry: {cleanups: Array<() => void>},
+  ) {
+    entry.cleanups
+      .splice(0)
+      .reverse()
+      .forEach((cleanup) => cleanup());
+  }
+
+  function connectRegisteredEntry(
+    entry: {
+      plugins: FloatingPlugin[];
+      cleanups: Array<() => void>;
+    },
+    context: NonNullable<typeof registeredPluginContext>,
+  ) {
+    cleanupRegisteredEntry(entry);
+    for (const plugin of entry.plugins) {
+      const cleanup = plugin.connect(context);
+      if (cleanup) entry.cleanups.push(cleanup);
+    }
+  }
+
+  const registeredPluginBridge: FloatingPlugin = {
+    name: 'vue-registered-plugins',
+    connect(context) {
+      registeredPluginContext = context;
+      for (const entry of registeredPluginEntries.values()) {
+        connectRegisteredEntry(entry, context);
+      }
+      return () => {
+        for (const entry of registeredPluginEntries.values()) {
+          cleanupRegisteredEntry(entry);
+        }
+        if (registeredPluginContext === context) {
+          registeredPluginContext = null;
+        }
+      };
+    },
+    update(context) {
+      for (const entry of registeredPluginEntries.values()) {
+        for (const plugin of entry.plugins) plugin.update?.(context);
+      }
+    },
+  };
 
   function syncPosition() {
     const position = controller.position;
@@ -204,6 +261,29 @@ export function useFloating<T extends ReferenceElement = ReferenceElement>(
     syncAttrs();
     return result;
   };
+  const registerPlugins = (...plugins: FloatingPlugin[]) => {
+    const owner = Symbol('vue-floating-plugins');
+    const entry = {plugins, cleanups: [] as Array<() => void>};
+    registeredPluginEntries.set(owner, entry);
+    if (!registeredPluginBridgeInstalled) {
+      registeredPluginBridgeInstalled = true;
+      controller.pipe(registeredPluginBridge);
+    } else if (registeredPluginContext) {
+      connectRegisteredEntry(entry, registeredPluginContext);
+    }
+    controller.refresh();
+    revision.value++;
+    syncAttrs();
+    return () => {
+      const current = registeredPluginEntries.get(owner);
+      if (!current) return;
+      cleanupRegisteredEntry(current);
+      registeredPluginEntries.delete(owner);
+      controller.refresh();
+      revision.value++;
+      syncAttrs();
+    };
+  };
 
   result = {
     x: shallowReadonly(x),
@@ -218,6 +298,7 @@ export function useFloating<T extends ReferenceElement = ReferenceElement>(
     controller,
     contextScope: controller.contextScope,
     pipe,
+    registerPlugins,
     referenceAttrs,
     floatingAttrs,
     getItemAttrs,

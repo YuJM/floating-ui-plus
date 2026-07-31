@@ -6,6 +6,7 @@ export {useSearch} from './search';
 export type {UseSearchReturn} from './search';
 export {
   FloatingContent,
+  FloatingClose,
   FloatingItem,
   FloatingReference,
   FloatingRoot,

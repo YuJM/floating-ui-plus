@@ -65,7 +65,10 @@ Use the component layer for ordinary popovers, menus, and dialogs:
   <FloatingReference>Open settings</FloatingReference>
   <FloatingPortal v-if="open">
     <FloatingFocusManager :options="{modal: false, initialFocus: -1}">
-      <FloatingContent class="popover">Settings</FloatingContent>
+      <FloatingContent class="popover">
+        Settings
+        <FloatingClose>Close</FloatingClose>
+      </FloatingContent>
     </FloatingFocusManager>
   </FloatingPortal>
 </FloatingRoot>
@@ -73,6 +76,35 @@ Use the component layer for ordinary popovers, menus, and dialogs:
 
 `FloatingRoot` provides the controller to its descendants. Pass a `floating`
 prop when an element belongs to a controller owned elsewhere.
+
+For menus, `FloatingList` can own active-index state, item refs, roving
+`tabindex`, arrow navigation, and typeahead. `FloatingListItem` registers and
+binds each rendered item:
+
+```vue
+<FloatingList navigation typeahead loop>
+  <FloatingPortal v-if="open">
+    <FloatingContent>
+      <FloatingListItem
+        v-for="action in actions"
+        :key="action.id"
+        tag="button"
+        :label="action.label"
+        role="menuitem"
+        close-on-click
+      >
+        {{ action.label }}
+      </FloatingListItem>
+    </FloatingContent>
+  </FloatingPortal>
+</FloatingList>
+```
+
+Use `v-model:active-index` only when application state needs the current item.
+Add `nested` to a submenu list; it opens from the parent reference with
+ArrowRight, closes with ArrowLeft, and restores focus after dismissal. Set a
+leaf item to `close-on-click="all"` when selecting it should close every
+ancestor root in the nested menu.
 
 ## Arrow defaults and customization
 
@@ -115,9 +147,9 @@ When the default component is used with `arrow({element})`, listen for
 ## Search, collections, and portals
 
 `useSearch()` connects the generic request controller to Vue lifecycle. It is
-not a finished Combobox: your application owns selection, open state,
-navigation, markup, and ARIA. Pair it with `useFloating()`, `listNavigation()`,
-and `role()`.
+not a finished Combobox: your application owns selection, open state, markup,
+and ARIA. Use `FloatingList navigation` for conventional listbox navigation,
+or compose `listNavigation()` directly for custom virtual/grid behavior.
 
 `FloatingTree`, `FloatingNode`, `FloatingList`, `FloatingListItem`,
 `Composite`, `CompositeItem`, and `FloatingDelayGroup` provide nested-menu and

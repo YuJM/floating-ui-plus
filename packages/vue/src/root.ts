@@ -4,6 +4,7 @@ import {
   h,
   inject,
   mergeProps,
+  onBeforeUnmount,
   provide,
   shallowRef,
   toValue,
@@ -19,9 +20,19 @@ import type {UseFloatingOptions, UseFloatingReturn} from './types';
 import {useFloating} from './useFloating';
 
 const FloatingRootKey: InjectionKey<UseFloatingReturn> = Symbol('FloatingRoot');
+export interface FloatingRootHierarchy {
+  floating: UseFloatingReturn;
+  parent: FloatingRootHierarchy | null;
+}
+const FloatingRootHierarchyKey: InjectionKey<FloatingRootHierarchy> =
+  Symbol('FloatingRootHierarchy');
 
 export function useFloatingRoot(explicit?: UseFloatingReturn | null) {
   return explicit ?? inject(FloatingRootKey, null);
+}
+
+export function useFloatingRootHierarchy() {
+  return inject(FloatingRootHierarchyKey, null);
 }
 
 /**
@@ -43,6 +54,7 @@ export const FloatingRoot = defineComponent({
   },
   emits: ['update:open', 'open-change'],
   setup(props, {emit, slots}) {
+    const parentHierarchy = useFloatingRootHierarchy();
     const reference = shallowRef<HTMLElement | null>(null);
     const floating = shallowRef<HTMLElement | null>(null);
     const localOpen = shallowRef(props.open);
@@ -61,12 +73,21 @@ export const FloatingRoot = defineComponent({
         emit('open-change', open, event, reason);
       },
     });
+    let unregisterPlugins: (() => void) | undefined;
     watch(
       () => props.plugins,
-      (plugins) => api.pipe(...plugins),
+      (plugins) => {
+        unregisterPlugins?.();
+        unregisterPlugins = api.registerPlugins(...plugins);
+      },
       {immediate: true},
     );
+    onBeforeUnmount(() => unregisterPlugins?.());
     provide(FloatingRootKey, api);
+    provide(FloatingRootHierarchyKey, {
+      floating: api,
+      parent: parentHierarchy,
+    });
 
     return () =>
       slots.default?.({
@@ -156,6 +177,38 @@ export const FloatingItem = defineComponent({
         props.as,
         mergeProps(attrs, itemAttrs),
         slots.default?.({floating, itemAttrs}),
+      );
+  },
+});
+
+/** Renders a control that closes its nearest FloatingRoot on click. */
+export const FloatingClose = defineComponent({
+  name: 'FloatingClose',
+  inheritAttrs: false,
+  props: {
+    floating: Object as PropType<UseFloatingReturn>,
+    as: {type: String, default: 'button'},
+  },
+  setup(props, {attrs, slots}) {
+    const injected = useFloatingRoot();
+    const floating = props.floating ?? injected;
+    if (!floating) {
+      throw new Error(
+        'FloatingClose requires a FloatingRoot or a floating prop.',
+      );
+    }
+    return () =>
+      h(
+        props.as,
+        mergeProps(
+          props.as === 'button' ? {type: 'button'} : {},
+          attrs,
+          {
+            onClick: (event: MouseEvent) =>
+              floating.context.onOpenChange(false, event, 'click'),
+          },
+        ),
+        slots.default?.({floating}),
       );
   },
 });

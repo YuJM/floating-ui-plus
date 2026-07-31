@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import {
+  FloatingContent,
   FloatingPortal,
+  FloatingReference,
+  FloatingRoot,
   autoUpdate,
   clientPoint,
   dismiss,
@@ -9,22 +12,22 @@ import {
   offset,
   role,
   shift,
-  useFloating,
-  vFloating,
 } from '@floating-ui-plus/vue';
 import {ref} from 'vue';
 
 const open = ref(false);
 const label = ref('Awaiting pointer');
-const reference = ref<HTMLElement | null>(null);
-const floatingElement = ref<HTMLElement | null>(null);
-const floating = useFloating(reference, floatingElement, {
-  open,
+const options = {
   placement: 'top',
   middleware: [offset(16), flip(), shift({padding: 18})],
   whileElementsMounted: autoUpdate,
-  onOpenChange: (next) => (open.value = next),
-}).pipe(hover({move: true}), clientPoint(), dismiss(), role({role: 'tooltip'}));
+} as const;
+const plugins = [
+  hover({move: true}),
+  clientPoint(),
+  dismiss(),
+  role({role: 'tooltip'}),
+];
 
 function track(event: MouseEvent) {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
@@ -38,11 +41,22 @@ function track(event: MouseEvent) {
     <h3>Cursor signal</h3>
     <p>A virtual reference follows the pointer instead of anchoring the tooltip to the whole field.</p>
     <div class="mt-auto pt-7">
-      <div ref="reference" class="vue-cursor-field" tabindex="0" v-bind="floating.referenceAttrs" @mousemove="track"><i /><i /><i /><span>{{ label }}</span></div>
-      <FloatingPortal v-if="open" :active="open" :context-scope="floating.contextScope">
-        <div ref="floatingElement" v-floating="floating" class="cursor-tooltip" v-bind="floating.floatingAttrs">Pointer is the <b>reference</b></div>
-      </FloatingPortal>
+      <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+        <FloatingReference
+          as="div"
+          class="vue-cursor-field"
+          tabindex="0"
+          @mousemove="track"
+        >
+          <i /><i /><i /><span>{{ label }}</span>
+        </FloatingReference>
+        <FloatingPortal v-if="open" :active="open">
+          <FloatingContent class="cursor-tooltip">
+            Pointer is the <b>reference</b>
+          </FloatingContent>
+        </FloatingPortal>
+      </FloatingRoot>
     </div>
-    <code>hover() → clientPoint() → dismiss()</code>
+    <code>FloatingReference → clientPoint()</code>
   </article>
 </template>

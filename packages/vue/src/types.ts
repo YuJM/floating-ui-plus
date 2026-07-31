@@ -176,6 +176,10 @@ export type UseFloatingReturn = {
    */
   pipe: (...plugins: FloatingPlugin[]) => UseFloatingReturn;
   /**
+   * Adds removable plugins owned by a Vue component or composable.
+   */
+  registerPlugins: (...plugins: FloatingPlugin[]) => () => void;
+  /**
    * Reactive attributes for `v-bind` on the reference element.
    */
   referenceAttrs: Record<string, string | boolean>;

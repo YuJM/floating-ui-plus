@@ -308,13 +308,32 @@ export const FloatingFocusManager = defineComponent({
   },
   setup(props, {slots}) {
     const context = resolveContext(props.context, props.floating);
+    const portalRoot = inject(PortalRootKey, null);
     if (!context) {
       throw new Error('FloatingFocusManager requires a FloatingRoot, floating, or context prop.');
     }
-    const plugin = focusManager(() => ({
-      ...props.options,
-      enabled: props.enabled,
-    }));
+    const plugin = focusManager(() => {
+      const getInsideElements =
+        portalRoot || props.options.getInsideElements
+          ? () => [
+              ...new Set([
+                ...(props.options.getInsideElements?.() ?? []),
+                ...Array.from(portalRoot?.value?.children ?? []).filter(
+                  (element): element is HTMLElement =>
+                    element instanceof HTMLElement &&
+                    element.hasAttribute(
+                      FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
+                    ),
+                ),
+              ]),
+            ]
+          : undefined;
+      return {
+        ...props.options,
+        enabled: props.enabled,
+        ...(getInsideElements ? {getInsideElements} : {}),
+      };
+    });
     let cleanup: (() => void) | undefined;
 
     onMounted(() => {

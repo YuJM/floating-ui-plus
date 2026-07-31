@@ -1,5 +1,23 @@
 # @floating-ui/vue
 
+## 0.5.0
+
+### Minor Changes
+
+- Add removable component-owned plugins, declarative list navigation and
+  typeahead, nested reference items, and `FloatingClose` so conventional Vue
+  menus, dialogs, and Comboboxes no longer need manual element-ref arrays,
+  roving tabindex state, or close handlers.
+
+  Keep nested Teleport targets inside modal focus traps so pointer interaction
+  and focus restoration continue to work with subtree isolation.
+
+### Patch Changes
+
+- Updated dependencies [a9ca2cc]
+- Updated dependencies [56b5d88]
+  - @floating-ui-plus/web@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes

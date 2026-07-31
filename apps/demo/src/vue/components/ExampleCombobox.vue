@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import {
+  FloatingContent,
+  FloatingList,
+  FloatingListItem,
   FloatingPortal,
+  FloatingReference,
+  FloatingRoot,
   autoUpdate,
   createFuzzySearchSource,
   dismiss,
   flip,
-  listNavigation,
   offset,
   role,
   shift,
-  useFloating,
   useSearch,
-  vFloating,
 } from '@floating-ui-plus/vue';
 import {ref, watch} from 'vue';
 
@@ -35,51 +37,34 @@ const search = useSearch<MultilingualDestination>({
 const open = ref(false);
 const activeIndex = ref<number | null>(null);
 const selectedItem = ref<MultilingualDestination | null>(null);
-const reference = ref<HTMLInputElement | null>(null);
-const floatingElement = ref<HTMLElement | null>(null);
-const itemElements = {
-  current: [] as Array<HTMLElement | null>,
-};
 
 const optionId = (index: number) =>
   `vue-destination-option-${search.items.value[index]?.id ?? index}`;
 
-const floating = useFloating(reference, floatingElement, {
-  open,
+const options = {
   placement: 'bottom-start',
   middleware: [offset(8), flip(), shift({padding: 18})],
   whileElementsMounted: autoUpdate,
-  onOpenChange(next) {
-    open.value = next;
-    if (!next) activeIndex.value = null;
-  },
-}).pipe(
+} as const;
+const plugins = [
   dismiss(),
   role(() => ({
     role: 'combobox',
     activeIndex: activeIndex.value,
     getItemId: optionId,
   })),
-  listNavigation(() => ({
-    listRef: itemElements,
-    activeIndex: activeIndex.value,
-    virtual: true,
-    loop: true,
-    allowEscape: true,
-    focusItemOnOpen: false,
-    onNavigate: (index) => (activeIndex.value = index),
-  })),
-);
+];
+const navigationOptions = {
+  virtual: true,
+  allowEscape: true,
+  focusItemOnOpen: false,
+};
 
 watch(search.items, (items) => {
   if (activeIndex.value != null && activeIndex.value >= items.length) {
     activeIndex.value = null;
   }
 });
-
-function bindItem(index: number, element: Element | null) {
-  itemElements.current[index] = element as HTMLElement | null;
-}
 
 function setQuery(query: string) {
   activeIndex.value = null;
@@ -116,103 +101,97 @@ function handleKeydown(event: KeyboardEvent) {
     <h3>Multilingual combobox</h3>
     <p>Search by city, country, local script, alias, or forgiving typo.</p>
 
-    <div class="vue-combobox-shell">
-      <label class="vue-combobox-label" for="vue-destination-search">
-        Destination
-      </label>
-      <span class="vue-combobox-icon" aria-hidden="true">⌕</span>
-      <input
-        id="vue-destination-search"
-        ref="reference"
-        type="text"
-        autocomplete="off"
-        spellcheck="false"
-        placeholder="Search city or country…"
-        aria-describedby="vue-combobox-hints vue-combobox-status"
-        data-floating-combobox-input
-        :value="search.query.value"
-        v-bind="floating.referenceAttrs"
-        :aria-activedescendant="
-          activeIndex == null ? undefined : optionId(activeIndex)
-        "
-        @focus="open = true"
-        @input="handleInput"
-        @compositionstart="search.controller.startComposition()"
-        @compositionend="
-          search.controller.endComposition(
-            ($event.currentTarget as HTMLInputElement).value,
-          )
-        "
-        @keydown="handleKeydown"
-      />
-    </div>
-
-    <FloatingPortal
-      v-if="open"
-      :active="open"
-      :context-scope="floating.contextScope"
-    >
-      <Transition name="vue-surface">
-        <div
-          ref="floatingElement"
-          v-floating="floating"
-          class="vue-combobox-popup"
-          data-floating-combobox-popup
-          v-bind="floating.floatingAttrs"
-        >
-          <div
-            v-if="search.loading.value"
-            class="vue-combobox-empty"
-            role="option"
-            aria-disabled="true"
-          >
-            Searching…
-          </div>
-          <div
-            v-else-if="search.error.value"
-            class="vue-combobox-empty"
-            role="option"
-            aria-disabled="true"
-          >
-            Search failed.
-          </div>
-          <template v-else-if="search.items.value.length">
-            <div
-              v-for="(item, index) in search.items.value"
-              :id="optionId(index)"
-              :key="item.id"
-              :ref="(element) => bindItem(index, element as Element | null)"
-              class="vue-combobox-option"
-              data-floating-combobox-option
-              :data-active="activeIndex === index"
-              v-bind="
-                floating.getItemAttrs({
-                  active: activeIndex === index,
-                  selected: selectedItem?.id === item.id,
-                  index,
-                })
-              "
-              @mousedown.prevent
-              @click="select(item)"
-            >
-              <span>
-                <strong>{{ item.label }}</strong>
-                <small>{{ item.region }}</small>
-              </span>
-              <span class="vue-language-badge">{{ item.language }}</span>
-            </div>
-          </template>
-          <div
-            v-else
-            class="vue-combobox-empty"
-            role="option"
-            aria-disabled="true"
-          >
-            No destination found for “{{ search.query.value }}”
-          </div>
+    <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+      <FloatingList
+        v-model:active-index="activeIndex"
+        navigation
+        loop
+        :navigation-options="navigationOptions"
+      >
+        <div class="vue-combobox-shell">
+          <label class="vue-combobox-label" for="vue-destination-search">
+            Destination
+          </label>
+          <span class="vue-combobox-icon" aria-hidden="true">⌕</span>
+          <FloatingReference
+            id="vue-destination-search"
+            as="input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Search city or country…"
+            aria-describedby="vue-combobox-hints vue-combobox-status"
+            data-floating-combobox-input
+            :value="search.query.value"
+            @focus="open = true"
+            @input="handleInput"
+            @compositionstart="search.controller.startComposition()"
+            @compositionend="
+              search.controller.endComposition(
+                ($event.currentTarget as HTMLInputElement).value,
+              )
+            "
+            @keydown="handleKeydown"
+          />
         </div>
-      </Transition>
-    </FloatingPortal>
+
+        <FloatingPortal v-if="open" :active="open">
+          <Transition name="vue-surface">
+            <FloatingContent
+              class="vue-combobox-popup"
+              data-floating-combobox-popup
+            >
+              <div
+                v-if="search.loading.value"
+                class="vue-combobox-empty"
+                role="option"
+                aria-disabled="true"
+              >
+                Searching…
+              </div>
+              <div
+                v-else-if="search.error.value"
+                class="vue-combobox-empty"
+                role="option"
+                aria-disabled="true"
+              >
+                Search failed.
+              </div>
+              <template v-else-if="search.items.value.length">
+                <FloatingListItem
+                  v-for="item in search.items.value"
+                  :key="item.id"
+                  tag="div"
+                  :label="item.label"
+                  :value="item"
+                  :selected="selectedItem?.id === item.id"
+                  class="vue-combobox-option"
+                  data-floating-combobox-option
+                  @mousedown.prevent
+                  @click="select(item)"
+                >
+                  <span>
+                    <strong>{{ item.label }}</strong>
+                    <small>{{ item.region }}</small>
+                  </span>
+                  <span class="vue-language-badge">
+                    {{ item.language }}
+                  </span>
+                </FloatingListItem>
+              </template>
+              <div
+                v-else
+                class="vue-combobox-empty"
+                role="option"
+                aria-disabled="true"
+              >
+                No destination found for “{{ search.query.value }}”
+              </div>
+            </FloatingContent>
+          </Transition>
+        </FloatingPortal>
+      </FloatingList>
+    </FloatingRoot>
 
     <div id="vue-combobox-hints" class="vue-combobox-hints">
       <button
@@ -236,6 +215,6 @@ function handleKeydown(event: KeyboardEvent) {
       }}
     </p>
 
-    <code>useSearch() + useFloating() + listNavigation()</code>
+    <code>useSearch() + &lt;FloatingList navigation&gt;</code>
   </article>
 </template>

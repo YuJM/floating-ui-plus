@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import {
+  FloatingClose,
+  FloatingContent,
   FloatingFocusManager,
   FloatingPortal,
+  FloatingReference,
+  FloatingRoot,
   autoUpdate,
   click,
   dismiss,
@@ -9,21 +13,17 @@ import {
   offset,
   role,
   shift,
-  useFloating,
-  vFloating,
 } from '@floating-ui-plus/vue';
 import {ref} from 'vue';
 
 const open = ref(false);
-const reference = ref<HTMLElement | null>(null);
-const floatingElement = ref<HTMLElement | null>(null);
-const floating = useFloating(reference, floatingElement, {
-  open,
+const options = {
   placement: 'bottom-start',
   middleware: [offset(12), flip(), shift({padding: 18})],
   whileElementsMounted: autoUpdate,
-  onOpenChange: (next) => (open.value = next),
-}).pipe(click(), dismiss(), role({role: 'dialog'}));
+} as const;
+const plugins = [click(), dismiss(), role({role: 'dialog'})];
+const focusOptions = {modal: false, initialFocus: -1};
 </script>
 
 <template>
@@ -32,20 +32,24 @@ const floating = useFloating(reference, floatingElement, {
     <h3>Anchored popover</h3>
     <p>Teleport moves the panel to body without severing its controller and focus relationship.</p>
     <div class="mt-auto pt-7">
-      <button ref="reference" class="vue-button vue-button-sky" v-bind="floating.referenceAttrs">Open coordinates <span>＋</span></button>
-      <FloatingPortal v-if="open" :active="open" :context-scope="floating.contextScope">
-        <Transition name="vue-surface">
-          <FloatingFocusManager :context="floating.context" :options="{modal: false, initialFocus: -1}">
-            <section ref="floatingElement" v-floating="floating" class="popover-panel" v-bind="floating.floatingAttrs">
-              <span class="panel-kicker">REFERENCE / 42.8°</span>
-              <strong>Teleport, still connected.</strong>
-              <p>Outside press and ARIA keep working after the DOM move.</p>
-              <button class="text-button" @click="open = false">Close panel</button>
-            </section>
-          </FloatingFocusManager>
-        </Transition>
-      </FloatingPortal>
+      <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+        <FloatingReference class="vue-button vue-button-sky">
+          Open coordinates <span>＋</span>
+        </FloatingReference>
+        <FloatingPortal v-if="open" :active="open">
+          <Transition name="vue-surface">
+            <FloatingFocusManager :options="focusOptions">
+              <FloatingContent as="section" class="popover-panel">
+                <span class="panel-kicker">REFERENCE / 42.8°</span>
+                <strong>Teleport, still connected.</strong>
+                <p>Outside press and ARIA keep working after the DOM move.</p>
+                <FloatingClose class="text-button">Close panel</FloatingClose>
+              </FloatingContent>
+            </FloatingFocusManager>
+          </Transition>
+        </FloatingPortal>
+      </FloatingRoot>
     </div>
-    <code>click() → dismiss() → FloatingPortal</code>
+    <code>FloatingRoot → FloatingPortal → FloatingClose</code>
   </article>
 </template>
