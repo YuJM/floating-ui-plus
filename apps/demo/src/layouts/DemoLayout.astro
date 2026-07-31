@@ -80,7 +80,8 @@ const metadata = {
         <div>
           <a
             class="brand-link"
-            href={getRelativeLocaleUrl(locale)}
+            href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`}
+            data-framework-home
             aria-label={m.site_name(undefined, options)}
           >
             <h1>
@@ -103,7 +104,7 @@ const metadata = {
           <ChevronDown class="pattern-picker-chevron" aria-hidden="true" size={16} strokeWidth={1.8} />
         </summary>
         <div class="pattern-picker-panel">
-          <a href={getRelativeLocaleUrl(locale)} data-example-link="home" aria-current={example ? undefined : 'page'}>
+          <a href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`} data-example-link="home" aria-current={example ? undefined : 'page'}>
             <House aria-hidden="true" size={16} strokeWidth={1.8} />
             <span>{m.site_name(undefined, options)}</span>
           </a>
@@ -146,6 +147,11 @@ const metadata = {
           link.href = url.href;
         });
         document.querySelectorAll<HTMLAnchorElement>('[data-language-switch]').forEach((link) => {
+          const url = new URL(link.href);
+          url.searchParams.set('framework', framework);
+          link.href = url.href;
+        });
+        document.querySelectorAll<HTMLAnchorElement>('[data-framework-home]').forEach((link) => {
           const url = new URL(link.href);
           url.searchParams.set('framework', framework);
           link.href = url.href;

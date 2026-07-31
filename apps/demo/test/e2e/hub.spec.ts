@@ -18,6 +18,15 @@ test('redirects legacy prefixed English URLs to their canonical routes', async (
   await expect(page).toHaveURL(/\/tooltip$/);
 });
 
+test('keeps the selected implementation when the brand returns home', async ({page}) => {
+  await page.goto('/ko/popover?framework=vue');
+
+  await page.getByRole('link', {name: 'Floating UI Plus'}).click();
+
+  await expect(page).toHaveURL(/\/ko\?framework=vue$/);
+  await expect(page.locator('html')).toHaveAttribute('data-framework', 'vue');
+});
+
 test('integrated demo selects an example and preserves it while switching implementations', async ({page}) => {
   await page.goto('/');
 
