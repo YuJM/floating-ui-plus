@@ -14,9 +14,12 @@ import {
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FloatingArrow,
+  FloatingClose,
   FloatingOverlay,
   FloatingPortal,
   FloatingContent,
+  FloatingList,
+  FloatingListItem,
   FloatingReference,
   FloatingRoot,
   click,
@@ -126,6 +129,139 @@ describe('Floating UI Plus Vue adapter', () => {
       expect(getByTestId('content')).toHaveAttribute('role', 'dialog');
       expect(getByTestId('content')).toHaveStyle({position: 'absolute'});
     });
+  });
+
+  test('owns declarative list navigation, typeahead, and close behavior', async () => {
+    const App = defineComponent({
+      components: {
+        FloatingContent,
+        FloatingList,
+        FloatingListItem,
+        FloatingReference,
+        FloatingRoot,
+      },
+      setup() {
+        const open = ref(false);
+        return {
+          navigationOptions: {scrollItemIntoView: false},
+          open,
+          plugins: [click(), role({role: 'menu'})],
+        };
+      },
+      template: `
+        <FloatingRoot v-model:open="open" :plugins="plugins">
+          <FloatingReference data-testid="reference">Open</FloatingReference>
+          <FloatingList
+            navigation
+            typeahead
+            loop
+            :navigation-options="navigationOptions"
+          >
+            <FloatingContent v-if="open" data-testid="menu">
+              <FloatingListItem
+                tag="button"
+                label="Inspect"
+                role="menuitem"
+                close-on-click
+              >
+                Inspect
+              </FloatingListItem>
+              <FloatingListItem
+                tag="button"
+                label="Signal"
+                role="menuitem"
+                close-on-click
+              >
+                Signal
+              </FloatingListItem>
+            </FloatingContent>
+          </FloatingList>
+        </FloatingRoot>
+      `,
+    });
+
+    const {getByTestId, getByRole} = render(App);
+    await fireEvent.click(getByTestId('reference'));
+    const inspect = getByRole('menuitem', {name: 'Inspect'});
+    const signal = getByRole('menuitem', {name: 'Signal'});
+    await waitFor(() => expect(inspect).toHaveFocus());
+    await fireEvent.keyDown(inspect, {key: 's'});
+    await waitFor(() => expect(signal).toHaveFocus());
+    expect(signal).toHaveAttribute('data-active', 'true');
+
+    await fireEvent.click(signal);
+    await waitFor(() => {
+      expect(() => getByTestId('menu')).toThrow();
+      expect(getByTestId('reference')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
+  });
+
+  test('renders a close control for the nearest root', async () => {
+    const App = defineComponent({
+      components: {
+        FloatingClose,
+        FloatingContent,
+        FloatingReference,
+        FloatingRoot,
+      },
+      setup() {
+        const open = ref(true);
+        return {open};
+      },
+      template: `
+        <FloatingRoot v-model:open="open">
+          <FloatingReference>Open</FloatingReference>
+          <FloatingContent v-if="open" data-testid="content">
+            <FloatingClose>Close</FloatingClose>
+          </FloatingContent>
+        </FloatingRoot>
+      `,
+    });
+
+    const {getByRole, getByTestId} = render(App);
+    await fireEvent.click(getByRole('button', {name: 'Close'}));
+    await waitFor(() => expect(() => getByTestId('content')).toThrow());
+  });
+
+  test('replaces component-owned plugins without retaining old listeners', async () => {
+    const App = defineComponent({
+      components: {
+        FloatingContent,
+        FloatingReference,
+        FloatingRoot,
+      },
+      setup() {
+        const open = ref(false);
+        const plugins = ref([click()]);
+        return {
+          disable: () => {
+            open.value = false;
+            plugins.value = [];
+          },
+          open,
+          plugins,
+        };
+      },
+      template: `
+        <button data-testid="disable" @click="disable">Disable</button>
+        <FloatingRoot v-model:open="open" :plugins="plugins">
+          <FloatingReference data-testid="reference">Open</FloatingReference>
+          <FloatingContent v-if="open" data-testid="content">
+            Content
+          </FloatingContent>
+        </FloatingRoot>
+      `,
+    });
+
+    const {getByTestId} = render(App);
+    await fireEvent.click(getByTestId('reference'));
+    expect(getByTestId('content')).toBeVisible();
+    await fireEvent.click(getByTestId('disable'));
+    await fireEvent.click(getByTestId('reference'));
+    expect(() => getByTestId('content')).toThrow();
   });
 
   test('pipes interactions and exposes reactive v-bind attributes', async () => {

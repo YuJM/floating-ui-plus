@@ -2,6 +2,23 @@ import {expect, test} from 'playwright/test';
 import axe from 'axe-core';
 import {MIDDLEWARE_ARROW} from '../../src/middleware-registry';
 
+test('owns Vue menu navigation, typeahead, and item dismissal', async ({
+  page,
+}) => {
+  await page.goto('/menu?framework=vue');
+  const trigger = page.getByRole('button', {name: /Open navigator/});
+  await trigger.click();
+  await trigger.press('ArrowDown');
+
+  const first = page.getByRole('menuitem', {name: /North star/});
+  const signal = page.getByRole('menuitem', {name: /Signal log/});
+  await expect(first).toBeFocused();
+  await first.press('s');
+  await expect(signal).toBeFocused();
+  await signal.click();
+  await expect(page.getByRole('menu')).toBeHidden();
+});
+
 test('opens Teleport-backed nested menus', async ({page}) => {
   await page.goto('/nested-menu?framework=vue');
   await expect(
@@ -20,7 +37,17 @@ test('opens Teleport-backed nested menus', async ({page}) => {
   await expect(projectMenu).toBeVisible();
   await expect(projectMenu).toHaveCSS('position', 'absolute');
   expect((await projectMenu.boundingBox())?.y).toBeGreaterThan(0);
-  await expect(page.getByRole('menuitem', {name: /Atlas/})).toBeVisible();
+  const projectTrigger = page.getByRole('menuitem', {
+    name: /Move to project/,
+  });
+  const atlas = page.getByRole('menuitem', {name: /Atlas/});
+  await expect(atlas).toBeFocused();
+  await atlas.press('Escape');
+  await expect(projectMenu).toBeHidden();
+  await expect(projectTrigger).toBeFocused();
+  await projectTrigger.press('ArrowRight');
+  await page.getByRole('menuitem', {name: /Field research/}).click();
+  await expect(rootMenu).toBeHidden();
 });
 
 test('traps modal focus and closes on Escape', async ({page}) => {
@@ -99,12 +126,20 @@ test('traps modal focus and closes on Escape', async ({page}) => {
       return portal?.parentElement?.matches('[data-fup-portal]');
     }),
   ).toBe(true);
-  await page.keyboard.press('Escape');
+  await page
+    .getByRole('button', {name: 'Return to focus room'})
+    .click();
   await expect(nestedDialog).toBeHidden();
   await expect(nestedDialogTrigger).toBeFocused();
   await expect(dialog).toBeVisible();
 
   await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(trigger).toBeFocused();
+
+  await trigger.click();
+  await expect(dialog).toBeVisible();
+  await page.getByRole('button', {name: 'Leave room'}).click();
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
 });

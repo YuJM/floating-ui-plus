@@ -17,24 +17,23 @@
         </button>
       </floating-reference>
       <floating-portal>
-        <floating-content>
+        <template data-popover-content>
           <div class="popover-panel">
             <span class="panel-kicker">REFERENCE / 42.8°</span>
             <strong>Portal, still connected.</strong>
             <p>ARIA and outside-press behavior are owned by the component.</p>
-            <button class="text-button" data-close-popover>Close panel</button>
+            <button class="text-button" data-fup-close>Close panel</button>
           </div>
-        </floating-content>
+        </template>
       </floating-portal>
     </floating-root>
   </div>
-  <code>&lt;floating-portal&gt; + &lt;floating-content&gt;</code>
+  <code>&lt;floating-portal&gt; + &lt;template&gt;</code>
 </article>
 
 <script>
   import {flip, offset, shift} from '@floating-ui-plus/web-components';
   import {
-    closeFloating,
     emitExampleAction,
     floatingRoot,
     initializeExample,
@@ -44,9 +43,6 @@
   initializeExample('popover', (scope) => {
     const floating = floatingRoot(scope, '[data-popover-root]');
     floating.middleware = [offset(12), flip(), shift({padding: 18})];
-    scope
-      .querySelector('[data-close-popover]')
-      ?.addEventListener('click', (event) => closeFloating(floating, event));
     onFloatingOpenChange(floating, ({open}) => {
       emitExampleAction(
         scope,

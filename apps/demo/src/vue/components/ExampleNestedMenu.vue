@@ -1,23 +1,24 @@
 <script setup lang="ts">
 import {
+  FloatingContent,
+  FloatingList,
+  FloatingListItem,
   FloatingPortal,
   FloatingNode,
+  FloatingReference,
+  FloatingRoot,
   FloatingTree,
   autoUpdate,
   click,
   dismiss,
   flip,
   hover,
-  listNavigation,
   offset,
   role,
   safePolygon,
   shift,
-  typeahead,
-  useFloating,
-  vFloating,
 } from '@floating-ui-plus/vue';
-import {nextTick, ref} from 'vue';
+import {ref, watch} from 'vue';
 import {
   NESTED_MENU_PROJECT_LABELS,
   NESTED_MENU_ROOT_LABELS,
@@ -27,64 +28,32 @@ const rootLabels = NESTED_MENU_ROOT_LABELS;
 const projectLabels = NESTED_MENU_PROJECT_LABELS;
 const rootOpen = ref(false);
 const projectsOpen = ref(false);
-const rootActive = ref<number | null>(null);
-const projectActive = ref<number | null>(null);
-const rootReference = ref<HTMLElement | null>(null);
-const rootFloating = ref<HTMLElement | null>(null);
-const projectReference = ref<HTMLElement | null>(null);
-const projectFloating = ref<HTMLElement | null>(null);
-const rootItems = {current: [] as Array<HTMLElement | null>};
-const projectItems = {current: [] as Array<HTMLElement | null>};
-const rootText = {current: rootLabels as Array<string | null>};
-const projectText = {current: projectLabels as Array<string | null>};
 
-const root = useFloating(rootReference, rootFloating, {
-  open: rootOpen,
+const rootOptions = {
   placement: 'bottom-start',
   middleware: [offset(8), flip(), shift({padding: 18})],
   whileElementsMounted: autoUpdate,
-  onOpenChange: (next) => {
-    rootOpen.value = next;
-    if (!next) {
-      projectsOpen.value = false;
-      rootActive.value = null;
-    }
-  },
-}).pipe(
+} as const;
+const rootPlugins = [
   click(),
-  dismiss({outsidePress: (event) => !(event.target instanceof Element) || !event.target.closest('.vue-submenu')}),
+  dismiss({
+    outsidePress: (event) =>
+      !(event.target instanceof Element) ||
+      !event.target.closest('.vue-submenu'),
+  }),
   role({role: 'menu'}),
-  listNavigation(() => ({
-    listRef: rootItems,
-    activeIndex: rootActive.value,
-    loop: true,
-    onNavigate: (index) => {
-      rootActive.value = index;
-      if (index !== 1) projectsOpen.value = false;
-    },
-  })),
-  typeahead(() => ({
-    listRef: rootText,
-    activeIndex: rootActive.value,
-    onMatch: (index) => {
-      rootActive.value = index;
-      rootItems.current[index]?.focus({preventScroll: true});
-    },
-  })),
-);
+];
 
-const projects = useFloating(projectReference, projectFloating, {
-  open: projectsOpen,
+const projectOptions = {
   placement: 'right-start',
-  middleware: [offset({mainAxis: 6, alignmentAxis: -6}), flip(), shift({padding: 18})],
+  middleware: [
+    offset({mainAxis: 6, alignmentAxis: -6}),
+    flip(),
+    shift({padding: 18}),
+  ],
   whileElementsMounted: autoUpdate,
-  onOpenChange: (next, _event, reason) => {
-    projectsOpen.value = next;
-    if (!next && (reason === 'escape-key' || reason === 'focus-out')) {
-      nextTick(() => rootItems.current[1]?.focus({preventScroll: true}));
-    }
-  },
-}).pipe(
+} as const;
+const projectPlugins = [
   click(),
   hover({
     move: false,
@@ -93,90 +62,134 @@ const projects = useFloating(projectReference, projectFloating, {
   }),
   dismiss(),
   role({role: 'menu'}),
-  listNavigation(() => ({
-    listRef: projectItems,
-    activeIndex: projectActive.value,
-    nested: true,
-    loop: true,
-    onNavigate: (index) => (projectActive.value = index),
-  })),
-  typeahead(() => ({
-    listRef: projectText,
-    activeIndex: projectActive.value,
-    onMatch: (index) => {
-      projectActive.value = index;
-      projectItems.current[index]?.focus({preventScroll: true});
-    },
-  })),
-);
+];
 
-function openProjects(event: KeyboardEvent) {
-  if (event.key === 'ArrowRight') {
-    event.preventDefault();
-    projectsOpen.value = true;
-    nextTick(() => {
-      projectActive.value = 0;
-      projectItems.current[0]?.focus({preventScroll: true});
-    });
-  }
+function handleRootNavigate(index: number | null) {
+  if (index !== 1) projectsOpen.value = false;
 }
 
-function bindRootItem(index: number, element: unknown) {
-  const item = element as HTMLElement | null;
-  rootItems.current[index] = item;
-  if (index === 1) projectReference.value = item;
-}
+watch(rootOpen, (open) => {
+  if (!open) projectsOpen.value = false;
+});
 </script>
 
 <template>
   <FloatingTree>
-    <FloatingNode :controller="root" id="vue-nested-root">
-      <article class="vue-demo-card bg-vue-leaf">
-    <div class="vue-card-top"><span class="vue-number">T</span><span>tree + teleport</span></div>
-    <h3>Nested command tree</h3>
-    <p>ArrowRight opens the child menu. Escape returns focus to the parent action.</p>
-    <div class="mt-auto pt-7">
-      <div>
-          <button ref="rootReference" class="vue-button vue-button-ink" v-bind="root.referenceAttrs">Open actions <span>⌄</span></button>
-          <FloatingPortal v-if="rootOpen" :active="rootOpen" :context-scope="root.contextScope">
-            <Transition name="vue-surface">
-              <div ref="rootFloating" v-floating="root" class="menu-panel" data-testid="actions-menu" v-bind="root.floatingAttrs">
-                <div class="menu-heading">Tree coordinated actions</div>
-                <button
-                  v-for="(label, index) in rootLabels"
-                  :key="label"
-                  :ref="(element) => bindRootItem(index, element)"
-                  class="menu-item"
-                  role="menuitem"
-                  :data-active="rootActive === index"
-                  :tabindex="rootActive === index ? 0 : -1"
-                  :aria-haspopup="index === 1 ? 'menu' : undefined"
-                  :aria-expanded="index === 1 ? projectsOpen : undefined"
-                  v-bind="root.getItemAttrs({active: rootActive === index, index})"
-                  @keydown="index === 1 && openProjects($event)"
-                  @click="index === 1 ? (projectsOpen = !projectsOpen) : (rootOpen = false)"
-                >
-                  <span>{{ label }}</span><kbd>{{ index === 1 ? '→' : index + 1 }}</kbd>
-                </button>
-              </div>
-            </Transition>
-          </FloatingPortal>
-        <FloatingNode :controller="projects" id="vue-nested-projects">
-          <FloatingPortal v-if="projectsOpen" :active="projectsOpen" :context-scope="projects.contextScope">
-            <Transition name="vue-surface">
-              <div ref="projectFloating" v-floating="projects" class="menu-panel nested-menu-submenu" data-testid="project-menu" v-bind="projects.floatingAttrs">
-                <div class="menu-heading">Choose a project</div>
-                <button v-for="(label, index) in projectLabels" :key="label" :ref="(element) => (projectItems.current[index] = element as HTMLElement | null)" class="menu-item" role="menuitem" :data-active="projectActive === index" :tabindex="projectActive === index ? 0 : -1" v-bind="projects.getItemAttrs({active: projectActive === index, index})" @click="projectsOpen = false">
-                  <span>{{ label }}</span><kbd>{{ index + 1 }}</kbd>
-                </button>
-              </div>
-            </Transition>
-          </FloatingPortal>
-        </FloatingNode>
-      </div>
-    </div>
-    <code>FloatingTree + FloatingNode + FloatingPortal</code>
-      </article>
-    </FloatingNode>
+    <FloatingRoot
+      v-model:open="rootOpen"
+      :options="rootOptions"
+      :plugins="rootPlugins"
+    >
+      <FloatingNode id="vue-nested-root">
+        <article class="vue-demo-card bg-vue-leaf">
+          <div class="vue-card-top">
+            <span class="vue-number">T</span><span>tree + teleport</span>
+          </div>
+          <h3>Nested command tree</h3>
+          <p>
+            ArrowRight opens the child menu. Escape returns focus to the
+            parent action.
+          </p>
+          <div class="mt-auto pt-7">
+            <FloatingReference class="vue-button vue-button-ink">
+              Open actions <span>⌄</span>
+            </FloatingReference>
+            <FloatingList
+              navigation
+              typeahead
+              loop
+              @update:active-index="handleRootNavigate"
+            >
+              <FloatingPortal v-if="rootOpen" :active="rootOpen">
+                <Transition name="vue-surface">
+                  <FloatingContent
+                    class="menu-panel"
+                    data-testid="actions-menu"
+                  >
+                    <div class="menu-heading">
+                      Tree coordinated actions
+                    </div>
+                    <FloatingListItem
+                      tag="button"
+                      :label="rootLabels[0]"
+                      class="menu-item"
+                      role="menuitem"
+                      close-on-click
+                    >
+                      <span>{{ rootLabels[0] }}</span><kbd>1</kbd>
+                    </FloatingListItem>
+
+                    <FloatingRoot
+                      v-model:open="projectsOpen"
+                      :options="projectOptions"
+                      :plugins="projectPlugins"
+                    >
+                      <FloatingNode id="vue-nested-projects">
+                        <FloatingListItem
+                          reference
+                          tag="button"
+                          :label="rootLabels[1]"
+                          class="menu-item"
+                          role="menuitem"
+                          aria-haspopup="menu"
+                          :aria-expanded="projectsOpen"
+                        >
+                          <span>{{ rootLabels[1] }}</span><kbd>→</kbd>
+                        </FloatingListItem>
+                        <FloatingList
+                          navigation
+                          typeahead
+                          loop
+                          nested
+                        >
+                          <FloatingPortal
+                            v-if="projectsOpen"
+                            :active="projectsOpen"
+                          >
+                            <Transition name="vue-surface">
+                              <FloatingContent
+                                class="menu-panel nested-menu-submenu"
+                                data-testid="project-menu"
+                              >
+                                <div class="menu-heading">
+                                  Choose a project
+                                </div>
+                                <FloatingListItem
+                                  v-for="(label, index) in projectLabels"
+                                  :key="label"
+                                  tag="button"
+                                  :label="label"
+                                  class="menu-item"
+                                  role="menuitem"
+                                  close-on-click="all"
+                                >
+                                  <span>{{ label }}</span>
+                                  <kbd>{{ index + 1 }}</kbd>
+                                </FloatingListItem>
+                              </FloatingContent>
+                            </Transition>
+                          </FloatingPortal>
+                        </FloatingList>
+                      </FloatingNode>
+                    </FloatingRoot>
+
+                    <FloatingListItem
+                      tag="button"
+                      :label="rootLabels[2]"
+                      class="menu-item"
+                      role="menuitem"
+                      close-on-click
+                    >
+                      <span>{{ rootLabels[2] }}</span><kbd>3</kbd>
+                    </FloatingListItem>
+                  </FloatingContent>
+                </Transition>
+              </FloatingPortal>
+            </FloatingList>
+          </div>
+          <code>FloatingList navigation typeahead nested</code>
+        </article>
+      </FloatingNode>
+    </FloatingRoot>
   </FloatingTree>
 </template>

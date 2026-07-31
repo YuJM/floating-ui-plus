@@ -23,71 +23,83 @@ import {
               Open actions <span aria-hidden="true">⌄</span>
             </button>
           </floating-reference>
-          <floating-content>
+          <template data-fup-content data-nested-menu-content>
             <div class="menu-panel nested-menu-root">
               <div class="menu-heading">Tree coordinated actions</div>
-              <button
-                class="menu-item"
-                role="menuitem"
-                tabindex="-1"
-                data-root-menu-item
-                data-index="0"
-                data-label={NESTED_MENU_ROOT_LABELS[0]}
+              <floating-list
+                navigation
+                typeahead
+                loop
+                item-selector="[data-root-menu-item]"
               >
-                <span>{NESTED_MENU_ROOT_LABELS[0]}</span><kbd>1</kbd>
-              </button>
-              <floating-root data-projects-root placement="right-start">
-                <floating-node node-id="projects">
-                  <floating-reference>
-                    <button
-                      class="menu-item"
-                      role="menuitem"
-                      tabindex="-1"
-                      aria-haspopup="menu"
-                      data-root-menu-item
-                      data-index="1"
-                      data-label={NESTED_MENU_ROOT_LABELS[1]}
+                <button
+                  class="menu-item"
+                  role="menuitem"
+                  data-fup-close
+                  data-root-menu-item
+                  data-root-menu-action
+                  data-label={NESTED_MENU_ROOT_LABELS[0]}
+                >
+                  <span>{NESTED_MENU_ROOT_LABELS[0]}</span><kbd>1</kbd>
+                </button>
+                <floating-root data-projects-root placement="right-start">
+                  <floating-node node-id="projects">
+                    <floating-reference>
+                      <button
+                        class="menu-item"
+                        role="menuitem"
+                        aria-haspopup="menu"
+                        data-root-menu-item
+                        data-label={NESTED_MENU_ROOT_LABELS[1]}
+                      >
+                        <span>{NESTED_MENU_ROOT_LABELS[1]}</span>
+                        <kbd aria-hidden="true">→</kbd>
+                      </button>
+                    </floating-reference>
+                    <floating-list
+                      navigation
+                      typeahead
+                      loop
+                      nested
+                      item-selector="[data-project-menu-item]"
                     >
-                      <span>{NESTED_MENU_ROOT_LABELS[1]}</span>
-                      <kbd aria-hidden="true">→</kbd>
-                    </button>
-                  </floating-reference>
-                  <floating-content>
-                    <div
-                      class="menu-panel nested-menu-submenu"
-                      aria-label="Move to project"
-                    >
-                      <div class="menu-heading">Choose a project</div>
-                      {
-                        NESTED_MENU_PROJECT_LABELS.map((label, index) => (
-                          <button
-                            class="menu-item"
-                            role="menuitem"
-                            tabindex="-1"
-                            data-project-menu-item
-                            data-index={index}
-                            data-label={label}
-                          >
-                            <span>{label}</span><kbd>{index + 1}</kbd>
-                          </button>
-                        ))
-                      }
-                    </div>
-                  </floating-content>
-                </floating-node>
-              </floating-root>
-              <button
-                class="menu-item"
-                role="menuitem"
-                tabindex="-1"
-                data-root-menu-item
-                data-index="2"
-                data-label={NESTED_MENU_ROOT_LABELS[2]}
-              >
-                <span>{NESTED_MENU_ROOT_LABELS[2]}</span><kbd>3</kbd>
-              </button>
+                      <template data-fup-content data-project-menu-content>
+                        <div
+                          class="menu-panel nested-menu-submenu"
+                          aria-label="Move to project"
+                        >
+                          <div class="menu-heading">Choose a project</div>
+                          {
+                            NESTED_MENU_PROJECT_LABELS.map((label, index) => (
+                              <button
+                                class="menu-item"
+                                role="menuitem"
+                                data-fup-close
+                                data-project-menu-item
+                                data-label={label}
+                              >
+                                <span>{label}</span><kbd>{index + 1}</kbd>
+                              </button>
+                            ))
+                          }
+                        </div>
+                      </template>
+                    </floating-list>
+                  </floating-node>
+                </floating-root>
+                <button
+                  class="menu-item"
+                  role="menuitem"
+                  data-fup-close
+                  data-root-menu-item
+                  data-root-menu-action
+                  data-label={NESTED_MENU_ROOT_LABELS[2]}
+                >
+                  <span>{NESTED_MENU_ROOT_LABELS[2]}</span><kbd>3</kbd>
+                </button>
+              </floating-list>
             </div>
-          </floating-content>
+          </template>
         </floating-node>
       </floating-root>
     </floating-tree>
@@ -101,148 +113,110 @@ import {
     dismiss,
     flip,
     hover,
-    listNavigation,
     offset,
     role,
     safePolygon,
     shift,
-    typeahead,
   } from '@floating-ui-plus/web-components';
   import {
-    activeItems,
     closeFloating,
     configureFloating,
     emitExampleAction,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
   initializeExample('nested-menu', (scope) => {
     const parent = floatingRoot(scope, '[data-nested-root]');
-    const child = floatingRoot(scope, '[data-projects-root]');
-    const parentItems = [
-      ...scope.querySelectorAll<HTMLElement>('[data-root-menu-item]'),
-    ];
-    const childItems = [
-      ...scope.querySelectorAll<HTMLElement>('[data-project-menu-item]'),
-    ];
-    const parentRef = {
-      current: parentItems as Array<HTMLElement | null>,
-    };
-    const childRef = {
-      current: childItems as Array<HTMLElement | null>,
-    };
-    const parentLabels = {
-      current: parentItems.map((item) => item.dataset.label ?? null),
-    };
-    const childLabels = {
-      current: childItems.map((item) => item.dataset.label ?? null),
-    };
-    const parentActive = activeItems(
-      parentItems,
-      () => parent.controller.refresh(),
+    const parentTemplate = floatingTemplate(
+      scope,
+      '[data-nested-menu-content]',
     );
-    const childActive = activeItems(
-      childItems,
-      () => child.controller.refresh(),
-    );
+    let child: ReturnType<typeof floatingRoot> | null = null;
 
     configureFloating(parent, {
       middleware: [offset(8), flip(), shift({padding: 18})],
       plugins: [
         click(),
         dismiss(() => ({
-          escapeKey: !child.open,
+          escapeKey: !child?.open,
           outsidePress: (event) =>
             !(event.target instanceof Element) ||
             !event.target.closest('.nested-menu-submenu'),
         })),
         role({role: 'menu'}),
-        listNavigation(() => ({
-          listRef: parentRef,
-          activeIndex: parentActive.value,
-          loop: true,
-          onNavigate: parentActive.set,
-        })),
-        typeahead({
-          listRef: parentLabels,
-          get activeIndex() {
-            return parentActive.value;
-          },
-          onMatch: (index) => {
-            parentActive.set(index);
-            if (index != null) {
-              parentItems[index]?.focus({preventScroll: true});
-            }
-          },
-        }),
-      ],
-    });
-    configureFloating(child, {
-      middleware: [
-        offset({mainAxis: 6, alignmentAxis: -6}),
-        flip(),
-        shift({padding: 18}),
-      ],
-      plugins: [
-        click(),
-        hover({
-          move: false,
-          delay: {open: 80, close: 120},
-          handleClose: safePolygon(),
-        }),
-        dismiss(),
-        role({role: 'menu'}),
-        listNavigation(() => ({
-          listRef: childRef,
-          activeIndex: childActive.value,
-          nested: true,
-          loop: true,
-          onNavigate: childActive.set,
-        })),
-        typeahead({
-          listRef: childLabels,
-          get activeIndex() {
-            return childActive.value;
-          },
-          onMatch: (index) => {
-            childActive.set(index);
-            if (index != null) {
-              childItems[index]?.focus({preventScroll: true});
-            }
-          },
-        }),
       ],
     });
 
-    const childTrigger = parentItems[1];
-    childTrigger?.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowRight') return;
-      event.preventDefault();
-      child.controller.context.onOpenChange(true, event, 'click');
-      queueMicrotask(() => {
-        childActive.set(0);
-        childItems[0]?.focus({preventScroll: true});
+    onFloatingTemplateMount(parentTemplate, (element) => {
+      child = floatingRoot(element, '[data-projects-root]');
+      configureFloating(child, {
+        middleware: [
+          offset({mainAxis: 6, alignmentAxis: -6}),
+          flip(),
+          shift({padding: 18}),
+        ],
+        plugins: [
+          click(),
+          hover({
+            move: false,
+            delay: {open: 80, close: 120},
+            handleClose: safePolygon(),
+          }),
+          dismiss(),
+          role({role: 'menu'}),
+        ],
       });
-    });
-    parentItems.forEach((item, index) => {
-      if (index === 1) return;
-      item.addEventListener('click', (event) => {
+
+      const childTemplate = floatingTemplate(
+        element,
+        '[data-project-menu-content]',
+      );
+      onFloatingTemplateMount(childTemplate, (childElement) => {
+        childElement.addEventListener('click', (event) => {
+          if (!(event.target instanceof Element)) return;
+          const item = event.target.closest<HTMLElement>(
+            '[data-project-menu-item]',
+          );
+          if (!item || !childElement.contains(item)) return;
+          emitExampleAction(scope, `Moved to ${item.dataset.label}`);
+          closeFloating(parent, event);
+        });
+      });
+
+      element.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) return;
+        const item = event.target.closest<HTMLElement>(
+          '[data-root-menu-action]',
+        );
+        if (!item || !element.contains(item)) return;
         emitExampleAction(scope, `${item.dataset.label} selected`);
-        closeFloating(parent, event);
+      });
+
+      onFloatingOpenChange(child, ({open, reason}) => {
+        if (!open) {
+          if (reason === 'escape-key' || reason === 'focus-out') {
+            window.setTimeout(() => {
+              const reference = child?.referenceElement;
+              if (reference instanceof HTMLElement) {
+                reference.focus({preventScroll: true});
+              }
+            }, 0);
+          }
+        }
+        emitExampleAction(
+          scope,
+          open ? 'Project submenu opened' : 'Project submenu closed',
+        );
       });
     });
-    childItems.forEach((item) => {
-      item.addEventListener('click', (event) => {
-        emitExampleAction(scope, `Moved to ${item.dataset.label}`);
-        closeFloating(parent, event);
-      });
-    });
+
     onFloatingOpenChange(parent, ({open, reason}) => {
       if (!open) {
-        parentActive.set(null);
-        child.open = false;
+        if (child) child.open = false;
         if (reason === 'escape-key') {
           queueMicrotask(() => {
             const reference = parent.referenceElement;
@@ -255,21 +229,6 @@ import {
       emitExampleAction(
         scope,
         open ? 'Nested menu opened' : 'Nested menu closed',
-      );
-    });
-    onFloatingOpenChange(child, ({open, reason}) => {
-      if (!open) {
-        childActive.set(null);
-        if (reason === 'escape-key' || reason === 'focus-out') {
-          window.setTimeout(
-            () => childTrigger?.focus({preventScroll: true}),
-            0,
-          );
-        }
-      }
-      emitExampleAction(
-        scope,
-        open ? 'Project submenu opened' : 'Project submenu closed',
       );
     });
   });

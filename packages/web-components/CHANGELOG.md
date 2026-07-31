@@ -1,5 +1,34 @@
 # @floating-ui-plus/web-components
 
+## 0.5.0
+
+### Minor Changes
+
+- 56b5d88: Replace `floating-content` with native conditional templates. A
+  `floating-portal` automatically marks its single owned template with
+  `data-fup-content`; explicit markers support ambiguous portals and non-portal
+  composition. Roots expose `contentTemplate`, and templates emit
+  `floatingmount` and `floatingunmount` for fresh-clone initialization.
+  Plugins and interaction properties assigned after a root connects now replace
+  their active bindings, supporting applications that register Custom Elements
+  before their configuration modules run.
+
+  Ignore stale asynchronous position measurements after a reference or floating
+  element unmounts.
+
+- a9ca2cc: Add declarative list navigation, typeahead, and selector-based item discovery
+  to `floating-list`, and let `data-fup-close` controls close their owning
+  floating surface without template mount listeners.
+
+  Keep dynamically mounted nested portal targets inside modal focus traps so
+  `outside-elements-inert` does not block their focus or pointer interactions.
+
+### Patch Changes
+
+- Updated dependencies [a9ca2cc]
+- Updated dependencies [56b5d88]
+  - @floating-ui-plus/web@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

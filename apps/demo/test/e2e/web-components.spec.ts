@@ -19,6 +19,66 @@ test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   )).toBe(0);
 });
 
+test('registers floating elements before the example module runs', async ({
+  page,
+}) => {
+  await page.goto('/popover');
+
+  const moduleSources = await page
+    .locator('script[type="module"][src]')
+    .evaluateAll((scripts) =>
+      scripts.map((script) => (script as HTMLScriptElement).src),
+    );
+  const registrationIndex = moduleSources.findIndex((source) =>
+    source.includes('DemoLayout.astro_astro_type_script_index_0'),
+  );
+  const exampleIndex = moduleSources.findIndex((source) =>
+    source.includes('PopoverExample.astro_astro_type_script_index_0'),
+  );
+
+  expect(registrationIndex).toBe(0);
+  expect(exampleIndex).toBeGreaterThan(registrationIndex);
+  expect(
+    await page.evaluate(() => Boolean(customElements.get('floating-root'))),
+  ).toBe(true);
+});
+
+test('keeps portal template content inert across refresh until it opens', async ({
+  page,
+}) => {
+  await page.goto('/popover');
+  await page.reload();
+  await expect(page.locator('[data-demo="popover"]')).toHaveAttribute(
+    'data-initialized',
+    'true',
+  );
+
+  const trigger = page.getByRole('button', {name: /Open coordinates/});
+  const panel = page.locator('.popover-panel');
+  await expect(panel).toHaveCount(0);
+  await expect(page.locator('[data-popover-content]')).toHaveAttribute(
+    'data-fup-content',
+    '',
+  );
+  expect(
+    await page.locator('[data-popover-content]').evaluate((template) => {
+      return Boolean(
+        (template as HTMLTemplateElement).content.querySelector(
+          '.popover-panel',
+        ),
+      );
+    }),
+  ).toBe(true);
+
+  await trigger.click();
+  await expect(panel).toBeVisible();
+  await page.getByRole('button', {name: 'Close panel'}).click();
+  await expect(panel).toHaveCount(0);
+
+  await trigger.click();
+  await expect(panel).toBeVisible();
+});
+
 test('menu starts roving focus at the first item after opening with a pointer', async ({
   page,
 }) => {
@@ -27,12 +87,15 @@ test('menu starts roving focus at the first item after opening with a pointer', 
   const trigger = page.getByRole('button', {name: 'Open navigator'});
   const firstItem = page.getByRole('menuitem', {name: /North star/});
   const secondItem = page.getByRole('menuitem', {name: /Orbit map/});
+  const signalItem = page.getByRole('menuitem', {name: /Signal log/});
 
   await trigger.click();
   await trigger.press('ArrowDown');
 
   await expect(firstItem).toBeFocused();
   await expect(secondItem).not.toBeFocused();
+  await firstItem.press('s');
+  await expect(signalItem).toBeFocused();
 });
 
 test('nested menu preserves the complete keyboard path', async ({page}) => {
@@ -162,7 +225,7 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
       return portal?.parentElement?.matches('floating-portal-target');
     }),
   ).toBe(true);
-  await page.keyboard.press('Escape');
+  await page.getByRole('button', {name: 'Close details'}).click();
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
 
@@ -196,7 +259,9 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
       );
     }),
   ).toBe(true);
-  await page.keyboard.press('Escape');
+  await page
+    .getByRole('button', {name: 'Return to focus room'})
+    .click();
   await expect(nestedDialog).toBeHidden();
   await expect(dialog).toBeVisible();
 

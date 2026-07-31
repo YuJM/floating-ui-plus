@@ -22,7 +22,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
         </button>
       </floating-reference>
       <floating-transition>
-        <floating-content>
+        <template data-fup-content data-tooltip-content>
           <div class="tooltip">
             Positioned by <b>autoUpdate</b>
             <floating-arrow
@@ -31,7 +31,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
               height={TOOLTIP_ARROW.height}
             ></floating-arrow>
           </div>
-        </floating-content>
+        </template>
       </floating-transition>
     </floating-root>
   </div>
@@ -55,20 +55,19 @@ import {TOOLTIP_ARROW} from '../../example-config';
     configureFloating,
     emitExampleAction,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
   initializeExample('tooltip', (scope) => {
     const floating = floatingRoot(scope, '[data-tooltip-root]');
-    const arrowElement =
-      floating.querySelector<HTMLElement>('floating-arrow');
     configureFloating(floating, {
       middleware: [
         offset(TOOLTIP_ARROW.gap),
         flip(),
         shift({padding: 12}),
-        ...(arrowElement ? [arrow({element: arrowElement})] : []),
       ],
       plugins: [
         hover({handleClose: safePolygon({buffer: 4})}),
@@ -76,6 +75,17 @@ import {TOOLTIP_ARROW} from '../../example-config';
         dismiss(),
         role({role: 'tooltip'}),
       ],
+    });
+    const template = floatingTemplate(scope, '[data-tooltip-content]');
+    onFloatingTemplateMount(template, (element) => {
+      const arrowElement =
+        element.querySelector<HTMLElement>('floating-arrow');
+      floating.middleware = [
+        offset(TOOLTIP_ARROW.gap),
+        flip(),
+        shift({padding: 12}),
+        ...(arrowElement ? [arrow({element: arrowElement})] : []),
+      ];
     });
     onFloatingOpenChange(floating, ({open}) => {
       emitExampleAction(

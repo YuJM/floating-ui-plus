@@ -12,112 +12,79 @@ import {MENU_LABELS} from '../../example-data';
     “signal”.
   </p>
   <div class="card-action">
-    <floating-root data-menu-root placement="bottom-start">
+    <floating-root
+      data-menu-root
+      interactions="click dismiss"
+      floating-role="menu"
+      placement="bottom-start"
+    >
       <floating-reference>
         <button class="dark-button">
           Open navigator <span aria-hidden="true">⌄</span>
         </button>
       </floating-reference>
       <floating-portal>
-        <floating-content>
+        <template data-menu-content>
           <div class="menu-panel">
             <div class="menu-heading">Jump to a field</div>
-            <floating-list>
+            <floating-list
+              navigation
+              typeahead
+              loop
+              item-selector="[data-menu-item]"
+            >
               {
                 MENU_LABELS.map((label, index) => (
-                  <floating-list-item label={label}>
-                    <button
-                      class="menu-item"
-                      role="menuitem"
-                      tabindex="-1"
-                      data-menu-item
-                      data-index={index}
-                      data-label={label}
-                    >
-                      <span>{label}</span><kbd>{index + 1}</kbd>
-                    </button>
-                  </floating-list-item>
+                  <button
+                    class="menu-item"
+                    role="menuitem"
+                    data-fup-close
+                    data-menu-item
+                    data-index={index}
+                    data-label={label}
+                  >
+                    <span>{label}</span><kbd>{index + 1}</kbd>
+                  </button>
                 ))
               }
             </floating-list>
           </div>
-        </floating-content>
+        </template>
       </floating-portal>
     </floating-root>
   </div>
-  <code>plugins = [click(), listNavigation(), typeahead()]</code>
+  <code>&lt;floating-list navigation typeahead item-selector="…" /&gt;</code>
 </article>
 
 <script>
   import {
-    click,
-    dismiss,
     flip,
-    listNavigation,
     offset,
-    role,
     shift,
-    typeahead,
   } from '@floating-ui-plus/web-components';
   import {
-    activeItems,
-    closeFloating,
-    configureFloating,
     emitExampleAction,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
   initializeExample('menu', (scope) => {
     const floating = floatingRoot(scope, '[data-menu-root]');
-    const items = [
-      ...scope.querySelectorAll<HTMLElement>('[data-menu-item]'),
-    ];
-    const labels = items.map((item) => item.dataset.label ?? null);
-    const listRef = {current: items as Array<HTMLElement | null>};
-    const labelRef = {current: labels};
-    const active = activeItems(
-      items,
-      () => floating.controller.refresh(),
-    );
+    const template = floatingTemplate(scope, '[data-menu-content]');
+    floating.middleware = [offset(8), flip(), shift({padding: 18})];
 
-    configureFloating(floating, {
-      middleware: [offset(8), flip(), shift({padding: 18})],
-      plugins: [
-        click(),
-        dismiss(),
-        role({role: 'menu'}),
-        listNavigation(() => ({
-          listRef,
-          activeIndex: active.value,
-          loop: true,
-          onNavigate: active.set,
-        })),
-        typeahead({
-          listRef: labelRef,
-          get activeIndex() {
-            return active.value;
-          },
-          onMatch: (index) => {
-            active.set(index);
-            if (index != null) {
-              items[index]?.focus({preventScroll: true});
-            }
-          },
-        }),
-      ],
-    });
-
-    items.forEach((item, index) => {
-      item.addEventListener('click', (event) => {
-        active.set(index);
-        emitExampleAction(scope, `${labels[index]} selected`);
-        closeFloating(floating, event);
+    onFloatingTemplateMount(template, (element) => {
+      element.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element)) return;
+        const item = event.target.closest<HTMLElement>('[data-menu-item]');
+        if (!item || !element.contains(item)) return;
+        emitExampleAction(scope, `${item.dataset.label} selected`);
       });
     });
     onFloatingOpenChange(floating, ({open}) => {
-      if (!open) active.set(null);
       emitExampleAction(
         scope,
         open

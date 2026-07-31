@@ -15,12 +15,13 @@
               return-focus
               outside-elements-inert
             >
-              <floating-content class="modal-anchor">
-                <section
-                  class="modal-panel"
-                  aria-label="Focus room"
-                  aria-labelledby="modal-heading"
-                >
+              <template data-modal-content>
+                <div class="modal-anchor">
+                  <section
+                    class="modal-panel"
+                    aria-label="Focus room"
+                    aria-labelledby="modal-heading"
+                  >
                   <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
                   <h3 id="modal-heading">You are inside<br />the focus trap.</h3>
                   <p>
@@ -38,11 +39,11 @@
                         <floating-reference>
                           <button class="text-button">Show placement hint</button>
                         </floating-reference>
-                        <floating-content>
+                        <template data-fup-content>
                           <div class="tooltip">
                             This tooltip stays inside the dialog.
                           </div>
-                        </floating-content>
+                        </template>
                       </floating-node>
                     </floating-root>
                     <floating-root
@@ -56,7 +57,7 @@
                           <button class="text-button">Open room details</button>
                         </floating-reference>
                         <floating-portal>
-                          <floating-content>
+                          <template data-modal-popover-content>
                             <section
                               class="popover-panel"
                               aria-label="Room details"
@@ -64,11 +65,11 @@
                               <span class="panel-kicker">NESTED PORTAL</span>
                               <strong>Details stay above the dialog.</strong>
                               <p>Escape and outside press dismiss only this panel first.</p>
-                              <button class="text-button" data-close-modal-popover>
+                              <button class="text-button" data-fup-close>
                                 Close details
                               </button>
                             </section>
-                          </floating-content>
+                          </template>
                         </floating-portal>
                       </floating-node>
                     </floating-root>
@@ -80,19 +81,21 @@
                         <floating-portal>
                           <floating-overlay class="demo-overlay" lock-scroll>
                             <floating-focus-manager modal return-focus>
-                              <floating-content class="modal-anchor">
-                                <section
-                                  class="modal-panel nested-modal-panel"
-                                  aria-label="Nested dialog"
-                                >
-                                  <span class="panel-kicker">SECOND LAYER</span>
-                                  <h3>One more<br />focus boundary.</h3>
-                                  <p>Close this layer to resume the parent dialog.</p>
-                                  <button class="coral-button" data-close-nested-modal>
-                                    Return to focus room
-                                  </button>
-                                </section>
-                              </floating-content>
+                              <template data-nested-modal-content>
+                                <div class="modal-anchor">
+                                  <section
+                                    class="modal-panel nested-modal-panel"
+                                    aria-label="Nested dialog"
+                                  >
+                                    <span class="panel-kicker">SECOND LAYER</span>
+                                    <h3>One more<br />focus boundary.</h3>
+                                    <p>Close this layer to resume the parent dialog.</p>
+                                    <button class="coral-button" data-fup-close>
+                                      Return to focus room
+                                    </button>
+                                  </section>
+                                </div>
+                              </template>
                             </floating-focus-manager>
                           </floating-overlay>
                         </floating-portal>
@@ -100,11 +103,12 @@
                     </floating-root>
                   </div>
                   <div class="modal-actions">
-                    <button class="coral-button" data-close-modal>Leave room</button>
+                    <button class="coral-button" data-fup-close>Leave room</button>
                     <span class="modal-hint">ESC closes the top layer</span>
                   </div>
-                </section>
-              </floating-content>
+                  </section>
+                </div>
+              </template>
             </floating-focus-manager>
           </floating-overlay>
         </floating-portal>
@@ -123,19 +127,18 @@
     shift,
   } from '@floating-ui-plus/web-components';
   import {
-    closeFloating,
     configureFloating,
     emitExampleAction,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
   initializeExample('modal', (scope) => {
     const floating = floatingRoot(scope, '[data-modal-root]');
-    const tooltip = floatingRoot(scope, '[data-modal-tooltip-root]');
-    const popover = floatingRoot(scope, '[data-modal-popover-root]');
-    const nestedModal = floatingRoot(scope, '[data-nested-modal-root]');
+    const template = floatingTemplate(scope, '[data-modal-content]');
 
     configureFloating(floating, {
       middleware: [offset(20), shift({padding: 24})],
@@ -146,28 +149,22 @@
         role({role: 'dialog'}),
       ],
     });
-    tooltip.middleware = [offset(12), flip(), shift({padding: 12})];
-    popover.middleware = [offset(12), flip(), shift({padding: 18})];
-    configureFloating(nestedModal, {
-      middleware: [offset(20), shift({padding: 24})],
-      plugins: [
-        click(),
-        dismiss({outsidePress: false}),
-        role({role: 'dialog'}),
-      ],
+    onFloatingTemplateMount(template, (element) => {
+      const tooltip = floatingRoot(element, '[data-modal-tooltip-root]');
+      const popover = floatingRoot(element, '[data-modal-popover-root]');
+      const nestedModal = floatingRoot(element, '[data-nested-modal-root]');
+      tooltip.middleware = [offset(12), flip(), shift({padding: 12})];
+      popover.middleware = [offset(12), flip(), shift({padding: 18})];
+      configureFloating(nestedModal, {
+        middleware: [offset(20), shift({padding: 24})],
+        plugins: [
+          click(),
+          dismiss({outsidePress: false}),
+          role({role: 'dialog'}),
+        ],
+      });
     });
 
-    scope
-      .querySelector('[data-close-modal]')
-      ?.addEventListener('click', (event) => closeFloating(floating, event));
-    scope
-      .querySelector('[data-close-modal-popover]')
-      ?.addEventListener('click', (event) => closeFloating(popover, event));
-    scope
-      .querySelector('[data-close-nested-modal]')
-      ?.addEventListener('click', (event) =>
-        closeFloating(nestedModal, event),
-      );
     onFloatingOpenChange(floating, ({open}) => {
       emitExampleAction(
         scope,

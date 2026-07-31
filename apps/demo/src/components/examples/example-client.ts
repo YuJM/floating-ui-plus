@@ -2,6 +2,7 @@ import type {
   FloatingOpenChangeDetail,
   FloatingPlugin,
   FloatingRootElement,
+  FloatingTemplateLifecycleDetail,
 } from '@floating-ui-plus/web-components';
 
 export type ExampleScope = HTMLElement;
@@ -23,6 +24,30 @@ export function floatingRoot(scope: ParentNode, selector: string) {
     throw new Error(`Missing FloatingRootElement for ${selector}`);
   }
   return element as FloatingRootElement;
+}
+
+export function floatingTemplate(scope: ParentNode, selector: string) {
+  const ownerDocument =
+    scope instanceof Document ? scope : scope.ownerDocument ?? document;
+  const element =
+    scope.querySelector(selector) ?? ownerDocument.querySelector(selector);
+  if (!(element instanceof HTMLTemplateElement)) {
+    throw new Error(`Missing HTMLTemplateElement for ${selector}`);
+  }
+  return element;
+}
+
+export function onFloatingTemplateMount(
+  template: HTMLTemplateElement,
+  listener: (element: HTMLElement) => void,
+) {
+  const handleMount = (event: Event) => {
+    listener(
+      (event as CustomEvent<FloatingTemplateLifecycleDetail>).detail.element,
+    );
+  };
+  template.addEventListener('floatingmount', handleMount);
+  return () => template.removeEventListener('floatingmount', handleMount);
 }
 
 export function configureFloating(

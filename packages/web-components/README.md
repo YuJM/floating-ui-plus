@@ -40,21 +40,26 @@ For complete templates and programmatic configuration, see the
   </floating-reference>
 
   <floating-portal>
-    <floating-content>
-      <section aria-label="Settings">Popover content</section>
-    </floating-content>
+    <template>
+      <section aria-label="Settings">
+        Popover content
+        <button data-fup-close>Close</button>
+      </section>
+    </template>
   </floating-portal>
 </floating-root>
 ```
 
 `open` reflects to an attribute. User actions emit a bubbling, composed
 `openchange` event whose detail contains `open` and `reason`.
+`data-fup-close` closes the surface that owns the marked control, including
+fresh clones created from a native template.
 
 ## Components
 
 | Need | Elements |
 | --- | --- |
-| Reference and floating surface | `floating-root`, `floating-reference`, `floating-content` |
+| Reference and floating surface | `floating-root`, `floating-reference`, native `template` |
 | Portal, arrow, overlay, and focus | `floating-portal`, `floating-arrow`, `floating-overlay`, `floating-focus-manager` |
 | Nested menus and collections | `floating-tree`, `floating-node`, `floating-list`, `floating-list-item` |
 | Roving keyboard focus | `floating-composite`, `floating-composite-item` |
@@ -62,6 +67,33 @@ For complete templates and programmatic configuration, see the
 
 For a small tooltip, `floating-root` also supports `reference` and `floating`
 named slots.
+
+## Declarative menu navigation
+
+`floating-list` can own its registered items' active index, roving tab index,
+arrow-key navigation, and typeahead:
+
+```html
+<floating-list
+  navigation
+  typeahead
+  loop
+  item-selector="[role=menuitem]"
+>
+  <button role="menuitem" data-fup-close>Edit</button>
+  <button role="menuitem" data-fup-close>Duplicate</button>
+</floating-list>
+```
+
+`item-selector` discovers matching descendants in DOM order and uses
+`data-label`, `aria-label`, or text content for typeahead. Use explicit
+`floating-list-item` wrappers instead when items need custom labels, values,
+or list instances.
+
+Read `activeIndex` or listen for the bubbling `activeindexchange` event only
+when the application needs to mirror navigation state. Omit these attributes
+and assign plugins to `floating-root` directly for virtual focus, grids, or
+custom navigation policies.
 
 ## Arrow defaults and customization
 
@@ -135,11 +167,15 @@ Wrap dialog content with an overlay and focus manager:
 <floating-portal>
   <floating-overlay lock-scroll>
     <floating-focus-manager modal return-focus outside-elements-inert>
-      <floating-content><section aria-label="Account settings">…</section></floating-content>
+      <template><section aria-label="Account settings">…</section></template>
     </floating-focus-manager>
   </floating-overlay>
 </floating-portal>
 ```
+
+`floating-portal` automatically marks its single owned template with
+`data-fup-content`. Mark a template explicitly when a portal owns more than one
+template, or when conditional content is used without a portal.
 
 Imports are SSR-safe. Positioning, portals, observers, and focus management
 start only after the corresponding elements connect.

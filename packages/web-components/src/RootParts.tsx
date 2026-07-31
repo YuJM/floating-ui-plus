@@ -5,12 +5,12 @@ import {
   useLayoutEffect,
   useRef,
   useSlot,
-} from 'atomico';
-import type {ItemState} from '@floating-ui-plus/web';
-import {setAttributes} from '@floating-ui-plus/web/utils';
+} from "atomico";
+import type { ItemState } from "@floating-ui-plus/web";
+import { setAttributes } from "@floating-ui-plus/web/utils";
 
-import {floatingComponentContext} from './component-context';
-import type {FloatingRootElement} from './FloatingRootElement';
+import { floatingComponentContext } from "./component-context";
+import type { FloatingRootElement } from "./FloatingRootElement";
 
 const contentsStyles = `
   :host,
@@ -24,10 +24,7 @@ function useRootPart(
 ) {
   const root = useContext(floatingComponentContext).root;
   const slot = useRef<HTMLSlotElement>();
-  const children = useSlot<Element>(
-    slot,
-    (node) => node instanceof Element,
-  );
+  const children = useSlot<Element>(slot, (node) => node instanceof Element);
   const element = children[0] ?? null;
 
   useLayoutEffect(() => {
@@ -66,34 +63,12 @@ export class FloatingReferenceElement extends FloatingReferenceBase {
   }
 }
 
-const FloatingContentBase = c(() => {
-  const slot = useRootPart((root, element) => {
-    root.setFloatingElement(element instanceof HTMLElement ? element : null);
-  });
-  return (
-    <host shadowDom>
-      <style>{contentsStyles}</style>
-      <slot ref={slot} />
-    </host>
-  );
-});
-
-/** Binds its first child to the nearest floating root surface. */
-export class FloatingContentElement extends FloatingContentBase {
-  get updateComplete() {
-    return this.updated;
-  }
-}
-
 const FloatingItemBase = c(
   () => {
     const host = useHost<FloatingItemHost>().current;
     const root = useContext(floatingComponentContext).root;
     const slot = useRef<HTMLSlotElement>();
-    const children = useSlot<Element>(
-      slot,
-      (node) => node instanceof Element,
-    );
+    const children = useSlot<Element>(slot, (node) => node instanceof Element);
     const element = children[0] ?? null;
     const bound = useRef<Element | null>(null);
     const attributes = useRef(new Set<string>());
@@ -111,13 +86,13 @@ const FloatingItemBase = c(
       const state: ItemState = {
         active: host.active,
         selected: host.selected,
-        ...(host.index == null ? {} : {index: host.index}),
+        ...(host.index == null ? {} : { index: host.index }),
       };
       attributes.current = setAttributes(
         element,
-        typeof itemAttributes === 'function'
+        typeof itemAttributes === "function"
           ? itemAttributes(state)
-          : itemAttributes ?? {},
+          : (itemAttributes ?? {}),
         attributes.current,
       );
     };
@@ -142,10 +117,10 @@ const FloatingItemBase = c(
   },
   {
     props: {
-      active: {type: Boolean, value: (): boolean => false, reflect: true},
-      selected: {type: Boolean, value: (): boolean => false, reflect: true},
-      index: {type: Number},
-      label: {type: String},
+      active: { type: Boolean, value: (): boolean => false, reflect: true },
+      selected: { type: Boolean, value: (): boolean => false, reflect: true },
+      index: { type: Number },
+      label: { type: String },
     },
   },
 );
@@ -171,8 +146,7 @@ export class FloatingItemElement extends FloatingItemBase {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'floating-reference': FloatingReferenceElement;
-    'floating-content': FloatingContentElement;
-    'floating-item': FloatingItemElement;
+    "floating-reference": FloatingReferenceElement;
+    "floating-item": FloatingItemElement;
   }
 }
