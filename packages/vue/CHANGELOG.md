@@ -16,7 +16,7 @@
 
 - Updated dependencies [a9ca2cc]
 - Updated dependencies [56b5d88]
-  - @floating-ui-plus/web@0.4.1
+  - @floating-ui-plus/web@0.5.0
 
 ## 0.4.0
 

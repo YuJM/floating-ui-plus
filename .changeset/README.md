@@ -77,7 +77,11 @@ maintainer action and is not required before npm publication.
 
 ## Versioning policy
 
-Packages version independently. When a changed package affects an internal
-consumer, Changesets updates that consumer with at least a patch release so its
-published dependency range remains valid. Use one changeset containing all
-affected packages when changing a shared public contract.
+The three published packages form one fixed group. A release affecting any one
+of them releases all three at the same version, using the highest required
+SemVer bump across the group. Changesets aligns an existing version difference
+to the highest current version before applying that bump.
+
+Use one changeset containing every directly affected package when changing a
+shared public contract so each changelog records the relevant user-facing
+impact.

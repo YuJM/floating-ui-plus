@@ -1,8 +1,8 @@
 # @floating-ui-plus/web-components
 
-## 1.0.0
+## 0.5.0
 
-### Major Changes
+### Minor Changes
 
 - 56b5d88: Replace `floating-content` with native conditional templates. A
   `floating-portal` automatically marks its single owned template with
@@ -16,8 +16,6 @@
   Ignore stale asynchronous position measurements after a reference or floating
   element unmounts.
 
-### Minor Changes
-
 - a9ca2cc: Add declarative list navigation, typeahead, and selector-based item discovery
   to `floating-list`, and let `data-fup-close` controls close their owning
   floating surface without template mount listeners.
@@ -29,7 +27,7 @@
 
 - Updated dependencies [a9ca2cc]
 - Updated dependencies [56b5d88]
-  - @floating-ui-plus/web@0.4.1
+  - @floating-ui-plus/web@0.5.0
 
 ## 0.4.0
 
