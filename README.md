@@ -86,14 +86,12 @@ bun run dev:demo
 
 Browser tests exercise both surfaces in desktop and mobile Chrome.
 
-## Cloudflare deployment
+## Cloudflare Pages deployment
 
-```sh
-bun run deploy:demo:dry-run
-bun run deploy:demo
-```
-
-The deployment command publishes the demo as a Worker with static assets.
+The connected Cloudflare Pages project builds the repository with
+`bun install --frozen-lockfile && bun run build` and publishes
+`apps/demo/dist`. The Pages Function for npm package versions lives in the
+repository-root `functions/` directory.
 
 ## Package releases
 

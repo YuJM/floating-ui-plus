@@ -36,11 +36,8 @@ bun run --filter floating-ui-plus-demo test
 Playwright builds the packages, serves the production output, and runs the
 hub, Web Components, and Vue suites in desktop and mobile Chrome.
 
-## Cloudflare
+## Cloudflare Pages
 
-The application deploys as a Cloudflare Worker with static assets.
-
-```sh
-bun run deploy:demo:dry-run
-bun run deploy:demo
-```
+The demo deploys through the connected Cloudflare Pages project. Pages runs the
+repository build command and publishes `apps/demo/dist`. The root `functions/`
+directory provides the `/api/npm-packages` Pages Function.

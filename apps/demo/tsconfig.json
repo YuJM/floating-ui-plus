@@ -23,9 +23,7 @@
     ".astro/types.d.ts",
     "src/**/*",
     "../../functions/**/*",
-    "astro.config.ts",
-    "cloudflare.config.ts",
-    "wrangler.config.ts"
+    "astro.config.ts"
   ],
   "exclude": ["dist"]
 }

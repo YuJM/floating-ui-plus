@@ -26,9 +26,7 @@
     "version": "changeset version",
     "release:packages:check": "bun scripts/release-packages.ts --check",
     "release:packages": "bun scripts/release-packages.ts --publish",
-    "release": "bun run release:packages",
-    "deploy:demo:dry-run": "bun run --filter floating-ui-plus-demo deploy:dry-run",
-    "deploy:demo": "bun run --filter floating-ui-plus-demo deploy"
+    "release": "bun run release:packages"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.1",
