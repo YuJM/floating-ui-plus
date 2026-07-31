@@ -2,7 +2,7 @@ import {expect, test, type Page} from 'playwright/test';
 import {TOOLTIP_ARROW} from '../../src/example-config';
 
 async function inspectTooltip(page: Page, framework: 'web-components' | 'vue') {
-  await page.goto(`/tooltip?framework=${framework}`);
+  await page.goto(`/en/tooltip?framework=${framework}`);
 
   const panel = page.locator(`[data-framework-panel="${framework}"]`);
   const card = panel.locator('.tooltip-card');

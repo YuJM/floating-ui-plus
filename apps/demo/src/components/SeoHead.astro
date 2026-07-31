@@ -6,18 +6,23 @@ import {
   normalizePathname,
   type SeoMetadata,
 } from '../seo';
+import {getAbsoluteLocaleUrl} from 'astro:i18n';
+import {ogLocale, type Locale} from '../i18n';
 
 interface Props {
   metadata: SeoMetadata;
   image?: string;
+  locale: Locale;
 }
 
-const {metadata, image = DEFAULT_SOCIAL_IMAGE} = Astro.props;
+const {metadata, image = DEFAULT_SOCIAL_IMAGE, locale} = Astro.props;
 const site = Astro.site ?? Astro.url;
 const pathname = normalizePathname(Astro.url.pathname);
 const canonical = new URL(pathname, site);
 const socialImage = new URL(image, site);
 const breadcrumbs = getBreadcrumbs(pathname);
+const route = pathname.split('/').slice(2).join('/');
+const alternateUrls = ['en', 'ko', 'ja'].map((target) => getAbsoluteLocaleUrl(target, route));
 const robots = metadata.noindex
   ? 'noindex, nofollow'
   : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
@@ -34,7 +39,7 @@ const graph = metadata.noindex
           name: SITE_NAME,
           description:
             'Interactive Floating UI Plus demos for Web Components and Vue.',
-          inLanguage: 'en',
+          inLanguage: locale,
         },
         {
           '@type': metadata.schemaType ?? 'WebPage',
@@ -42,7 +47,7 @@ const graph = metadata.noindex
           url: canonical.href,
           name: metadata.title,
           description: metadata.description,
-          inLanguage: 'en',
+          inLanguage: locale,
           isPartOf: {'@id': `${site.href}#website`},
           ...(breadcrumbs.length > 0
             ? {breadcrumb: {'@id': `${canonical.href}#breadcrumb`}}
@@ -97,13 +102,15 @@ const structuredData = graph
 <meta name="application-name" content={SITE_NAME} />
 <meta name="theme-color" content="#101a17" />
 <link rel="canonical" href={canonical} />
+{alternateUrls.map((href, index) => <link rel="alternate" hreflang={['en', 'ko', 'ja'][index]} href={href} />)}
+<link rel="alternate" hreflang="x-default" href={getAbsoluteLocaleUrl('en', route)} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="manifest" href="/site.webmanifest" />
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content={SITE_NAME} />
-<meta property="og:locale" content="en_US" />
+<meta property="og:locale" content={ogLocale(locale)} />
 <meta property="og:title" content={metadata.title} />
 <meta property="og:description" content={metadata.description} />
 <meta property="og:url" content={canonical} />

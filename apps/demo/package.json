@@ -20,6 +20,7 @@
     "@astrojs/vue": "7.0.1",
     "@floating-ui-plus/vue": "workspace:^",
     "@floating-ui-plus/web-components": "workspace:^",
+    "@inlang/paraglide-js": "^2.23.0",
     "astro": "7.1.4",
     "lucide-astro": "^0.556.0",
     "pretendard": "^1.3.9",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@inlang/plugin-message-format": "^4.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "playwright": "^1.50.0",
     "tailwindcss": "^4.3.3",

@@ -1,0 +1,32 @@
+---
+import ExampleRoute from './ExampleRoute.astro';
+import ClientPointExample from './examples/ClientPointExample.astro';
+import ComboboxExample from './examples/ComboboxExample.astro';
+import MenuExample from './examples/MenuExample.astro';
+import MiddlewareExamples from './examples/MiddlewareExamples.astro';
+import ModalExample from './examples/ModalExample.astro';
+import NestedMenuExample from './examples/NestedMenuExample.astro';
+import PlacementExample from './examples/PlacementExample.astro';
+import PopoverExample from './examples/PopoverExample.astro';
+import TooltipExample from './examples/TooltipExample.astro';
+import DemoLayout from '../layouts/DemoLayout.astro';
+import ExampleView from '../vue/views/ExampleView.vue';
+import * as m from '../paraglide/messages';
+import {getExample, type ExampleId, type Locale} from '../i18n';
+
+const {locale, example} = Astro.props as {locale: Locale; example: ExampleId};
+const details = getExample(locale, example);
+const webExamples = {tooltip: TooltipExample, popover: PopoverExample, menu: MenuExample, 'nested-menu': NestedMenuExample, 'client-point': ClientPointExample, combobox: ComboboxExample, placement: PlacementExample, middleware: MiddlewareExamples, modal: ModalExample};
+const WebExample = webExamples[example];
+const variant = example === 'middleware' ? 'full' : example === 'placement' ? 'wide' : 'default';
+const frameworkPackage = Astro.url.searchParams.get('framework') === 'vue'
+  ? '@floating-ui-plus/vue'
+  : '@floating-ui-plus/web-components';
+---
+
+<DemoLayout locale={locale} example={example}>
+  <ExampleRoute locale={locale} kicker={details.label} heading={details.heading} description={details.description} build={details.build} frameworkPackage={frameworkPackage} variant={variant}>
+    <section data-framework-panel="web-components" class="framework-panel"><WebExample /></section>
+    <section data-framework-panel="vue" class="framework-panel"><ExampleView exampleName={example} locale={locale} client:only="vue"><p>{m.loading_example(undefined, {locale})}</p></ExampleView></section>
+  </ExampleRoute>
+</DemoLayout>
