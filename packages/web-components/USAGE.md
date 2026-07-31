@@ -41,22 +41,40 @@ Use explicit child elements when the floating surface needs a portal, focus
 manager, overlay, list, or other composition.
 
 ```html
-<floating-root placement="bottom-start" interactions="click dismiss" floating-role="menu">
+<floating-root
+  placement="bottom-start"
+  interactions="click dismiss"
+  floating-role="menu"
+>
   <floating-reference><button>Actions</button></floating-reference>
   <floating-portal>
     <template>
-      <floating-list>
-        <floating-list-item label="Edit"><button role="menuitem">Edit</button></floating-list-item>
-        <floating-list-item label="Duplicate"><button role="menuitem">Duplicate</button></floating-list-item>
+      <floating-list
+        navigation
+        typeahead
+        loop
+        item-selector="[role=menuitem]"
+      >
+        <button role="menuitem" data-fup-close>Edit</button>
+        <button role="menuitem" data-fup-close>Duplicate</button>
       </floating-list>
     </template>
   </floating-portal>
 </floating-root>
 ```
 
-`floating-list-item` registers its first child with the nearest
-`floating-list`. Add `floating-tree` and `floating-node` around related roots
-when menus can nest.
+`item-selector` discovers matching descendants in DOM order and uses
+`data-label`, `aria-label`, or text content for typeahead. For richer item
+metadata, `floating-list-item` still registers its first child explicitly.
+The `navigation` attribute owns arrow-key focus and roving `tabIndex`;
+`typeahead` uses registered labels; and `loop` wraps at either end. The list
+exposes `activeIndex` and emits a bubbling `activeindexchange` event with
+`{activeIndex}` when application state needs to follow it. Add `nested` to a
+submenu list, and wrap related roots in `floating-tree` and `floating-node`.
+
+`data-fup-close` delegates closing to the nearest owning floating surface and
+preserves the source click and `click` reason in `openchange`. It also works in
+fresh native-template clones, so close controls do not need a mount listener.
 
 ### Conditional native templates
 
@@ -65,28 +83,19 @@ be upgraded or painted. A portal automatically marks its single owned template
 with `data-fup-content`, even below an overlay or focus manager. The root imports
 the template fragment when it opens and removes the fresh clone when it closes.
 
-```ts
-import type {
-  FloatingTemplateLifecycleDetail,
-} from '@floating-ui-plus/web-components';
-
-const template = document.querySelector<HTMLTemplateElement>(
-  'template[data-fup-content]',
-)!;
-
-template.addEventListener('floatingmount', (event) => {
-  const {element} = (
-    event as CustomEvent<FloatingTemplateLifecycleDetail>
-  ).detail;
-  element.querySelector('[data-close]')?.addEventListener('click', () => {
-    // Close the floating root.
-  });
-});
+```html
+<template data-fup-content>
+  <section>
+    Conditional content
+    <button data-fup-close>Close</button>
+  </section>
+</template>
 ```
 
 The template emits bubbling, composed `floatingmount` and `floatingunmount`
-events with `{root, template, element}`. Initialize each fresh clone from these
-events because listeners attached to blueprint nodes are not copied.
+events with `{root, template, element}`. Use them only for application-specific
+initialization of each fresh clone; close controls and declarative lists do not
+need mount listeners.
 
 When a portal owns multiple templates, add `data-fup-content` to exactly one.
 Use the same explicit marker for a conditional template outside a portal.
@@ -107,7 +116,10 @@ the document scroll lock.
     <floating-overlay lock-scroll>
       <floating-focus-manager modal return-focus outside-elements-inert>
         <template>
-          <section aria-label="Account settings">…</section>
+          <section aria-label="Account settings">
+            …
+            <button data-fup-close>Close</button>
+          </section>
         </template>
       </floating-focus-manager>
     </floating-overlay>

@@ -65,7 +65,7 @@
                               <span class="panel-kicker">NESTED PORTAL</span>
                               <strong>Details stay above the dialog.</strong>
                               <p>Escape and outside press dismiss only this panel first.</p>
-                              <button class="text-button" data-close-modal-popover>
+                              <button class="text-button" data-fup-close>
                                 Close details
                               </button>
                             </section>
@@ -90,7 +90,7 @@
                                     <span class="panel-kicker">SECOND LAYER</span>
                                     <h3>One more<br />focus boundary.</h3>
                                     <p>Close this layer to resume the parent dialog.</p>
-                                    <button class="coral-button" data-close-nested-modal>
+                                    <button class="coral-button" data-fup-close>
                                       Return to focus room
                                     </button>
                                   </section>
@@ -103,7 +103,7 @@
                     </floating-root>
                   </div>
                   <div class="modal-actions">
-                    <button class="coral-button" data-close-modal>Leave room</button>
+                    <button class="coral-button" data-fup-close>Leave room</button>
                     <span class="modal-hint">ESC closes the top layer</span>
                   </div>
                   </section>
@@ -127,7 +127,6 @@
     shift,
   } from '@floating-ui-plus/web-components';
   import {
-    closeFloating,
     configureFloating,
     emitExampleAction,
     floatingRoot,
@@ -164,33 +163,6 @@
           role({role: 'dialog'}),
         ],
       });
-      const popoverTemplate = floatingTemplate(
-        element,
-        '[data-modal-popover-content]',
-      );
-      const nestedModalTemplate = floatingTemplate(
-        element,
-        '[data-nested-modal-content]',
-      );
-      onFloatingTemplateMount(popoverTemplate, (popoverElement) => {
-        popoverElement
-          .querySelector('[data-close-modal-popover]')
-          ?.addEventListener('click', (event) => {
-            closeFloating(popover, event);
-          });
-      });
-      onFloatingTemplateMount(nestedModalTemplate, (nestedElement) => {
-        nestedElement
-          .querySelector('[data-close-nested-modal]')
-          ?.addEventListener('click', (event) => {
-            closeFloating(nestedModal, event);
-          });
-      });
-      element
-        .querySelector('[data-close-modal]')
-        ?.addEventListener('click', (event) => {
-          closeFloating(floating, event);
-        });
     });
 
     onFloatingOpenChange(floating, ({open}) => {

@@ -120,6 +120,92 @@ describe('createFloating pipeline', () => {
     expect(getDocumentTrapStack(document)).toHaveLength(0);
   });
 
+  test('keeps dynamically added inside containers out of subtree isolation', async () => {
+    const reference = document.createElement('button');
+    const floatingElement = document.createElement('div');
+    const insideButton = document.createElement('button');
+    const outside = document.createElement('div');
+    const insideContainers: Element[] = [];
+    floatingElement.append(insideButton);
+    document.body.append(reference, floatingElement, outside);
+    const floating = createFloating({open: true}).pipe(
+      focusManager({
+        isolateSubtrees: 'inert',
+        getInsideElements: () => insideContainers,
+        tabbableOptions: {displayCheck: 'none'},
+      }),
+    );
+    floating.setReference(reference);
+    floating.setFloating(floatingElement);
+    floating.connect();
+
+    const portal = document.createElement('div');
+    portal.append(document.createElement('button'));
+    insideContainers.push(portal);
+    document.body.append(portal);
+
+    await vi.waitFor(() => {
+      expect(portal.hasAttribute('inert')).toBe(false);
+      expect(outside.hasAttribute('inert')).toBe(true);
+    });
+    expect(getDocumentTrapStack(document)).toHaveLength(1);
+    expect(getDocumentTrapStack(document)[0]?.paused).toBe(false);
+    floating.destroy();
+    expect(getDocumentTrapStack(document)).toHaveLength(0);
+    expect(outside.hasAttribute('inert')).toBe(false);
+  });
+
+  test('restores isolation after a nested trap pauses a dynamic parent trap', async () => {
+    const parentReference = document.createElement('button');
+    const parentFloating = document.createElement('div');
+    const childReference = document.createElement('button');
+    const outside = document.createElement('div');
+    const insideContainers: Element[] = [];
+    parentFloating.append(childReference);
+    document.body.append(parentReference, parentFloating, outside);
+    const parent = createFloating({open: true}).pipe(
+      focusManager({
+        isolateSubtrees: 'inert',
+        getInsideElements: () => insideContainers,
+        tabbableOptions: {displayCheck: 'none'},
+      }),
+    );
+    parent.setReference(parentReference);
+    parent.setFloating(parentFloating);
+    parent.connect();
+
+    const portalTarget = document.createElement('div');
+    const childFloating = document.createElement('div');
+    childFloating.append(document.createElement('button'));
+    portalTarget.append(childFloating);
+    insideContainers.push(portalTarget);
+    document.body.append(portalTarget);
+    const child = createFloating({open: true}).pipe(
+      focusManager({
+        tabbableOptions: {displayCheck: 'none'},
+      }),
+    );
+    child.setReference(childReference);
+    child.setFloating(childFloating);
+    child.connect();
+
+    await vi.waitFor(() => {
+      expect(getDocumentTrapStack(document)).toHaveLength(2);
+      expect(portalTarget.hasAttribute('inert')).toBe(false);
+    });
+    child.destroy();
+    insideContainers.splice(0);
+    portalTarget.remove();
+    await vi.waitFor(() => {
+      expect(getDocumentTrapStack(document)).toHaveLength(1);
+      expect(outside.hasAttribute('inert')).toBe(true);
+    });
+    parent.destroy();
+
+    expect(getDocumentTrapStack(document)).toHaveLength(0);
+    expect(outside.hasAttribute('inert')).toBe(false);
+  });
+
   test('returns focus when a closed manager disconnects before its microtask', async () => {
     let open = true;
     const reference = document.createElement('button');

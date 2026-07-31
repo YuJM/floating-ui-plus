@@ -87,12 +87,15 @@ test('menu starts roving focus at the first item after opening with a pointer', 
   const trigger = page.getByRole('button', {name: 'Open navigator'});
   const firstItem = page.getByRole('menuitem', {name: /North star/});
   const secondItem = page.getByRole('menuitem', {name: /Orbit map/});
+  const signalItem = page.getByRole('menuitem', {name: /Signal log/});
 
   await trigger.click();
   await trigger.press('ArrowDown');
 
   await expect(firstItem).toBeFocused();
   await expect(secondItem).not.toBeFocused();
+  await firstItem.press('s');
+  await expect(signalItem).toBeFocused();
 });
 
 test('nested menu preserves the complete keyboard path', async ({page}) => {
@@ -222,7 +225,7 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
       return portal?.parentElement?.matches('floating-portal-target');
     }),
   ).toBe(true);
-  await page.keyboard.press('Escape');
+  await page.getByRole('button', {name: 'Close details'}).click();
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
 
@@ -256,7 +259,9 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
       );
     }),
   ).toBe(true);
-  await page.keyboard.press('Escape');
+  await page
+    .getByRole('button', {name: 'Return to focus room'})
+    .click();
   await expect(nestedDialog).toBeHidden();
   await expect(dialog).toBeVisible();
 

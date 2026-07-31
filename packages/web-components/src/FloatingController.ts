@@ -17,10 +17,14 @@ import {
 } from '@floating-ui-plus/web';
 import {setAttributes} from '@floating-ui-plus/web/utils';
 
-import {FLOATING_UI_PLUS_CONTENT_ATTRIBUTE} from './constants';
+import {
+  FLOATING_UI_PLUS_CLOSE_ATTRIBUTE,
+  FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
+} from './constants';
 import type {FloatingRootElement} from './FloatingRootElement';
 
 const runtimes = new WeakMap<FloatingRootElement, FloatingRootRuntime>();
+const floatingOwners = new WeakMap<Element, FloatingRootElement>();
 
 export function getFloatingRootRuntime(host: FloatingRootElement) {
   let runtime = runtimes.get(host);
@@ -52,6 +56,9 @@ export class FloatingRootRuntime {
   #contextAttachmentCleanup: (() => void) | null = null;
   #unsubscribePosition: (() => void) | null = null;
   #componentPlugins: FloatingPlugin[] = [];
+  #registeredComponentPlugins = new Map<object, readonly FloatingPlugin[]>();
+  #registeredComponentPluginsVersion = 0;
+  #syncedRegisteredComponentPluginsVersion = -1;
   #componentPluginCleanups: Array<() => void> = [];
   #componentPluginContext: FloatingContext | null = null;
   #componentPluginsSource: readonly FloatingPlugin[] | null = null;
@@ -60,6 +67,7 @@ export class FloatingRootRuntime {
   #componentPluginBridgeInstalled = false;
   #connected = false;
   #disconnectQueued = false;
+  #floatingClickCleanup: (() => void) | null = null;
 
   constructor(host: FloatingRootElement) {
     this.#host = host;
@@ -91,6 +99,20 @@ export class FloatingRootRuntime {
 
   pipe(...plugins: FloatingPlugin[]) {
     this.engine.pipe(...plugins);
+  }
+
+  registerComponentPlugins(
+    owner: object,
+    plugins: readonly FloatingPlugin[],
+  ) {
+    this.#registeredComponentPlugins.set(owner, plugins);
+    this.#registeredComponentPluginsVersion++;
+    this.#syncComponentPlugins();
+    return () => {
+      if (!this.#registeredComponentPlugins.delete(owner)) return;
+      this.#registeredComponentPluginsVersion++;
+      this.#syncComponentPlugins();
+    };
   }
 
   connect() {
@@ -232,7 +254,10 @@ export class FloatingRootRuntime {
 
   #bindFloatingElement(floating: HTMLElement | null) {
     if (floating === this.#floatingElement) return;
+    this.#floatingClickCleanup?.();
+    this.#floatingClickCleanup = null;
     if (this.#floatingElement) {
+      floatingOwners.delete(this.#floatingElement);
       this.#floatingAttributes = setAttributes(
         this.#floatingElement,
         {},
@@ -240,6 +265,29 @@ export class FloatingRootRuntime {
       );
     }
     this.#floatingElement = floating;
+    if (floating) {
+      floatingOwners.set(floating, this.#host);
+      const handleClick = (event: MouseEvent) => {
+        const pathOwner = event
+          .composedPath()
+          .find(
+            (target): target is Element =>
+              target instanceof Element && floatingOwners.has(target),
+          );
+        if (
+          !pathOwner ||
+          floatingOwners.get(pathOwner) !== this.#host ||
+          !(event.target instanceof Element) ||
+          !event.target.closest(`[${FLOATING_UI_PLUS_CLOSE_ATTRIBUTE}]`)
+        ) {
+          return;
+        }
+        this.engine.context.onOpenChange(false, event, 'click');
+      };
+      floating.addEventListener('click', handleClick);
+      this.#floatingClickCleanup = () =>
+        floating.removeEventListener('click', handleClick);
+    }
     this.engine.setFloating(floating);
     this.engine.presence.set(floating ? 'mounted' : 'unmounted');
     this.syncBindings();
@@ -502,13 +550,17 @@ export class FloatingRootRuntime {
     if (
       this.#componentPluginsSource === this.#host.plugins &&
       this.#componentInteractions === this.#host.interactions &&
-      this.#componentFloatingRole === this.#host.floatingRole
+      this.#componentFloatingRole === this.#host.floatingRole &&
+      this.#syncedRegisteredComponentPluginsVersion ===
+        this.#registeredComponentPluginsVersion
     ) {
       return;
     }
     this.#componentPluginsSource = this.#host.plugins;
     this.#componentInteractions = this.#host.interactions;
     this.#componentFloatingRole = this.#host.floatingRole;
+    this.#syncedRegisteredComponentPluginsVersion =
+      this.#registeredComponentPluginsVersion;
 
     const names = new Set(
       this.#host.interactions.split(/[\s,]+/).filter(Boolean),
@@ -521,6 +573,12 @@ export class FloatingRootRuntime {
     if (this.#host.floatingRole) {
       plugins.push(role({role: this.#host.floatingRole}));
     }
+    plugins.push(
+      ...Array.from(
+        this.#registeredComponentPlugins.values(),
+        (value) => [...value],
+      ).flat(),
+    );
     this.#componentPlugins = plugins;
     if (this.#componentPluginContext) {
       this.#connectComponentPlugins(this.#componentPluginContext);

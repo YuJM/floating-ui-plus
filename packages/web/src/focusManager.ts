@@ -76,6 +76,10 @@ export function focusManager(
   let lastFocusedInside: HTMLElement | null = null;
   let removeListeners: (() => void) | null = null;
   let dismissButtons: HTMLElement[] = [];
+  let insideElementsObserver: MutationObserver | null = null;
+  let insideElementsUpdateQueued = false;
+  let trapReady = false;
+  let trapContainerUpdatePending = false;
   let wasOpen = false;
   let returnFocusScheduled = false;
   let closeReason: OpenChangeReason | undefined;
@@ -84,6 +88,67 @@ export function focusManager(
   return {
     name: 'focusManager',
     connect(context) {
+      const disconnectInsideElementsObserver = () => {
+        insideElementsObserver?.disconnect();
+        insideElementsObserver = null;
+        insideElementsUpdateQueued = false;
+        trapContainerUpdatePending = false;
+      };
+      const getTrapContainers = (
+        floating: HTMLElement,
+        current: FocusManagerOptions,
+      ) => [
+        ...new Set([
+          floating,
+          ...(current.getInsideElements?.().filter((element) =>
+            element.isConnected,
+          ) ?? []),
+        ]),
+      ] as HTMLElement[];
+      const updateTrapContainers = (
+        floating: HTMLElement,
+        current: FocusManagerOptions,
+      ) => {
+        if (!trapReady || trap?.paused) {
+          trapContainerUpdatePending = true;
+          return;
+        }
+        trap?.updateContainerElements(getTrapContainers(floating, current));
+      };
+      const markTrapReady = (
+        floating: HTMLElement,
+        current: FocusManagerOptions,
+      ) => {
+        trapReady = true;
+        if (!trapContainerUpdatePending) return;
+        trapContainerUpdatePending = false;
+        updateTrapContainers(floating, current);
+      };
+      const observeInsideElements = (
+        floating: HTMLElement,
+        current: FocusManagerOptions,
+      ) => {
+        disconnectInsideElementsObserver();
+        if (!current.getInsideElements) return;
+        const view = floating.ownerDocument.defaultView;
+        const Observer = view?.MutationObserver ?? globalThis.MutationObserver;
+        const target =
+          floating.ownerDocument.body ??
+          floating.ownerDocument.documentElement;
+        if (!Observer || !target) return;
+        insideElementsObserver = new Observer(() => {
+          if (insideElementsUpdateQueued) return;
+          insideElementsUpdateQueued = true;
+          enqueueMicrotask(() => {
+            insideElementsUpdateQueued = false;
+            if (trap) updateTrapContainers(floating, getValue(options));
+          });
+        });
+        insideElementsObserver.observe(target, {
+          childList: true,
+          subtree: true,
+        });
+      };
       const sync = () => {
         const current = getValue(options);
         const floating = context.elements.floating;
@@ -98,10 +163,12 @@ export function focusManager(
           dismissButtons.forEach((element) => element.remove());
           dismissButtons = [];
 
+          disconnectInsideElementsObserver();
           if (trap) {
             trap.deactivate();
             trap = null;
           }
+          trapReady = false;
 
           const outsideFocusable =
             closeReason === 'outside-press' &&
@@ -237,7 +304,9 @@ export function focusManager(
             return getFloatingFocusElement(floating);
           };
 
-          trap = createFocusTrap(floating, {
+          trapReady = false;
+          trapContainerUpdatePending = false;
+          trap = createFocusTrap(getTrapContainers(floating, current), {
             escapeDeactivates: false,
             clickOutsideDeactivates: false,
             allowOutsideClick: true,
@@ -247,8 +316,18 @@ export function focusManager(
               current.initialFocus < 0
                 ? false
                 : () => initialFocus() || floating,
+            // Dynamic multi-container traps must finish isolation before a
+            // portal mutation can request another container update.
+            delayInitialFocus: current.getInsideElements ? false : true,
             returnFocusOnDeactivate: false,
             trapStack: getDocumentTrapStack(floating.ownerDocument),
+            onPause: () => {
+              trapReady = false;
+            },
+            onPostActivate: () =>
+              markTrapReady(floating, getValue(options)),
+            onPostUnpause: () =>
+              markTrapReady(floating, getValue(options)),
             tabbableOptions: {
               ...getTabbableOptions(),
               ...current.tabbableOptions,
@@ -260,6 +339,9 @@ export function focusManager(
               : current.isolateSubtrees ?? 'aria-hidden',
           });
           trap.activate();
+          observeInsideElements(floating, current);
+        } else if (trap) {
+          updateTrapContainers(floating, current);
         } else if (current.modal === false && opening) {
           enqueueMicrotask(() => {
             const target =
@@ -318,8 +400,10 @@ export function focusManager(
         unsubscribe();
         removeListeners?.();
         dismissButtons.forEach((element) => element.remove());
+        disconnectInsideElementsObserver();
         trap?.deactivate();
         trap = null;
+        trapReady = false;
         removeListeners = null;
         dismissButtons = [];
         previouslyFocused = null;

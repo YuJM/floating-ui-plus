@@ -12,7 +12,12 @@ import {MENU_LABELS} from '../../example-data';
     “signal”.
   </p>
   <div class="card-action">
-    <floating-root data-menu-root placement="bottom-start">
+    <floating-root
+      data-menu-root
+      interactions="click dismiss"
+      floating-role="menu"
+      placement="bottom-start"
+    >
       <floating-reference>
         <button class="dark-button">
           Open navigator <span aria-hidden="true">⌄</span>
@@ -22,21 +27,24 @@ import {MENU_LABELS} from '../../example-data';
         <template data-menu-content>
           <div class="menu-panel">
             <div class="menu-heading">Jump to a field</div>
-            <floating-list>
+            <floating-list
+              navigation
+              typeahead
+              loop
+              item-selector="[data-menu-item]"
+            >
               {
                 MENU_LABELS.map((label, index) => (
-                  <floating-list-item label={label}>
-                    <button
-                      class="menu-item"
-                      role="menuitem"
-                      tabindex="-1"
-                      data-menu-item
-                      data-index={index}
-                      data-label={label}
-                    >
-                      <span>{label}</span><kbd>{index + 1}</kbd>
-                    </button>
-                  </floating-list-item>
+                  <button
+                    class="menu-item"
+                    role="menuitem"
+                    data-fup-close
+                    data-menu-item
+                    data-index={index}
+                    data-label={label}
+                  >
+                    <span>{label}</span><kbd>{index + 1}</kbd>
+                  </button>
                 ))
               }
             </floating-list>
@@ -45,23 +53,16 @@ import {MENU_LABELS} from '../../example-data';
       </floating-portal>
     </floating-root>
   </div>
-  <code>plugins = [click(), listNavigation(), typeahead()]</code>
+  <code>&lt;floating-list navigation typeahead item-selector="…" /&gt;</code>
 </article>
 
 <script>
   import {
-    click,
-    dismiss,
     flip,
-    listNavigation,
     offset,
-    role,
     shift,
-    typeahead,
   } from '@floating-ui-plus/web-components';
   import {
-    closeFloating,
-    configureFloating,
     emitExampleAction,
     floatingRoot,
     floatingTemplate,
@@ -73,73 +74,17 @@ import {MENU_LABELS} from '../../example-data';
   initializeExample('menu', (scope) => {
     const floating = floatingRoot(scope, '[data-menu-root]');
     const template = floatingTemplate(scope, '[data-menu-content]');
-    const templateContent = template.content;
-    const labels = [
-      ...templateContent.querySelectorAll<HTMLElement>('[data-menu-item]'),
-    ].map((item) => item.dataset.label ?? null);
-    let items: HTMLElement[] = [];
-    const listRef = {current: [] as Array<HTMLElement | null>};
-    const labelRef = {current: labels};
-    let activeIndex: number | null = null;
-    const active = {
-      get value() {
-        return activeIndex;
-      },
-      set(next: number | null) {
-        activeIndex = next;
-        items.forEach((item, itemIndex) => {
-          item.tabIndex = itemIndex === next ? 0 : -1;
-          item.dataset.active = String(itemIndex === next);
-        });
-        floating.controller.refresh();
-      },
-    };
-
-    configureFloating(floating, {
-      middleware: [offset(8), flip(), shift({padding: 18})],
-      plugins: [
-        click(),
-        dismiss(),
-        role({role: 'menu'}),
-        listNavigation(() => ({
-          listRef,
-          activeIndex: active.value,
-          loop: true,
-          onNavigate: active.set,
-        })),
-        typeahead({
-          listRef: labelRef,
-          get activeIndex() {
-            return active.value;
-          },
-          onMatch: (index) => {
-            active.set(index);
-            if (index != null) {
-              items[index]?.focus({preventScroll: true});
-            }
-          },
-        }),
-      ],
-    });
+    floating.middleware = [offset(8), flip(), shift({padding: 18})];
 
     onFloatingTemplateMount(template, (element) => {
-      items = [
-        ...element.querySelectorAll<HTMLElement>('[data-menu-item]'),
-      ];
-      listRef.current = items;
-      active.set(active.value);
       element.addEventListener('click', (event) => {
         if (!(event.target instanceof Element)) return;
         const item = event.target.closest<HTMLElement>('[data-menu-item]');
         if (!item || !element.contains(item)) return;
-        const index = Number(item.dataset.index);
-        active.set(index);
-        emitExampleAction(scope, `${labels[index]} selected`);
-        closeFloating(floating, event);
+        emitExampleAction(scope, `${item.dataset.label} selected`);
       });
     });
     onFloatingOpenChange(floating, ({open}) => {
-      if (!open) active.set(null);
       emitExampleAction(
         scope,
         open

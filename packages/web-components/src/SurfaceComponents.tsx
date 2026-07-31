@@ -588,6 +588,16 @@ interface FloatingFocusManagerHost extends HTMLElement {
   outsideElementsInert: boolean;
 }
 
+function getNestedPortalTargets(root: FloatingRootElement) {
+  const portalTarget = root.floatingElement?.closest(
+    "floating-portal-target",
+  );
+  if (!portalTarget) return [];
+  return Array.from(portalTarget.children).filter(
+    (element) => element.localName === "floating-portal-target",
+  );
+}
+
 const FloatingFocusManagerBase = c(
   () => {
     const host = useHost<FloatingFocusManagerHost>().current;
@@ -601,6 +611,7 @@ const FloatingFocusManagerBase = c(
         initialFocus: host.initialFocus,
         returnFocus: host.returnFocus,
         outsideElementsInert: host.outsideElementsInert,
+        getInsideElements: () => getNestedPortalTargets(root),
       }));
       const cleanup = plugin.connect(root.controller.context) || undefined;
       plugin.update?.(root.controller.context);

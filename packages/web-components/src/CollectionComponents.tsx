@@ -16,9 +16,13 @@ import {
   FloatingList,
   FloatingTree,
   NextDelayGroup,
+  listNavigation,
+  typeahead,
   type CompositeOptions,
+  type FloatingPlugin,
 } from '@floating-ui-plus/web';
 
+import {getFloatingRootRuntime} from './FloatingController';
 import {
   floatingComponentContext,
   type FloatingCompositeContext,
@@ -32,6 +36,7 @@ const contentsStyles = `
 `;
 
 let nodeId = 0;
+let discoveredListItemId = 0;
 
 interface FloatingTreeHost extends HTMLElement {
   tree: FloatingTree;
@@ -169,33 +174,269 @@ export class FloatingNodeElement extends FloatingNodeBase {
 
 interface FloatingListHost extends HTMLElement {
   list: FloatingList<unknown>;
+  itemSelector: string;
+  navigation: boolean;
+  typeahead: boolean;
+  loop: boolean;
+  nested: boolean;
+  activeIndex: number | null;
+  commitActiveIndex(index: number | null): void;
 }
 
-const FloatingListBase = c(() => {
-  const host = useHost<FloatingListHost>().current;
-  const inheritedContext = useContext(floatingComponentContext);
-  const root = inheritedContext.root;
-  const contextValue = useMemo(
-    () => ({...inheritedContext, list: host.list}),
-    [inheritedContext, host.list],
-  );
-  useProvider(floatingComponentContext, contextValue);
+export interface FloatingListActiveIndexChangeDetail {
+  activeIndex: number | null;
+}
 
-  useLayoutEffect(() => {
-    root?.controller.withList(host.list);
-  }, [root, host.list]);
+const FloatingListBase = c(
+  () => {
+    const host = useHost<FloatingListHost>().current;
+    const inheritedContext = useContext(floatingComponentContext);
+    const root = inheritedContext.root;
+    const contextValue = useMemo(
+      () => ({...inheritedContext, list: host.list}),
+      [inheritedContext, host.list],
+    );
+    const elementRef = useMemo(
+      () => ({current: [] as Array<HTMLElement | null>}),
+      [],
+    );
+    const labelRef = useMemo(
+      () => ({current: [] as Array<string | null>}),
+      [],
+    );
+    const originalItemState = useMemo(
+      () =>
+        new Map<
+          HTMLElement,
+          {tabIndex: string | null; active: string | null}
+        >(),
+      [],
+    );
+    const discoveredItems = useMemo(
+      () =>
+        new Map<
+          HTMLElement,
+          {id: string; label: string | null; unregister: () => void}
+        >(),
+      [],
+    );
+    useProvider(floatingComponentContext, contextValue);
 
-  return (
-    <host shadowDom>
-      <style>{contentsStyles}</style>
-      <slot />
-    </host>
-  );
-});
+    useLayoutEffect(() => {
+      const clearDiscoveredItems = (
+        except = new Set<HTMLElement>(),
+      ) => {
+        for (const [element, item] of discoveredItems) {
+          if (except.has(element)) continue;
+          item.unregister();
+          discoveredItems.delete(element);
+        }
+      };
+      const syncDiscoveredItems = () => {
+        if (!host.itemSelector) {
+          clearDiscoveredItems();
+          return;
+        }
+        let elements: HTMLElement[];
+        try {
+          elements = Array.from(
+            host.querySelectorAll<HTMLElement>(host.itemSelector),
+          ).filter(
+            (element) => element.closest('floating-list') === host,
+          );
+        } catch {
+          clearDiscoveredItems();
+          return;
+        }
+        const currentElements = new Set(elements);
+        clearDiscoveredItems(currentElements);
+        for (const element of elements) {
+          const label =
+            element.dataset.label ??
+            element.getAttribute('aria-label') ??
+            element.textContent;
+          const existing = discoveredItems.get(element);
+          if (existing) {
+            if (existing.label !== label) {
+              existing.label = label;
+              host.list.update(existing.id, {label});
+            }
+            continue;
+          }
+          const id = `floating-list-discovered-${++discoveredListItemId}`;
+          discoveredItems.set(element, {
+            id,
+            label,
+            unregister: host.list.register({
+              id,
+              element,
+              label,
+              value: element,
+            }),
+          });
+        }
+      };
+
+      syncDiscoveredItems();
+      const observer = new MutationObserver(syncDiscoveredItems);
+      observer.observe(host, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['aria-label', 'data-label'],
+      });
+      return () => {
+        observer.disconnect();
+        clearDiscoveredItems();
+      };
+    }, [host.list, host.itemSelector, discoveredItems]);
+
+    const restoreItems = (except = new Set<HTMLElement>()) => {
+      for (const [element, original] of originalItemState) {
+        if (except.has(element)) continue;
+        if (original.tabIndex == null) {
+          element.removeAttribute('tabindex');
+        } else {
+          element.setAttribute('tabindex', original.tabIndex);
+        }
+        if (original.active == null) {
+          delete element.dataset.active;
+        } else {
+          element.dataset.active = original.active;
+        }
+        originalItemState.delete(element);
+      }
+    };
+
+    const syncItems = () => {
+      const items = host.list.items;
+      elementRef.current = items.map((item) => item.element);
+      labelRef.current = items.map((item) => item.label);
+      const currentElements = new Set(
+        elementRef.current.filter(
+          (element): element is HTMLElement => element != null,
+        ),
+      );
+      restoreItems(currentElements);
+      if (!host.navigation && !host.typeahead) {
+        restoreItems();
+        root?.controller.refresh();
+        return;
+      }
+      if (
+        host.activeIndex != null &&
+        !elementRef.current[host.activeIndex]
+      ) {
+        host.commitActiveIndex(null);
+      }
+      items.forEach(({element}, index) => {
+        if (!element) return;
+        if (!originalItemState.has(element)) {
+          originalItemState.set(element, {
+            tabIndex: element.getAttribute('tabindex'),
+            active: element.getAttribute('data-active'),
+          });
+        }
+        element.tabIndex = index === host.activeIndex ? 0 : -1;
+        element.dataset.active = String(index === host.activeIndex);
+      });
+      root?.controller.refresh();
+    };
+
+    useLayoutEffect(() => {
+      if (!root) return;
+      root.controller.withList(host.list);
+      syncItems();
+      const unsubscribe = host.list.subscribe(syncItems);
+      return () => {
+        unsubscribe();
+        restoreItems();
+        if (root.controller.list === host.list) {
+          root.controller.withList();
+        }
+      };
+    }, [
+      root,
+      host.list,
+      host.navigation,
+      host.typeahead,
+      host.activeIndex,
+      originalItemState,
+    ]);
+
+    useLayoutEffect(() => {
+      if (!root || (!host.navigation && !host.typeahead)) return;
+      const plugins: FloatingPlugin[] = [];
+      if (host.navigation) {
+        plugins.push(
+          listNavigation(() => ({
+            listRef: elementRef,
+            activeIndex: host.activeIndex,
+            loop: host.loop,
+            nested: host.nested || root.controller.context.nested,
+            onNavigate: (index) => host.commitActiveIndex(index),
+          })),
+        );
+      }
+      if (host.typeahead) {
+        plugins.push(
+          typeahead(() => ({
+            listRef: labelRef,
+            activeIndex: host.activeIndex,
+            onMatch: (index) => {
+              host.commitActiveIndex(index);
+              elementRef.current[index]?.focus({preventScroll: true});
+            },
+          })),
+        );
+      }
+      return getFloatingRootRuntime(root).registerComponentPlugins(
+        host,
+        plugins,
+      );
+    }, [
+      root,
+      host.navigation,
+      host.typeahead,
+      host.loop,
+      host.nested,
+      elementRef,
+      labelRef,
+    ]);
+
+    useEffect(() => {
+      if (!root) return;
+      return root.controller.context.events.on('openchange', ({open}) => {
+        if (!open) host.commitActiveIndex(null);
+      });
+    }, [root]);
+
+    return (
+      <host shadowDom>
+        <style>{contentsStyles}</style>
+        <slot />
+      </host>
+    );
+  },
+  {
+    props: {
+      itemSelector: {
+        type: String,
+        value: (): string => '',
+        attr: 'item-selector',
+      },
+      navigation: {type: Boolean, value: (): boolean => false, reflect: true},
+      typeahead: {type: Boolean, value: (): boolean => false, reflect: true},
+      loop: {type: Boolean, value: (): boolean => false, reflect: true},
+      nested: {type: Boolean, value: (): boolean => false, reflect: true},
+    },
+  },
+);
 
 /** Provides a shared ordered list to a descendant root and list items. */
 export class FloatingListElement extends FloatingListBase {
   #list: FloatingList<unknown> = new FloatingList();
+  #activeIndex: number | null = null;
 
   get updateComplete() {
     return this.updated;
@@ -209,6 +450,35 @@ export class FloatingListElement extends FloatingListBase {
     if (value === this.#list) return;
     this.#list = value;
     void this.update();
+  }
+
+  get activeIndex() {
+    return this.#activeIndex;
+  }
+
+  set activeIndex(value: number | null) {
+    this.#setActiveIndex(value, false);
+  }
+
+  commitActiveIndex(index: number | null) {
+    this.#setActiveIndex(index, true);
+  }
+
+  #setActiveIndex(index: number | null, emit: boolean) {
+    if (index === this.#activeIndex) return;
+    this.#activeIndex = index;
+    void this.update();
+    if (!emit) return;
+    this.dispatchEvent(
+      new CustomEvent<FloatingListActiveIndexChangeDetail>(
+        'activeindexchange',
+        {
+          bubbles: true,
+          composed: true,
+          detail: {activeIndex: index},
+        },
+      ),
+    );
   }
 }
 
@@ -542,5 +812,9 @@ declare global {
     'next-floating-delay-group': NextFloatingDelayGroupElement;
     'floating-composite': FloatingCompositeElement;
     'floating-composite-item': FloatingCompositeItemElement;
+  }
+
+  interface HTMLElementEventMap {
+    activeindexchange: CustomEvent<FloatingListActiveIndexChangeDetail>;
   }
 }

@@ -3,6 +3,7 @@ import {afterEach, describe, expect, test, vi} from 'vitest';
 import {
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+  FLOATING_UI_PLUS_CLOSE_ATTRIBUTE,
   FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
   FloatingArrowElement,
   FloatingCompositeElement,
@@ -14,8 +15,16 @@ import {
   offset,
 } from '../../src';
 
+const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+
 afterEach(() => {
   document.body.replaceChildren();
+  if (originalScrollIntoView) {
+    HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+  } else {
+    delete (HTMLElement.prototype as {scrollIntoView?: unknown})
+      .scrollIntoView;
+  }
 });
 
 describe('FloatingRootElement', () => {
@@ -68,6 +77,112 @@ describe('FloatingRootElement', () => {
     expect(root.hasAttribute('open')).toBe(true);
     expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
     expect(listener).toHaveBeenCalledOnce();
+  });
+
+  test('closes template content through the declarative close marker', async () => {
+    const root = document.createElement('floating-root');
+    root.interactions = 'click dismiss';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+        <section>
+          Content
+          <button ${FLOATING_UI_PLUS_CLOSE_ATTRIBUTE}>Close</button>
+        </section>
+      </template>
+    `;
+    const listener = vi.fn();
+    root.addEventListener('openchange', listener);
+    document.body.append(root);
+    await root.updateComplete;
+
+    root.querySelector('button')?.click();
+    await vi.waitFor(() => {
+      expect(root.open).toBe(true);
+      expect(root.floatingElement).not.toBeNull();
+    });
+    root.floatingElement?.querySelector('button')?.click();
+
+    await vi.waitFor(() => {
+      expect(root.open).toBe(false);
+      expect(root.floatingElement).toBeNull();
+    });
+    expect(listener).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        detail: expect.objectContaining({open: false, reason: 'click'}),
+      }),
+    );
+  });
+
+  test('lets a floating list own navigation and typeahead state', async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.interactions = 'dismiss';
+    root.floatingRole = 'menu';
+    root.innerHTML = `
+      <button slot="reference">Open</button>
+      <section slot="floating">
+        <floating-list navigation typeahead loop>
+          <floating-list-item label="Inspect">
+            <button role="menuitem">Inspect</button>
+          </floating-list-item>
+          <floating-list-item label="Signal">
+            <button role="menuitem">Signal</button>
+          </floating-list-item>
+        </floating-list>
+      </section>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    const list = root.querySelector('floating-list')!;
+    const listItems = Array.from(root.querySelectorAll('floating-list-item'));
+    await list.updateComplete;
+    await Promise.all(listItems.map((item) => item.updateComplete));
+    const reference = root.querySelector<HTMLButtonElement>(
+      '[slot="reference"]',
+    )!;
+    const items = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'),
+    );
+
+    reference.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+    await vi.waitFor(() => {
+      expect(list.activeIndex).toBe(0);
+      expect(document.activeElement).toBe(items[0]);
+      expect(items[0]?.tabIndex).toBe(0);
+      expect(items[1]?.tabIndex).toBe(-1);
+    });
+
+    items[0]?.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 's'}),
+    );
+    await vi.waitFor(() => {
+      expect(list.activeIndex).toBe(1);
+      expect(document.activeElement).toBe(items[1]);
+      expect(items[1]?.dataset.active).toBe('true');
+    });
+
+    root.controller.context.onOpenChange(false);
+    await vi.waitFor(() => {
+      expect(list.activeIndex).toBeNull();
+      expect(items.every((item) => item.tabIndex === -1)).toBe(true);
+    });
+
+    list.navigation = false;
+    list.typeahead = false;
+    await list.updateComplete;
+    await vi.waitFor(() => {
+      expect(
+        items.every(
+          (item) =>
+            !item.hasAttribute('tabindex') &&
+            !item.hasAttribute('data-active'),
+        ),
+      ).toBe(true);
+    });
   });
 
   test('connects and replaces plugins assigned after the root is connected', async () => {
@@ -725,6 +840,33 @@ describe('FloatingRootElement', () => {
 
     expect(composite).toBeInstanceOf(FloatingCompositeElement);
     expect(document.activeElement).toBe(buttons[1]);
+  });
+
+  test('discovers list items from a selector and tracks DOM changes', async () => {
+    const list = document.createElement('floating-list');
+    list.setAttribute('item-selector', '[data-command]');
+    list.innerHTML = `
+      <button data-command data-label="One">First label</button>
+      <button data-command>Two</button>
+    `;
+    document.body.append(list);
+    await list.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(list.list.items.map((item) => item.label)).toEqual([
+        'One',
+        'Two',
+      ]);
+    });
+
+    const first = list.querySelector('button')!;
+    first.dataset.label = 'Updated';
+    list.lastElementChild?.remove();
+    await vi.waitFor(() => {
+      expect(list.list.items.map((item) => item.label)).toEqual([
+        'Updated',
+      ]);
+    });
   });
 
   test('renders an arrow component with an SVG contract', async () => {
