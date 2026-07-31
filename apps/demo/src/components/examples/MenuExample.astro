@@ -26,7 +26,12 @@ import {MENU_LABELS} from '../../example-data';
       <floating-portal>
         <template data-menu-content>
           <div class="menu-panel">
-            <div class="menu-heading">Jump to a field</div>
+            <div class="menu-heading">
+              <span>Jump to a field</span>
+              <span class="menu-shortcuts" aria-label="Arrow keys to navigate, Enter to select, Escape to close">
+                <kbd>↑</kbd><kbd>↓</kbd><kbd>↵</kbd><kbd>Esc</kbd>
+              </span>
+            </div>
             <floating-list
               navigation
               typeahead
@@ -34,16 +39,15 @@ import {MENU_LABELS} from '../../example-data';
               item-selector="[data-menu-item]"
             >
               {
-                MENU_LABELS.map((label, index) => (
+                MENU_LABELS.map((label) => (
                   <button
                     class="menu-item"
                     role="menuitem"
                     data-fup-close
                     data-menu-item
-                    data-index={index}
                     data-label={label}
                   >
-                    <span>{label}</span><kbd>{index + 1}</kbd>
+                    <span>{label}</span><kbd>{label.slice(0, 1).toUpperCase()}</kbd>
                   </button>
                 ))
               }

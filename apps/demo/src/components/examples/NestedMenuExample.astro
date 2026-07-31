@@ -40,7 +40,7 @@ import {
                   data-root-menu-action
                   data-label={NESTED_MENU_ROOT_LABELS[0]}
                 >
-                  <span>{NESTED_MENU_ROOT_LABELS[0]}</span><kbd>1</kbd>
+                  <span>{NESTED_MENU_ROOT_LABELS[0]}</span><kbd>{NESTED_MENU_ROOT_LABELS[0].slice(0, 1).toUpperCase()}</kbd>
                 </button>
                 <floating-root data-projects-root placement="right-start">
                   <floating-node node-id="projects">
@@ -53,7 +53,7 @@ import {
                         data-label={NESTED_MENU_ROOT_LABELS[1]}
                       >
                         <span>{NESTED_MENU_ROOT_LABELS[1]}</span>
-                        <kbd aria-hidden="true">→</kbd>
+                        <span class="menu-item-shortcuts"><kbd>{NESTED_MENU_ROOT_LABELS[1].slice(0, 1).toUpperCase()}</kbd><kbd aria-hidden="true">→</kbd></span>
                       </button>
                     </floating-reference>
                     <floating-list
@@ -70,7 +70,7 @@ import {
                         >
                           <div class="menu-heading">Choose a project</div>
                           {
-                            NESTED_MENU_PROJECT_LABELS.map((label, index) => (
+                            NESTED_MENU_PROJECT_LABELS.map((label) => (
                               <button
                                 class="menu-item"
                                 role="menuitem"
@@ -78,7 +78,7 @@ import {
                                 data-project-menu-item
                                 data-label={label}
                               >
-                                <span>{label}</span><kbd>{index + 1}</kbd>
+                                <span>{label}</span><kbd>{label.slice(0, 1).toUpperCase()}</kbd>
                               </button>
                             ))
                           }
@@ -95,7 +95,7 @@ import {
                   data-root-menu-action
                   data-label={NESTED_MENU_ROOT_LABELS[2]}
                 >
-                  <span>{NESTED_MENU_ROOT_LABELS[2]}</span><kbd>3</kbd>
+                  <span>{NESTED_MENU_ROOT_LABELS[2]}</span><kbd>{NESTED_MENU_ROOT_LABELS[2].slice(0, 1).toUpperCase()}</kbd>
                 </button>
               </floating-list>
             </div>

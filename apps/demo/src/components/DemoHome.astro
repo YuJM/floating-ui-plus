@@ -1,0 +1,53 @@
+---
+import {ArrowRight, Layers, Search, Workflow} from 'lucide-astro';
+import {siNpm} from 'simple-icons';
+import {getRelativeLocaleUrl} from 'astro:i18n';
+import * as m from '../paraglide/messages';
+import DemoLayout from '../layouts/DemoLayout.astro';
+import {EXAMPLE_IDS, getExample, type Locale} from '../i18n';
+import {EXAMPLE_ICONS} from '../example-icons';
+import {getNpmPackages} from '../npm-packages';
+
+const {locale} = Astro.props as {locale: Locale};
+const options = {locale};
+const examples = EXAMPLE_IDS.map((example) => getExample(locale, example));
+const npmPackages = getNpmPackages();
+---
+
+<DemoLayout locale={locale}>
+  <section class="demo-overview" aria-labelledby="demo-overview-title">
+    <div class="demo-overview-copy">
+      <span class="section-kicker">{m.hero_kicker(undefined, options)}</span>
+      <h2 id="demo-overview-title"><Layers aria-hidden="true" size={32} strokeWidth={1.5} />{m.hero_title(undefined, options)}</h2>
+      <p>{m.hero_copy(undefined, options)}</p>
+    </div>
+    <div class="demo-example-list" aria-label={m.patterns_title(undefined, options)}>
+      {examples.map((example) => (
+        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=web-components`} data-example-link={example.id}>
+          {(() => {
+            const Icon = EXAMPLE_ICONS[example.id];
+            return <Icon class="demo-example-icon" aria-hidden="true" size={21} strokeWidth={1.7} />;
+          })()}
+          <strong>{example.label}</strong>
+          <ArrowRight aria-hidden="true" size={16} strokeWidth={1.8} />
+        </a>
+      ))}
+    </div>
+  </section>
+  <section class="why-plus" aria-labelledby="why-plus-title">
+    <div><h2 id="why-plus-title">{m.foundation_title(undefined, options)}</h2></div>
+    <div class="why-plus-copy">
+      <p>{m.hero_copy(undefined, options)}</p>
+      <div class="why-plus-points">
+        <article><Workflow aria-hidden="true" size={22} strokeWidth={1.7} /><h3>{m.foundation_state_title(undefined, options)}</h3><p>{m.foundation_state_copy(undefined, options)}</p></article>
+        <article><Search aria-hidden="true" size={22} strokeWidth={1.7} /><h3>{m.foundation_search_title(undefined, options)}</h3><p>{m.foundation_search_copy(undefined, options)}</p></article>
+      </div>
+    </div>
+  </section>
+  <section class="npm-releases" aria-labelledby="npm-releases-title">
+    <div class="npm-releases-copy"><h2 id="npm-releases-title">{m.packages_title(undefined, options)}</h2><p>{m.packages_copy(undefined, options)}</p></div>
+    <div class="npm-package-list" aria-label="npm packages">
+      {npmPackages.map((pkg) => (<a class="npm-package-link" href={pkg.href} target="_blank" rel="noreferrer" data-npm-package={pkg.name}><svg aria-hidden="true" viewBox="0 0 24 24"><path d={siNpm.path} /></svg><span class="npm-package-copy"><strong>{pkg.name}</strong></span><span class="npm-package-version" data-npm-package-version>{pkg.version ? `v${pkg.version}` : 'npm'}</span></a>))}
+    </div>
+  </section>
+</DemoLayout>

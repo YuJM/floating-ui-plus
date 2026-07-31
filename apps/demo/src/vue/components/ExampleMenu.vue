@@ -45,9 +45,14 @@ const plugins = [
           <FloatingPortal v-if="open" :active="open">
             <Transition name="vue-surface">
               <FloatingContent class="menu-panel">
-                <div class="menu-heading">Jump to a field</div>
+                <div class="menu-heading">
+                  <span>Jump to a field</span>
+                  <span class="menu-shortcuts" aria-label="Arrow keys to navigate, Enter to select, Escape to close">
+                    <kbd>↑</kbd><kbd>↓</kbd><kbd>↵</kbd><kbd>Esc</kbd>
+                  </span>
+                </div>
                 <FloatingListItem
-                  v-for="(label, index) in labels"
+                  v-for="label in labels"
                   :key="label"
                   tag="button"
                   :label="label"
@@ -55,7 +60,7 @@ const plugins = [
                   role="menuitem"
                   close-on-click
                 >
-                  <span>{{ label }}</span><kbd>{{ index + 1 }}</kbd>
+                  <span>{{ label }}</span><kbd>{{ label.slice(0, 1).toUpperCase() }}</kbd>
                 </FloatingListItem>
               </FloatingContent>
             </Transition>

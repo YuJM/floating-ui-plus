@@ -3,7 +3,8 @@ export const DEFAULT_SITE =
   'https://fup.polcaneli.com';
 export const DEFAULT_SOCIAL_IMAGE = '/og-image.png';
 
-import {EXAMPLE_BY_ID, EXAMPLES, type ExampleId} from './demo-registry';
+import {EXAMPLE_IDS, getExample, type ExampleId, type Locale} from './i18n';
+import * as m from './paraglide/messages';
 
 export interface SeoMetadata {
   title: string;
@@ -13,8 +14,10 @@ export interface SeoMetadata {
 }
 
 export const INDEXABLE_ROUTES = [
-  '/',
-  ...EXAMPLES.map((example) => `/${example.id}`),
+  ...(['en', 'ko', 'ja'] as const).flatMap((locale) => [
+    `/${locale}`,
+    ...EXAMPLE_IDS.map((example) => `/${locale}/${example}`),
+  ]),
 ] as const;
 
 export function normalizePathname(pathname: string) {
@@ -22,14 +25,16 @@ export function normalizePathname(pathname: string) {
   return pathname.replace(/\/+$/, '');
 }
 
-export function getSeoMetadata(pathname: string): SeoMetadata {
+export function getSeoMetadata(pathname: string, locale: Locale = 'en'): SeoMetadata {
   const path = normalizePathname(pathname);
+  const options = {locale};
+  const segments = path.split('/').filter(Boolean);
+  const exampleId = (segments.length === 2 ? segments[1] : undefined) as ExampleId | undefined;
 
-  if (path === '/') {
+  if (segments.length === 1 && ['en', 'ko', 'ja'].includes(segments[0] ?? '')) {
     return {
-      title: 'Floating UI Plus Demos — Web Components & Vue',
-      description:
-        'Explore accessible floating UI primitives through interactive Web Components and Vue demos powered by one framework-neutral kernel.',
+      title: `${m.site_name(undefined, options)} — ${m.hero_title(undefined, options)}`,
+      description: m.hero_copy(undefined, options),
       schemaType: 'CollectionPage',
     };
   }
@@ -43,13 +48,11 @@ export function getSeoMetadata(pathname: string): SeoMetadata {
     };
   }
 
-  const example = path.slice(1) as ExampleId;
-  const metadata = EXAMPLE_BY_ID[example];
-
-  if (metadata) {
+  if (exampleId && EXAMPLE_IDS.includes(exampleId)) {
+    const metadata = getExample(locale, exampleId);
     return {
-      title: `${metadata.label} Demo — Floating UI Plus`,
-      description: `${metadata.description} Compare the Web Components and Vue implementations in one demo.`,
+      title: `${metadata.label} — Floating UI Plus`,
+      description: metadata.description,
     };
   }
 
@@ -65,11 +68,14 @@ export function getBreadcrumbs(pathname: string) {
   const path = normalizePathname(pathname);
   if (path === '/') return [];
 
-  const example = path.slice(1) as ExampleId;
-  const metadata = EXAMPLE_BY_ID[example];
+  const [, locale, example] = path.split('/');
+  if (!locale || !example || !['en', 'ko', 'ja'].includes(locale)) return [];
+  const metadata = EXAMPLE_IDS.includes(example as ExampleId)
+    ? getExample(locale as Locale, example as ExampleId)
+    : undefined;
   return metadata
     ? [
-        {name: 'Demos', pathname: '/'},
+        {name: 'Demos', pathname: `/${locale}`},
         {name: metadata.label, pathname: path},
       ]
     : [];

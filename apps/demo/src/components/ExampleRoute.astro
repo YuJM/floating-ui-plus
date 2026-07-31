@@ -1,12 +1,17 @@
 ---
 interface Props {
+  locale: import('../i18n').Locale;
   heading: string;
   kicker: string;
   description: string;
+  build: string;
+  frameworkPackage: '@floating-ui-plus/web-components' | '@floating-ui-plus/vue';
   variant?: 'default' | 'wide' | 'full';
 }
 
-const {heading, kicker, description, variant = 'default'} = Astro.props;
+import {getRelativeLocaleUrl} from 'astro:i18n';
+import * as m from '../paraglide/messages';
+const {heading, kicker, description, build, frameworkPackage, locale, variant = 'default'} = Astro.props;
 ---
 
 <section class:list={[
@@ -14,11 +19,18 @@ const {heading, kicker, description, variant = 'default'} = Astro.props;
   'grid grid-cols-1 gap-8 py-12 lg:grid-cols-2 lg:gap-x-20 lg:py-16',
   `route-view--${variant}`,
 ]}>
-  <a class="back-link" href="/">← All examples</a>
+  <a class="back-link" href={getRelativeLocaleUrl(locale)}>← {m.back_to_patterns(undefined, {locale})}</a>
   <div class="route-copy">
     <span class="section-kicker">{kicker}</span>
     <h2 set:html={heading} />
-    <p>{description}</p>
+    <p class="route-outcome">{description}</p>
+    <aside class="implementation-story" aria-label={m.built_with(undefined, {locale})}>
+      <div class="implementation-heading">
+        <code class="implementation-package">{frameworkPackage}</code>
+        <span>{m.implemented_with(undefined, {locale})}</span>
+      </div>
+      <p>{build}</p>
+    </aside>
   </div>
   <slot />
 </section>

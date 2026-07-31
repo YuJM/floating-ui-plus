@@ -1,48 +1,33 @@
 import {expect, test} from 'playwright/test';
 
-test('loads published package information once when the hub opens', async ({page}) => {
-  let packageRequests = 0;
-  await page.route('**/api/npm-packages', async (route) => {
-    packageRequests += 1;
-    await route.fulfill({
-      json: [
-        {
-          name: '@floating-ui-plus/web',
-          version: '9.9.9',
-          description: 'Fresh package metadata from npm',
-        },
-      ],
-    });
-  });
+test('shows the package choices from the local catalog', async ({page}) => {
+  await page.goto('/en');
 
-  await page.goto('/');
-
-  const webPackage = page.locator('[data-npm-package="@floating-ui-plus/web"]');
-  await expect(webPackage.getByText('v9.9.9')).toBeVisible();
-  await expect(webPackage.locator('[data-npm-package-description]')).toHaveText(
-    'Fresh package metadata from npm',
-  );
-  expect(packageRequests).toBe(1);
+  const packages = page.locator('[data-npm-package]');
+  await expect(packages).toHaveCount(3);
+  await expect(page.locator('[data-npm-package="@floating-ui-plus/web"]')).toBeVisible();
+  await expect(page.locator('[data-npm-package="@floating-ui-plus/web-components"]')).toBeVisible();
+  await expect(page.locator('[data-npm-package="@floating-ui-plus/vue"]')).toBeVisible();
 });
 
 test('integrated demo selects an example and preserves it while switching implementations', async ({page}) => {
-  await page.goto('/');
+  await page.goto('/en');
 
   await expect(
-    page.getByRole('heading', {level: 2, name: /Choose an interaction/}),
+    page.getByRole('heading', {level: 2, name: /Build the moments around your interface/}),
   ).toBeVisible();
 
   await page.getByRole('link', {name: 'Tooltip'}).first().click();
-  await expect(page).toHaveURL(/\/tooltip\?framework=web-components$/);
+  await expect(page).toHaveURL(/\/en\/tooltip\?framework=web-components$/);
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeVisible();
   await expect(page.locator('[data-framework-panel="vue"]')).toBeHidden();
 
-  const switcher = page.getByRole('group', {name: 'Framework implementation'});
+  const switcher = page.getByRole('group', {name: 'Implementation'});
   await switcher.getByRole('link', {name: 'Vue'}).click();
-  await expect(page).toHaveURL(/\/tooltip\?framework=vue$/);
+  await expect(page).toHaveURL(/\/en\/tooltip\?framework=vue$/);
   await expect(page.locator('[data-framework-panel="vue"]')).toBeVisible();
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeHidden();
 
-  await page.goto('/tooltip?framework=unknown');
+  await page.goto('/en/tooltip?framework=unknown');
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeVisible();
 });

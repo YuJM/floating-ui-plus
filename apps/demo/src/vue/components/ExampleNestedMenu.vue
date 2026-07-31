@@ -116,7 +116,7 @@ watch(rootOpen, (open) => {
                       role="menuitem"
                       close-on-click
                     >
-                      <span>{{ rootLabels[0] }}</span><kbd>1</kbd>
+                      <span>{{ rootLabels[0] }}</span><kbd>{{ rootLabels[0].slice(0, 1).toUpperCase() }}</kbd>
                     </FloatingListItem>
 
                     <FloatingRoot
@@ -134,7 +134,7 @@ watch(rootOpen, (open) => {
                           aria-haspopup="menu"
                           :aria-expanded="projectsOpen"
                         >
-                          <span>{{ rootLabels[1] }}</span><kbd>→</kbd>
+                          <span>{{ rootLabels[1] }}</span><span class="menu-item-shortcuts"><kbd>{{ rootLabels[1].slice(0, 1).toUpperCase() }}</kbd><kbd aria-hidden="true">→</kbd></span>
                         </FloatingListItem>
                         <FloatingList
                           navigation
@@ -155,7 +155,7 @@ watch(rootOpen, (open) => {
                                   Choose a project
                                 </div>
                                 <FloatingListItem
-                                  v-for="(label, index) in projectLabels"
+                                  v-for="label in projectLabels"
                                   :key="label"
                                   tag="button"
                                   :label="label"
@@ -164,7 +164,7 @@ watch(rootOpen, (open) => {
                                   close-on-click="all"
                                 >
                                   <span>{{ label }}</span>
-                                  <kbd>{{ index + 1 }}</kbd>
+                                  <kbd>{{ label.slice(0, 1).toUpperCase() }}</kbd>
                                 </FloatingListItem>
                               </FloatingContent>
                             </Transition>
@@ -180,7 +180,7 @@ watch(rootOpen, (open) => {
                       role="menuitem"
                       close-on-click
                     >
-                      <span>{{ rootLabels[2] }}</span><kbd>3</kbd>
+                      <span>{{ rootLabels[2] }}</span><kbd>{{ rootLabels[2].slice(0, 1).toUpperCase() }}</kbd>
                     </FloatingListItem>
                   </FloatingContent>
                 </Transition>
