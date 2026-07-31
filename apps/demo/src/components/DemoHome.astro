@@ -35,7 +35,7 @@ const packageCopy = {
     </div>
     <div class="demo-example-list" aria-label={m.patterns_title(undefined, options)}>
       {examples.map((example) => (
-        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=web-components`} data-example-link={example.id}>
+        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=web-components`} data-example-link={example.id} data-preserve-framework>
           {(() => {
             const Icon = EXAMPLE_ICONS[example.id];
             return <Icon class="demo-example-icon" aria-hidden="true" size={21} strokeWidth={1.7} />;

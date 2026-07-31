@@ -27,6 +27,22 @@ test('keeps the selected implementation when the brand returns home', async ({pa
   await expect(page.locator('html')).toHaveAttribute('data-framework', 'vue');
 });
 
+test('keeps the selected implementation through home, example, and pattern navigation', async ({page}) => {
+  await page.goto('/ko/popover?framework=vue');
+
+  await page.locator('.back-link').click();
+  await expect(page).toHaveURL(/\/ko\?framework=vue$/);
+
+  await page.locator('.demo-example-link[data-example-link="tooltip"]').click();
+  await expect(page).toHaveURL(/\/ko\/tooltip\?framework=vue$/);
+
+  await page.locator('.pattern-picker > summary').click();
+  await page.locator('.pattern-picker-panel [data-example-link="popover"]').click();
+  await expect(page).toHaveURL(/\/ko\/popover\?framework=vue$/);
+  await expect(page.locator('[data-framework-panel="vue"]')).toBeVisible();
+  await expect(page.locator('[data-framework-panel="web-components"]')).toBeHidden();
+});
+
 test('integrated demo selects an example and preserves it while switching implementations', async ({page}) => {
   await page.goto('/');
 

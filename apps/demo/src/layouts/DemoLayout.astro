@@ -68,7 +68,7 @@ const metadata = {
         </div>
         <nav class="language-switch" aria-label={m.language_label(undefined, options)}>
           {(['en', 'ko', 'ja'] as const).map((target) => (
-            <a data-language-switch href={`${getRelativeLocaleUrl(target, example ?? '')}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
+            <a data-language-switch data-preserve-framework href={`${getRelativeLocaleUrl(target, example ?? '')}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
               {{en: 'English', ko: '한국어', ja: '日本語'}[target]}
             </a>
           ))}
@@ -81,7 +81,7 @@ const metadata = {
           <a
             class="brand-link"
             href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`}
-            data-framework-home
+            data-preserve-framework
             aria-label={m.site_name(undefined, options)}
           >
             <h1>
@@ -104,7 +104,7 @@ const metadata = {
           <ChevronDown class="pattern-picker-chevron" aria-hidden="true" size={16} strokeWidth={1.8} />
         </summary>
         <div class="pattern-picker-panel">
-          <a href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`} data-example-link="home" aria-current={example ? undefined : 'page'}>
+          <a href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`} data-example-link="home" data-preserve-framework aria-current={example ? undefined : 'page'}>
             <House aria-hidden="true" size={16} strokeWidth={1.8} />
             <span>{m.site_name(undefined, options)}</span>
           </a>
@@ -113,6 +113,7 @@ const metadata = {
               <a
                 href={`${getRelativeLocaleUrl(locale, item.id)}?framework=web-components`}
                 data-example-link={item.id}
+                data-preserve-framework
                 aria-current={example === item.id ? 'page' : undefined}
               >
                 {(() => {
@@ -141,17 +142,7 @@ const metadata = {
           .querySelector('meta[name="theme-color"]')
           ?.setAttribute('content', framework === 'vue' ? '#effaf5' : '#edf3ff');
 
-        document.querySelectorAll<HTMLAnchorElement>('[data-example-link]').forEach((link) => {
-          const url = new URL(link.href);
-          url.searchParams.set('framework', framework);
-          link.href = url.href;
-        });
-        document.querySelectorAll<HTMLAnchorElement>('[data-language-switch]').forEach((link) => {
-          const url = new URL(link.href);
-          url.searchParams.set('framework', framework);
-          link.href = url.href;
-        });
-        document.querySelectorAll<HTMLAnchorElement>('[data-framework-home]').forEach((link) => {
+        document.querySelectorAll<HTMLAnchorElement>('[data-preserve-framework]').forEach((link) => {
           const url = new URL(link.href);
           url.searchParams.set('framework', framework);
           link.href = url.href;
