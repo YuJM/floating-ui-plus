@@ -5,7 +5,7 @@ import {MIDDLEWARE_ARROW} from '../../src/middleware-registry';
 test('owns Vue menu navigation, typeahead, and item dismissal', async ({
   page,
 }) => {
-  await page.goto('/en/menu?framework=vue');
+  await page.goto('/menu?framework=vue');
   const trigger = page.getByRole('button', {name: /Open navigator/});
   await trigger.click();
   await trigger.press('ArrowDown');
@@ -20,7 +20,7 @@ test('owns Vue menu navigation, typeahead, and item dismissal', async ({
 });
 
 test('opens Teleport-backed nested menus', async ({page}) => {
-  await page.goto('/en/nested-menu?framework=vue');
+  await page.goto('/nested-menu?framework=vue');
   await expect(
     page.getByRole('heading', {
       level: 1,
@@ -51,7 +51,7 @@ test('opens Teleport-backed nested menus', async ({page}) => {
 });
 
 test('traps modal focus and closes on Escape', async ({page}) => {
-  await page.goto('/en/modal?framework=vue');
+  await page.goto('/modal?framework=vue');
   const trigger = page.getByRole('button', {name: /Enter focus room/});
   await trigger.click();
   const dialog = page.getByRole('dialog', {
@@ -150,7 +150,7 @@ test('routes to individual Vue examples and the middleware lab', async ({
   const legacyResponse = await page.goto('/vue/examples/tooltip');
   expect(legacyResponse?.status()).toBe(404);
 
-  await page.goto('/en/tooltip?framework=vue');
+  await page.goto('/tooltip?framework=vue');
   await expect(
     page.getByRole('heading', {level: 2, name: 'Pointer and'}),
   ).toBeVisible();
@@ -160,18 +160,18 @@ test('routes to individual Vue examples and the middleware lab', async ({
   await expect(navigation).toHaveCSS('position', 'sticky');
   await navigation.locator('summary').click();
   await navigation.getByRole('link', {name: 'Popover'}).click();
-  await expect(page).toHaveURL(/\/en\/popover\?framework=vue$/);
+  await expect(page).toHaveURL(/\/popover\?framework=vue$/);
   await expect(
     navigation.locator('[data-example-link="popover"]'),
   ).toHaveAttribute('aria-current', 'page');
 
-  await page.goto('/en/tooltip?framework=vue');
+  await page.goto('/tooltip?framework=vue');
   await page.getByRole('button', {name: /Inspect signal/}).hover();
   const tooltip = page.getByRole('tooltip');
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveCSS('position', 'absolute');
 
-  await page.goto('/en/middleware?framework=vue');
+  await page.goto('/middleware?framework=vue');
   await expect(
     page.locator('.route-copy').getByRole('heading', {level: 2, name: /Position with the constraints/}),
   ).toBeVisible();
@@ -274,7 +274,7 @@ test('routes to individual Vue examples and the middleware lab', async ({
 });
 
 test('placement constants drive all 12 Vue positions', async ({page}) => {
-  await page.goto('/en/placement?framework=vue');
+  await page.goto('/placement?framework=vue');
 
   await expect(
     page.locator('.route-copy').getByRole('heading', {level: 2, name: /Make placement a product decision/}),
@@ -308,7 +308,7 @@ test('placement constants drive all 12 Vue positions', async ({page}) => {
 test('multilingual Vue combobox keeps input focus and teleports results', async ({
   page,
 }) => {
-  await page.goto('/en/combobox?framework=vue');
+  await page.goto('/combobox?framework=vue');
   const input = page.getByRole('combobox', {name: 'Destination'});
 
   await input.focus();

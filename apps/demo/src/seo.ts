@@ -14,7 +14,9 @@ export interface SeoMetadata {
 }
 
 export const INDEXABLE_ROUTES = [
-  ...(['en', 'ko', 'ja'] as const).flatMap((locale) => [
+  '/',
+  ...EXAMPLE_IDS.map((example) => `/${example}`),
+  ...(['ko', 'ja'] as const).flatMap((locale) => [
     `/${locale}`,
     ...EXAMPLE_IDS.map((example) => `/${locale}/${example}`),
   ]),
@@ -29,9 +31,15 @@ export function getSeoMetadata(pathname: string, locale: Locale = 'en'): SeoMeta
   const path = normalizePathname(pathname);
   const options = {locale};
   const segments = path.split('/').filter(Boolean);
-  const exampleId = (segments.length === 2 ? segments[1] : undefined) as ExampleId | undefined;
+  const exampleId = (
+    locale === 'en' && segments.length === 1
+      ? segments[0]
+      : segments.length === 2
+        ? segments[1]
+        : undefined
+  ) as ExampleId | undefined;
 
-  if (segments.length === 1 && ['en', 'ko', 'ja'].includes(segments[0] ?? '')) {
+  if (path === '/' || (segments.length === 1 && ['ko', 'ja'].includes(segments[0] ?? ''))) {
     return {
       title: `${m.site_name(undefined, options)} — ${m.hero_title(undefined, options)}`,
       description: m.hero_copy(undefined, options),
@@ -68,14 +76,17 @@ export function getBreadcrumbs(pathname: string) {
   const path = normalizePathname(pathname);
   if (path === '/') return [];
 
-  const [, locale, example] = path.split('/');
-  if (!locale || !example || !['en', 'ko', 'ja'].includes(locale)) return [];
+  const segments = path.split('/').filter(Boolean);
+  const [first, second] = segments;
+  const locale = ['ko', 'ja'].includes(first ?? '') ? first : 'en';
+  const example = locale === 'en' ? first : second;
+  if (!example) return [];
   const metadata = EXAMPLE_IDS.includes(example as ExampleId)
     ? getExample(locale as Locale, example as ExampleId)
     : undefined;
   return metadata
     ? [
-        {name: 'Demos', pathname: `/${locale}`},
+        {name: 'Demos', pathname: locale === 'en' ? '/' : `/${locale}`},
         {name: metadata.label, pathname: path},
       ]
     : [];

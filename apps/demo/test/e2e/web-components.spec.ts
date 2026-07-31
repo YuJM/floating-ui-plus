@@ -5,7 +5,7 @@ import {MIDDLEWARE_ARROW} from '../../src/middleware-registry';
 test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   page,
 }) => {
-  await page.goto('/en/tooltip');
+  await page.goto('/tooltip');
 
   await expect(
     page.getByRole('heading', {
@@ -22,7 +22,7 @@ test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
 test('registers floating elements before the example module runs', async ({
   page,
 }) => {
-  await page.goto('/en/popover');
+  await page.goto('/popover');
 
   const moduleSources = await page
     .locator('script[type="module"][src]')
@@ -46,7 +46,7 @@ test('registers floating elements before the example module runs', async ({
 test('keeps portal template content inert across refresh until it opens', async ({
   page,
 }) => {
-  await page.goto('/en/popover');
+  await page.goto('/popover');
   await page.reload();
   await expect(page.locator('[data-demo="popover"]')).toHaveAttribute(
     'data-initialized',
@@ -82,7 +82,7 @@ test('keeps portal template content inert across refresh until it opens', async 
 test('menu starts roving focus at the first item after opening with a pointer', async ({
   page,
 }) => {
-  await page.goto('/en/menu');
+  await page.goto('/menu');
 
   const trigger = page.getByRole('button', {name: 'Open navigator'});
   const firstItem = page.getByRole('menuitem', {name: /North star/});
@@ -99,7 +99,7 @@ test('menu starts roving focus at the first item after opening with a pointer', 
 });
 
 test('nested menu preserves the complete keyboard path', async ({page}) => {
-  await page.goto('/en/nested-menu');
+  await page.goto('/nested-menu');
   await expect(page.locator('[data-demo="nested-menu"]')).toHaveAttribute(
     'data-initialized',
     'true',
@@ -182,7 +182,7 @@ test('nested menu preserves the complete keyboard path', async ({page}) => {
 });
 
 test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => {
-  await page.goto('/en/modal');
+  await page.goto('/modal');
   await expect(page.locator('[data-demo="modal"]')).toHaveAttribute(
     'data-initialized',
     'true',
@@ -274,7 +274,7 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
 test('tooltip component opens from hover or keyboard focus and dismisses cleanly', async ({
   page,
 }) => {
-  await page.goto('/en/tooltip');
+  await page.goto('/tooltip');
   const trigger = page.getByRole('button', {name: /Inspect signal/});
   const tooltip = page.getByRole('tooltip');
 
@@ -291,7 +291,7 @@ test('tooltip component opens from hover or keyboard focus and dismisses cleanly
 });
 
 test('cursor signal follows the pointer virtual reference', async ({page}) => {
-  await page.goto('/en/client-point');
+  await page.goto('/client-point');
   await expect(page.locator('[data-demo="client-point"]')).toHaveAttribute(
     'data-initialized',
     'true',
@@ -331,7 +331,7 @@ test('cursor signal follows the pointer virtual reference', async ({page}) => {
 test('all middleware fixtures expose their observable behavior', async ({
   page,
 }) => {
-  await page.goto('/en/middleware');
+  await page.goto('/middleware');
   await expect(page.locator('[data-demo="middleware"]')).toHaveAttribute(
     'data-initialized',
     'true',
@@ -547,7 +547,7 @@ test('all middleware fixtures expose their observable behavior', async ({
 });
 
 test('placement controls drive all 12 component positions', async ({page}) => {
-  await page.goto('/en/placement');
+  await page.goto('/placement');
   await expect(page.locator('[data-demo="placement"]')).toHaveAttribute(
     'data-initialized',
     'true',
@@ -585,7 +585,7 @@ test('placement controls drive all 12 component positions', async ({page}) => {
 test('multilingual combobox keeps input focus and renders results', async ({
   page,
 }) => {
-  await page.goto('/en/combobox');
+  await page.goto('/combobox');
   await expect(page.locator('[data-demo="combobox"]')).toHaveAttribute(
     'data-initialized',
     'true',

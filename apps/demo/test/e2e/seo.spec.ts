@@ -3,7 +3,7 @@ import {expect, test} from 'playwright/test';
 import {DEFAULT_SITE, INDEXABLE_ROUTES} from '../../src/seo';
 
 test('publishes complete canonical and social metadata', async ({page}) => {
-  await page.goto('/en');
+  await page.goto('/');
 
   await expect(page).toHaveTitle(
     /Floating UI Plus/,
@@ -14,11 +14,11 @@ test('publishes complete canonical and social metadata', async ({page}) => {
   );
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',
-    `${DEFAULT_SITE}/en`,
+    `${DEFAULT_SITE}/`,
   );
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
     'content',
-    `${DEFAULT_SITE}/en`,
+    `${DEFAULT_SITE}/`,
   );
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     'content',
@@ -89,8 +89,8 @@ test('publishes crawl controls, sitemap, manifest, and a noindex 404', async ({
   const sitemap = await request.get('/sitemap-0.xml');
   expect(sitemap.ok()).toBe(true);
   const sitemapSource = await sitemap.text();
-  expect(sitemapSource).toContain(`${DEFAULT_SITE}/en/tooltip`);
-  expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/en/tooltip?framework=vue`);
+  expect(sitemapSource).toContain(`${DEFAULT_SITE}/tooltip`);
+  expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/tooltip?framework=vue`);
   expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/404`);
   expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/web-components`);
   expect(sitemapSource).not.toContain(`${DEFAULT_SITE}/vue`);

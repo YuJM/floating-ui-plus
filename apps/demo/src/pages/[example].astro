@@ -1,6 +1,6 @@
 ---
-import LocalizedExamplePage from '../../components/LocalizedExamplePage.astro';
-import {EXAMPLE_IDS} from '../../i18n';
+import LocalizedExamplePage from '../components/LocalizedExamplePage.astro';
+import {EXAMPLE_IDS} from '../i18n';
 export function getStaticPaths() { return EXAMPLE_IDS.map((example) => ({params: {example}})); }
 const {example} = Astro.params;
 ---

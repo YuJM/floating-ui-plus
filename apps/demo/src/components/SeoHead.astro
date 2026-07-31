@@ -21,7 +21,9 @@ const pathname = normalizePathname(Astro.url.pathname);
 const canonical = new URL(pathname, site);
 const socialImage = new URL(image, site);
 const breadcrumbs = getBreadcrumbs(pathname);
-const route = pathname.split('/').slice(2).join('/');
+const route = locale === 'en'
+  ? pathname.replace(/^\//, '')
+  : pathname.split('/').slice(2).join('/');
 const alternateUrls = ['en', 'ko', 'ja'].map((target) => getAbsoluteLocaleUrl(target, route));
 const robots = metadata.noindex
   ? 'noindex, nofollow'
