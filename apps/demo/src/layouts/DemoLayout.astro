@@ -24,6 +24,8 @@ const options = {locale};
 const examples = getExamples(locale);
 const activeExample = examples.find((item) => item.id === example);
 const ActiveExampleIcon = activeExample ? EXAMPLE_ICONS[activeExample.id] : House;
+const framework = Astro.url.searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
+const frameworkSearch = `?framework=${framework}`;
 const routeMetadata = getSeoMetadata(Astro.url.pathname, locale);
 const metadata = {
   ...routeMetadata,
@@ -66,7 +68,7 @@ const metadata = {
         </div>
         <nav class="language-switch" aria-label={m.language_label(undefined, options)}>
           {(['en', 'ko', 'ja'] as const).map((target) => (
-            <a href={`${getRelativeLocaleUrl(target, example ?? '')}${Astro.url.search}`} aria-current={target === locale ? 'page' : undefined}>
+            <a data-language-switch href={`${getRelativeLocaleUrl(target, example ?? '')}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
               {{en: 'English', ko: '한국어', ja: '日本語'}[target]}
             </a>
           ))}
@@ -139,6 +141,11 @@ const metadata = {
           ?.setAttribute('content', framework === 'vue' ? '#effaf5' : '#edf3ff');
 
         document.querySelectorAll<HTMLAnchorElement>('[data-example-link]').forEach((link) => {
+          const url = new URL(link.href);
+          url.searchParams.set('framework', framework);
+          link.href = url.href;
+        });
+        document.querySelectorAll<HTMLAnchorElement>('[data-language-switch]').forEach((link) => {
           const url = new URL(link.href);
           url.searchParams.set('framework', framework);
           link.href = url.href;

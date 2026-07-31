@@ -1,5 +1,5 @@
 ---
-import {ArrowRight, Layers, Search, Workflow} from 'lucide-astro';
+import {ArrowRight, Boxes, Check, Component, ExternalLink, Layers, Search, Workflow} from 'lucide-astro';
 import {siNpm} from 'simple-icons';
 import {getRelativeLocaleUrl} from 'astro:i18n';
 import * as m from '../paraglide/messages';
@@ -12,6 +12,18 @@ const {locale} = Astro.props as {locale: Locale};
 const options = {locale};
 const examples = EXAMPLE_IDS.map((example) => getExample(locale, example));
 const npmPackages = getNpmPackages();
+const appPackages = npmPackages.filter((pkg) => pkg.id !== 'web');
+const corePackage = npmPackages.find((pkg) => pkg.id === 'web');
+const packageCopy = {
+  'web-components': {
+    description: m.packages_web_components_copy(undefined, options),
+    icon: Component,
+  },
+  vue: {
+    description: m.packages_vue_copy(undefined, options),
+    icon: Boxes,
+  },
+};
 ---
 
 <DemoLayout locale={locale}>
@@ -47,7 +59,19 @@ const npmPackages = getNpmPackages();
   <section class="npm-releases" aria-labelledby="npm-releases-title">
     <div class="npm-releases-copy"><h2 id="npm-releases-title">{m.packages_title(undefined, options)}</h2><p>{m.packages_copy(undefined, options)}</p></div>
     <div class="npm-package-list" aria-label="npm packages">
-      {npmPackages.map((pkg) => (<a class="npm-package-link" href={pkg.href} target="_blank" rel="noreferrer" data-npm-package={pkg.name}><svg aria-hidden="true" viewBox="0 0 24 24"><path d={siNpm.path} /></svg><span class="npm-package-copy"><strong>{pkg.name}</strong></span><span class="npm-package-version" data-npm-package-version>{pkg.version ? `v${pkg.version}` : 'npm'}</span></a>))}
+      <p class="npm-package-group-label"><Check aria-hidden="true" size={15} strokeWidth={2.3} />{m.packages_recommended_label(undefined, options)}</p>
+      <div class="npm-app-package-grid">
+        {appPackages.map((pkg) => {
+          const copy = packageCopy[pkg.id as 'web-components' | 'vue'];
+          const Icon = copy.icon;
+          return <a class="npm-package-link npm-package-link--recommended" href={pkg.href} target="_blank" rel="noreferrer" data-npm-package={pkg.name}>
+            <span class="npm-package-icon"><Icon aria-hidden="true" size={22} strokeWidth={1.8} /></span>
+            <span class="npm-package-copy"><strong>{pkg.label}</strong><small>{copy.description}</small><code>{pkg.name}</code></span>
+            <span class="npm-package-meta"><span class="npm-package-version" data-npm-package-version>{pkg.version ? `v${pkg.version}` : 'npm'}</span><ExternalLink aria-hidden="true" size={15} strokeWidth={1.8} /></span>
+          </a>;
+        })}
+      </div>
+      {corePackage && <div class="npm-core-package"><div><span>{m.packages_core_label(undefined, options)}</span><p>{m.packages_core_copy(undefined, options)}</p></div><a class="npm-package-link npm-package-link--core" href={corePackage.href} target="_blank" rel="noreferrer" data-npm-package={corePackage.name}><svg aria-hidden="true" viewBox="0 0 24 24"><path d={siNpm.path} /></svg><span class="npm-package-copy"><strong>{corePackage.name}</strong></span><span class="npm-package-version" data-npm-package-version>{corePackage.version ? `v${corePackage.version}` : 'npm'}</span></a></div>}
     </div>
   </section>
 </DemoLayout>

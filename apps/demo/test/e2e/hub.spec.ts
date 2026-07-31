@@ -31,3 +31,13 @@ test('integrated demo selects an example and preserves it while switching implem
   await page.goto('/en/tooltip?framework=unknown');
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeVisible();
 });
+
+test('preserves the selected framework when switching locale', async ({page}) => {
+  await page.goto('/ko/modal?framework=vue');
+
+  await page.getByRole('link', {name: 'English'}).click();
+
+  await expect(page).toHaveURL(/\/en\/modal\?framework=vue$/);
+  await expect(page.locator('[data-framework-panel="vue"]')).toBeVisible();
+  await expect(page.locator('[data-framework-panel="web-components"]')).toBeHidden();
+});
