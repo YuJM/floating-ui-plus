@@ -89,7 +89,10 @@ const FloatingRootBase = c(
       host.placement,
       host.strategy,
       host.transform,
+      host.interactions,
+      host.floatingRole,
       host.middleware,
+      host.plugins,
       referenceChildren,
       floatingChildren,
     ]);

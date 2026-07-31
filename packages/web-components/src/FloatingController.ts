@@ -10,6 +10,7 @@ import {
   requestFloatingContextScope,
   role,
   type FloatingController,
+  type FloatingContext,
   type FloatingPlugin,
   type OpenChangeReason,
   type ReferenceElement,
@@ -50,7 +51,13 @@ export class FloatingRootRuntime {
   #floatingAttributes = new Set<string>();
   #contextAttachmentCleanup: (() => void) | null = null;
   #unsubscribePosition: (() => void) | null = null;
-  #pluginsInstalled = false;
+  #componentPlugins: FloatingPlugin[] = [];
+  #componentPluginCleanups: Array<() => void> = [];
+  #componentPluginContext: FloatingContext | null = null;
+  #componentPluginsSource: readonly FloatingPlugin[] | null = null;
+  #componentInteractions = '';
+  #componentFloatingRole = '';
+  #componentPluginBridgeInstalled = false;
   #connected = false;
   #disconnectQueued = false;
 
@@ -89,7 +96,8 @@ export class FloatingRootRuntime {
   connect() {
     if (this.#connected) return;
     this.#connected = true;
-    this.#installPlugins();
+    this.#syncComponentPlugins();
+    this.#installComponentPluginBridge();
     this.engine.setContextParent(
       requestFloatingContextScope(this.#host) ?? null,
     );
@@ -155,6 +163,7 @@ export class FloatingRootRuntime {
   }
 
   sync() {
+    this.#syncComponentPlugins();
     this.engine.refresh();
     this.#reconcileContentTemplates();
     this.#syncTemplateMount();
@@ -466,9 +475,41 @@ export class FloatingRootRuntime {
     );
   }
 
-  #installPlugins() {
-    if (this.#pluginsInstalled) return;
-    this.#pluginsInstalled = true;
+  #installComponentPluginBridge() {
+    if (this.#componentPluginBridgeInstalled) return;
+    this.#componentPluginBridgeInstalled = true;
+    this.engine.pipe({
+      name: 'web-components',
+      connect: (context) => {
+        this.#componentPluginContext = context;
+        this.#connectComponentPlugins(context);
+        return () => {
+          this.#cleanupComponentPlugins();
+          if (this.#componentPluginContext === context) {
+            this.#componentPluginContext = null;
+          }
+        };
+      },
+      update: (context) => {
+        for (const plugin of this.#componentPlugins) {
+          plugin.update?.(context);
+        }
+      },
+    });
+  }
+
+  #syncComponentPlugins() {
+    if (
+      this.#componentPluginsSource === this.#host.plugins &&
+      this.#componentInteractions === this.#host.interactions &&
+      this.#componentFloatingRole === this.#host.floatingRole
+    ) {
+      return;
+    }
+    this.#componentPluginsSource = this.#host.plugins;
+    this.#componentInteractions = this.#host.interactions;
+    this.#componentFloatingRole = this.#host.floatingRole;
+
     const names = new Set(
       this.#host.interactions.split(/[\s,]+/).filter(Boolean),
     );
@@ -480,7 +521,25 @@ export class FloatingRootRuntime {
     if (this.#host.floatingRole) {
       plugins.push(role({role: this.#host.floatingRole}));
     }
-    this.engine.pipe(...plugins);
+    this.#componentPlugins = plugins;
+    if (this.#componentPluginContext) {
+      this.#connectComponentPlugins(this.#componentPluginContext);
+    }
+  }
+
+  #connectComponentPlugins(context: FloatingContext) {
+    this.#cleanupComponentPlugins();
+    for (const plugin of this.#componentPlugins) {
+      const cleanup = plugin.connect(context);
+      if (cleanup) this.#componentPluginCleanups.push(cleanup);
+    }
+  }
+
+  #cleanupComponentPlugins() {
+    this.#componentPluginCleanups
+      .splice(0)
+      .reverse()
+      .forEach((cleanup) => cleanup());
   }
 }
 

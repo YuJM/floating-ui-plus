@@ -10,6 +10,7 @@ import {
   FloatingPortalElement,
   FloatingReferenceElement,
   FloatingRootElement,
+  click,
   offset,
 } from '../../src';
 
@@ -67,6 +68,33 @@ describe('FloatingRootElement', () => {
     expect(root.hasAttribute('open')).toBe(true);
     expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
     expect(listener).toHaveBeenCalledOnce();
+  });
+
+  test('connects and replaces plugins assigned after the root is connected', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <button slot="reference">Open</button>
+      <section slot="floating">Content</section>
+    `;
+    const button = root.querySelector('button')!;
+    document.body.append(root);
+    await root.updateComplete;
+
+    root.plugins = [click()];
+    await root.updateComplete;
+    button.click();
+    expect(root.open).toBe(true);
+
+    root.open = false;
+    root.plugins = [];
+    await root.updateComplete;
+    button.click();
+    expect(root.open).toBe(false);
+
+    root.interactions = 'click';
+    await root.updateComplete;
+    button.click();
+    expect(root.open).toBe(true);
   });
 
   test('reconciles replaced slot content', async () => {

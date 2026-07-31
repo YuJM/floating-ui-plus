@@ -8,6 +8,9 @@ Replace `floating-content` with native conditional templates. A
 `data-fup-content`; explicit markers support ambiguous portals and non-portal
 composition. Roots expose `contentTemplate`, and templates emit
 `floatingmount` and `floatingunmount` for fresh-clone initialization.
+Plugins and interaction properties assigned after a root connects now replace
+their active bindings, supporting applications that register Custom Elements
+before their configuration modules run.
 
 Ignore stale asynchronous position measurements after a reference or floating
 element unmounts.

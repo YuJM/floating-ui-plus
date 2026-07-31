@@ -36,6 +36,10 @@ const metadata = {
           ? 'vue'
           : 'web-components';
     </script>
+    <script>
+      // Upgrade floating elements before per-example configuration modules run.
+      import '@floating-ui-plus/web-components';
+    </script>
   </head>
   <body>
     <floating-ui-demo>
@@ -92,7 +96,6 @@ const metadata = {
       <slot />
     </main>
     <script>
-      import '@floating-ui-plus/web-components';
       import {resolveFramework} from '../demo-registry';
 
       function initializeIntegratedDemo() {

@@ -19,6 +19,30 @@ test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
   )).toBe(0);
 });
 
+test('registers floating elements before the example module runs', async ({
+  page,
+}) => {
+  await page.goto('/popover');
+
+  const moduleSources = await page
+    .locator('script[type="module"][src]')
+    .evaluateAll((scripts) =>
+      scripts.map((script) => (script as HTMLScriptElement).src),
+    );
+  const registrationIndex = moduleSources.findIndex((source) =>
+    source.includes('DemoLayout.astro_astro_type_script_index_0'),
+  );
+  const exampleIndex = moduleSources.findIndex((source) =>
+    source.includes('PopoverExample.astro_astro_type_script_index_0'),
+  );
+
+  expect(registrationIndex).toBe(0);
+  expect(exampleIndex).toBeGreaterThan(registrationIndex);
+  expect(
+    await page.evaluate(() => Boolean(customElements.get('floating-root'))),
+  ).toBe(true);
+});
+
 test('keeps portal template content inert across refresh until it opens', async ({
   page,
 }) => {
