@@ -2,13 +2,14 @@ export * from '@floating-ui-plus/web';
 
 export {FloatingArrowElement} from './FloatingArrowElement';
 export {
-  FloatingContentElement,
   FloatingItemElement,
   FloatingReferenceElement,
 } from './RootParts';
+export {FLOATING_UI_PLUS_CONTENT_ATTRIBUTE} from './constants';
 export {
   FloatingRootElement,
   type FloatingOpenChangeDetail,
+  type FloatingTemplateLifecycleDetail,
 } from './FloatingRootElement';
 export {
   FloatingFocusManagerElement,

@@ -18,15 +18,19 @@ import type {
   ReferenceElement,
 } from '@floating-ui-plus/web';
 
-import {
-  getFloatingRootRuntime,
-} from './FloatingController';
+import {getFloatingRootRuntime} from './FloatingController';
 import {floatingComponentContext} from './component-context';
 
 export interface FloatingOpenChangeDetail {
   open: boolean;
   reason?: OpenChangeReason | undefined;
   sourceEvent?: Event | undefined;
+}
+
+export interface FloatingTemplateLifecycleDetail {
+  root: FloatingRootElement;
+  template: HTMLTemplateElement;
+  element: HTMLElement;
 }
 
 const contentsStyles = `
@@ -165,6 +169,10 @@ export class FloatingRootElement extends FloatingRootBase {
     return getFloatingRootRuntime(this).floatingElement;
   }
 
+  get contentTemplate() {
+    return getFloatingRootRuntime(this).contentTemplate;
+  }
+
   use(...plugins: FloatingPlugin[]) {
     getFloatingRootRuntime(this).pipe(...plugins);
     return this;
@@ -205,5 +213,10 @@ export class FloatingRootElement extends FloatingRootBase {
 declare global {
   interface HTMLElementTagNameMap {
     'floating-root': FloatingRootElement;
+  }
+
+  interface HTMLElementEventMap {
+    floatingmount: CustomEvent<FloatingTemplateLifecycleDetail>;
+    floatingunmount: CustomEvent<FloatingTemplateLifecycleDetail>;
   }
 }

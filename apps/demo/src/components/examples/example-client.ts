@@ -1,8 +1,8 @@
 import type {
-  FloatingContentElement,
   FloatingOpenChangeDetail,
   FloatingPlugin,
   FloatingRootElement,
+  FloatingTemplateLifecycleDetail,
 } from '@floating-ui-plus/web-components';
 
 export type ExampleScope = HTMLElement;
@@ -26,52 +26,28 @@ export function floatingRoot(scope: ParentNode, selector: string) {
   return element as FloatingRootElement;
 }
 
-export function floatingContent(scope: ParentNode, selector: string) {
+export function floatingTemplate(scope: ParentNode, selector: string) {
   const ownerDocument =
     scope instanceof Document ? scope : scope.ownerDocument ?? document;
   const element =
     scope.querySelector(selector) ?? ownerDocument.querySelector(selector);
-  if (
-    !(element instanceof HTMLElement) ||
-    element.localName !== 'floating-content'
-  ) {
-    throw new Error(`Missing FloatingContentElement for ${selector}`);
+  if (!(element instanceof HTMLTemplateElement)) {
+    throw new Error(`Missing HTMLTemplateElement for ${selector}`);
   }
-  return element as FloatingContentElement;
+  return element;
 }
 
-export function floatingTemplateContent(element: FloatingContentElement) {
-  const template =
-    element.template ??
-    Array.from(element.children).find(
-      (child): child is HTMLTemplateElement =>
-        child instanceof HTMLTemplateElement,
-    ) ??
-    null;
-  const content = template?.content;
-  if (!content) {
-    throw new Error('FloatingContentElement requires a direct template child');
-  }
-  return content;
-}
-
-export function onFloatingContentMount(
-  element: FloatingContentElement,
-  listener: () => void,
+export function onFloatingTemplateMount(
+  template: HTMLTemplateElement,
+  listener: (element: HTMLElement) => void,
 ) {
-  const sync = () => {
-    if (
-      Array.from(element.children).some(
-        (child) => !(child instanceof HTMLTemplateElement),
-      )
-    ) {
-      listener();
-    }
+  const handleMount = (event: Event) => {
+    listener(
+      (event as CustomEvent<FloatingTemplateLifecycleDetail>).detail.element,
+    );
   };
-  const observer = new MutationObserver(sync);
-  observer.observe(element, {childList: true});
-  sync();
-  return () => observer.disconnect();
+  template.addEventListener('floatingmount', handleMount);
+  return () => template.removeEventListener('floatingmount', handleMount);
 }
 
 export function configureFloating(

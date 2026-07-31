@@ -32,10 +32,17 @@ test('keeps portal template content inert across refresh until it opens', async 
   const trigger = page.getByRole('button', {name: /Open coordinates/});
   const panel = page.locator('.popover-panel');
   await expect(panel).toHaveCount(0);
+  await expect(page.locator('[data-popover-content]')).toHaveAttribute(
+    'data-fup-content',
+    '',
+  );
   expect(
-    await page.locator('[data-popover-content]').evaluate((content) => {
-      const template = content.querySelector('template');
-      return Boolean(template?.content.querySelector('.popover-panel'));
+    await page.locator('[data-popover-content]').evaluate((template) => {
+      return Boolean(
+        (template as HTMLTemplateElement).content.querySelector(
+          '.popover-panel',
+        ),
+      );
     }),
   ).toBe(true);
 

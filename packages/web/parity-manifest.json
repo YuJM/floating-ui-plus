@@ -10,7 +10,7 @@
     "FloatingArrow": "FloatingArrowElement",
     "FloatingDelayGroup": "FloatingDelayGroupElement",
     "useDelayGroup": "FloatingDelayGroupElement.group",
-    "useDelayGroupContext": "Lit Context",
+    "useDelayGroupContext": "Atomico Context",
     "NextFloatingDelayGroup": "NextFloatingDelayGroupElement",
     "useNextDelayGroup": "NextFloatingDelayGroupElement.group",
     "FloatingFocusManager": "FloatingFocusManagerElement",
@@ -22,19 +22,19 @@
     "FloatingNode": "FloatingNodeElement",
     "FloatingTree": "FloatingTreeElement",
     "useFloatingNodeId": "FloatingNodeElement.nodeId",
-    "useFloatingParentNodeId": "Lit Context",
+    "useFloatingParentNodeId": "Atomico Context",
     "useFloatingTree": "FloatingTreeElement.tree",
     "useClick": "click",
     "useClientPoint": "clientPoint",
     "useDismiss": "dismiss",
     "useFloating": "FloatingRootElement",
-    "useFloatingRootContext": "Lit Context",
+    "useFloatingRootContext": "Atomico Context",
     "useFocus": "focus",
     "useHover": "hover",
     "useId": "native element ids",
     "useInteractions": "FloatingRootElement.plugins",
     "useListNavigation": "listNavigation",
-    "useMergeRefs": "FloatingReferenceElement + FloatingContentElement",
+    "useMergeRefs": "FloatingReferenceElement + FloatingRootElement",
     "useRole": "role",
     "useTransitionStatus": "FloatingTransitionElement",
     "useTransitionStyles": "FloatingTransitionElement",
@@ -134,7 +134,7 @@
     },
     "useDelayGroupContext": {
       "web": "Context Protocol",
-      "webComponents": "Lit Context",
+      "webComponents": "Atomico Context",
       "kind": "adapter"
     },
     "NextFloatingDelayGroup": {
@@ -194,7 +194,7 @@
     },
     "useFloatingParentNodeId": {
       "web": "Context Protocol",
-      "webComponents": "Lit Context",
+      "webComponents": "Atomico Context",
       "kind": "adapter"
     },
     "useFloatingTree": {
@@ -216,7 +216,7 @@
     },
     "useFloatingRootContext": {
       "web": "createFloating.context",
-      "webComponents": "Lit Context",
+      "webComponents": "Atomico Context",
       "kind": "kernel"
     },
     "useFocus": {"web": "focus", "webComponents": "focus", "kind": "plugin"},
@@ -234,7 +234,7 @@
     },
     "useMergeRefs": {
       "web": "mergeRefs",
-      "webComponents": "FloatingReferenceElement + FloatingContentElement",
+      "webComponents": "FloatingReferenceElement + native content template",
       "kind": "utility"
     },
     "useRole": {"web": "role", "webComponents": "role", "kind": "plugin"},

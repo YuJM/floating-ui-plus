@@ -1,13 +1,13 @@
 ---
-"@floating-ui-plus/web-components": minor
+"@floating-ui-plus/web-components": major
 "@floating-ui-plus/web": patch
 ---
 
-Add native-template conditional rendering to `floating-content`. A direct
-`template` remains inert while closed, is cloned into Light DOM while open, and
-is removed on close. Expose the native template and its `content` fragment from
-`FloatingContentElement`, and bind direct children only while their root is
-open.
+Replace `floating-content` with native conditional templates. A
+`floating-portal` automatically marks its single owned template with
+`data-fup-content`; explicit markers support ambiguous portals and non-portal
+composition. Roots expose `contentTemplate`, and templates emit
+`floatingmount` and `floatingunmount` for fresh-clone initialization.
 
 Ignore stale asynchronous position measurements after a reference or floating
 element unmounts.

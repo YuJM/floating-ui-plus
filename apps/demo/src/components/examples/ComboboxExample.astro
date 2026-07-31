@@ -27,15 +27,13 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
         />
       </floating-reference>
       <floating-portal>
-        <floating-content data-combobox-content>
-          <template>
-            <div
-              class="combobox-popup"
-              data-combobox-popup
-              aria-label="Destination suggestions"
-            ></div>
-          </template>
-        </floating-content>
+        <template data-combobox-content>
+          <div
+            class="combobox-popup"
+            data-combobox-popup
+            aria-label="Destination suggestions"
+          ></div>
+        </template>
       </floating-portal>
     </floating-root>
     <span class="combobox-icon" aria-hidden="true">⌕</span>
@@ -75,10 +73,10 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   import {
     configureFloating,
     emitExampleAction,
-    floatingContent,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
-    onFloatingContentMount,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
@@ -93,7 +91,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
 
   initializeExample('combobox', (scope) => {
     const floating = floatingRoot(scope, '[data-combobox-root]');
-    const content = floatingContent(scope, '[data-combobox-content]');
+    const template = floatingTemplate(scope, '[data-combobox-content]');
     const input =
       scope.querySelector<HTMLInputElement>('#destination-search');
     const status = scope.querySelector<HTMLElement>('#combobox-status');
@@ -205,8 +203,10 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
       ],
     });
 
-    onFloatingContentMount(content, () => {
-      popup = content.querySelector<HTMLElement>('[data-combobox-popup]');
+    onFloatingTemplateMount(template, (element) => {
+      popup = element.matches('[data-combobox-popup]')
+        ? element
+        : element.querySelector<HTMLElement>('[data-combobox-popup]');
       render();
     });
     search.subscribe(render);

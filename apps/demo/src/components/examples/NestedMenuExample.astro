@@ -23,7 +23,7 @@ import {
               Open actions <span aria-hidden="true">⌄</span>
             </button>
           </floating-reference>
-          <floating-content>
+          <template data-fup-content data-nested-menu-content>
             <div class="menu-panel nested-menu-root">
               <div class="menu-heading">Tree coordinated actions</div>
               <button
@@ -52,7 +52,7 @@ import {
                       <kbd aria-hidden="true">→</kbd>
                     </button>
                   </floating-reference>
-                  <floating-content>
+                  <template data-fup-content data-project-menu-content>
                     <div
                       class="menu-panel nested-menu-submenu"
                       aria-label="Move to project"
@@ -73,7 +73,7 @@ import {
                         ))
                       }
                     </div>
-                  </floating-content>
+                  </template>
                 </floating-node>
               </floating-root>
               <button
@@ -87,7 +87,7 @@ import {
                 <span>{NESTED_MENU_ROOT_LABELS[2]}</span><kbd>3</kbd>
               </button>
             </div>
-          </floating-content>
+          </template>
         </floating-node>
       </floating-root>
     </floating-tree>
@@ -114,19 +114,20 @@ import {
     configureFloating,
     emitExampleAction,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
   initializeExample('nested-menu', (scope) => {
     const parent = floatingRoot(scope, '[data-nested-root]');
-    const child = floatingRoot(scope, '[data-projects-root]');
-    const parentItems = [
-      ...scope.querySelectorAll<HTMLElement>('[data-root-menu-item]'),
-    ];
-    const childItems = [
-      ...scope.querySelectorAll<HTMLElement>('[data-project-menu-item]'),
-    ];
+    const parentTemplate = floatingTemplate(
+      scope,
+      '[data-nested-menu-content]',
+    );
+    const parentItems: HTMLElement[] = [];
+    const childItems: HTMLElement[] = [];
     const parentRef = {
       current: parentItems as Array<HTMLElement | null>,
     };
@@ -134,18 +135,28 @@ import {
       current: childItems as Array<HTMLElement | null>,
     };
     const parentLabels = {
-      current: parentItems.map((item) => item.dataset.label ?? null),
+      current: [
+        ...parentTemplate.content.querySelectorAll<HTMLElement>(
+          '[data-root-menu-item]',
+        ),
+      ].map((item) => item.dataset.label ?? null),
     };
     const childLabels = {
-      current: childItems.map((item) => item.dataset.label ?? null),
+      current: [
+        ...parentTemplate.content.querySelectorAll<HTMLElement>(
+          '[data-project-menu-item]',
+        ),
+      ].map((item) => item.dataset.label ?? null),
     };
+    let child: ReturnType<typeof floatingRoot> | null = null;
+    let childTrigger: HTMLElement | null = null;
     const parentActive = activeItems(
       parentItems,
       () => parent.controller.refresh(),
     );
     const childActive = activeItems(
       childItems,
-      () => child.controller.refresh(),
+      () => child?.controller.refresh(),
     );
 
     configureFloating(parent, {
@@ -153,7 +164,7 @@ import {
       plugins: [
         click(),
         dismiss(() => ({
-          escapeKey: !child.open,
+          escapeKey: !child?.open,
           outsidePress: (event) =>
             !(event.target instanceof Element) ||
             !event.target.closest('.nested-menu-submenu'),
@@ -179,70 +190,120 @@ import {
         }),
       ],
     });
-    configureFloating(child, {
-      middleware: [
-        offset({mainAxis: 6, alignmentAxis: -6}),
-        flip(),
-        shift({padding: 18}),
-      ],
-      plugins: [
-        click(),
-        hover({
-          move: false,
-          delay: {open: 80, close: 120},
-          handleClose: safePolygon(),
-        }),
-        dismiss(),
-        role({role: 'menu'}),
-        listNavigation(() => ({
-          listRef: childRef,
-          activeIndex: childActive.value,
-          nested: true,
-          loop: true,
-          onNavigate: childActive.set,
-        })),
-        typeahead({
-          listRef: childLabels,
-          get activeIndex() {
-            return childActive.value;
-          },
-          onMatch: (index) => {
-            childActive.set(index);
-            if (index != null) {
-              childItems[index]?.focus({preventScroll: true});
-            }
-          },
-        }),
-      ],
+
+    onFloatingTemplateMount(parentTemplate, (element) => {
+      parentItems.splice(
+        0,
+        parentItems.length,
+        ...element.querySelectorAll<HTMLElement>('[data-root-menu-item]'),
+      );
+      parentRef.current = parentItems;
+      child = floatingRoot(element, '[data-projects-root]');
+      childTrigger = parentItems[1] ?? null;
+      configureFloating(child, {
+        middleware: [
+          offset({mainAxis: 6, alignmentAxis: -6}),
+          flip(),
+          shift({padding: 18}),
+        ],
+        plugins: [
+          click(),
+          hover({
+            move: false,
+            delay: {open: 80, close: 120},
+            handleClose: safePolygon(),
+          }),
+          dismiss(),
+          role({role: 'menu'}),
+          listNavigation(() => ({
+            listRef: childRef,
+            activeIndex: childActive.value,
+            nested: true,
+            loop: true,
+            onNavigate: childActive.set,
+          })),
+          typeahead({
+            listRef: childLabels,
+            get activeIndex() {
+              return childActive.value;
+            },
+            onMatch: (index) => {
+              childActive.set(index);
+              if (index != null) {
+                childItems[index]?.focus({preventScroll: true});
+              }
+            },
+          }),
+        ],
+      });
+
+      const childTemplate = floatingTemplate(
+        element,
+        '[data-project-menu-content]',
+      );
+      onFloatingTemplateMount(childTemplate, (childElement) => {
+        childItems.splice(
+          0,
+          childItems.length,
+          ...childElement.querySelectorAll<HTMLElement>(
+            '[data-project-menu-item]',
+          ),
+        );
+        childRef.current = childItems;
+        childItems.forEach((item) => {
+          item.addEventListener('click', (event) => {
+            emitExampleAction(scope, `Moved to ${item.dataset.label}`);
+            closeFloating(parent, event);
+          });
+        });
+      });
+
+      childTrigger?.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowRight' || !child) return;
+        event.preventDefault();
+        child.controller.context.onOpenChange(true, event, 'click');
+        queueMicrotask(() => {
+          childActive.set(0);
+          childItems[0]?.focus({preventScroll: true});
+        });
+      });
+      parentItems.forEach((item, index) => {
+        if (index === 1) return;
+        item.addEventListener('click', (event) => {
+          emitExampleAction(scope, `${item.dataset.label} selected`);
+          closeFloating(parent, event);
+        });
+      });
+
+      onFloatingOpenChange(child, ({open, reason}) => {
+        if (!open) {
+          childActive.set(null);
+          if (reason === 'escape-key' || reason === 'focus-out') {
+            window.setTimeout(
+              () => childTrigger?.focus({preventScroll: true}),
+              0,
+            );
+          }
+        }
+        emitExampleAction(
+          scope,
+          open ? 'Project submenu opened' : 'Project submenu closed',
+        );
+      });
+    });
+    parentTemplate.addEventListener('floatingunmount', () => {
+      parentRef.current = [];
+      childRef.current = [];
+      parentItems.splice(0);
+      childItems.splice(0);
+      child = null;
+      childTrigger = null;
     });
 
-    const childTrigger = parentItems[1];
-    childTrigger?.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowRight') return;
-      event.preventDefault();
-      child.controller.context.onOpenChange(true, event, 'click');
-      queueMicrotask(() => {
-        childActive.set(0);
-        childItems[0]?.focus({preventScroll: true});
-      });
-    });
-    parentItems.forEach((item, index) => {
-      if (index === 1) return;
-      item.addEventListener('click', (event) => {
-        emitExampleAction(scope, `${item.dataset.label} selected`);
-        closeFloating(parent, event);
-      });
-    });
-    childItems.forEach((item) => {
-      item.addEventListener('click', (event) => {
-        emitExampleAction(scope, `Moved to ${item.dataset.label}`);
-        closeFloating(parent, event);
-      });
-    });
     onFloatingOpenChange(parent, ({open, reason}) => {
       if (!open) {
         parentActive.set(null);
-        child.open = false;
+        if (child) child.open = false;
         if (reason === 'escape-key') {
           queueMicrotask(() => {
             const reference = parent.referenceElement;
@@ -255,21 +316,6 @@ import {
       emitExampleAction(
         scope,
         open ? 'Nested menu opened' : 'Nested menu closed',
-      );
-    });
-    onFloatingOpenChange(child, ({open, reason}) => {
-      if (!open) {
-        childActive.set(null);
-        if (reason === 'escape-key' || reason === 'focus-out') {
-          window.setTimeout(
-            () => childTrigger?.focus({preventScroll: true}),
-            0,
-          );
-        }
-      }
-      emitExampleAction(
-        scope,
-        open ? 'Project submenu opened' : 'Project submenu closed',
       );
     });
   });

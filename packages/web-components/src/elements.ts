@@ -1,7 +1,6 @@
 import {FloatingArrowElement} from './FloatingArrowElement';
 import {FloatingRootElement} from './FloatingRootElement';
 import {
-  FloatingContentElement,
   FloatingItemElement,
   FloatingReferenceElement,
 } from './RootParts';
@@ -26,7 +25,6 @@ import {
 const floatingElements = [
   ['floating-root', FloatingRootElement],
   ['floating-reference', FloatingReferenceElement],
-  ['floating-content', FloatingContentElement],
   ['floating-item', FloatingItemElement],
   ['floating-portal', FloatingPortalElement],
   ['floating-portal-target', FloatingPortalTargetElement],

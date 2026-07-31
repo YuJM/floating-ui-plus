@@ -40,9 +40,9 @@ For complete templates and programmatic configuration, see the
   </floating-reference>
 
   <floating-portal>
-    <floating-content>
+    <template>
       <section aria-label="Settings">Popover content</section>
-    </floating-content>
+    </template>
   </floating-portal>
 </floating-root>
 ```
@@ -54,7 +54,7 @@ For complete templates and programmatic configuration, see the
 
 | Need | Elements |
 | --- | --- |
-| Reference and floating surface | `floating-root`, `floating-reference`, `floating-content` |
+| Reference and floating surface | `floating-root`, `floating-reference`, native `template` |
 | Portal, arrow, overlay, and focus | `floating-portal`, `floating-arrow`, `floating-overlay`, `floating-focus-manager` |
 | Nested menus and collections | `floating-tree`, `floating-node`, `floating-list`, `floating-list-item` |
 | Roving keyboard focus | `floating-composite`, `floating-composite-item` |
@@ -135,11 +135,15 @@ Wrap dialog content with an overlay and focus manager:
 <floating-portal>
   <floating-overlay lock-scroll>
     <floating-focus-manager modal return-focus outside-elements-inert>
-      <floating-content><section aria-label="Account settings">…</section></floating-content>
+      <template><section aria-label="Account settings">…</section></template>
     </floating-focus-manager>
   </floating-overlay>
 </floating-portal>
 ```
+
+`floating-portal` automatically marks its single owned template with
+`data-fup-content`. Mark a template explicitly when a portal owns more than one
+template, or when conditional content is used without a portal.
 
 Imports are SSR-safe. Positioning, portals, observers, and focus management
 start only after the corresponding elements connect.

@@ -44,14 +44,12 @@ manager, overlay, list, or other composition.
 <floating-root placement="bottom-start" interactions="click dismiss" floating-role="menu">
   <floating-reference><button>Actions</button></floating-reference>
   <floating-portal>
-    <floating-content>
-      <template>
-        <floating-list>
-          <floating-list-item label="Edit"><button role="menuitem">Edit</button></floating-list-item>
-          <floating-list-item label="Duplicate"><button role="menuitem">Duplicate</button></floating-list-item>
-        </floating-list>
-      </template>
-    </floating-content>
+    <template>
+      <floating-list>
+        <floating-list-item label="Edit"><button role="menuitem">Edit</button></floating-list-item>
+        <floating-list-item label="Duplicate"><button role="menuitem">Duplicate</button></floating-list-item>
+      </floating-list>
+    </template>
   </floating-portal>
 </floating-root>
 ```
@@ -62,37 +60,39 @@ when menus can nest.
 
 ### Conditional native templates
 
-Put a direct native `<template>` inside `floating-content` when closed content
-must not be parsed into the live document, upgraded, or painted. The template
-remains an inert blueprint. `floating-content` clones its `content` into Light
-DOM when the nearest root opens and removes that clone when it closes.
+Put a native `<template>` inside `floating-portal` when closed content must not
+be upgraded or painted. A portal automatically marks its single owned template
+with `data-fup-content`, even below an overlay or focus manager. The root imports
+the template fragment when it opens and removes the fresh clone when it closes.
 
 ```ts
-import type {FloatingContentElement} from '@floating-ui-plus/web-components';
+import type {
+  FloatingTemplateLifecycleDetail,
+} from '@floating-ui-plus/web-components';
 
-const content = document.querySelector<FloatingContentElement>(
-  'floating-content',
+const template = document.querySelector<HTMLTemplateElement>(
+  'template[data-fup-content]',
 )!;
 
-// The inert blueprint remains available while the rendered clone is mounted.
-const blueprint = content.content;
-
-// Delegate events from fresh clones through the stable component host.
-content.addEventListener('click', (event) => {
-  if (
-    event.target instanceof Element &&
-    event.target.closest('[data-close]')
-  ) {
+template.addEventListener('floatingmount', (event) => {
+  const {element} = (
+    event as CustomEvent<FloatingTemplateLifecycleDetail>
+  ).detail;
+  element.querySelector('[data-close]')?.addEventListener('click', () => {
     // Close the floating root.
-  }
+  });
 });
 ```
 
-Listeners attached directly to nodes inside `content` are not copied by
-`cloneNode()`. Delegate them from `floating-content`, or initialize each
-rendered clone when it mounts. Direct, non-template children remain supported;
-after the component upgrades they are slotted and bound only while open. Use a
-native template when preventing pre-upgrade paint is required.
+The template emits bubbling, composed `floatingmount` and `floatingunmount`
+events with `{root, template, element}`. Initialize each fresh clone from these
+events because listeners attached to blueprint nodes are not copied.
+
+When a portal owns multiple templates, add `data-fup-content` to exactly one.
+Use the same explicit marker for a conditional template outside a portal.
+Each content template must contain exactly one top-level HTMLElement; whitespace
+and comments around it are allowed. The named `floating` slot remains available
+for an always-mounted surface.
 
 ## Modal dialog
 
@@ -106,11 +106,9 @@ the document scroll lock.
   <floating-portal>
     <floating-overlay lock-scroll>
       <floating-focus-manager modal return-focus outside-elements-inert>
-        <floating-content>
-          <template>
-            <section aria-label="Account settings">…</section>
-          </template>
-        </floating-content>
+        <template>
+          <section aria-label="Account settings">…</section>
+        </template>
       </floating-focus-manager>
     </floating-overlay>
   </floating-portal>

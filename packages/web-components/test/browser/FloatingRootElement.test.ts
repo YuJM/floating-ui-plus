@@ -3,9 +3,9 @@ import {afterEach, describe, expect, test, vi} from 'vitest';
 import {
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
+  FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
   FloatingArrowElement,
   FloatingCompositeElement,
-  FloatingContentElement,
   FloatingListElement,
   FloatingPortalElement,
   FloatingReferenceElement,
@@ -18,6 +18,10 @@ afterEach(() => {
 });
 
 describe('FloatingRootElement', () => {
+  test('does not register the removed floating-content element', () => {
+    expect(customElements.get('floating-content')).toBeUndefined();
+  });
+
   test('binds native slotted elements without a directive', async () => {
     const root = document.createElement('floating-root');
     root.open = true;
@@ -86,32 +90,30 @@ describe('FloatingRootElement', () => {
     expect(root.controller.elements.reference).toBe(replacement);
   });
 
-  test('composes reference and content components through Atomico context', async () => {
+  test('composes a reference with an explicit native content template', async () => {
     const root = document.createElement('floating-root');
     root.interactions = 'click dismiss';
     root.floatingRole = 'dialog';
     root.innerHTML = `
       <floating-reference><button>Open</button></floating-reference>
-      <floating-content><section>Content</section></floating-content>
+      <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+        <section>Content</section>
+      </template>
     `;
     document.body.append(root);
     await root.updateComplete;
     const reference = root.querySelector('floating-reference');
-    const content = root.querySelector('floating-content');
     await reference?.updateComplete;
-    await content?.updateComplete;
 
     expect(reference).toBeInstanceOf(FloatingReferenceElement);
-    expect(content).toBeInstanceOf(FloatingContentElement);
     expect(root.referenceElement).toBe(root.querySelector('button'));
+    expect(root.contentTemplate).toBe(root.querySelector('template'));
     expect(root.floatingElement).toBeNull();
-    expect(content?.shadowRoot?.querySelector('slot')).toBeNull();
 
     root.querySelector('button')?.click();
     await root.updateComplete;
     await vi.waitFor(() => {
       expect(root.floatingElement).toBe(root.querySelector('section'));
-      expect(content?.shadowRoot?.querySelector('slot')).not.toBeNull();
     });
     expect(root.open).toBe(true);
     expect(root.floatingElement?.getAttribute('role')).toBe('dialog');
@@ -121,36 +123,46 @@ describe('FloatingRootElement', () => {
     const root = document.createElement('floating-root');
     root.innerHTML = `
       <floating-reference><button>Open</button></floating-reference>
-      <floating-content>
-        <template>
-          <section data-template-panel>
-            Content
-            <button data-template-action>Action</button>
-          </section>
-        </template>
-      </floating-content>
+      <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+        <section data-template-panel>
+          Content
+          <button data-template-action>Action</button>
+        </section>
+      </template>
     `;
-    const content = root.querySelector('floating-content');
-    const template = content?.template;
+    const template = root.querySelector('template');
     const panel = template?.content.querySelector<HTMLElement>(
       '[data-template-panel]',
     );
     const listener = vi.fn();
-    content?.addEventListener('click', (event) => {
-      if (
-        event.target instanceof Element &&
-        event.target.matches('[data-template-action]')
-      ) {
-        listener();
-      }
+    const mountListener = vi.fn((event: Event) => {
+      const {element} = (
+        event as CustomEvent<{element: HTMLElement}>
+      ).detail;
+      expect(element.isConnected).toBe(true);
+      expect(root.floatingElement).toBeNull();
+      element
+        .querySelector('[data-template-action]')
+        ?.addEventListener('click', listener);
+    });
+    const unmountListener = vi.fn();
+    const unmountConnected: boolean[] = [];
+    template?.addEventListener('floatingmount', mountListener);
+    template?.addEventListener('floatingunmount', (event) => {
+      unmountListener(event);
+      unmountConnected.push(
+        (
+          event as CustomEvent<{
+            element: HTMLElement;
+          }>
+        ).detail.element.isConnected,
+      );
+      expect(root.floatingElement).toBeNull();
     });
 
     document.body.append(root);
     await root.updateComplete;
-    await content?.updateComplete;
 
-    expect(content).toBeInstanceOf(FloatingContentElement);
-    expect(content?.content).toBe(template?.content);
     expect(panel?.isConnected).toBe(false);
     expect(document.querySelector('[data-template-panel]')).toBeNull();
     expect(root.floatingElement).toBeNull();
@@ -162,6 +174,8 @@ describe('FloatingRootElement', () => {
       expect(root.floatingElement).toBe(firstPanel);
       expect(firstPanel).not.toBe(panel);
     });
+    expect(mountListener).toHaveBeenCalledOnce();
+    expect(mountListener.mock.calls[0]?.[0].target).toBe(template);
     const firstPanel = document.querySelector('[data-template-panel]');
     firstPanel
       ?.querySelector<HTMLButtonElement>('[data-template-action]')
@@ -177,6 +191,8 @@ describe('FloatingRootElement', () => {
         panel,
       );
     });
+    expect(unmountListener).toHaveBeenCalledOnce();
+    expect(unmountConnected).toEqual([true]);
 
     root.open = true;
     await root.updateComplete;
@@ -191,25 +207,29 @@ describe('FloatingRootElement', () => {
       ?.querySelector<HTMLButtonElement>('[data-template-action]')
       ?.click();
     expect(listener).toHaveBeenCalledTimes(2);
+    expect(mountListener).toHaveBeenCalledTimes(2);
   });
 
-  test('keeps template-backed portal content out of the document until open', async () => {
+  test('automatically marks a portal template and keeps it inert until open', async () => {
     const root = document.createElement('floating-root');
     root.innerHTML = `
       <floating-reference><button>Open</button></floating-reference>
       <floating-portal>
-        <floating-content>
-          <template>
-            <section data-template-portal>Portal content</section>
-          </template>
-        </floating-content>
+        <template>
+          <section data-template-portal>Portal content</section>
+        </template>
       </floating-portal>
     `;
+    const template = root.querySelector('template');
     document.body.append(root);
     await root.updateComplete;
 
     await vi.waitFor(() => {
       expect(document.querySelector('floating-portal-target')).not.toBeNull();
+      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
+        true,
+      );
+      expect(root.contentTemplate).toBe(template);
     });
     expect(document.querySelector('[data-template-portal]')).toBeNull();
     expect(root.floatingElement).toBeNull();
@@ -231,7 +251,328 @@ describe('FloatingRootElement', () => {
     });
   });
 
-  test('waits for root context and binds direct content only when open', async () => {
+  test('preserves a mounted clone while its portal is enabled or disabled', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Reference</button></floating-reference>
+      <floating-portal>
+        <template><section data-portable-clone>Portable</section></template>
+      </floating-portal>
+    `;
+    const portal = root.querySelector('floating-portal');
+    const template = root.querySelector('template');
+    const mounted = vi.fn();
+    template?.addEventListener('floatingmount', mounted);
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
+        true,
+      );
+      expect(template?.closest('floating-portal-target')).not.toBeNull();
+    });
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(
+        document.querySelector('[data-portable-clone]'),
+      );
+      expect(
+        root.floatingElement?.closest('floating-portal-target'),
+      ).not.toBeNull();
+    });
+    const clone = root.floatingElement;
+    portal!.disabled = true;
+    await portal?.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(clone);
+      expect(clone?.closest('floating-root')).toBe(root);
+    });
+
+    portal!.disabled = false;
+    await portal?.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(clone);
+      expect(clone?.closest('floating-portal-target')).not.toBeNull();
+    });
+    expect(mounted).toHaveBeenCalledOnce();
+  });
+
+  test('preserves a mounted clone while its portal target changes', async () => {
+    const firstTarget = document.createElement('div');
+    const secondTarget = document.createElement('div');
+    document.body.append(firstTarget, secondTarget);
+
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-reference><button>Reference</button></floating-reference>
+      <floating-portal>
+        <template><section data-target-clone>Targeted</section></template>
+      </floating-portal>
+    `;
+    const portal = root.querySelector('floating-portal')!;
+    const template = root.querySelector('template');
+    const mounted = vi.fn();
+    template?.addEventListener('floatingmount', mounted);
+    portal.target = firstTarget;
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(root.contentTemplate).toBe(template);
+      expect(root.floatingElement).toBe(
+        firstTarget.querySelector('[data-target-clone]'),
+      );
+    });
+    const clone = root.floatingElement;
+
+    portal.target = secondTarget;
+    await portal.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.contentTemplate).toBe(template);
+      expect(root.floatingElement).toBe(clone);
+      expect(secondTarget.querySelector('[data-target-clone]')).toBe(clone);
+    });
+    expect(firstTarget.querySelector('[data-target-clone]')).toBeNull();
+    expect(mounted).toHaveBeenCalledOnce();
+  });
+
+  test('remounts an open template after its document fragment changes', async () => {
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+        <section data-fragment-version="first">First</section>
+      </template>
+    `;
+    const template = root.querySelector('template');
+    const mounted = vi.fn();
+    template?.addEventListener('floatingmount', mounted);
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(root.floatingElement?.dataset.fragmentVersion).toBe('first');
+    });
+    const first = root.floatingElement;
+    const replacement = document.createElement('section');
+    replacement.dataset.fragmentVersion = 'second';
+    replacement.textContent = 'Second';
+    template?.content.replaceChildren(replacement);
+
+    await vi.waitFor(() => {
+      expect(root.floatingElement?.dataset.fragmentVersion).toBe('second');
+      expect(root.floatingElement).not.toBe(first);
+    });
+    expect(first?.isConnected).toBe(false);
+    expect(mounted).toHaveBeenCalledTimes(2);
+  });
+
+  test('finds the unique portal template through structural components', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-portal>
+        <floating-overlay>
+          <floating-focus-manager>
+            <template>
+              <section data-structured-template>Dialog</section>
+            </template>
+          </floating-focus-manager>
+        </floating-overlay>
+      </floating-portal>
+    `;
+    const template = root.querySelector('template');
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
+        true,
+      );
+      expect(root.contentTemplate).toBe(template);
+    });
+    expect(document.querySelector('[data-structured-template]')).toBeNull();
+  });
+
+  test('excludes templates owned by a nested floating root', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-portal>
+        <template><section>Parent</section></template>
+        <floating-root>
+          <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+            <section>Child</section>
+          </template>
+        </floating-root>
+      </floating-portal>
+    `;
+    const templates = Array.from(root.querySelectorAll('template'));
+    const childRoot = root.querySelector('floating-root');
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(
+        templates[0]?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
+      ).toBe(true);
+      expect(childRoot?.contentTemplate).toBe(templates[1]);
+    });
+    expect(root.contentTemplate).toBe(templates[0]);
+    expect(
+      templates[1]?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
+    ).toBe(true);
+  });
+
+  test('excludes a nested portal template from its parent portal', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-portal>
+        <floating-portal>
+          <template><section data-nested-portal-template>Nested</section></template>
+        </floating-portal>
+      </floating-portal>
+    `;
+    const template = root.querySelector('template');
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
+        true,
+      );
+      expect(root.contentTemplate).toBe(template);
+    });
+    expect(
+      document.querySelectorAll(
+        `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
+      ),
+    ).toHaveLength(1);
+    expect(document.querySelector('[data-nested-portal-template]')).toBeNull();
+  });
+
+  test('requires an explicit marker when a portal owns multiple templates', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-portal>
+        <template><section data-first-template>First</section></template>
+        <template><section data-second-template>Second</section></template>
+      </floating-portal>
+    `;
+    const templates = Array.from(root.querySelectorAll('template'));
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(warning).toHaveBeenCalled();
+    });
+    expect(
+      templates.some((template) =>
+        template.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
+      ),
+    ).toBe(false);
+    expect(root.contentTemplate).toBeNull();
+
+    templates[1]?.setAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE, '');
+    root.open = true;
+    await vi.waitFor(() => {
+      expect(root.contentTemplate).toBe(templates[1]);
+      expect(root.floatingElement).toBe(
+        document.querySelector('[data-second-template]'),
+      );
+    });
+    expect(document.querySelector('[data-first-template]')).toBeNull();
+    warning.mockRestore();
+  });
+
+  test('removes only an automatically injected marker after ownership changes', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-portal>
+        <template><section>Automatic</section></template>
+      </floating-portal>
+    `;
+    const portal = root.querySelector('floating-portal');
+    const automatic = portal?.querySelector('template');
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(
+        automatic?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
+      ).toBe(true);
+    });
+    root.append(automatic!);
+    await vi.waitFor(() => {
+      expect(
+        automatic?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
+      ).toBe(false);
+    });
+
+    const explicit = document.createElement('template');
+    explicit.setAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE, '');
+    explicit.innerHTML = '<section>Explicit</section>';
+    portal?.append(explicit);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    root.append(explicit);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(explicit?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
+      true,
+    );
+  });
+
+  test('prioritizes a manual surface, then a named slot, then a template', async () => {
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <section slot="floating" data-slotted-surface>Slotted</section>
+      <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+        <section data-template-surface>Template</section>
+      </template>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    expect(root.floatingElement).toBe(
+      root.querySelector('[data-slotted-surface]'),
+    );
+    expect(document.querySelector('[data-template-surface]')).toBeNull();
+
+    const manual = document.createElement('section');
+    manual.dataset.manualSurface = '';
+    document.body.append(manual);
+    root.setFloatingElement(manual);
+    expect(root.floatingElement).toBe(manual);
+
+    root.setFloatingElement(null);
+    expect(root.floatingElement).toBe(
+      root.querySelector('[data-slotted-surface]'),
+    );
+
+    root.querySelector('[data-slotted-surface]')?.remove();
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBe(
+        root.querySelector('[data-template-surface]'),
+      );
+    });
+  });
+
+  test('warns and stays unmounted for an invalid template fragment', async () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+        <section>First</section>
+        <section>Second</section>
+      </template>
+    `;
+    document.body.append(root);
+
+    await vi.waitFor(() => {
+      expect(warning).toHaveBeenCalled();
+    });
+    expect(root.floatingElement).toBeNull();
+    warning.mockRestore();
+  });
+
+  test('waits for root context and binds portal template content only when open', async () => {
     const standaloneParent = document.createElement('div');
     const standalone = document.createElement('floating-portal');
     standalone.innerHTML = '<button>Not ready</button>';
@@ -248,7 +589,7 @@ describe('FloatingRootElement', () => {
       '<floating-reference><button>Reference</button></floating-reference>';
     const portal = document.createElement('floating-portal');
     portal.innerHTML =
-      '<floating-content><section>Ready while closed</section></floating-content>';
+      '<template><section>Ready while closed</section></template>';
     root.append(portal);
     document.body.append(root);
     await root.updateComplete;
@@ -263,15 +604,11 @@ describe('FloatingRootElement', () => {
       expect(target?.shadowRoot?.querySelector('slot')).toBeInstanceOf(
         HTMLSlotElement,
       );
-      expect(target?.querySelector('floating-content')).not.toBeNull();
+      expect(target?.querySelector('template')).not.toBeNull();
     });
     expect(root.open).toBe(false);
     expect(root.floatingElement).toBeNull();
-    expect(
-      document
-        .querySelector('floating-portal-target floating-content')
-        ?.shadowRoot?.querySelector('slot'),
-    ).toBeNull();
+    expect(document.querySelector('floating-portal-target section')).toBeNull();
 
     root.open = true;
     await root.updateComplete;
@@ -286,16 +623,17 @@ describe('FloatingRootElement', () => {
 
   test('appends a nested portal to its logical parent portal', async () => {
     const root = document.createElement('floating-root');
+    root.open = true;
     root.innerHTML = `
       <floating-reference><button>Reference</button></floating-reference>
       <floating-portal>
-        <floating-content>
+        <template>
           <section data-parent-content>
             <floating-portal>
               <div data-child-content>Child</div>
             </floating-portal>
           </section>
-        </floating-content>
+        </template>
       </floating-portal>
     `;
     document.body.append(root);

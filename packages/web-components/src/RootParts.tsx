@@ -3,7 +3,6 @@ import {
   useContext,
   useHost,
   useLayoutEffect,
-  useNodes,
   useRef,
   useSlot,
 } from "atomico";
@@ -61,83 +60,6 @@ const FloatingReferenceBase = c(() => {
 export class FloatingReferenceElement extends FloatingReferenceBase {
   get updateComplete() {
     return this.updated;
-  }
-}
-
-const FloatingContentBase = c(() => {
-  const host = useHost<HTMLElement>().current;
-  const root = useContext(floatingComponentContext).root;
-  const children = useNodes<Node>();
-  const template =
-    children.find(
-      (node): node is HTMLTemplateElement =>
-        node instanceof HTMLTemplateElement,
-    ) ?? null;
-  const element =
-    (root?.open &&
-      children.find(
-        (node): node is HTMLElement =>
-          node instanceof HTMLElement &&
-          !(node instanceof HTMLTemplateElement),
-      )) ||
-    null;
-  const templateNodes = useRef<Node[]>([]);
-
-  useLayoutEffect(() => {
-    if (!template || !root?.open) return;
-
-    const content = template.content.cloneNode(true) as DocumentFragment;
-    templateNodes.current = Array.from(content.childNodes);
-    host.append(content);
-
-    return () => {
-      for (const node of templateNodes.current) {
-        if (node.parentNode === host) {
-          host.removeChild(node);
-        }
-      }
-      templateNodes.current = [];
-    };
-  }, [host, root, root?.open, template]);
-
-  useLayoutEffect(() => {
-    if (root) root.setFloatingElement(element);
-    return () => {
-      if (root && element) root.setFloatingElement(null);
-    };
-  }, [root, element]);
-
-  return (
-    <host shadowDom>
-      <style>{contentsStyles}</style>
-      {root?.open && <slot />}
-    </host>
-  );
-});
-
-/**
- * Binds its first rendered child to the nearest floating root surface.
- *
- * A direct native template keeps its contents inert while the root is closed.
- * A fresh clone moves into the light DOM while open and is removed when closed,
- * matching conditional rendering semantics.
- */
-export class FloatingContentElement extends FloatingContentBase {
-  get updateComplete() {
-    return this.updated;
-  }
-
-  get template() {
-    return (
-      Array.from(this.children).find(
-        (element): element is HTMLTemplateElement =>
-          element instanceof HTMLTemplateElement,
-      ) ?? null
-    );
-  }
-
-  get content() {
-    return this.template?.content ?? null;
   }
 }
 
@@ -225,7 +147,6 @@ export class FloatingItemElement extends FloatingItemBase {
 declare global {
   interface HTMLElementTagNameMap {
     "floating-reference": FloatingReferenceElement;
-    "floating-content": FloatingContentElement;
     "floating-item": FloatingItemElement;
   }
 }

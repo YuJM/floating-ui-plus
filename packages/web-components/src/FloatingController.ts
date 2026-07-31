@@ -16,6 +16,7 @@ import {
 } from '@floating-ui-plus/web';
 import {setAttributes} from '@floating-ui-plus/web/utils';
 
+import {FLOATING_UI_PLUS_CONTENT_ATTRIBUTE} from './constants';
 import type {FloatingRootElement} from './FloatingRootElement';
 
 const runtimes = new WeakMap<FloatingRootElement, FloatingRootRuntime>();
@@ -35,15 +36,27 @@ export class FloatingRootRuntime {
   readonly #host: FloatingRootElement;
   #reference: Element | null = null;
   #floatingElement: HTMLElement | null = null;
+  #manualFloatingElement: HTMLElement | null = null;
+  #slottedFloatingElement: HTMLElement | null = null;
+  #templateFloatingElement: HTMLElement | null = null;
+  #contentTemplate: HTMLTemplateElement | null = null;
+  #templateNodes: Node[] = [];
+  #contentScopes = new Map<Element, MutationObserver | null>();
+  #templateContentObserver: MutationObserver | null = null;
+  #contentReconcileQueued = false;
+  #forceTemplateRemount = false;
+  #contentWarning: string | null = null;
   #referenceAttributes = new Set<string>();
   #floatingAttributes = new Set<string>();
   #contextAttachmentCleanup: (() => void) | null = null;
   #unsubscribePosition: (() => void) | null = null;
   #pluginsInstalled = false;
   #connected = false;
+  #disconnectQueued = false;
 
   constructor(host: FloatingRootElement) {
     this.#host = host;
+    this.#contentScopes.set(host, null);
     this.engine = createFloating(() => ({
       open: host.open,
       placement: host.placement,
@@ -65,6 +78,10 @@ export class FloatingRootRuntime {
     return this.#floatingElement;
   }
 
+  get contentTemplate() {
+    return this.#contentTemplate;
+  }
+
   pipe(...plugins: FloatingPlugin[]) {
     this.engine.pipe(...plugins);
   }
@@ -78,6 +95,9 @@ export class FloatingRootRuntime {
     );
     this.#contextAttachmentCleanup =
       this.engine.contextScope.attach(this.#host);
+    for (const scope of this.#contentScopes.keys()) {
+      this.#observeContentScope(scope);
+    }
     this.engine.connect();
     this.#unsubscribePosition = this.engine.context.events.on(
       'positionchange',
@@ -90,14 +110,26 @@ export class FloatingRootRuntime {
   }
 
   disconnect() {
-    if (!this.#connected) return;
-    this.#connected = false;
-    this.#unsubscribePosition?.();
-    this.#unsubscribePosition = null;
-    this.engine.disconnect();
-    this.#contextAttachmentCleanup?.();
-    this.#contextAttachmentCleanup = null;
-    this.engine.setContextParent(null);
+    if (!this.#connected || this.#disconnectQueued) return;
+    this.#disconnectQueued = true;
+    queueMicrotask(() => {
+      this.#disconnectQueued = false;
+      if (this.#host.isConnected || !this.#connected) return;
+      this.#connected = false;
+      this.#unsubscribePosition?.();
+      this.#unsubscribePosition = null;
+      this.#unmountTemplate();
+      this.#templateContentObserver?.disconnect();
+      this.#templateContentObserver = null;
+      for (const [scope, observer] of this.#contentScopes) {
+        observer?.disconnect();
+        this.#contentScopes.set(scope, null);
+      }
+      this.engine.disconnect();
+      this.#contextAttachmentCleanup?.();
+      this.#contextAttachmentCleanup = null;
+      this.engine.setContextParent(null);
+    });
   }
 
   syncSlots(
@@ -116,20 +148,31 @@ export class FloatingRootRuntime {
       this.setReferenceElement(nextReference);
     }
 
-    if (
-      nextFloating ||
-      this.#floatingElement?.getAttribute('slot') === 'floating'
-    ) {
-      this.setFloatingElement(
-        nextFloating instanceof HTMLElement ? nextFloating : null,
-      );
-    }
+    this.#setSlottedFloatingElement(
+      nextFloating instanceof HTMLElement ? nextFloating : null,
+    );
     this.syncBindings();
   }
 
   sync() {
     this.engine.refresh();
+    this.#reconcileContentTemplates();
+    this.#syncTemplateMount();
     this.syncBindings();
+  }
+
+  registerContentScope(scope: Element) {
+    if (!this.#contentScopes.has(scope)) {
+      this.#contentScopes.set(scope, null);
+      if (this.#connected) this.#observeContentScope(scope);
+      this.#scheduleContentReconcile();
+    }
+    return () => {
+      if (scope === this.#host) return;
+      this.#contentScopes.get(scope)?.disconnect();
+      this.#contentScopes.delete(scope);
+      this.#scheduleContentReconcile();
+    };
   }
 
   async updatePosition() {
@@ -157,6 +200,28 @@ export class FloatingRootRuntime {
   }
 
   setFloatingElement(floating: HTMLElement | null) {
+    if (floating === this.#manualFloatingElement) return;
+    this.#manualFloatingElement = floating;
+    this.#syncTemplateMount();
+    this.#syncEffectiveFloatingElement();
+  }
+
+  #setSlottedFloatingElement(floating: HTMLElement | null) {
+    if (floating === this.#slottedFloatingElement) return;
+    this.#slottedFloatingElement = floating;
+    this.#syncTemplateMount();
+    this.#syncEffectiveFloatingElement();
+  }
+
+  #syncEffectiveFloatingElement() {
+    this.#bindFloatingElement(
+      this.#manualFloatingElement ??
+        this.#slottedFloatingElement ??
+        this.#templateFloatingElement,
+    );
+  }
+
+  #bindFloatingElement(floating: HTMLElement | null) {
     if (floating === this.#floatingElement) return;
     if (this.#floatingElement) {
       this.#floatingAttributes = setAttributes(
@@ -175,6 +240,190 @@ export class FloatingRootRuntime {
         nested: this.engine.context.nested,
       });
     }
+  }
+
+  #observeContentScope(scope: Element) {
+    this.#contentScopes.get(scope)?.disconnect();
+    const observer = new MutationObserver((records) => {
+      const markerChanged = records.some(
+        (record) =>
+          record.type === 'attributes' ||
+          Array.from(record.addedNodes).some(
+            (node) =>
+              node instanceof Element &&
+              (node.matches(
+                `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
+              ) ||
+                node.querySelector(
+                  `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
+                )),
+          ) ||
+          Array.from(record.removedNodes).some(
+            (node) =>
+              node === this.#contentTemplate ||
+              (node instanceof Element &&
+                this.#contentTemplate != null &&
+                node.contains(this.#contentTemplate)),
+          ),
+      );
+      if (markerChanged) this.#scheduleContentReconcile();
+    });
+    observer.observe(scope, {
+      attributes: true,
+      attributeFilter: [FLOATING_UI_PLUS_CONTENT_ATTRIBUTE],
+      childList: true,
+      subtree: true,
+    });
+    this.#contentScopes.set(scope, observer);
+  }
+
+  #scheduleContentReconcile(forceRemount = false) {
+    this.#forceTemplateRemount ||= forceRemount;
+    if (this.#contentReconcileQueued) return;
+    this.#contentReconcileQueued = true;
+    queueMicrotask(() => {
+      this.#contentReconcileQueued = false;
+      const remount = this.#forceTemplateRemount;
+      this.#forceTemplateRemount = false;
+      if (remount) this.#unmountTemplate();
+      this.#reconcileContentTemplates();
+      this.#syncTemplateMount();
+    });
+  }
+
+  #reconcileContentTemplates() {
+    const templates: HTMLTemplateElement[] = [];
+    for (const scope of this.#contentScopes.keys()) {
+      for (const template of Array.from(
+        scope.querySelectorAll<HTMLTemplateElement>(
+          `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
+        ),
+      )) {
+        if (
+          !templates.includes(template) &&
+          this.#ownsContentTemplate(template)
+        ) {
+          templates.push(template);
+        }
+      }
+    }
+
+    const nextTemplate = templates.length === 1 ? templates[0]! : null;
+    if (templates.length > 1) {
+      this.#warnContent(
+        `A floating root can own only one template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}].`,
+      );
+    } else {
+      this.#contentWarning = null;
+    }
+    if (nextTemplate === this.#contentTemplate) return;
+
+    this.#unmountTemplate();
+    this.#templateContentObserver?.disconnect();
+    this.#contentTemplate = nextTemplate;
+    if (!nextTemplate) {
+      this.#templateContentObserver = null;
+      return;
+    }
+    this.#templateContentObserver = new MutationObserver(() => {
+      this.#scheduleContentReconcile(true);
+    });
+    this.#templateContentObserver.observe(nextTemplate.content, {
+      childList: true,
+      subtree: true,
+    });
+  }
+
+  #ownsContentTemplate(template: HTMLTemplateElement) {
+    const nearestRoot = template.closest('floating-root');
+    if (nearestRoot) return nearestRoot === this.#host;
+    const portalTarget = template.closest('floating-portal-target') as
+      | (HTMLElement & {
+          contextValue?: {root?: FloatingRootElement};
+        })
+      | null;
+    return !portalTarget || portalTarget.contextValue?.root === this.#host;
+  }
+
+  #syncTemplateMount() {
+    const shouldMount =
+      this.#connected &&
+      this.#host.open &&
+      this.#contentTemplate != null &&
+      this.#manualFloatingElement == null &&
+      this.#slottedFloatingElement == null;
+    if (!shouldMount) {
+      this.#unmountTemplate();
+      return;
+    }
+    if (this.#templateFloatingElement) {
+      this.#syncEffectiveFloatingElement();
+      return;
+    }
+
+    const template = this.#contentTemplate!;
+    const meaningfulNodes = Array.from(template.content.childNodes).filter(
+      (node) =>
+        node.nodeType !== Node.COMMENT_NODE &&
+        !(
+          node.nodeType === Node.TEXT_NODE &&
+          (node.textContent ?? '').trim() === ''
+        ),
+    );
+    const sourceElement = meaningfulNodes[0];
+    if (
+      meaningfulNodes.length !== 1 ||
+      !(sourceElement instanceof Element) ||
+      sourceElement.namespaceURI !== 'http://www.w3.org/1999/xhtml'
+    ) {
+      this.#warnContent(
+        `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}] must contain exactly one top-level HTMLElement.`,
+      );
+      return;
+    }
+
+    const clone = template.ownerDocument.importNode(template.content, true);
+    const element = Array.from(clone.children).find(
+      (child): child is HTMLElement =>
+        child.namespaceURI === 'http://www.w3.org/1999/xhtml',
+    );
+    if (!element) return;
+    this.#templateNodes = Array.from(clone.childNodes);
+    template.after(clone);
+    template.dispatchEvent(
+      new CustomEvent('floatingmount', {
+        bubbles: true,
+        composed: true,
+        detail: {root: this.#host, template, element},
+      }),
+    );
+    this.#templateFloatingElement = element;
+    this.#syncEffectiveFloatingElement();
+  }
+
+  #unmountTemplate() {
+    const template = this.#contentTemplate;
+    const element = this.#templateFloatingElement;
+    if (!template || !element) return;
+    this.#templateFloatingElement = null;
+    this.#syncEffectiveFloatingElement();
+    template.dispatchEvent(
+      new CustomEvent('floatingunmount', {
+        bubbles: true,
+        composed: true,
+        detail: {root: this.#host, template, element},
+      }),
+    );
+    for (const node of this.#templateNodes) {
+      node.parentNode?.removeChild(node);
+    }
+    this.#templateNodes = [];
+  }
+
+  #warnContent(message: string) {
+    if (message === this.#contentWarning) return;
+    this.#contentWarning = message;
+    console.warn(`[floating-ui-plus] ${message}`, this.#host);
   }
 
   syncBindings() {

@@ -17,20 +17,18 @@
         </button>
       </floating-reference>
       <floating-portal>
-        <floating-content data-popover-content>
-          <template>
-            <div class="popover-panel">
-              <span class="panel-kicker">REFERENCE / 42.8°</span>
-              <strong>Portal, still connected.</strong>
-              <p>ARIA and outside-press behavior are owned by the component.</p>
-              <button class="text-button" data-close-popover>Close panel</button>
-            </div>
-          </template>
-        </floating-content>
+        <template data-popover-content>
+          <div class="popover-panel">
+            <span class="panel-kicker">REFERENCE / 42.8°</span>
+            <strong>Portal, still connected.</strong>
+            <p>ARIA and outside-press behavior are owned by the component.</p>
+            <button class="text-button" data-close-popover>Close panel</button>
+          </div>
+        </template>
       </floating-portal>
     </floating-root>
   </div>
-  <code>&lt;floating-portal&gt; + &lt;floating-content&gt;</code>
+  <code>&lt;floating-portal&gt; + &lt;template&gt;</code>
 </article>
 
 <script>
@@ -38,23 +36,23 @@
   import {
     closeFloating,
     emitExampleAction,
-    floatingContent,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
   initializeExample('popover', (scope) => {
     const floating = floatingRoot(scope, '[data-popover-root]');
-    const content = floatingContent(scope, '[data-popover-content]');
+    const template = floatingTemplate(scope, '[data-popover-content]');
     floating.middleware = [offset(12), flip(), shift({padding: 18})];
-    content.addEventListener('click', (event) => {
-      if (
-        event.target instanceof Element &&
-        event.target.closest('[data-close-popover]')
-      ) {
-        closeFloating(floating, event);
-      }
+    onFloatingTemplateMount(template, (element) => {
+      element
+        .querySelector('[data-close-popover]')
+        ?.addEventListener('click', (event) => {
+          closeFloating(floating, event);
+        });
     });
     onFloatingOpenChange(floating, ({open}) => {
       emitExampleAction(

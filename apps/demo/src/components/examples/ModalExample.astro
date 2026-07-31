@@ -15,8 +15,8 @@
               return-focus
               outside-elements-inert
             >
-              <floating-content class="modal-anchor" data-modal-content>
-                <template>
+              <template data-modal-content>
+                <div class="modal-anchor">
                   <section
                     class="modal-panel"
                     aria-label="Focus room"
@@ -39,11 +39,11 @@
                         <floating-reference>
                           <button class="text-button">Show placement hint</button>
                         </floating-reference>
-                        <floating-content>
+                        <template data-fup-content>
                           <div class="tooltip">
                             This tooltip stays inside the dialog.
                           </div>
-                        </floating-content>
+                        </template>
                       </floating-node>
                     </floating-root>
                     <floating-root
@@ -57,21 +57,19 @@
                           <button class="text-button">Open room details</button>
                         </floating-reference>
                         <floating-portal>
-                          <floating-content data-modal-popover-content>
-                            <template>
-                              <section
-                                class="popover-panel"
-                                aria-label="Room details"
-                              >
-                                <span class="panel-kicker">NESTED PORTAL</span>
-                                <strong>Details stay above the dialog.</strong>
-                                <p>Escape and outside press dismiss only this panel first.</p>
-                                <button class="text-button" data-close-modal-popover>
-                                  Close details
-                                </button>
-                              </section>
-                            </template>
-                          </floating-content>
+                          <template data-modal-popover-content>
+                            <section
+                              class="popover-panel"
+                              aria-label="Room details"
+                            >
+                              <span class="panel-kicker">NESTED PORTAL</span>
+                              <strong>Details stay above the dialog.</strong>
+                              <p>Escape and outside press dismiss only this panel first.</p>
+                              <button class="text-button" data-close-modal-popover>
+                                Close details
+                              </button>
+                            </section>
+                          </template>
                         </floating-portal>
                       </floating-node>
                     </floating-root>
@@ -83,11 +81,8 @@
                         <floating-portal>
                           <floating-overlay class="demo-overlay" lock-scroll>
                             <floating-focus-manager modal return-focus>
-                              <floating-content
-                                class="modal-anchor"
-                                data-nested-modal-content
-                              >
-                                <template>
+                              <template data-nested-modal-content>
+                                <div class="modal-anchor">
                                   <section
                                     class="modal-panel nested-modal-panel"
                                     aria-label="Nested dialog"
@@ -99,8 +94,8 @@
                                       Return to focus room
                                     </button>
                                   </section>
-                                </template>
-                              </floating-content>
+                                </div>
+                              </template>
                             </floating-focus-manager>
                           </floating-overlay>
                         </floating-portal>
@@ -112,8 +107,8 @@
                     <span class="modal-hint">ESC closes the top layer</span>
                   </div>
                   </section>
-                </template>
-              </floating-content>
+                </div>
+              </template>
             </floating-focus-manager>
           </floating-overlay>
         </floating-portal>
@@ -135,16 +130,16 @@
     closeFloating,
     configureFloating,
     emitExampleAction,
-    floatingContent,
     floatingRoot,
+    floatingTemplate,
     initializeExample,
-    onFloatingContentMount,
+    onFloatingTemplateMount,
     onFloatingOpenChange,
   } from './example-client';
 
   initializeExample('modal', (scope) => {
     const floating = floatingRoot(scope, '[data-modal-root]');
-    const content = floatingContent(scope, '[data-modal-content]');
+    const template = floatingTemplate(scope, '[data-modal-content]');
 
     configureFloating(floating, {
       middleware: [offset(20), shift({padding: 24})],
@@ -155,10 +150,10 @@
         role({role: 'dialog'}),
       ],
     });
-    onFloatingContentMount(content, () => {
-      const tooltip = floatingRoot(content, '[data-modal-tooltip-root]');
-      const popover = floatingRoot(content, '[data-modal-popover-root]');
-      const nestedModal = floatingRoot(content, '[data-nested-modal-root]');
+    onFloatingTemplateMount(template, (element) => {
+      const tooltip = floatingRoot(element, '[data-modal-tooltip-root]');
+      const popover = floatingRoot(element, '[data-modal-popover-root]');
+      const nestedModal = floatingRoot(element, '[data-nested-modal-root]');
       tooltip.middleware = [offset(12), flip(), shift({padding: 12})];
       popover.middleware = [offset(12), flip(), shift({padding: 18})];
       configureFloating(nestedModal, {
@@ -169,40 +164,35 @@
           role({role: 'dialog'}),
         ],
       });
-      const popoverContent = floatingContent(
-        content,
+      const popoverTemplate = floatingTemplate(
+        element,
         '[data-modal-popover-content]',
       );
-      const nestedModalContent = floatingContent(
-        content,
+      const nestedModalTemplate = floatingTemplate(
+        element,
         '[data-nested-modal-content]',
       );
-      popoverContent.addEventListener('click', (event) => {
-        if (
-          event.target instanceof Element &&
-          event.target.closest('[data-close-modal-popover]')
-        ) {
-          closeFloating(popover, event);
-        }
+      onFloatingTemplateMount(popoverTemplate, (popoverElement) => {
+        popoverElement
+          .querySelector('[data-close-modal-popover]')
+          ?.addEventListener('click', (event) => {
+            closeFloating(popover, event);
+          });
       });
-      nestedModalContent.addEventListener('click', (event) => {
-        if (
-          event.target instanceof Element &&
-          event.target.closest('[data-close-nested-modal]')
-        ) {
-          closeFloating(nestedModal, event);
-        }
+      onFloatingTemplateMount(nestedModalTemplate, (nestedElement) => {
+        nestedElement
+          .querySelector('[data-close-nested-modal]')
+          ?.addEventListener('click', (event) => {
+            closeFloating(nestedModal, event);
+          });
       });
+      element
+        .querySelector('[data-close-modal]')
+        ?.addEventListener('click', (event) => {
+          closeFloating(floating, event);
+        });
     });
 
-    content.addEventListener('click', (event) => {
-      if (
-        event.target instanceof Element &&
-        event.target.closest('[data-close-modal]')
-      ) {
-        closeFloating(floating, event);
-      }
-    });
     onFloatingOpenChange(floating, ({open}) => {
       emitExampleAction(
         scope,
