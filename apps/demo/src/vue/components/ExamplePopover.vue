@@ -36,7 +36,7 @@ const focusOptions = {modal: false, initialFocus: -1};
         <FloatingReference class="vue-button vue-button-sky">
           Open coordinates <span>＋</span>
         </FloatingReference>
-        <FloatingPortal v-if="open" :active="open">
+        <FloatingPortal>
           <Transition name="vue-surface">
             <FloatingFocusManager :options="focusOptions">
               <FloatingContent as="section" class="popover-panel">

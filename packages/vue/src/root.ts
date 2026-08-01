@@ -12,6 +12,7 @@ import {
   withDirectives,
   type InjectionKey,
   type PropType,
+  type Ref,
 } from 'vue';
 
 import {vFloating} from './directives';
@@ -20,6 +21,8 @@ import type {UseFloatingOptions, UseFloatingReturn} from './types';
 import {useFloating} from './useFloating';
 
 const FloatingRootKey: InjectionKey<UseFloatingReturn> = Symbol('FloatingRoot');
+const FloatingRootOpenKey: InjectionKey<Readonly<Ref<boolean>>> =
+  Symbol('FloatingRootOpen');
 export interface FloatingRootHierarchy {
   floating: UseFloatingReturn;
   parent: FloatingRootHierarchy | null;
@@ -29,6 +32,10 @@ const FloatingRootHierarchyKey: InjectionKey<FloatingRootHierarchy> =
 
 export function useFloatingRoot(explicit?: UseFloatingReturn | null) {
   return explicit ?? inject(FloatingRootKey, null);
+}
+
+export function useFloatingRootOpen() {
+  return inject(FloatingRootOpenKey, null);
 }
 
 export function useFloatingRootHierarchy() {
@@ -73,6 +80,7 @@ export const FloatingRoot = defineComponent({
         emit('open-change', open, event, reason);
       },
     });
+    const open = computed(() => localOpen.value);
     let unregisterPlugins: (() => void) | undefined;
     watch(
       () => props.plugins,
@@ -84,6 +92,7 @@ export const FloatingRoot = defineComponent({
     );
     onBeforeUnmount(() => unregisterPlugins?.());
     provide(FloatingRootKey, api);
+    provide(FloatingRootOpenKey, open);
     provide(FloatingRootHierarchyKey, {
       floating: api,
       parent: parentHierarchy,
@@ -92,7 +101,7 @@ export const FloatingRoot = defineComponent({
     return () =>
       slots.default?.({
         floating: api,
-        open: computed(() => localOpen.value),
+        open,
       });
   },
 });

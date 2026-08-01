@@ -75,7 +75,7 @@ const open = ref(false);
     :plugins="[click(), dismiss(), role({role: 'dialog'})]"
   >
     <FloatingReference>Open settings</FloatingReference>
-    <FloatingPortal v-if="open">
+    <FloatingPortal>
       <FloatingFocusManager :options="{modal: false, initialFocus: -1}">
         <FloatingContent class="popover">
           Settings
@@ -100,10 +100,14 @@ that live for the full `useFloating()` scope.
 
 ## Portals and modal dialogs
 
-`FloatingPortal` uses Vue Teleport and targets `body` by default. Pass `to` for
-another target or `disabled` to keep the content in place. For a modal dialog,
-wrap `FloatingContent` with `FloatingOverlay` and `FloatingFocusManager` using
-modal focus options. Keep an accessible name on the dialog content.
+`FloatingPortal` uses Vue Teleport and targets `body` by default. When nested
+under `FloatingRoot`, it follows that root's `open` state automatically, so a
+consumer does not need to repeat `v-if` or `:active`. The optional `active`
+prop remains available as a reactive signal for closed-over slot functions.
+Pass `to` for another target or `disabled` to keep the content in place. For a
+modal dialog, wrap `FloatingContent` with `FloatingOverlay` and
+`FloatingFocusManager` using modal focus options. Keep an accessible name on
+the dialog content.
 
 ## Combobox search
 

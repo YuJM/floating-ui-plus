@@ -35,7 +35,7 @@ import {
 } from 'vue';
 
 import type {UseFloatingReturn} from './types';
-import {useFloatingRoot} from './root';
+import {useFloatingRoot, useFloatingRootOpen} from './root';
 
 function resolveContext(
   context: FloatingContext | undefined,
@@ -56,12 +56,13 @@ export const FloatingPortal = defineComponent({
       default: undefined,
     },
     disabled: Boolean,
-    active: Boolean,
+    active: {type: Boolean, default: undefined},
     contextScope: Object as PropType<FloatingContextScope | null>,
     floating: Object as PropType<UseFloatingReturn>,
   },
   setup(props, {attrs, slots}) {
     const injected = useFloatingRoot();
+    const rootOpen = useFloatingRootOpen();
     const instance = getCurrentInstance();
     const parentPortalRoot = inject(PortalRootKey, null);
     const isServerRendering = inject(ssrContextKey, null) !== null;
@@ -73,6 +74,7 @@ export const FloatingPortal = defineComponent({
       target: () => portalRoot.value,
     });
     provide(PortalRootKey, portalRoot);
+    const isActive = computed(() => rootOpen?.value ?? true);
 
     function setPortalRoot(element: unknown) {
       portalRoot.value =
@@ -124,10 +126,11 @@ export const FloatingPortal = defineComponent({
     onScopeDispose(() => portalBridge.destroy());
 
     return () => {
-      // Slot contents are often closed over by a parent render function. An
-      // explicit state signal keeps the Teleport render effect reactive when
-      // consumers conditionally render a floating surface inside the slot.
+      // A portal nested under FloatingRoot follows that root's open state by
+      // default. Keep reading `active` so existing closed-over slot render
+      // functions still receive an explicit reactive update signal.
       props.active;
+      if (!isActive.value) return null;
       if (isServerRendering || typeof document === 'undefined') {
         return slots.default?.();
       }

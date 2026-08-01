@@ -56,7 +56,7 @@ const plugins = [
         <FloatingReference class="ink-button">
           Inspect signal <span aria-hidden="true">↗</span>
         </FloatingReference>
-        <FloatingPortal v-if="open" :active="open">
+        <FloatingPortal>
           <Transition name="vue-surface">
             <FloatingContent
               class="tooltip"

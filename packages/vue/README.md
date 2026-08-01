@@ -11,9 +11,28 @@ mature React experience and other frameworks. Vue receives the same reusable
 interaction, focus, collection, portal, and search behavior while components
 keep control of their own markup and accessibility semantics.
 
+## How this differs from Floating UI
+
+`@floating-ui/vue` is the upstream positioning adapter. This package keeps its
+familiar `useFloating()` shape and adds a shared Plus controller underneath:
+
+| Concern | Upstream Floating UI | Floating UI Plus for Vue |
+| --- | --- | --- |
+| Positioning | Vue refs, `floatingStyles`, middleware | The same positioning model plus a shared controller/context scope |
+| Interaction | Consumer composes the supported interaction hooks | `.pipe()`/`registerPlugins()` with click, hover, focus, dismiss, roles, navigation, and typeahead |
+| Declarative surfaces | Consumer builds each surface | `FloatingRoot`, `FloatingReference`, `FloatingContent`, `FloatingPortal`, overlay, focus, arrow, and transition components |
+| Nested and modal behavior | Consumer wires focus/portal coordination | Trees, lists, delay groups, focus manager, inert neighbors, scroll locking, and context-preserving Teleport |
+| Search | No generic query/data controller | `useSearch()` and the shared `SearchController` for async, controlled, or fuzzy search |
+
+Plus is still headless: it does not decide your combobox selection model,
+labels, visual language, or final ARIA names. It supplies reusable behavior so
+those decisions can remain in the Vue component that owns the product UI.
+
 ## Install
 
 ```sh
+npm install @floating-ui-plus/vue
+pnpm add @floating-ui-plus/vue
 bun add @floating-ui-plus/vue
 ```
 
@@ -63,7 +82,7 @@ Use the component layer for ordinary popovers, menus, and dialogs:
 ```vue
 <FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
   <FloatingReference>Open settings</FloatingReference>
-  <FloatingPortal v-if="open">
+  <FloatingPortal>
     <FloatingFocusManager :options="{modal: false, initialFocus: -1}">
       <FloatingContent class="popover">
         Settings
@@ -83,7 +102,7 @@ binds each rendered item:
 
 ```vue
 <FloatingList navigation typeahead loop>
-  <FloatingPortal v-if="open">
+  <FloatingPortal>
     <FloatingContent>
       <FloatingListItem
         v-for="action in actions"
@@ -106,6 +125,39 @@ ArrowRight, closes with ArrowLeft, and restores focus after dismissal. Set a
 leaf item to `close-on-click="all"` when selecting it should close every
 ancestor root in the nested menu.
 
+## Component API
+
+The declarative components provide Vue-native bindings around the same
+framework-neutral controller. They forward attributes and slots, so your
+application still owns markup, classes, labels, and ARIA names.
+
+| Component | Props / model | Purpose |
+| --- | --- | --- |
+| `FloatingRoot` | `v-model:open`, `options`, `plugins` | Owns a controller and provides it to descendants; the default slot receives `{floating, open}` |
+| `FloatingReference` | `as`, optional `floating` | Binds its rendered element as the reference and forwards reference attributes |
+| `FloatingContent` | `as`, optional `floating` | Binds its rendered element as the floating surface and applies positioning/ARIA attributes |
+| `FloatingItem` | `as`, `state`, optional `floating` | Applies the controller's item attributes for active/selected collection items |
+| `FloatingPortal` | `to`, `disabled`, optional `active` signal | Teleports to `body` or a target; under `FloatingRoot` it follows that root's `open` state automatically |
+| `FloatingClose` | `as`, optional `floating` | Closes the nearest root while preserving the source event and reason |
+| `FloatingOverlay` | `tag`, `lockScroll` | Renders a fixed overlay and optionally locks document scrolling |
+| `FloatingFocusManager` | `context`/`floating`, `options`, `enabled` | Connects modal focus trapping, restoration, and nested portal awareness |
+| `FloatingArrow` | `context`/`floating`, `width`, `height`, `staticOffset`, `rotation` | Renders and registers an arrow; emits `element-change` when its SVG changes |
+| `FloatingTransition` | required `open`, `placement`, `styles` | Provides presence-aware transition slot props `{status, style}` |
+
+Collections use `FloatingTree` and `FloatingNode` for nested roots,
+`FloatingList` for ordered items, `FloatingListItem` for registration and
+roving attributes, `Composite` / `CompositeItem` for general keyboard
+collections, and `FloatingDelayGroup` / `NextFloatingDelayGroup` for shared
+open/close delays. `FloatingList` accepts `navigation`, `typeahead`, `loop`,
+`nested`, `navigation-options`, and `typeahead-options`, and emits
+`update:active-index` plus `active-index-change`. A `FloatingListItem` can use
+`close-on-click="all"` to close its full nested root chain.
+
+`FloatingPortal` no longer needs a repeated `v-if="open"` in the common case.
+Its optional `active` prop remains a reactive signal for advanced closed-over
+slot render functions; it is not required when the portal is under
+`FloatingRoot`.
+
 ## Arrow defaults and customization
 
 `FloatingArrow` supplies the default SVG triangle with its own `width`,
@@ -115,7 +167,7 @@ the exported `FLOATING_UI_PLUS_ARROW_ATTRIBUTE`
 (`data-fup-arrow`):
 
 ```vue
-<FloatingArrow :floating="floating" :width="18" :height="9" :static-offset="-9">
+<FloatingArrow :width="18" :height="9" :static-offset="-9">
   <path d="M0 9L9 0L18 9Z" fill="rebeccapurple" />
 </FloatingArrow>
 ```
@@ -144,12 +196,153 @@ shape, color, and markup remain application-owned.
 When the default component is used with `arrow({element})`, listen for
 `@element-change` to receive its SVG element for that middleware option.
 
-## Search, collections, and portals
+## SearchController and `useSearch()`
 
-`useSearch()` connects the generic request controller to Vue lifecycle. It is
-not a finished Combobox: your application owns selection, open state, markup,
-and ARIA. Use `FloatingList navigation` for conventional listbox navigation,
-or compose `listNavigation()` directly for custom virtual/grid behavior.
+`useSearch()` is the Vue lifecycle adapter for the same framework-neutral
+`SearchController` used by the Web and Web Components packages. It handles
+debounce, minimum query length, IME composition, `AbortSignal` cancellation,
+stale-response protection, TTL caching, de-duplication, and cursor pagination;
+your component owns selection, open state, markup, and ARIA.
+
+```vue
+<script setup lang="ts">
+import {
+  FloatingContent,
+  FloatingList,
+  FloatingListItem,
+  FloatingPortal,
+  FloatingReference,
+  FloatingRoot,
+  autoUpdate,
+  createFuzzySearchSource,
+  dismiss,
+  flip,
+  offset,
+  role,
+  shift,
+  useSearch,
+} from '@floating-ui-plus/vue';
+import {ref, watch} from 'vue';
+import {
+  multilingualDestinations,
+  multilingualSearchKeys,
+  type MultilingualDestination,
+} from './multilingual-destinations';
+
+const source = createFuzzySearchSource(multilingualDestinations, {
+  keys: multilingualSearchKeys,
+  threshold: 0.35,
+});
+const search = useSearch<MultilingualDestination>({
+  source,
+  getItemKey: (item) => item.id,
+  debounceMs: 0,
+});
+
+const open = ref(false);
+const activeIndex = ref<number | null>(null);
+const optionId = (index: number) =>
+  `vue-destination-option-${search.items.value[index]?.id ?? index}`;
+const options = {
+  placement: 'bottom-start',
+  middleware: [offset(8), flip(), shift({padding: 18})],
+  whileElementsMounted: autoUpdate,
+} as const;
+const plugins = [
+  dismiss(),
+  role(() => ({role: 'combobox', activeIndex: activeIndex.value, getItemId: optionId})),
+];
+const navigationOptions = {
+  virtual: true,
+  allowEscape: true,
+  focusItemOnOpen: false,
+};
+
+function onInput(event: Event) {
+  activeIndex.value = null;
+  open.value = true;
+  search.controller.setQuery((event.target as HTMLInputElement).value);
+}
+
+function select(item: MultilingualDestination) {
+  search.controller.setQuery(item.label);
+  activeIndex.value = null;
+  open.value = false;
+}
+
+watch(search.items, (items) => {
+  if (activeIndex.value != null && activeIndex.value >= items.length) {
+    activeIndex.value = null;
+  }
+});
+</script>
+
+<template>
+  <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+    <FloatingList
+      v-model:active-index="activeIndex"
+      navigation
+      loop
+      :navigation-options="navigationOptions"
+    >
+      <FloatingReference
+        as="input"
+        :value="search.query"
+        @focus="open = true"
+        @input="onInput"
+        @compositionstart="search.controller.startComposition()"
+        @compositionend="search.controller.endComposition(($event.currentTarget as HTMLInputElement).value)"
+      />
+      <FloatingPortal>
+        <FloatingContent>
+          <p v-if="search.loading">Searching…</p>
+          <p v-else-if="search.error">Search failed.</p>
+          <template v-else>
+            <FloatingListItem
+              v-for="item in search.items"
+              :key="item.id"
+              tag="button"
+              :label="item.label"
+              :value="item"
+              @click="select(item)"
+            >
+              {{ item.label }}
+            </FloatingListItem>
+          </template>
+        </FloatingContent>
+      </FloatingPortal>
+    </FloatingList>
+  </FloatingRoot>
+</template>
+```
+
+This is the same pattern as the multilingual combobox demo: local fuzzy
+indexing supplies results, `FloatingList` supplies virtual keyboard navigation,
+and the component owns selection plus the loading/error/empty states.
+
+`createFuzzySearchSource()` normalizes compatibility forms and diacritics,
+then returns exact/prefix/fuzzy scores and match ranges through `hits`. For a
+remote API, replace it with `createAsyncSearchSource()` while keeping the same
+`useSearch()` and template composition. Call
+`search.controller.loadMore()` when `search.state.hasMore` is true. For data
+owned by TanStack Query or another request library, omit `source` and call
+`search.controller.setControlledState({items, loading, error, ...})`.
+
+`useSearch()` destroys its controller with the Vue scope. Use `createSearch()`
+directly when a longer-lived service owns the controller lifecycle.
+
+| `useSearch()` value | Purpose |
+| --- | --- |
+| `query`, `items`, `loading`, `error` | Reactive projections for template rendering |
+| `state` | Full snapshot, including `hits`, `composing`, `hasMore`, `total`, and `nextCursor` |
+| `controller.setQuery()` | Update the query from an input or custom event |
+| `controller.refresh()` / `loadMore()` | Re-run the current request or append the next page |
+| `controller.setControlledState()` | Bridge data owned by another request/cache library |
+
+## Collections and portals
+
+Use `FloatingList navigation` for conventional listbox navigation, or compose
+`listNavigation()` directly for custom virtual/grid behavior.
 
 `FloatingTree`, `FloatingNode`, `FloatingList`, `FloatingListItem`,
 `Composite`, `CompositeItem`, and `FloatingDelayGroup` provide nested-menu and

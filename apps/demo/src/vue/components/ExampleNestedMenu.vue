@@ -100,7 +100,7 @@ watch(rootOpen, (open) => {
               loop
               @update:active-index="handleRootNavigate"
             >
-              <FloatingPortal v-if="rootOpen" :active="rootOpen">
+              <FloatingPortal>
                 <Transition name="vue-surface">
                   <FloatingContent
                     class="menu-panel"
@@ -142,10 +142,7 @@ watch(rootOpen, (open) => {
                           loop
                           nested
                         >
-                          <FloatingPortal
-                            v-if="projectsOpen"
-                            :active="projectsOpen"
-                          >
+                          <FloatingPortal>
                             <Transition name="vue-surface">
                               <FloatingContent
                                 class="menu-panel nested-menu-submenu"

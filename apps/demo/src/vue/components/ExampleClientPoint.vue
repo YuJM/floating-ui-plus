@@ -50,7 +50,7 @@ function track(event: MouseEvent) {
         >
           <i /><i /><i /><span>{{ label }}</span>
         </FloatingReference>
-        <FloatingPortal v-if="open" :active="open">
+        <FloatingPortal>
           <FloatingContent class="cursor-tooltip">
             Pointer is the <b>reference</b>
           </FloatingContent>

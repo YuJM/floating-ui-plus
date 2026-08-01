@@ -324,6 +324,42 @@ describe('Floating UI Plus Vue adapter', () => {
     });
   });
 
+  test('lets a portal follow the nearest FloatingRoot open state', async () => {
+    const App = defineComponent({
+      components: {
+        FloatingClose,
+        FloatingContent,
+        FloatingPortal,
+        FloatingReference,
+        FloatingRoot,
+      },
+      setup() {
+        const open = ref(false);
+        return {open, plugins: [click()]};
+      },
+      template: `
+        <FloatingRoot v-model:open="open" :plugins="plugins">
+          <FloatingReference data-testid="reference">Open</FloatingReference>
+          <FloatingPortal>
+            <FloatingContent data-testid="content">
+              Content
+              <FloatingClose data-testid="close">Close</FloatingClose>
+            </FloatingContent>
+          </FloatingPortal>
+        </FloatingRoot>
+      `,
+    });
+
+    const {getByTestId, queryByTestId} = render(App);
+    expect(queryByTestId('content')).toBeNull();
+
+    await fireEvent.click(getByTestId('reference'));
+    await waitFor(() => expect(getByTestId('content')).toBeVisible());
+
+    await fireEvent.click(getByTestId('close'));
+    await waitFor(() => expect(queryByTestId('content')).toBeNull());
+  });
+
   test('uses Vue Teleport and supports disabling it', async () => {
     const disabled = ref(false);
     const target = document.createElement('div');

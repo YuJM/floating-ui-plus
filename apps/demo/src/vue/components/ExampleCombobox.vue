@@ -135,7 +135,7 @@ function handleKeydown(event: KeyboardEvent) {
           />
         </div>
 
-        <FloatingPortal v-if="open" :active="open">
+        <FloatingPortal>
           <Transition name="vue-surface">
             <FloatingContent
               class="vue-combobox-popup"

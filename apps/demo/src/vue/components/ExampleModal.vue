@@ -103,7 +103,7 @@ watch(open, (next) => {
             Enter focus room <span>→</span>
           </FloatingReference>
 
-          <FloatingPortal v-if="open" :active="open">
+          <FloatingPortal>
             <FloatingOverlay lock-scroll class="demo-overlay">
               <FloatingFocusManager :options="roomFocusOptions">
                 <div class="modal-anchor">
@@ -132,10 +132,7 @@ watch(open, (next) => {
                           <FloatingReference class="text-button">
                             Show placement hint
                           </FloatingReference>
-                          <FloatingPortal
-                            v-if="tooltipOpen"
-                            :active="tooltipOpen"
-                          >
+                          <FloatingPortal>
                             <FloatingContent class="tooltip">
                               This tooltip stays inside the dialog.
                             </FloatingContent>
@@ -152,10 +149,7 @@ watch(open, (next) => {
                           <FloatingReference class="text-button">
                             Open room details
                           </FloatingReference>
-                          <FloatingPortal
-                            v-if="popoverOpen"
-                            :active="popoverOpen"
-                          >
+                          <FloatingPortal>
                             <FloatingContent
                               as="section"
                               class="popover-panel"
@@ -186,10 +180,7 @@ watch(open, (next) => {
                           <FloatingReference class="text-button">
                             Open nested dialog
                           </FloatingReference>
-                          <FloatingPortal
-                            v-if="nestedOpen"
-                            :active="nestedOpen"
-                          >
+                          <FloatingPortal>
                             <FloatingOverlay
                               lock-scroll
                               class="demo-overlay"
