@@ -22,13 +22,13 @@ engine underneath, then adds a Custom Element composition layer around it:
 | Positioning | `computePosition()` and middleware | `<floating-root>` attributes plus the same middleware and positioning data |
 | Interaction | Consumer-managed event wiring | `interactions="click dismiss"`, roles, focus management, lists, and nested trees |
 | Portals and modal behavior | Consumer-managed DOM and focus | `<floating-portal>`, `<floating-overlay>`, and `<floating-focus-manager>` preserve context across layers |
-| Search | No query/data controller | The framework-neutral `SearchController` and fuzzy sources, imported from this package |
+| Search | No query/data controller | `SearchController`, fuzzy sources, and declarative `<floating-combobox>` composition |
 | Rendering | No elements | Native Custom Elements that keep your light-DOM markup, classes, labels, and ARIA |
 
 This is not a pre-styled component library. The elements coordinate behavior;
-your HTML remains the visual and semantic contract. There is deliberately no
-`<floating-combobox>`: search state, option selection, and the final ARIA
-markup stay with the application.
+your HTML remains the visual and semantic contract. `<floating-combobox>` is a
+renderless behavior element: it automates input, search, navigation, selection,
+and ARIA while the application keeps control of result markup.
 
 ## Install
 
@@ -89,6 +89,7 @@ markup and classes while binding the nearest `floating-root` controller.
 | `floating-focus-manager` | `enabled`, `modal`, `initial-focus`, `return-focus`, `outside-elements-inert` | Connects focus trapping, focus restoration, and inert outside elements |
 | `floating-arrow` | `width`, `height`, `static-offset`, `rotation` | Registers arrow geometry and renders the default or slotted SVG |
 | `floating-transition` | No required attributes | Reflects the nearest root's open/close state as `data-status` for CSS |
+| `floating-combobox` | `input-selector`, `item-label-key`, `option-id-prefix`; properties `search`, `getItemKey`, `getItemLabel`, `selectedItem` | Connects an editable input, search state, virtual-focus list, selection, and combobox ARIA |
 
 `floating-root` also exposes `controller`, `referenceElement`,
 `floatingElement`, and `contentTemplate` properties for imperative integration.
@@ -101,8 +102,8 @@ The collection elements form a second layer of the API:
 | Element | Main attributes / properties | Role |
 | --- | --- | --- |
 | `floating-tree` / `floating-node` | `node-id`, optional `parent-id` | Coordinate nested roots and restore parent focus |
-| `floating-list` | `navigation`, `typeahead`, `loop`, `nested`, `item-selector`; property `activeIndex` | Register ordered items and own keyboard navigation |
-| `floating-list-item` | `item-id`, `label`; properties `value`, `list` | Register a first child with a list and its label/value metadata |
+| `floating-list` | `navigation`, `typeahead`, `loop`, `nested`, `virtual`, `allow-escape`, `item-selector`; property `activeIndex` | Register ordered items and own keyboard navigation or virtual-focus navigation |
+| `floating-list-item` | `item-id`, `label`; properties `value`, `list` | Register a first child with a list and automatically bind option behavior inside a combobox |
 | `floating-composite` | `orientation`, `loop`, `cols`, `rtl` | Own roving focus for grids and composite widgets |
 | `floating-delay-group` / `next-floating-delay-group` | `delay`, `timeout-ms`; property `group` | Share hover/focus delays across related roots |
 
@@ -117,6 +118,7 @@ element}` when a fresh clone is created or removed.
 | Reference and floating surface | `floating-root`, `floating-reference`, native `template` |
 | Portal, arrow, overlay, and focus | `floating-portal`, `floating-arrow`, `floating-overlay`, `floating-focus-manager` |
 | Nested menus and collections | `floating-tree`, `floating-node`, `floating-list`, `floating-list-item` |
+| Editable fuzzy-search combobox | `floating-combobox`, `floating-list`, `floating-list-item` |
 | Roving keyboard focus | `floating-composite`, `floating-composite-item` |
 | Coordinated hover delays and presence | `floating-delay-group`, `floating-transition` |
 
@@ -146,31 +148,51 @@ arrow-key navigation, and typeahead:
 or list instances.
 
 Read `activeIndex` or listen for the bubbling `activeindexchange` event only
-when the application needs to mirror navigation state. Omit these attributes
-and assign plugins to `floating-root` directly for virtual focus, grids, or
-custom navigation policies.
+when the application needs to mirror navigation state. Set `virtual` when DOM
+focus must stay on an input and `aria-activedescendant` represents the active
+item, as in an editable combobox. `allow-escape` lets arrow navigation return
+to no active item at the list boundary.
 
-## SearchController with Custom Elements
+## Search and combobox behavior with Custom Elements
 
-`@floating-ui-plus/web-components` re-exports `createSearch`,
-`createAsyncSearchSource`, and `createFuzzySearchSource` from the
-framework-neutral package. The multilingual combobox in the demo is the
-canonical example. The controller owns query lifecycle—not the
-combobox DOM—so the demo combines it with a `<floating-root>`, a portal
-template, and an application-owned option renderer.
+`@floating-ui-plus/web-components` re-exports `SearchController` and
+`createFuzzySearchSource()` from the framework-neutral package.
+`<floating-combobox>` binds the input, IME composition, active option, Enter
+selection, and ARIA through the shared Web binding contract. It automatically
+puts the nearest `<floating-list>` into virtual-focus mode, so arrow navigation
+does not move DOM focus. Each `<floating-list-item>` registers and binds its
+first child as an option. The application only supplies search data and result
+markup.
+
+```html
+<floating-root data-root placement="bottom-start">
+  <floating-list navigation loop allow-escape>
+    <floating-combobox data-combobox option-id-prefix="destination-option">
+      <floating-reference>
+        <input aria-label="Destination" autocomplete="off" />
+      </floating-reference>
+
+      <floating-portal>
+        <template data-options-template>
+          <div aria-label="Destination suggestions"></div>
+        </template>
+      </floating-portal>
+    </floating-combobox>
+  </floating-list>
+</floating-root>
+```
 
 ```ts
 import {
   createFuzzySearchSource,
   dismiss,
   flip,
-  listNavigation,
   offset,
-  role,
   shift,
+  SearchController,
+  type FloatingComboboxElement,
   type FloatingRootElement,
 } from '@floating-ui-plus/web-components';
-import {SearchController} from '@floating-ui-plus/web-components';
 
 const source = createFuzzySearchSource(multilingualDestinations, {
   keys: multilingualSearchKeys,
@@ -182,49 +204,40 @@ const search = new SearchController<MultilingualDestination>({
   debounceMs: 0,
 });
 
-const root = document.querySelector<FloatingRootElement>('[data-combobox-root]')!;
-const input = document.querySelector<HTMLInputElement>('#destination-search')!;
-const listRef = {current: [] as Array<HTMLElement | null>};
-let activeIndex: number | null = null;
-const optionId = (index: number) =>
-  `destination-option-${search.items[index]?.id ?? index}`;
+const root = document.querySelector<FloatingRootElement>('[data-root]')!;
+const combobox = document.querySelector<FloatingComboboxElement>(
+  '[data-combobox]',
+)!;
+combobox.search = search as SearchController<unknown>;
 
 root.middleware = [offset(8), flip(), shift({padding: 18})];
-root.use(
-  dismiss(),
-  role(() => ({role: 'combobox', activeIndex, getItemId: optionId})),
-  listNavigation(() => ({
-    listRef,
-    activeIndex,
-    virtual: true,
-    loop: true,
-    allowEscape: true,
-    focusItemOnOpen: false,
-    onNavigate(index) {
-      activeIndex = index;
-      render();
-    },
-  })),
-);
+root.plugins = [dismiss()];
 
-const stop = search.subscribe(() => {
-  render();
+function render(items: MultilingualDestination[], container: HTMLElement) {
+  container.replaceChildren(
+    ...items.map((item) => {
+      const listItem = document.createElement('floating-list-item');
+      listItem.label = item.label;
+      listItem.value = item;
+
+      const option = document.createElement('div');
+      option.textContent = item.label;
+      listItem.append(option);
+      return listItem;
+    }),
+  );
+}
+
+let options: HTMLElement | null = null;
+document
+  .querySelector<HTMLTemplateElement>('[data-options-template]')!
+  .addEventListener('floatingmount', (event) => {
+    options = (event as CustomEvent<{element: HTMLElement}>).detail.element;
+    render(search.items, options);
+  });
+combobox.addEventListener('comboboxstatechange', () => {
+  if (options) render(search.items, options);
 });
-
-input.addEventListener('input', () => search.setQuery(input.value));
-input.addEventListener('compositionstart', () => search.startComposition());
-input.addEventListener('compositionend', () =>
-  search.endComposition(input.value),
-);
-void search.refresh();
-
-// Call this from an infinite-scroll sentinel when the latest snapshot
-// hasMore is true.
-const loadMore = () => void search.loadMore();
-
-// On teardown:
-stop();
-search.destroy();
 ```
 
 `SearchController` provides debounce, IME-safe queries, cancellation of stale
@@ -234,11 +247,13 @@ requests, TTL caching, de-duplication, and cursor pagination. It exposes
 server-owned query library, omit `source` and push results through
 `setControlledState()`.
 
-Use `setQuery()` from input events, `subscribe()` to render snapshots, and
-`loadMore()` for cursor pagination. Call `disconnect()` when the view is
-temporarily inactive and `destroy()` when its owner is disposed. The
-`floating-root` and `floating-list` elements remain responsible for placement,
-open state, active-index navigation, and option semantics.
+Use `combobox.setQuery()` for programmatic query changes and
+`search.loadMore()` for cursor pagination. The element performs the initial
+refresh and releases its internal bindings when disconnected. The editable
+input intentionally stays outside `<floating-focus-manager>`: virtual focus
+keeps keyboard focus on the input while `aria-activedescendant` identifies the
+active option. `<floating-root>` still owns placement and the application still
+decides how every result looks.
 
 ## Arrow defaults and customization
 

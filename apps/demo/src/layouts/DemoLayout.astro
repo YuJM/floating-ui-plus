@@ -138,6 +138,20 @@ const metadata = {
           new URL(window.location.href).searchParams.get('framework'),
         );
         document.documentElement.dataset.framework = framework;
+        const frameworkPackage =
+          framework === 'vue'
+            ? '@floating-ui-plus/vue'
+            : '@floating-ui-plus/web-components';
+        document
+          .querySelectorAll<HTMLElement>('[data-framework-package]')
+          .forEach((element) => {
+            element.textContent = frameworkPackage;
+          });
+        document
+          .querySelectorAll<HTMLElement>('[data-framework-name]')
+          .forEach((element) => {
+            element.textContent = framework;
+          });
         document
           .querySelector('meta[name="theme-color"]')
           ?.setAttribute('content', framework === 'vue' ? '#effaf5' : '#edf3ff');

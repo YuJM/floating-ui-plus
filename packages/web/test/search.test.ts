@@ -142,6 +142,7 @@ describe('SearchController', () => {
     expect(searchController.snapshot).not.toHaveProperty('activeIndex');
     expect(searchController.snapshot).not.toHaveProperty('selectedItem');
     expect(searchController.snapshot).not.toHaveProperty('open');
+    expect(searchController.getItemKey(beta)).toBe('beta');
     searchController.destroy();
   });
 

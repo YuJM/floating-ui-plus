@@ -97,12 +97,22 @@ test('integrated demo selects an example and preserves it while switching implem
   await expect(page).toHaveURL(/\/tooltip\?framework=web-components$/);
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeVisible();
   await expect(page.locator('[data-framework-panel="vue"]')).toBeHidden();
+  await expect(page.locator('[data-framework-package]')).toHaveText(
+    '@floating-ui-plus/web-components',
+  );
+  await expect(page.locator('[data-framework-name]')).toHaveText(
+    'web-components',
+  );
 
   const switcher = page.getByRole('group', {name: 'Implementation'});
   await switcher.getByRole('link', {name: 'Vue'}).click();
   await expect(page).toHaveURL(/\/tooltip\?framework=vue$/);
   await expect(page.locator('[data-framework-panel="vue"]')).toBeVisible();
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeHidden();
+  await expect(page.locator('[data-framework-package]')).toHaveText(
+    '@floating-ui-plus/vue',
+  );
+  await expect(page.locator('[data-framework-name]')).toHaveText('vue');
 
   await page.goto('/tooltip?framework=unknown');
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeVisible();

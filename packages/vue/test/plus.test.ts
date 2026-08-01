@@ -28,6 +28,7 @@ import {
   dismiss,
   requestFloatingContext,
   role,
+  useCombobox,
   useFloating,
   useSearch,
   vFloating,
@@ -100,6 +101,56 @@ describe('Floating UI Plus Vue adapter', () => {
     await waitFor(() => {
       expect(getByText('北京')).toHaveAttribute('data-query', 'bejing');
     });
+  });
+
+  test('composes combobox input, active option, and selection state', async () => {
+    const App = defineComponent({
+      setup() {
+        const search = useSearch({
+          items: [
+            {id: 'alpha', label: 'Alpha'},
+            {id: 'beta', label: 'Beta'},
+          ],
+          getItemKey: (item) => item.id,
+        });
+        const combobox = useCombobox({
+          search,
+          getItemLabel: (item) => item.label,
+          optionIdPrefix: 'vue-test-option',
+        });
+        return {combobox, beta: search.items.value[1]};
+      },
+      template: `
+        <div>
+          <input data-testid="input" v-bind="combobox.inputProps.value" />
+          <button
+            data-testid="option"
+            v-bind="combobox.getOptionProps(beta, 1)"
+          >Beta</button>
+          <button @click="combobox.activeIndex.value = 1">Activate Beta</button>
+          <output>
+            {{ combobox.open.value }}:{{ combobox.selectedItem.value?.label ?? '' }}
+          </output>
+        </div>
+      `,
+    });
+
+    const {getByTestId, getByRole, getByText} = render(App);
+    const input = getByTestId('input');
+    const option = getByTestId('option');
+    await fireEvent.focus(input);
+    expect(getByText('true:')).toBeVisible();
+
+    await fireEvent.click(getByRole('button', {name: 'Activate Beta'}));
+    await nextTick();
+    expect(option).toHaveAttribute('id', 'vue-test-option-beta');
+    expect(option).toHaveAttribute('role', 'option');
+    expect(option).toHaveAttribute('data-active', 'true');
+    await fireEvent.keyDown(input, {key: 'Enter'});
+
+    expect(input).toHaveValue('Beta');
+    expect(getByText('false:Beta')).toBeVisible();
+    expect(option).toHaveAttribute('aria-selected', 'true');
   });
 
   test('offers a declarative root, reference, and content API alongside useFloating', async () => {

@@ -11,11 +11,10 @@ import {
   dismiss,
   flip,
   offset,
-  role,
   shift,
+  useCombobox,
   useSearch,
 } from '@floating-ui-plus/vue';
-import {ref, watch} from 'vue';
 
 import {
   multilingualDestinations,
@@ -34,62 +33,30 @@ const search = useSearch<MultilingualDestination>({
   debounceMs: 0,
 });
 
-const open = ref(false);
-const activeIndex = ref<number | null>(null);
-const selectedItem = ref<MultilingualDestination | null>(null);
-
-const optionId = (index: number) =>
-  `vue-destination-option-${search.items.value[index]?.id ?? index}`;
+const {
+  open,
+  activeIndex,
+  selectedItem,
+  inputProps,
+  rolePlugin,
+  setQuery,
+  getOptionProps,
+  getNavigationOptions,
+} = useCombobox({
+  search,
+  getItemLabel: (item) => item.label,
+  optionIdPrefix: 'vue-destination-option',
+});
 
 const options = {
   placement: 'bottom-start',
   middleware: [offset(8), flip(), shift({padding: 18})],
   whileElementsMounted: autoUpdate,
 } as const;
-const plugins = [
-  dismiss(),
-  role(() => ({
-    role: 'combobox',
-    activeIndex: activeIndex.value,
-    getItemId: optionId,
-  })),
-];
-const navigationOptions = {
-  virtual: true,
+const plugins = [dismiss(), rolePlugin];
+const navigationOptions = getNavigationOptions({
   allowEscape: true,
-  focusItemOnOpen: false,
-};
-
-watch(search.items, (items) => {
-  if (activeIndex.value != null && activeIndex.value >= items.length) {
-    activeIndex.value = null;
-  }
 });
-
-function setQuery(query: string) {
-  activeIndex.value = null;
-  open.value = true;
-  search.controller.setQuery(query);
-}
-
-function handleInput(event: Event) {
-  setQuery((event.currentTarget as HTMLInputElement).value);
-}
-
-function select(item: MultilingualDestination) {
-  selectedItem.value = item;
-  search.controller.setQuery(item.label);
-  activeIndex.value = null;
-  open.value = false;
-}
-
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Enter' || activeIndex.value == null) return;
-  const item = search.items.value[activeIndex.value];
-  if (!item) return;
-  event.preventDefault();
-  select(item);
-}
 </script>
 
 <template>
@@ -122,16 +89,7 @@ function handleKeydown(event: KeyboardEvent) {
             placeholder="Search city or country…"
             aria-describedby="vue-combobox-hints vue-combobox-status"
             data-floating-combobox-input
-            :value="search.query.value"
-            @focus="open = true"
-            @input="handleInput"
-            @compositionstart="search.controller.startComposition()"
-            @compositionend="
-              search.controller.endComposition(
-                ($event.currentTarget as HTMLInputElement).value,
-              )
-            "
-            @keydown="handleKeydown"
+            v-bind="inputProps"
           />
         </div>
 
@@ -159,16 +117,14 @@ function handleKeydown(event: KeyboardEvent) {
               </div>
               <template v-else-if="search.items.value.length">
                 <FloatingListItem
-                  v-for="item in search.items.value"
+                  v-for="(item, index) in search.items.value"
                   :key="item.id"
                   tag="div"
                   :label="item.label"
                   :value="item"
-                  :selected="selectedItem?.id === item.id"
+                  v-bind="getOptionProps(item, index)"
                   class="vue-combobox-option"
                   data-floating-combobox-option
-                  @mousedown.prevent
-                  @click="select(item)"
                 >
                   <span>
                     <strong>{{ item.label }}</strong>
@@ -215,6 +171,6 @@ function handleKeydown(event: KeyboardEvent) {
       }}
     </p>
 
-    <code>useSearch() + &lt;FloatingList navigation&gt;</code>
+    <code>useSearch() + useCombobox() + &lt;FloatingList navigation&gt;</code>
   </article>
 </template>

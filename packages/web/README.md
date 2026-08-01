@@ -25,7 +25,7 @@ renderer or a design system.
 | Open state | Consumer-managed | `context.open`, `onOpenChange()`, presence, and controller refresh/update helpers |
 | Interaction | Consumer wires events | Composable `click()`, `hover()`, `focus()`, `dismiss()`, `role()`, navigation, and typeahead plugins |
 | Cross-surface behavior | Consumer composes it | Focus manager, portals, nested trees, lists, composites, delay groups, and scroll locking |
-| Search | No query/data controller | `SearchController` for async or controlled search, cancellation, IME, caching, and pagination |
+| Search and combobox behavior | No query/data controller | `SearchController` plus `ComboboxController` for request state, editable-input behavior, ARIA, and selection |
 
 This package is intentionally headless. It does not render a combobox, menu, or
 dialog and does not choose labels, selection rules, or ARIA names. It gives a
@@ -163,25 +163,36 @@ slot, upstream `offset()` semantics remain unchanged.
 | Standard placement values | `PLACEMENT` and `PLACEMENTS` |
 | Async or controlled search requests | `createSearch()` from `/search` |
 | Local typo-tolerant search | `createFuzzySearchSource()` from `/fuzzy` |
+| Editable combobox input and selection | `createCombobox()` from `/combobox` |
 | Nested menus and ordered items | tree, list, and composite controllers |
 | Modal focus | `focusManager()` with `dismiss()` |
 | A DOM target outside the current renderer | `createPortalBridge()` |
 
-## SearchController: search state, not a combobox
+## SearchController and ComboboxController
 
 `createSearch()` (or `new SearchController(...)`) returns the framework-neutral
 `SearchController`. It handles
 debounce, minimum query length, IME composition, `AbortSignal` cancellation,
 stale-response protection, TTL caching, de-duplication by `getItemKey`, and
-cursor pagination through `loadMore()`. The application still owns combobox
-markup, open state, active option, selection, focus, and ARIA.
+cursor pagination through `loadMore()`.
+
+`createCombobox()` composes that search state with the repeated editable
+combobox behavior: focus/input opening, IME events, active option state,
+`aria-activedescendant`, Enter selection, option mouse binding, and the
+`role()` plus virtual `listNavigation()` plugins. The application still owns
+the option markup and loading, error, empty, and result rendering.
+
+Framework adapters consume the same `getInputProps()`, `getOptionProps()`, and
+`getNavigationOptions()` contract. The imperative `bindInput()`,
+`bindOption()`, and `navigationPlugin()` helpers are built from those props, so
+Web Components, Vue, and direct DOM integrations share one behavior source.
 
 The demo's multilingual combobox is the concrete composition to copy. Its core
 wiring is:
 
 ```ts
-import {createFloating} from '@floating-ui-plus/web';
-import {dismiss, listNavigation, role} from '@floating-ui-plus/web';
+import {createFloating, dismiss} from '@floating-ui-plus/web';
+import {createCombobox} from '@floating-ui-plus/web/combobox';
 import {createFuzzySearchSource} from '@floating-ui-plus/web/fuzzy';
 import {SearchController} from '@floating-ui-plus/web/search';
 
@@ -195,43 +206,29 @@ const search = new SearchController({
   debounceMs: 0,
 });
 
-let activeIndex: number | null = null;
-const listRef = {current: [] as Array<HTMLElement | null>};
-const optionId = (index: number) =>
-  `destination-option-${search.items[index]?.id ?? index}`;
+const floating = createFloating(() => ({open, onOpenChange: setOpen}));
+const combobox = createCombobox({
+  search,
+  getItemLabel: (item) => item.label,
+  onOpenChange: (next, event, reason) =>
+    floating.context.onOpenChange(next, event, reason),
+});
 
-const floating = createFloating(() => ({open, onOpenChange: setOpen}))
-  .pipe(
-    dismiss(),
-    role(() => ({role: 'combobox', activeIndex, getItemId: optionId})),
-    listNavigation(() => ({
-      listRef,
-      activeIndex,
-      virtual: true,
-      loop: true,
-      allowEscape: true,
-      focusItemOnOpen: false,
-      onNavigate(index) {
-        activeIndex = index;
-        render();
-      },
-    })),
-  );
+floating.pipe(dismiss(), ...combobox.interactions({loop: true, allowEscape: true}));
+combobox.subscribe(render);
+combobox.bindInput(input); // Also runs the initial search refresh.
 
-const unsubscribe = search.subscribe(render);
-
-input.addEventListener('input', () => search.setQuery(input.value));
-input.addEventListener('compositionstart', () => search.startComposition());
-input.addEventListener('compositionend', () =>
-  search.endComposition(input.value),
-);
-void search.refresh();
+// After rendering options:
+combobox.setListElements(optionElements);
+optionElements.forEach((element, index) => {
+  combobox.bindOption(element, search.items[index], index);
+});
 
 // Call this when the results viewport reaches the end.
 const loadMore = () => void search.loadMore();
 
 // On unmount:
-unsubscribe();
+combobox.destroy();
 search.destroy();
 ```
 
@@ -240,11 +237,18 @@ The controller's small lifecycle surface is deliberate:
 | API | Use |
 | --- | --- |
 | `setQuery(query)` | Update the query and schedule a debounced source request |
+| `getItemKey(item)` | Reuse the configured stable key in render adapters |
 | `subscribe(listener)` | Receive the initial and every subsequent `SearchSnapshot` |
 | `refresh()` | Re-run the current query immediately |
 | `loadMore()` | Request the next `nextCursor` page and append de-duplicated items |
 | `setControlledState(state)` | Feed results owned by another data-fetching library |
 | `connect()` / `disconnect()` / `destroy()` | Pause requests or release the controller lifecycle |
+
+`ComboboxController` exposes `setQuery()`, `select()`, `setActiveIndex()`,
+`getInputProps()`, `getOptionProps()`, `getNavigationOptions()`, `bindInput()`,
+`bindOption()`, and `setListElements()`. Framework renderers should bind the
+prop-returning methods declaratively; direct DOM and Custom Element adapters
+can use the imperative binding helpers.
 
 `createFuzzySearchSource()` normalizes compatibility forms and diacritics,
 ranks exact/prefix/fuzzy matches, and exposes match ranges for highlighting.
@@ -256,8 +260,8 @@ fuzzy matching by default and accepts `findMatch` for custom matching.
 ## Imports and compatibility
 
 The package is safe to import during SSR; DOM work begins when a controller is
-connected. Use `/search` when fuzzy search is unnecessary, `/fuzzy` when it
-is needed, and `/utils` for shared utility exports. The root entry also
+connected. Use `/search` for request state, `/fuzzy` for local fuzzy search,
+`/combobox` for editable combobox behavior, and `/utils` for shared utilities. The root entry also
 re-exports them for convenience.
 
 Run the package checks from the workspace root:

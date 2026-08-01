@@ -1,4 +1,5 @@
 import {FloatingArrowElement} from './FloatingArrowElement';
+import {FloatingComboboxElement} from './FloatingComboboxElement';
 import {FloatingRootElement} from './FloatingRootElement';
 import {
   FloatingItemElement,
@@ -36,6 +37,7 @@ const floatingElements = [
   ['floating-node', FloatingNodeElement],
   ['floating-list', FloatingListElement],
   ['floating-list-item', FloatingListItemElement],
+  ['floating-combobox', FloatingComboboxElement],
   ['floating-delay-group', FloatingDelayGroupElement],
   ['next-floating-delay-group', NextFloatingDelayGroupElement],
   ['floating-composite', FloatingCompositeElement],

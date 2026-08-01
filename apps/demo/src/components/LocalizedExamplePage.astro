@@ -19,13 +19,10 @@ const details = getExample(locale, example);
 const webExamples = {tooltip: TooltipExample, popover: PopoverExample, menu: MenuExample, 'nested-menu': NestedMenuExample, 'client-point': ClientPointExample, combobox: ComboboxExample, placement: PlacementExample, middleware: MiddlewareExamples, modal: ModalExample};
 const WebExample = webExamples[example];
 const variant = example === 'middleware' ? 'full' : example === 'placement' ? 'wide' : 'default';
-const frameworkPackage = Astro.url.searchParams.get('framework') === 'vue'
-  ? '@floating-ui-plus/vue'
-  : '@floating-ui-plus/web-components';
 ---
 
 <DemoLayout locale={locale} example={example}>
-  <ExampleRoute locale={locale} heading={details.heading} description={details.description} build={details.build} features={details.features} frameworkPackage={frameworkPackage} variant={variant}>
+  <ExampleRoute locale={locale} heading={details.heading} description={details.description} build={details.build} features={details.features} variant={variant}>
     <section data-framework-panel="web-components" class="framework-panel"><WebExample /></section>
     <section data-framework-panel="vue" class="framework-panel"><ExampleView exampleName={example} locale={locale} client:only="vue"><p>{m.loading_example(undefined, {locale})}</p></ExampleView></section>
   </ExampleRoute>

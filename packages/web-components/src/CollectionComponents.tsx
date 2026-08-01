@@ -179,6 +179,8 @@ interface FloatingListHost extends HTMLElement {
   typeahead: boolean;
   loop: boolean;
   nested: boolean;
+  virtual: boolean;
+  allowEscape: boolean;
   activeIndex: number | null;
   commitActiveIndex(index: number | null): void;
 }
@@ -329,15 +331,18 @@ const FloatingListBase = c(
       ) {
         host.commitActiveIndex(null);
       }
+      if (host.virtual) restoreItems();
       items.forEach(({element}, index) => {
         if (!element) return;
-        if (!originalItemState.has(element)) {
+        if (!host.virtual && !originalItemState.has(element)) {
           originalItemState.set(element, {
             tabIndex: element.getAttribute('tabindex'),
             active: element.getAttribute('data-active'),
           });
         }
-        element.tabIndex = index === host.activeIndex ? 0 : -1;
+        if (!host.virtual) {
+          element.tabIndex = index === host.activeIndex ? 0 : -1;
+        }
         element.dataset.active = String(index === host.activeIndex);
       });
       root?.controller.refresh();
@@ -361,6 +366,7 @@ const FloatingListBase = c(
       host.navigation,
       host.typeahead,
       host.activeIndex,
+      host.virtual,
       originalItemState,
     ]);
 
@@ -374,6 +380,9 @@ const FloatingListBase = c(
             activeIndex: host.activeIndex,
             loop: host.loop,
             nested: host.nested || root.controller.context.nested,
+            virtual: host.virtual,
+            allowEscape: host.allowEscape,
+            focusItemOnOpen: host.virtual ? false : 'auto',
             onNavigate: (index) => host.commitActiveIndex(index),
           })),
         );
@@ -385,7 +394,9 @@ const FloatingListBase = c(
             activeIndex: host.activeIndex,
             onMatch: (index) => {
               host.commitActiveIndex(index);
-              elementRef.current[index]?.focus({preventScroll: true});
+              if (!host.virtual) {
+                elementRef.current[index]?.focus({preventScroll: true});
+              }
             },
           })),
         );
@@ -400,6 +411,8 @@ const FloatingListBase = c(
       host.typeahead,
       host.loop,
       host.nested,
+      host.virtual,
+      host.allowEscape,
       elementRef,
       labelRef,
     ]);
@@ -429,6 +442,13 @@ const FloatingListBase = c(
       typeahead: {type: Boolean, value: (): boolean => false, reflect: true},
       loop: {type: Boolean, value: (): boolean => false, reflect: true},
       nested: {type: Boolean, value: (): boolean => false, reflect: true},
+      virtual: {type: Boolean, value: (): boolean => false, reflect: true},
+      allowEscape: {
+        type: Boolean,
+        value: (): boolean => false,
+        reflect: true,
+        attr: 'allow-escape',
+      },
     },
   },
 );
@@ -492,7 +512,9 @@ interface FloatingListItemHost extends HTMLElement {
 const FloatingListItemBase = c(
   () => {
     const host = useHost<FloatingListItemHost>().current;
-    const inheritedList = useContext(floatingComponentContext).list;
+    const componentContext = useContext(floatingComponentContext);
+    const inheritedList = componentContext.list;
+    const combobox = componentContext.combobox;
     const slot = useRef<HTMLSlotElement>();
     const children = useSlot<HTMLElement>(
       slot,
@@ -503,13 +525,40 @@ const FloatingListItemBase = c(
 
     useLayoutEffect(() => {
       if (!list || !element) return;
-      return list.register({
+      const unregister = list.register({
         ...(host.itemId ? {id: host.itemId} : {}),
         element,
         label: host.label ?? element.textContent,
         value: host.value ?? element,
       });
-    }, [list, element, host.itemId, host.label, host.value]);
+      let unbindOption: (() => void) | undefined;
+      const syncComboboxOption = () => {
+        unbindOption?.();
+        unbindOption = undefined;
+        if (!combobox) return;
+        const item = list.items.find((current) => current.element === element);
+        if (!item) return;
+        unbindOption = combobox.bindOption(
+          element,
+          item.value,
+          item.index,
+        );
+      };
+      const unsubscribe = list.subscribe(syncComboboxOption);
+      syncComboboxOption();
+      return () => {
+        unsubscribe();
+        unbindOption?.();
+        unregister();
+      };
+    }, [
+      list,
+      element,
+      host.itemId,
+      host.label,
+      host.value,
+      combobox,
+    ]);
 
     return (
       <host shadowDom>

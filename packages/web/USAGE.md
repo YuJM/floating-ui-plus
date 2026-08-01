@@ -85,12 +85,14 @@ const dialog = createFloating(dialogOptions)
 
 ## Search and comboboxes
 
-Search is request state, not a Combobox component. `createSearch()` handles
+`createSearch()` handles
 debouncing, IME completion, cancellation, stale responses, cache TTL, and
-cursor pagination. Your UI owns input markup, open state, selection,
-`aria-activedescendant`, and rendering.
+cursor pagination. Compose it with `createCombobox()` to own input events,
+IME wiring, active-option ARIA, Enter selection, and virtual list navigation.
+Your UI still owns markup and result rendering.
 
 ```ts
+import {createCombobox} from '@floating-ui-plus/web/combobox';
 import {createAsyncSearchSource, createSearch} from '@floating-ui-plus/web/search';
 
 const source = createAsyncSearchSource<Product>({
@@ -110,6 +112,21 @@ const search = createSearch({
   source,
   getItemKey: (product) => product.id,
 });
+
+const combobox = createCombobox({
+  search,
+  getItemLabel: (product) => product.name,
+  onOpenChange: setOpen,
+});
+
+// Framework adapters bind these objects to their input, options, and list.
+const inputProps = combobox.getInputProps();
+const optionProps = combobox.getOptionProps(search.items[0]!, 0);
+const navigationOptions = combobox.getNavigationOptions({loop: true});
+
+// Direct DOM consumers can use the equivalent imperative helpers.
+combobox.bindInput(input);
+floating.pipe(...combobox.interactions({loop: true}));
 ```
 
 For data fetched by your application or a query library, use controlled state:

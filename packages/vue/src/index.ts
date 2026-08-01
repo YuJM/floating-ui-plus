@@ -4,6 +4,11 @@ export type * from './types';
 export {useFloating} from './useFloating';
 export {useSearch} from './search';
 export type {UseSearchReturn} from './search';
+export {useCombobox} from './combobox';
+export type {
+  UseComboboxOptions,
+  UseComboboxReturn,
+} from './combobox';
 export {
   FloatingContent,
   FloatingClose,
@@ -17,6 +22,7 @@ export {
   autoUpdate,
   computePosition,
   createAsyncSearchSource,
+  createCombobox,
   createFloating,
   createFloatingContextScope,
   createFuzzyMatcher,
@@ -116,6 +122,9 @@ export type {
   SearchSnapshot,
   SearchSource,
   SearchSourceItem,
+  ComboboxOptions,
+  ComboboxNavigationOptions,
+  ComboboxSnapshot,
   SafePolygonOptions,
   TransitionStatus,
   TransitionStyles,

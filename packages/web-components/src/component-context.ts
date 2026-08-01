@@ -1,5 +1,6 @@
 import {createContext} from 'atomico';
 import type {
+  ComboboxController,
   CompositeController,
   DelayGroup,
   FloatingContextScope,
@@ -25,6 +26,7 @@ export interface FloatingComponentContext {
   list?: FloatingList<unknown> | undefined;
   delayGroup?: DelayGroup | undefined;
   composite?: FloatingCompositeContext | undefined;
+  combobox?: ComboboxController<unknown> | undefined;
 }
 
 export const floatingComponentContext =
@@ -38,4 +40,5 @@ export const floatingComponentContext =
     list: undefined,
     delayGroup: undefined,
     composite: undefined,
+    combobox: undefined,
   });

@@ -6,11 +6,13 @@ import {
   FLOATING_UI_PLUS_CLOSE_ATTRIBUTE,
   FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
   FloatingArrowElement,
+  FloatingComboboxElement,
   FloatingCompositeElement,
   FloatingListElement,
   FloatingPortalElement,
   FloatingReferenceElement,
   FloatingRootElement,
+  SearchController,
   click,
   offset,
 } from '../../src';
@@ -183,6 +185,82 @@ describe('FloatingRootElement', () => {
         ),
       ).toBe(true);
     });
+  });
+
+  test('composes a declarative virtual-focus combobox with list items', async () => {
+    const destinations = [
+      {id: 'seoul', label: '서울'},
+      {id: 'beijing', label: '北京'},
+    ];
+    const search = new SearchController({
+      items: destinations,
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-list navigation loop allow-escape>
+        <floating-combobox option-id-prefix="destination-option">
+          <floating-reference><input aria-label="Destination" /></floating-reference>
+          <floating-list-item label="서울"><div>서울</div></floating-list-item>
+          <floating-list-item label="北京"><div>北京</div></floating-list-item>
+        </floating-combobox>
+      </floating-list>
+    `;
+    const combobox = root.querySelector('floating-combobox')!;
+    const list = root.querySelector('floating-list')!;
+    const listItems = Array.from(
+      root.querySelectorAll('floating-list-item'),
+    );
+    listItems.forEach((item, index) => {
+      item.value = destinations[index];
+    });
+    combobox.search = search as SearchController<unknown>;
+    const selectListener = vi.fn();
+    combobox.addEventListener('comboboxselect', selectListener);
+    document.body.append(root);
+
+    await root.updateComplete;
+    await list.updateComplete;
+    await combobox.updateComplete;
+    await Promise.all(listItems.map((item) => item.updateComplete));
+    const input = root.querySelector('input')!;
+    const options = Array.from(root.querySelectorAll<HTMLElement>('div'));
+
+    await vi.waitFor(() => {
+      expect(combobox).toBeInstanceOf(FloatingComboboxElement);
+      expect(list.virtual).toBe(true);
+      expect(input.getAttribute('role')).toBe('combobox');
+      expect(
+        options.every((option) => option.getAttribute('role') === 'option'),
+      ).toBe(true);
+    });
+
+    input.focus();
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+    await vi.waitFor(() => {
+      expect(list.activeIndex).toBe(0);
+      expect(document.activeElement).toBe(input);
+      expect(input.getAttribute('aria-activedescendant')).toBe(
+        options[0]?.id,
+      );
+      expect(options.every((option) => !option.hasAttribute('tabindex'))).toBe(
+        true,
+      );
+    });
+
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'Enter'}),
+    );
+    await vi.waitFor(() => {
+      expect(combobox.selectedItem).toBe(destinations[0]);
+      expect(input.value).toBe('서울');
+      expect(root.open).toBe(false);
+      expect(selectListener).toHaveBeenCalledOnce();
+    });
+    search.destroy();
   });
 
   test('connects and replaces plugins assigned after the root is connected', async () => {

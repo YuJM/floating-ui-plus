@@ -2,6 +2,11 @@ export * from '@floating-ui-plus/web';
 
 export {FloatingArrowElement} from './FloatingArrowElement';
 export {
+  FloatingComboboxElement,
+  type FloatingComboboxSelectDetail,
+  type FloatingComboboxStateChangeDetail,
+} from './FloatingComboboxElement';
+export {
   FloatingItemElement,
   FloatingReferenceElement,
 } from './RootParts';

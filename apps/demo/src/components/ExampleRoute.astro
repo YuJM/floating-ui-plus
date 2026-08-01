@@ -5,13 +5,12 @@ interface Props {
   description: string;
   build: string;
   features: readonly string[];
-  frameworkPackage: '@floating-ui-plus/web-components' | '@floating-ui-plus/vue';
   variant?: 'default' | 'wide' | 'full';
 }
 
 import {getRelativeLocaleUrl} from 'astro:i18n';
 import * as m from '../paraglide/messages';
-const {heading, description, build, features, frameworkPackage, locale, variant = 'default'} = Astro.props;
+const {heading, description, build, features, locale, variant = 'default'} = Astro.props;
 const badgeTones = ['cyan', 'lavender', 'coral', 'mint', 'gold'] as const;
 ---
 
@@ -26,7 +25,9 @@ const badgeTones = ['cyan', 'lavender', 'coral', 'mint', 'gold'] as const;
     <p class="route-outcome">{description}</p>
     <aside class="implementation-story" aria-label={m.built_with(undefined, {locale})}>
       <div class="implementation-heading">
-        <code class="implementation-package">{frameworkPackage}</code>
+        <code class="implementation-package" data-framework-package>
+          @floating-ui-plus/web-components
+        </code>
         <span>{m.implemented_with(undefined, {locale})}</span>
       </div>
       <ul class="implementation-badges" aria-label={m.built_with(undefined, {locale})}>
@@ -46,7 +47,7 @@ const badgeTones = ['cyan', 'lavender', 'coral', 'mint', 'gold'] as const;
     <div class="route-stage-header">
       <span>{m.live_demo(undefined, {locale})}</span>
       <span class="route-stage-rule" aria-hidden="true"></span>
-      <code>{frameworkPackage.replace('@floating-ui-plus/', '')}</code>
+      <code data-framework-name>web-components</code>
     </div>
     <slot />
   </div>

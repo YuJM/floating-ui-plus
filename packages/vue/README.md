@@ -22,11 +22,11 @@ familiar `useFloating()` shape and adds a shared Plus controller underneath:
 | Interaction | Consumer composes the supported interaction hooks | `.pipe()`/`registerPlugins()` with click, hover, focus, dismiss, roles, navigation, and typeahead |
 | Declarative surfaces | Consumer builds each surface | `FloatingRoot`, `FloatingReference`, `FloatingContent`, `FloatingPortal`, overlay, focus, arrow, and transition components |
 | Nested and modal behavior | Consumer wires focus/portal coordination | Trees, lists, delay groups, focus manager, inert neighbors, scroll locking, and context-preserving Teleport |
-| Search | No generic query/data controller | `useSearch()` and the shared `SearchController` for async, controlled, or fuzzy search |
+| Search and combobox behavior | No generic query/data controller | `useSearch()` for data and `useCombobox()` for editable input, active option, ARIA, and selection |
 
-Plus is still headless: it does not decide your combobox selection model,
-labels, visual language, or final ARIA names. It supplies reusable behavior so
-those decisions can remain in the Vue component that owns the product UI.
+Plus is still headless: it supplies a default combobox selection lifecycle but
+does not decide labels, result markup, visual language, or accessible names.
+Those product decisions remain in the Vue component.
 
 ## Install
 
@@ -196,13 +196,15 @@ shape, color, and markup remain application-owned.
 When the default component is used with `arrow({element})`, listen for
 `@element-change` to receive its SVG element for that middleware option.
 
-## SearchController and `useSearch()`
+## SearchController, `useSearch()`, and `useCombobox()`
 
 `useSearch()` is the Vue lifecycle adapter for the same framework-neutral
 `SearchController` used by the Web and Web Components packages. It handles
 debounce, minimum query length, IME composition, `AbortSignal` cancellation,
 stale-response protection, TTL caching, de-duplication, and cursor pagination;
-your component owns selection, open state, markup, and ARIA.
+`useCombobox()` adds Vue refs and input bindings for open state, active option,
+IME, ARIA, Enter selection, and the combobox role. Your component still owns
+the result markup and loading, error, and empty states.
 
 ```vue
 <script setup lang="ts">
@@ -218,11 +220,10 @@ import {
   dismiss,
   flip,
   offset,
-  role,
   shift,
+  useCombobox,
   useSearch,
 } from '@floating-ui-plus/vue';
-import {ref, watch} from 'vue';
 import {
   multilingualDestinations,
   multilingualSearchKeys,
@@ -239,41 +240,26 @@ const search = useSearch<MultilingualDestination>({
   debounceMs: 0,
 });
 
-const open = ref(false);
-const activeIndex = ref<number | null>(null);
-const optionId = (index: number) =>
-  `vue-destination-option-${search.items.value[index]?.id ?? index}`;
+const {
+  open,
+  activeIndex,
+  selectedItem,
+  inputProps,
+  rolePlugin,
+  getOptionProps,
+  getNavigationOptions,
+} = useCombobox({
+  search,
+  getItemLabel: (item) => item.label,
+});
 const options = {
   placement: 'bottom-start',
   middleware: [offset(8), flip(), shift({padding: 18})],
   whileElementsMounted: autoUpdate,
 } as const;
-const plugins = [
-  dismiss(),
-  role(() => ({role: 'combobox', activeIndex: activeIndex.value, getItemId: optionId})),
-];
-const navigationOptions = {
-  virtual: true,
+const plugins = [dismiss(), rolePlugin];
+const navigationOptions = getNavigationOptions({
   allowEscape: true,
-  focusItemOnOpen: false,
-};
-
-function onInput(event: Event) {
-  activeIndex.value = null;
-  open.value = true;
-  search.controller.setQuery((event.target as HTMLInputElement).value);
-}
-
-function select(item: MultilingualDestination) {
-  search.controller.setQuery(item.label);
-  activeIndex.value = null;
-  open.value = false;
-}
-
-watch(search.items, (items) => {
-  if (activeIndex.value != null && activeIndex.value >= items.length) {
-    activeIndex.value = null;
-  }
 });
 </script>
 
@@ -287,11 +273,7 @@ watch(search.items, (items) => {
     >
       <FloatingReference
         as="input"
-        :value="search.query"
-        @focus="open = true"
-        @input="onInput"
-        @compositionstart="search.controller.startComposition()"
-        @compositionend="search.controller.endComposition(($event.currentTarget as HTMLInputElement).value)"
+        v-bind="inputProps"
       />
       <FloatingPortal>
         <FloatingContent>
@@ -299,12 +281,12 @@ watch(search.items, (items) => {
           <p v-else-if="search.error">Search failed.</p>
           <template v-else>
             <FloatingListItem
-              v-for="item in search.items"
+              v-for="(item, index) in search.items"
               :key="item.id"
               tag="button"
               :label="item.label"
               :value="item"
-              @click="select(item)"
+              v-bind="getOptionProps(item, index)"
             >
               {{ item.label }}
             </FloatingListItem>
@@ -316,9 +298,9 @@ watch(search.items, (items) => {
 </template>
 ```
 
-This is the same pattern as the multilingual combobox demo: local fuzzy
-indexing supplies results, `FloatingList` supplies virtual keyboard navigation,
-and the component owns selection plus the loading/error/empty states.
+Local fuzzy indexing supplies results, `useCombobox()` supplies editable-input
+and selection behavior, and `FloatingList` supplies virtual keyboard
+navigation. The template keeps ownership of loading/error/empty presentation.
 
 `createFuzzySearchSource()` normalizes compatibility forms and diacritics,
 then returns exact/prefix/fuzzy scores and match ranges through `hits`. For a
@@ -331,6 +313,10 @@ owned by TanStack Query or another request library, omit `source` and call
 `useSearch()` destroys its controller with the Vue scope. Use `createSearch()`
 directly when a longer-lived service owns the controller lifecycle.
 
+`useCombobox()` also destroys its framework-neutral controller with the Vue
+scope. Pass optional writable `open`, `activeIndex`, or `selectedItem` refs when
+their state is owned elsewhere.
+
 | `useSearch()` value | Purpose |
 | --- | --- |
 | `query`, `items`, `loading`, `error` | Reactive projections for template rendering |
@@ -338,6 +324,15 @@ directly when a longer-lived service owns the controller lifecycle.
 | `controller.setQuery()` | Update the query from an input or custom event |
 | `controller.refresh()` / `loadMore()` | Re-run the current request or append the next page |
 | `controller.setControlledState()` | Bridge data owned by another request/cache library |
+
+| `useCombobox()` value | Purpose |
+| --- | --- |
+| `open`, `activeIndex`, `selectedItem` | Writable refs for root, list, and selected-result state |
+| `inputProps` | Reactive value plus focus, input, IME, and Enter handlers from the Web binding contract |
+| `getOptionProps(item, index)` | Option ID, active/selected ARIA, blur prevention, and selection handlers from the same Web contract |
+| `getNavigationOptions(options)` | Virtual-focus combobox defaults merged with list navigation overrides |
+| `rolePlugin` | Combobox ARIA plugin for `FloatingRoot` |
+| `setQuery()` / `select()` | Programmatic query and selection operations |
 
 ## Collections and portals
 

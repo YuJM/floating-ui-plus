@@ -300,6 +300,7 @@ export class FloatingPortalTargetElement extends FloatingPortalTargetBase {
     list: undefined,
     delayGroup: undefined,
     composite: undefined,
+    combobox: undefined,
   };
 
   get contextValue() {

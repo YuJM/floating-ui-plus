@@ -150,6 +150,10 @@ export class SearchController<T> {
     return this.#connected && !this.#destroyed;
   }
 
+  getItemKey(item: T) {
+    return this.#options.getItemKey(item);
+  }
+
   subscribe(listener: (snapshot: SearchSnapshot<T>) => void) {
     this.#listeners.add(listener);
     listener(this.snapshot);

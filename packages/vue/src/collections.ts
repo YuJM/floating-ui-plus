@@ -335,7 +335,8 @@ export const FloatingListItem = defineComponent({
     );
     const itemAttrs = listContext?.floating?.getItemAttrs(() => ({
       active: active.value,
-      selected: props.selected,
+      selected:
+        props.selected || attrs['aria-selected'] === 'true',
       index: index.value,
     }));
 
