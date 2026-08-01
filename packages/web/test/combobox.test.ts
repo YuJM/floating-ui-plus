@@ -4,6 +4,7 @@ import {
   createAsyncSearchSource,
   createCombobox,
   createComboboxStatusFormatter,
+  createQuery,
   createSearch,
 } from '../src';
 
@@ -247,4 +248,62 @@ describe('ComboboxController', () => {
     expect(request).toHaveBeenCalledOnce();
     expect(search.items).toEqual([alpha]);
   });
+});
+
+describe('QueryController', () => {
+  test('uses combobox option semantics by default without selecting an item', () => {
+    const search = createSearch<Item>({
+      items: [alpha, beta],
+      getItemKey: (item) => item.id,
+    });
+    const onActivate = vi.fn();
+    const query = createQuery({
+      search,
+      getItemLabel: (item) => item.label,
+      optionIdPrefix: 'query-option',
+      onActivate,
+    });
+    controllers.push(query, search);
+    const input = document.createElement('input');
+    document.body.append(input);
+    query.bindInput(input);
+    query.setActiveIndex(1);
+
+    expect(query.getOptionProps(beta, 1)).toMatchObject({
+      id: 'query-option-beta',
+      role: 'option',
+      'aria-selected': 'false',
+    });
+
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {key: 'Enter', cancelable: true}),
+    );
+
+    expect(onActivate).toHaveBeenCalledWith(beta, expect.any(KeyboardEvent));
+    expect(input.value).toBe('');
+    expect(search.query).toBe('');
+  });
+
+  test.each(['dialog', 'none'] as const)(
+    'does not apply combobox option semantics for %s queries',
+    (semantics) => {
+      const search = createSearch<Item>({
+        items: [alpha],
+        getItemKey: (item) => item.id,
+      });
+      const query = createQuery({
+        search,
+        getItemLabel: (item) => item.label,
+        semantics,
+      });
+      controllers.push(query, search);
+
+      expect(query.getOptionProps(alpha, 0)).toMatchObject({
+        id: expect.any(String),
+        'data-active': 'false',
+      });
+      expect(query.getOptionProps(alpha, 0).role).toBeUndefined();
+      expect(query.getOptionProps(alpha, 0)['aria-selected']).toBeUndefined();
+    },
+  );
 });

@@ -11,7 +11,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
     class="combobox-panel"
     data-demo="combobox"
   >
-  <h3>Multilingual combobox</h3>
+  <h3>Multilingual query</h3>
   <p>Search by city, country, local script, alias, or forgiving typo.</p>
 
   <div class="combobox-shell">
@@ -20,7 +20,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
     </label>
     <floating-root data-combobox-root placement="bottom-start">
       <floating-list navigation loop allow-escape>
-        <floating-combobox
+        <floating-query
           data-combobox
           option-id-prefix="destination-option"
           query-trigger-selector="#combobox-hints [data-search-sample]"
@@ -93,11 +93,11 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
             id="combobox-status"
             class="sr-only"
             aria-live="polite"
-            data-combobox-status
+            data-query-status
           >
             Destination suggestions closed
           </p>
-        </floating-combobox>
+        </floating-query>
       </floating-list>
     </floating-root>
     <span class="combobox-icon" aria-hidden="true">⌕</span>
@@ -114,7 +114,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   </div>
 
   <code>
-    &lt;floating-combobox&gt; + &lt;floating-search&gt; +
+    &lt;floating-query&gt; + &lt;floating-search&gt; +
     &lt;floating-list-item&gt;
   </code>
   </section>
@@ -129,7 +129,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
     offset,
     size,
     shift,
-    type FloatingComboboxElement,
+    type FloatingQueryElement,
   } from '@floating-ui-plus/web-components';
   import {
     multilingualDestinations,
@@ -143,12 +143,12 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
       scope,
       '[data-combobox-root]',
     );
-    const combobox = scope.querySelector<FloatingComboboxElement>(
+    const query = scope.querySelector<FloatingQueryElement>(
       '[data-combobox]',
     );
-    if (!combobox) return;
+    if (!query) return;
 
-    combobox.configure<MultilingualDestination>({
+    query.configure<MultilingualDestination>({
       search: {
         source: createFuzzySearchSource(multilingualDestinations, {
           keys: multilingualSearchKeys,
@@ -160,7 +160,6 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
       getItemLabel: (item) => item.label,
       status: {
         closed: 'Destination suggestions closed',
-        selected: (item) => `${item.label} selected`,
         idle: 'Start typing to search',
         loading: 'Searching destinations',
         error: 'Destination search failed',

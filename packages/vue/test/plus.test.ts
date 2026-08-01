@@ -31,6 +31,7 @@ import {
   role,
   useCombobox,
   useFloating,
+  useQuery,
   useSearch,
   vFloating,
 } from '../src';
@@ -140,7 +141,7 @@ describe('Floating UI Plus Vue adapter', () => {
     });
   });
 
-  test('composes combobox input, active option, and selection state', async () => {
+  test('composes query input, active option, and activation state', async () => {
     const App = defineComponent({
       setup() {
         const search = useSearch({
@@ -150,23 +151,27 @@ describe('Floating UI Plus Vue adapter', () => {
           ],
           getItemKey: (item) => item.id,
         });
-        const combobox = useCombobox({
+        const activated = ref('');
+        const query = useQuery({
           search,
           getItemLabel: (item) => item.label,
           optionIdPrefix: 'vue-test-option',
+          onActivate: (item) => {
+            activated.value = item.label;
+          },
         });
-        return {combobox, beta: search.items.value[1]};
+        return {activated, query, beta: search.items.value[1]};
       },
       template: `
         <div>
-          <input data-testid="input" v-bind="combobox.inputProps.value" />
+          <input data-testid="input" v-bind="query.inputProps.value" />
           <button
             data-testid="option"
-            v-bind="combobox.getOptionProps(beta, 1)"
+            v-bind="query.getOptionProps(beta, 1)"
           >Beta</button>
-          <button @click="combobox.activeIndex.value = 1">Activate Beta</button>
+          <button @click="query.activeIndex.value = 1">Activate Beta</button>
           <output>
-            {{ combobox.open.value }}:{{ combobox.selectedItem.value?.label ?? '' }}
+            {{ query.open.value }}:{{ activated }}
           </output>
         </div>
       `,
@@ -185,12 +190,43 @@ describe('Floating UI Plus Vue adapter', () => {
     expect(option).toHaveAttribute('data-active', 'true');
     await fireEvent.keyDown(input, {key: 'Enter'});
 
-    expect(input).toHaveValue('Beta');
+    expect(input).toHaveValue('');
     expect(getByText('false:Beta')).toBeVisible();
-    expect(option).toHaveAttribute('aria-selected', 'true');
+    expect(option).toHaveAttribute('aria-selected', 'false');
   });
 
-  test('exposes search loading through combobox input props', async () => {
+  test('keeps useCombobox selection behavior as a deprecated compatibility API', async () => {
+    const App = defineComponent({
+      setup() {
+        const search = useSearch({
+          items: [{id: 'beta', label: 'Beta'}],
+          getItemKey: (item) => item.id,
+        });
+        const combobox = useCombobox({
+          search,
+          getItemLabel: (item) => item.label,
+        });
+        return {combobox, beta: search.items.value[0]};
+      },
+      template: `
+        <div>
+          <input data-testid="input" v-bind="combobox.inputProps.value" />
+          <button data-testid="option" v-bind="combobox.getOptionProps(beta, 0)">Beta</button>
+          <output>{{ combobox.selectedValue.value }}</output>
+        </div>
+      `,
+    });
+
+    const {getByTestId, getByText} = render(App);
+    const input = getByTestId('input');
+    await fireEvent.focus(input);
+    await fireEvent.click(getByTestId('option'));
+
+    expect(input).toHaveValue('Beta');
+    expect(getByText('beta')).toBeVisible();
+  });
+
+  test('exposes search loading through query input props', async () => {
     let search: ReturnType<typeof useSearch<{id: string; label: string}>>;
     const App = defineComponent({
       setup() {
@@ -198,13 +234,13 @@ describe('Floating UI Plus Vue adapter', () => {
           items: [{id: 'alpha', label: 'Alpha'}],
           getItemKey: (item) => item.id,
         });
-        const combobox = useCombobox({
+        const query = useQuery({
           search,
           getItemLabel: (item) => item.label,
         });
-        return {combobox};
+        return {query};
       },
-      template: `<input data-testid="input" v-bind="combobox.inputProps.value" />`,
+      template: `<input data-testid="input" v-bind="query.inputProps.value" />`,
     });
 
     const {getByTestId} = render(App);
@@ -220,7 +256,7 @@ describe('Floating UI Plus Vue adapter', () => {
     expect(input).toHaveAttribute('data-loading', 'true');
   });
 
-  test('renders Vue search phase slots and shares combobox status/query bindings', async () => {
+  test('renders Vue search phase slots and shares query status bindings', async () => {
     let search: ReturnType<typeof useSearch<{id: string; label: string}>>;
     const App = defineComponent({
       components: {FloatingSearch},
@@ -232,12 +268,11 @@ describe('Floating UI Plus Vue adapter', () => {
           ],
           getItemKey: (item) => item.id,
         });
-        const combobox = useCombobox({
+        const query = useQuery({
           search,
           getItemLabel: (item) => item.label,
           status: {
             closed: 'Suggestions closed',
-            selected: (item) => `${item.label} selected`,
             idle: 'Start searching',
             loading: 'Searching',
             error: 'Search failed',
@@ -245,12 +280,12 @@ describe('Floating UI Plus Vue adapter', () => {
             results: ({search: state}) => `${state.items.length} results`,
           },
         });
-        return {combobox, search};
+        return {query, search};
       },
       template: `
         <div>
-          <input data-testid="input" v-bind="combobox.inputProps.value" />
-          <button data-testid="preset" v-bind="combobox.getQueryTriggerProps('beta')">
+          <input data-testid="input" v-bind="query.inputProps.value" />
+          <button data-testid="preset" v-bind="query.getQueryTriggerProps('beta')">
             Try beta
           </button>
           <FloatingSearch :search="search">
@@ -258,7 +293,7 @@ describe('Floating UI Plus Vue adapter', () => {
               <output data-testid="phase">{{ search.items.value.length }} result slots</output>
             </template>
           </FloatingSearch>
-          <output data-testid="status">{{ combobox.statusText.value }}</output>
+          <output data-testid="status">{{ query.statusText.value }}</output>
         </div>
       `,
     });

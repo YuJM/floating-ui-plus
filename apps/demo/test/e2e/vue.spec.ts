@@ -348,7 +348,7 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
   await input.fill('bejing');
   const option = page.getByRole('option', {name: /北京/});
   await expect(option).toBeVisible();
-  const popup = page.locator('[data-floating-combobox-popup]');
+  const popup = page.locator('[data-floating-query-popup]');
   await expect(popup).toHaveCSS('position', 'absolute');
   expect(
     await popup.evaluate((element) =>
@@ -373,7 +373,7 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
     const result = await (window as any).axe.run({
       include: [
         ['.vue-combobox-card'],
-        ['[data-floating-combobox-popup]'],
+        ['[data-floating-query-popup]'],
       ],
     });
     return result.violations.filter((violation: {impact: string | null}) =>

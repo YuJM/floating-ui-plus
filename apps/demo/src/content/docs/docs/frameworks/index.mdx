@@ -187,7 +187,7 @@ imperative close method.
 </TabItem>
 </Tabs>
 
-## Search and combobox
+## Search and query
 
 The Web Components and Vue search adapters consume the same phases:
 `idle`, `loading`, `error`, `empty`, and `results`. Use fuzzy search for a
@@ -195,12 +195,12 @@ local collection and an async source for a server-backed list. The controller
 owns debounce, cancellation, stale-response protection, de-duplication, and
 cursor pagination; each renderer owns the phase markup.
 
-<Tabs syncKey="framework-combobox">
+<Tabs syncKey="framework-query">
 <TabItem label="Web Components">
 
 ```html
 <floating-root interactions="click dismiss" floating-role="listbox">
-  <floating-combobox name="destination">
+  <floating-query>
     <floating-reference>
       <input aria-label="Destination" />
     </floating-reference>
@@ -213,12 +213,13 @@ cursor pagination; each renderer owns the phase markup.
         </template>
       </floating-search>
     </template>
-  </floating-combobox>
+  </floating-query>
 </floating-root>
 ```
 
-Configure `search`, `getItemLabel`, `getItemValue`, and `getItemKey` as
-properties in JavaScript. Use `data-search-load-more` for cursor pagination.
+Configure `search`, `getItemLabel`, and `getItemKey` as properties in
+JavaScript. The default semantics are ARIA combobox; use `semantics="dialog"`
+for a command palette or `semantics="none"` when the renderer owns ARIA.
 
 </TabItem>
 <TabItem label="Vue">
@@ -247,8 +248,9 @@ properties in JavaScript. Use `data-search-load-more` for cursor pagination.
 </FloatingRoot>
 ```
 
-Use `useSearch()` and `useCombobox()` to create the reactive `search`,
-`inputProps`, `getOptionProps`, and `selectedValue` values.
+Use `useSearch()` and `useQuery()` to create the reactive `search`,
+`inputProps`, and `getOptionProps` values. `useCombobox()` remains available
+for the specialized selected-value workflow.
 
 </TabItem>
 </Tabs>

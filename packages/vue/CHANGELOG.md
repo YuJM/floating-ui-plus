@@ -1,5 +1,22 @@
 # @floating-ui/vue
 
+## 0.7.0
+
+### Minor Changes
+
+- Add the generic Query primitive with ARIA combobox semantics by default. Use `createQuery()`, `useQuery()`, or `<floating-query>` for query-driven result lists; set `semantics` to `dialog` or `none` when appropriate. The existing Combobox APIs remain as deprecated compatibility layers for selected-value and form-associated workflows.
+
+### Patch Changes
+
+- d8acfb4: 문서의 native Popover, `<dialog>`, root-owned template, portal 사용 가이드를 실제 데모 동작에 맞게 보완합니다.
+- 97018f4: 패키지별 `USAGE.md`를 Starlight의 통합 사용 가이드로 옮기고 배포 패키지에서는 제거합니다.
+- d8acfb4: 닫기 전 동기 취소 계약을 추가하고 Web Components의 `floatingbeforeclose` 이벤트와 Vue/Web의 `onBeforeClose` 콜백을 제공합니다.
+- Updated dependencies [d8acfb4]
+- Updated dependencies [97018f4]
+- Updated dependencies
+- Updated dependencies [d8acfb4]
+  - @floating-ui-plus/web@0.7.0
+
 ## 0.6.1
 
 ### Patch Changes

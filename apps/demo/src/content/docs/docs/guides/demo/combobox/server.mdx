@@ -1,13 +1,13 @@
 ---
-title: 'Demo: Combobox — server search'
-description: Explore cancellable cursor-based server search with the Combobox demo.
+title: 'Demo: Query — server search'
+description: Explore cancellable cursor-based server search with the Query demo.
 ---
 
 import DemoPreview from '../../../../../../components/docs/DemoPreview.astro';
 import asyncComboboxSource from '../../../../../../components/examples/AsyncComboboxExample.astro?raw';
 import asyncComboboxVueSource from '../../../../../../vue/components/ExampleAsyncCombobox.vue?raw';
 
-The server-search Combobox demo passes an application-owned async source to the
+The server-search Query demo passes an application-owned async source to the
 shared search controller. The demo's MSW endpoint simulates debounce,
 `AbortSignal` cancellation, stale-response protection, loading/error/empty
 phases, and cursor pagination.
@@ -16,7 +16,7 @@ phases, and cursor pagination.
 - [Open the Vue demo](/combobox?framework=vue&source=server)
 - [View the fuzzy-search demo](/docs/guides/demo/combobox/fuzzy)
 
-<DemoPreview route="/preview/combobox/server" title="Combobox · server search" height={640} webCode={asyncComboboxSource} vueCode={asyncComboboxVueSource} webTitle="AsyncComboboxExample.astro" vueTitle="ExampleAsyncCombobox.vue" />
+<DemoPreview route="/preview/combobox/server" title="Query · server search" height={640} webCode={asyncComboboxSource} vueCode={asyncComboboxVueSource} webTitle="AsyncComboboxExample.astro" vueTitle="ExampleAsyncCombobox.vue" />
 
 ## What this demo shows
 
@@ -34,7 +34,7 @@ works with `fetch`, TanStack Query, or another request layer.
 ## Search configuration
 
 ```ts
-combobox.configure({
+query.configure({
   search: {
     source: ({query, signal, cursor}) =>
       fetchDestinationPage({query, signal, cursor}),
@@ -42,7 +42,6 @@ combobox.configure({
     debounceMs: 200,
   },
   getItemLabel: (item) => item.label,
-  getItemValue: (item) => item.id,
 });
 ```
 

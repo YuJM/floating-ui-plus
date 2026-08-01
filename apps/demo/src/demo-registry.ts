@@ -40,10 +40,10 @@ export const EXAMPLES = [
   },
   {
     id: 'combobox',
-    label: 'Combobox',
+    label: 'Query',
     heading: 'Search across<br /><span>writing systems.</span>',
     description:
-      'Search multilingual destinations with fuzzy matching, list navigation, and accessible combobox behavior.',
+      'Search multilingual destinations with fuzzy matching, list navigation, and default accessible query behavior.',
   },
   {
     id: 'placement',

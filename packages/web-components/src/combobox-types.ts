@@ -19,6 +19,10 @@ export type FloatingComboboxSearchConfiguration<T> =
   | SearchController<T>
   | SearchOptions<T>;
 
+/**
+ * @deprecated Use `FloatingQueryConfiguration` unless form-associated selected
+ * values are required.
+ */
 export interface FloatingComboboxConfiguration<T> {
   search: FloatingComboboxSearchConfiguration<T>;
   getItemLabel(item: T): string;

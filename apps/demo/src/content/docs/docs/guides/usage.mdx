@@ -276,19 +276,21 @@ collections, `FloatingTree`/`FloatingNode` for nested menus, and
 </TabItem>
 </Tabs>
 
-## Combobox search
+## Query search
 
 `createSearch()`/`useSearch()` own debounce, IME composition, cancellation,
 stale-response protection, caching, de-duplication, and cursor pagination.
-`createCombobox()`/`useCombobox()` add editable input behavior, virtual focus,
-selection, and combobox ARIA. Every renderer should provide `idle`, `loading`,
+`createQuery()`/`useQuery()` add editable input behavior, virtual focus,
+activation, and combobox ARIA by default. Set `semantics: 'dialog'` for a
+command palette or `semantics: 'none'` when the renderer owns ARIA. Every
+renderer should provide `idle`, `loading`,
 `error`, `empty`, and `results` states.
 
 <Tabs syncKey="usage-search">
 <TabItem label="Web">
 
 ```ts
-import {createCombobox} from '@floating-ui-plus/web/combobox';
+import {createQuery} from '@floating-ui-plus/web/query';
 import {createSearch} from '@floating-ui-plus/web/search';
 
 const search = createSearch({
@@ -299,15 +301,15 @@ const search = createSearch({
   },
   getItemKey: (item) => item.id,
 });
-const combobox = createCombobox({
+const query = createQuery({
   search,
   getItemLabel: (item) => item.name,
-  getItemValue: (item) => item.id,
   onOpenChange: setOpen,
+  onActivate: (item) => openProduct(item),
 });
 
-input.replaceWith(Object.assign(input, combobox.getInputProps()));
-combobox.bindOption(option, search.items[0]!, 0);
+input.replaceWith(Object.assign(input, query.getInputProps()));
+query.bindOption(option, search.items[0]!, 0);
 await search.loadMore();
 ```
 
@@ -320,7 +322,7 @@ query library, omit `source` and push state through `setControlledState()`.
 ```html
 <floating-root placement="bottom-start">
   <floating-list navigation loop allow-escape>
-    <floating-combobox name="destination" data-destination-combobox>
+    <floating-query data-destination-query>
       <floating-reference><input aria-label="Destination" /></floating-reference>
       <template slot="content">
         <floating-search>
@@ -335,16 +337,16 @@ query library, omit `source` and push state through `setControlledState()`.
           </template>
         </floating-search>
       </template>
-      <p data-combobox-status aria-live="polite"></p>
-    </floating-combobox>
+      <p data-query-status aria-live="polite"></p>
+    </floating-query>
   </floating-list>
 </floating-root>
 ```
 
-Configure `search`, `getItemLabel`, `getItemValue`, and `getItemKey` as
-properties. `floating-combobox` is form-associated: put `name`, `required`,
-and `disabled` on the element itself. The selected `getItemValue()` is
-submitted with `FormData`.
+Configure `search`, `getItemLabel`, and `getItemKey` as properties.
+`floating-query` emits `queryactivate` for result activation and is not
+form-associated. Use the deprecated `floating-combobox` only when its native
+selected-value form behavior is specifically required.
 
 </TabItem>
 <TabItem label="Vue">
@@ -374,9 +376,9 @@ submitted with `FormData`.
 </FloatingRoot>
 ```
 
-`useCombobox()` returns `inputProps`, `getOptionProps()`, `selectedValue`,
-`statusText`, and query-trigger props. Bind `selectedValue` to a hidden input
-for native form submission.
+`useQuery()` returns `inputProps`, `getOptionProps()`, `statusText`, and
+query-trigger props. Use the deprecated `useCombobox()` only when a selected
+value must be bound to a native form field.
 
 </TabItem>
 </Tabs>

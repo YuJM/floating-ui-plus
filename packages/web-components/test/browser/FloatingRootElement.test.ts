@@ -11,6 +11,7 @@ import {
   FloatingCompositeElement,
   FloatingListElement,
   FloatingPortalElement,
+  FloatingQueryElement,
   FloatingReferenceElement,
   FloatingRootElement,
   SearchController,
@@ -419,6 +420,71 @@ describe('FloatingRootElement', () => {
       expect(input.value).toBe('서울');
       expect(root.open).toBe(false);
       expect(selectListener).toHaveBeenCalledOnce();
+    });
+    search.destroy();
+  });
+
+  test('composes a non-form-associated query with default combobox semantics', async () => {
+    const destinations = [
+      {id: 'seoul', label: 'Seoul'},
+      {id: 'beijing', label: 'Beijing'},
+    ];
+    const search = new SearchController<(typeof destinations)[number]>({
+      items: destinations,
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-list navigation loop allow-escape>
+        <floating-query option-id-prefix="destination-query-option">
+          <floating-reference><input aria-label="Destination query" /></floating-reference>
+          <floating-list-item label="Seoul"><div>Seoul</div></floating-list-item>
+          <floating-list-item label="Beijing"><div>Beijing</div></floating-list-item>
+        </floating-query>
+      </floating-list>
+    `;
+    const query = root.querySelector('floating-query')!;
+    const list = root.querySelector('floating-list')!;
+    const listItems = Array.from(root.querySelectorAll('floating-list-item'));
+    listItems.forEach((item, index) => {
+      item.value = destinations[index];
+    });
+    query.configure({search, getItemLabel: (item) => item.label});
+    const activateListener = vi.fn();
+    query.addEventListener('queryactivate', activateListener);
+    document.body.append(root);
+
+    await root.updateComplete;
+    await list.updateComplete;
+    await query.updateComplete;
+    await Promise.all(listItems.map((item) => item.updateComplete));
+    const input = root.querySelector('input')!;
+    const options = Array.from(root.querySelectorAll<HTMLElement>('div'));
+
+    await vi.waitFor(() => {
+      expect(query).toBeInstanceOf(FloatingQueryElement);
+      expect((query as {selectedItem?: unknown}).selectedItem).toBeUndefined();
+      expect(input.getAttribute('role')).toBe('combobox');
+      expect(
+        options.every((option) => option.getAttribute('role') === 'option'),
+      ).toBe(true);
+    });
+
+    input.focus();
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+    await vi.waitFor(() => expect(list.activeIndex).toBe(0));
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'Enter'}),
+    );
+    await vi.waitFor(() => {
+      expect(activateListener).toHaveBeenCalledOnce();
+      expect(activateListener.mock.calls[0]?.[0].detail.item).toBe(
+        destinations[0],
+      );
+      expect(input.value).toBe('');
     });
     search.destroy();
   });

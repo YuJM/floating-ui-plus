@@ -17,7 +17,7 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
     </label>
     <floating-root data-async-combobox-root placement="bottom-start">
       <floating-list navigation loop allow-escape>
-        <floating-combobox
+        <floating-query
           data-async-combobox
           option-id-prefix="remote-destination-option"
         >
@@ -102,11 +102,11 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
             id="remote-combobox-status"
             class="sr-only"
             aria-live="polite"
-            data-combobox-status
+            data-query-status
           >
             Remote destination suggestions closed
           </p>
-        </floating-combobox>
+        </floating-query>
       </floating-list>
     </floating-root>
     <span class="combobox-icon" aria-hidden="true">⌕</span>
@@ -120,7 +120,7 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
     <span>cursor API</span>
   </div>
 
-    <code>application source + &lt;floating-combobox&gt;</code>
+    <code>application source + &lt;floating-query&gt;</code>
 </section>
 </article>
 
@@ -132,7 +132,7 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
     offset,
     size,
     shift,
-    type FloatingComboboxElement,
+    type FloatingQueryElement,
   } from '@floating-ui-plus/web-components';
   import type {MultilingualDestination} from '../../multilingual-destinations';
   import {FAKE_SERVER_DESTINATION_PAGE_SIZE} from '../../fake-server-destinations';
@@ -144,12 +144,12 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
       scope,
       '[data-async-combobox-root]',
     );
-    const combobox = scope.querySelector<FloatingComboboxElement>(
+    const query = scope.querySelector<FloatingQueryElement>(
       '[data-async-combobox]',
     );
-    if (!combobox) return;
+    if (!query) return;
 
-    combobox.configure<MultilingualDestination>({
+    query.configure<MultilingualDestination>({
       search: {
         source: searchDestinationsOnServer,
         getItemKey: (item) => item.id,
@@ -160,7 +160,6 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
       getItemLabel: (item) => item.label,
       status: {
         closed: 'Remote destination suggestions closed',
-        selected: (item) => `${item.label} selected from the server`,
         idle: 'Remote destination search is idle',
         loading: 'Querying remote destinations',
         error: 'Remote destination search failed',

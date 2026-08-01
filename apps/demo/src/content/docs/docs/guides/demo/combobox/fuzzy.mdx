@@ -1,13 +1,13 @@
 ---
-title: 'Demo: Combobox — fuzzy search'
-description: Explore local typo-tolerant search with the Combobox demo.
+title: 'Demo: Query — fuzzy search'
+description: Explore local typo-tolerant search with the Query demo.
 ---
 
 import DemoPreview from '../../../../../../components/docs/DemoPreview.astro';
 import fuzzyComboboxSource from '../../../../../../components/examples/FuzzyComboboxExample.astro?raw';
 import fuzzyComboboxVueSource from '../../../../../../vue/components/ExampleFuzzyCombobox.vue?raw';
 
-The fuzzy Combobox demo keeps its data local and searches it with
+The fuzzy Query demo keeps its data local and searches it with
 `createFuzzySearchSource()`. Use the implementation switch in the preview to
 compare the Web Components and Vue adapters with the same search contract.
 
@@ -15,14 +15,14 @@ compare the Web Components and Vue adapters with the same search contract.
 - [Open the Vue demo](/combobox?framework=vue&source=fuzzy)
 - [View the server-search demo](/docs/guides/demo/combobox/server)
 
-<DemoPreview route="/preview/combobox/fuzzy" title="Combobox · fuzzy search" height={640} webCode={fuzzyComboboxSource} vueCode={fuzzyComboboxVueSource} webTitle="FuzzyComboboxExample.astro" vueTitle="ExampleFuzzyCombobox.vue" />
+<DemoPreview route="/preview/combobox/fuzzy" title="Query · fuzzy search" height={640} webCode={fuzzyComboboxSource} vueCode={fuzzyComboboxVueSource} webTitle="FuzzyComboboxExample.astro" vueTitle="ExampleFuzzyCombobox.vue" />
 
 ## What this demo shows
 
 - Local typo-tolerant matching across city, country, aliases, and local scripts.
 - Query presets, virtual focus, keyboard navigation, and an ARIA live region.
-- A selected item label kept separate from its submitted form value.
-- The same `createSearch()`/`useSearch()` and `createCombobox()`/`useCombobox()` phases in both renderers.
+- Activation callbacks, virtual focus, and default ARIA combobox semantics.
+- The same `createSearch()`/`useSearch()` and `createQuery()`/`useQuery()` phases in both renderers.
 
 The search controller owns query, loading, error, empty, results, IME,
 cancellation, stale-response protection, and pagination state. The renderer
@@ -31,16 +31,16 @@ owns the result markup and accessible names.
 ## Search configuration
 
 ```ts
-combobox.configure({
+query.configure({
   search: {
     source: createFuzzySearchSource(destinations, {keys: searchKeys}),
     getItemKey: (item) => item.id,
   },
   getItemLabel: (item) => item.label,
-  getItemValue: (item) => item.id,
 });
 ```
 
-Use `getItemLabel()` for visible copy and `getItemValue()` for the stable
-submitted identifier. The [usage recipes](/docs/guides/usage) cover controlled
-search state, form submission, and renderer-specific composition.
+Use `getItemLabel()` for visible copy. The [usage recipes](/docs/guides/usage)
+cover controlled search state, activation handlers, and renderer-specific
+composition. Use the deprecated Combobox API only for native selected-value
+form submission.

@@ -14,9 +14,10 @@ import {
   offset,
   size,
   shift,
-  useCombobox,
+  useQuery,
   useSearch,
 } from '@floating-ui-plus/vue';
+import {shallowRef} from 'vue';
 
 import {
   multilingualDestinations,
@@ -33,6 +34,7 @@ const search = useSearch<MultilingualDestination>({
   getItemKey: (item) => item.id,
   debounceMs: 0,
 });
+const selectedDestination = shallowRef<MultilingualDestination | null>(null);
 
 const {
   open,
@@ -43,13 +45,21 @@ const {
   getOptionProps,
   getQueryTriggerProps,
   getNavigationOptions,
-} = useCombobox({
+} = useQuery({
   search,
   getItemLabel: (item) => item.label,
   optionIdPrefix: 'vue-destination-option',
+  onActivate(item) {
+    selectedDestination.value = item;
+    // QueryController leaves result presentation to the application. Preserve
+    // the selected label in this destination field without reopening it.
+    search.controller.setQuery(item.label);
+  },
   status: {
-    closed: 'Destination suggestions closed',
-    selected: (item) => `${item.label} selected`,
+    closed: () =>
+      selectedDestination.value
+        ? `${selectedDestination.value.label} selected`
+        : 'Destination suggestions closed',
     idle: 'Start typing to search',
     loading: 'Searching destinations',
     error: 'Destination search failed',
@@ -118,8 +128,8 @@ const navigationOptions = getNavigationOptions({
             autocomplete="off"
             spellcheck="false"
             placeholder="Search city or country…"
-            aria-describedby="vue-combobox-hints vue-combobox-status"
-            data-floating-combobox-input
+            aria-describedby="vue-query-hints vue-query-status"
+            data-floating-query-input
             v-bind="inputProps"
           />
         </div>
@@ -128,7 +138,7 @@ const navigationOptions = getNavigationOptions({
           <Transition name="vue-surface">
             <FloatingContent
               class="vue-combobox-popup"
-              data-floating-combobox-popup
+              data-floating-query-popup
             >
               <FloatingSearch :search="search">
                 <template #loading>
@@ -150,7 +160,7 @@ const navigationOptions = getNavigationOptions({
                     :value="item"
                     v-bind="getOptionProps(item, index)"
                     class="vue-combobox-option"
-                    data-floating-combobox-option
+                    data-floating-query-option
                   >
                     <span>
                       <strong>{{ item.label }}</strong>
@@ -173,7 +183,7 @@ const navigationOptions = getNavigationOptions({
       </FloatingList>
     </FloatingRoot>
 
-    <div id="vue-combobox-hints" class="vue-combobox-hints">
+    <div id="vue-query-hints" class="vue-combobox-hints">
       <button
         v-for="[sample, destination] in multilingualSearchPrompts"
         :key="sample"
@@ -185,11 +195,11 @@ const navigationOptions = getNavigationOptions({
       </button>
     </div>
 
-    <p id="vue-combobox-status" class="sr-only" aria-live="polite">
+    <p id="vue-query-status" class="sr-only" aria-live="polite">
       {{ statusText }}
     </p>
 
-    <code>useSearch() + useCombobox() + &lt;FloatingList navigation&gt;</code>
+    <code>useSearch() + useQuery() + &lt;FloatingList navigation&gt;</code>
     </section>
   </article>
 </template>

@@ -5,6 +5,7 @@ export default defineConfig({
     combobox: 'src/combobox.ts',
     fuzzy: 'src/fuzzy.ts',
     index: 'src/index.ts',
+    query: 'src/query.ts',
     search: 'src/search.ts',
     utils: 'src/utils.ts',
   },

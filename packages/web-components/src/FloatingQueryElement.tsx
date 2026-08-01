@@ -8,16 +8,17 @@ import {
   useProvider,
 } from 'atomico';
 import {
-  ComboboxController,
-  type ComboboxSnapshot,
+  QueryController,
+  type QuerySnapshot,
+  type QuerySemantics,
   SearchController,
 } from '@floating-ui-plus/web';
 
 import {
-  createFloatingComboboxStatusFormatter,
-  type FloatingComboboxConfiguration,
-  type FloatingComboboxStatusFormatter,
-} from './combobox-types';
+  createFloatingQueryStatusFormatter,
+  type FloatingQueryConfiguration,
+  type FloatingQueryStatusFormatter,
+} from './query-types';
 import type {FloatingListElement} from './CollectionComponents';
 import {floatingComponentContext} from './component-context';
 import {getFloatingRootRuntime} from './FloatingController';
@@ -31,36 +32,31 @@ const contentsStyles = `
   }
 `;
 
-export interface FloatingComboboxStateChangeDetail<T = unknown> {
-  snapshot: ComboboxSnapshot<T>;
+export interface FloatingQueryStateChangeDetail<T = unknown> {
+  snapshot: QuerySnapshot<T>;
 }
 
-export interface FloatingComboboxSelectDetail<T = unknown> {
+export interface FloatingQueryActivateDetail<T = unknown> {
   item: T;
   sourceEvent?: Event | undefined;
 }
 
-interface FloatingComboboxHost extends HTMLElement {
+interface FloatingQueryHost extends HTMLElement {
   inputSelector: string;
   itemLabelKey: string;
   optionIdPrefix: string;
   queryTriggerSelector: string;
   statusSelector: string;
+  semantics: QuerySemantics;
   search: SearchController<unknown> | undefined;
   getItemKey: ((item: unknown) => string | number) | undefined;
-  getItemValue: ((item: unknown) => string) | undefined;
   getItemLabel: ((item: unknown) => string) | undefined;
-  selectedItem: unknown | null;
-  statusFormatter: FloatingComboboxStatusFormatter<unknown> | undefined;
+  statusFormatter: FloatingQueryStatusFormatter<unknown> | undefined;
   ownsSearch: boolean;
-  name: string;
-  required: boolean;
-  disabled: boolean;
-  setController(controller: ComboboxController<unknown> | undefined): void;
-  syncFormState(): void;
+  setController(controller: QueryController<unknown> | undefined): void;
 }
 
-function findInput(host: FloatingComboboxHost) {
+function findInput(host: FloatingQueryHost) {
   try {
     const element = host.querySelector(host.inputSelector);
     return element instanceof HTMLInputElement ? element : null;
@@ -98,9 +94,9 @@ function getQueryTriggerValue(element: Element) {
   return element.getAttribute('data-query') ?? element.textContent?.trim() ?? '';
 }
 
-const FloatingComboboxBase = c(
+const FloatingQueryBase = c(
   () => {
-    const host = useHost<FloatingComboboxHost>().current;
+    const host = useHost<FloatingQueryHost>().current;
     const inheritedContext = useContext(floatingComponentContext);
     const root = inheritedContext.root;
     const listElement = host.closest(
@@ -109,27 +105,25 @@ const FloatingComboboxBase = c(
     const input = findInput(host);
     const controller = useMemo(() => {
       if (!root || !host.search) return undefined;
-      return new ComboboxController<unknown>({
+      return new QueryController<unknown>({
         search: host.search,
+        semantics: host.semantics,
         getItemLabel: (item) =>
           host.getItemLabel?.(item) ??
           getDefaultItemLabel(item, host.itemLabelKey),
         ...(host.getItemKey ? {getItemKey: host.getItemKey} : {}),
-        ...(host.getItemValue ? {getItemValue: host.getItemValue} : {}),
         ...(host.optionIdPrefix
           ? {optionIdPrefix: host.optionIdPrefix}
           : {}),
-        initialSelectedItem: host.selectedItem,
         onOpenChange: (open, event, reason) =>
           root.controller.context.onOpenChange(open, event, reason),
         onActiveIndexChange: (index) => {
           if (listElement) listElement.activeIndex = index;
           root.controller.refresh();
         },
-        onSelect: (item, sourceEvent) => {
-          host.syncFormState();
+        onActivate: (item, sourceEvent) => {
           host.dispatchEvent(
-            new CustomEvent<FloatingComboboxSelectDetail>('comboboxselect', {
+            new CustomEvent<FloatingQueryActivateDetail>('queryactivate', {
               bubbles: true,
               composed: true,
               detail: {item, sourceEvent},
@@ -141,13 +135,14 @@ const FloatingComboboxBase = c(
       root,
       listElement,
       host.search,
+      host.semantics,
       host.getItemKey,
       host.getItemLabel,
       host.itemLabelKey,
       host.optionIdPrefix,
     ]);
     const contextValue = useMemo(
-      () => ({...inheritedContext, combobox: controller}),
+      () => ({...inheritedContext, query: controller}),
       [inheritedContext, controller],
     );
     useProvider(floatingComponentContext, contextValue);
@@ -173,8 +168,8 @@ const FloatingComboboxBase = c(
         getDefaultItemLabel(item, host.itemLabelKey);
       const bindViews = (scope: Element) => {
         for (const view of getSearchViews(scope)) {
-          const owningCombobox = view.closest('floating-combobox');
-          if (owningCombobox && owningCombobox !== host) continue;
+          const owningQuery = view.closest('floating-query, floating-combobox');
+          if (owningQuery && owningQuery !== host) continue;
           view.getItemLabel = getItemLabel;
           view.onRender = () => root?.controller.refresh();
           view.search = search;
@@ -190,9 +185,7 @@ const FloatingComboboxBase = c(
       };
 
       bindViews(host);
-      if (root?.floatingElement) {
-        bindViews(root.floatingElement);
-      }
+      if (root?.floatingElement) bindViews(root.floatingElement);
       host.addEventListener('floatingmount', handleMount);
       return () => {
         host.removeEventListener('floatingmount', handleMount);
@@ -228,32 +221,22 @@ const FloatingComboboxBase = c(
         ).detail;
         controller.setActiveIndex(detail.activeIndex);
       };
-      listElement?.addEventListener(
-        'activeindexchange',
-        onActiveIndexChange,
-      );
+      listElement?.addEventListener('activeindexchange', onActiveIndexChange);
       const syncStatus = (snapshot = controller.snapshot) => {
         const status = host.querySelector<HTMLElement>(host.statusSelector);
         if (!status || !host.statusFormatter) return;
-        status.textContent = host.statusFormatter({
-          ...snapshot,
-          open: root.open,
-        });
+        status.textContent = host.statusFormatter({...snapshot, open: root.open});
       };
       const unsubscribeController = controller.subscribe((snapshot) => {
         const loading = String(snapshot.search.loading);
         host.dataset.loading = loading;
         host.setAttribute('aria-busy', loading);
-        host.syncFormState();
         host.dispatchEvent(
-          new CustomEvent<FloatingComboboxStateChangeDetail>(
-            'comboboxstatechange',
-            {
-              bubbles: true,
-              composed: true,
-              detail: {snapshot},
-            },
-          ),
+          new CustomEvent<FloatingQueryStateChangeDetail>('querystatechange', {
+            bubbles: true,
+            composed: true,
+            detail: {snapshot},
+          }),
         );
         syncStatus(snapshot);
       });
@@ -265,10 +248,7 @@ const FloatingComboboxBase = c(
       return () => {
         unsubscribeController();
         root.removeEventListener('openchange', handleOpenChange);
-        listElement?.removeEventListener(
-          'activeindexchange',
-          onActiveIndexChange,
-        );
+        listElement?.removeEventListener('activeindexchange', onActiveIndexChange);
         unsubscribeList?.();
         unregisterRole();
         unbindInput();
@@ -284,9 +264,6 @@ const FloatingComboboxBase = c(
       input,
       host.statusSelector,
       host.statusFormatter,
-      host.name,
-      host.required,
-      host.disabled,
     ]);
 
     useLayoutEffect(() => {
@@ -329,7 +306,7 @@ const FloatingComboboxBase = c(
 
     useEffect(() => {
       const observer = new MutationObserver(
-        () => void (host as FloatingComboboxElement).update(),
+        () => void (host as FloatingQueryElement).update(),
       );
       observer.observe(host, {childList: true, subtree: true});
       return () => observer.disconnect();
@@ -366,38 +343,28 @@ const FloatingComboboxBase = c(
       },
       statusSelector: {
         type: String,
-        value: (): string => '[data-combobox-status]',
+        value: (): string => '[data-query-status]',
         attr: 'status-selector',
       },
-      name: {type: String, value: (): string => '', reflect: true},
-      required: {type: Boolean, value: (): boolean => false, reflect: true},
-      disabled: {type: Boolean, value: (): boolean => false, reflect: true},
+      semantics: {
+        type: String,
+        value: (): string => 'combobox',
+        reflect: true,
+      },
     },
   },
 );
 
 /**
- * Connects search, editable input, list, selection, and combobox ARIA.
- *
- * @deprecated Use `<floating-query>` for generic query experiences. Keep this
- * element for form-associated selected values and strict combobox presets.
+ * Connects an editable query, result list, and configurable ARIA semantics.
+ * It is not form-associated and does not own a selected value.
  */
-export class FloatingComboboxElement extends FloatingComboboxBase {
-  static readonly formAssociated = true;
-
-  #internals =
-    typeof this.attachInternals === 'function'
-      ? this.attachInternals()
-      : undefined;
+export class FloatingQueryElement extends FloatingQueryBase {
   #search: SearchController<unknown> | undefined;
   #getItemKey: ((item: unknown) => string | number) | undefined;
-  #getItemValue: ((item: unknown) => string) | undefined;
   #getItemLabel: ((item: unknown) => string) | undefined;
-  #controller: ComboboxController<unknown> | undefined;
-  #selectedItem: unknown | null = null;
-  #initialSelectedItem: unknown | null = null;
-  #hasInitialSelectedItem = false;
-  #statusFormatter: FloatingComboboxStatusFormatter<unknown> | undefined;
+  #controller: QueryController<unknown> | undefined;
+  #statusFormatter: FloatingQueryStatusFormatter<unknown> | undefined;
   #ownsSearch = false;
 
   get updateComplete() {
@@ -420,21 +387,9 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
     return this.#getItemKey;
   }
 
-  set getItemKey(
-    value: ((item: unknown) => string | number) | undefined,
-  ) {
+  set getItemKey(value: ((item: unknown) => string | number) | undefined) {
     if (value === this.#getItemKey) return;
     this.#getItemKey = value;
-    void this.update();
-  }
-
-  get getItemValue() {
-    return this.#getItemValue;
-  }
-
-  set getItemValue(value: ((item: unknown) => string) | undefined) {
-    if (value === this.#getItemValue) return;
-    this.#getItemValue = value;
     void this.update();
   }
 
@@ -452,46 +407,27 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
     return this.#controller;
   }
 
-  get selectedItem() {
-    return this.#controller?.selectedItem ?? this.#selectedItem;
-  }
-
-  set selectedItem(value: unknown | null) {
-    this.#selectedItem = value;
-    this.#controller?.setSelectedItem(value);
-    this.syncFormState();
-  }
-
   get statusFormatter() {
     return this.#statusFormatter;
   }
 
-  set statusFormatter(
-    value: FloatingComboboxStatusFormatter<unknown> | undefined,
-  ) {
+  set statusFormatter(value: FloatingQueryStatusFormatter<unknown> | undefined) {
     if (value === this.#statusFormatter) return;
     this.#statusFormatter = value;
     void this.update();
   }
 
-  configure<T>(configuration: FloatingComboboxConfiguration<T>) {
-    this.getItemLabel = configuration.getItemLabel as (
-      item: unknown,
-    ) => string;
+  configure<T>(configuration: FloatingQueryConfiguration<T>) {
+    this.getItemLabel = configuration.getItemLabel as (item: unknown) => string;
     this.getItemKey = configuration.getItemKey as
       | ((item: unknown) => string | number)
       | undefined;
-    this.getItemValue = configuration.getItemValue as
-      | ((item: unknown) => string)
-      | undefined;
-    this.selectedItem = configuration.selectedItem ?? null;
-    this.#initialSelectedItem = configuration.selectedItem ?? null;
-    this.#hasInitialSelectedItem = true;
+    this.semantics = configuration.semantics ?? 'combobox';
     this.statusFormatter = configuration.status
       ? ((typeof configuration.status === 'function'
           ? configuration.status
-          : createFloatingComboboxStatusFormatter(configuration.status)) as
-          FloatingComboboxStatusFormatter<unknown>)
+          : createFloatingQueryStatusFormatter(configuration.status)) as
+          FloatingQueryStatusFormatter<unknown>)
       : undefined;
     const ownsSearch = !(configuration.search instanceof SearchController);
     const search = ownsSearch
@@ -500,68 +436,12 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
     this.#setSearch(search as SearchController<unknown>, ownsSearch);
   }
 
-  setController(controller: ComboboxController<unknown> | undefined) {
+  setController(controller: QueryController<unknown> | undefined) {
     this.#controller = controller;
-    if (controller) {
-      controller.setSelectedItem(this.#selectedItem);
-      if (!this.#hasInitialSelectedItem) {
-        this.#initialSelectedItem = this.#selectedItem;
-        this.#hasInitialSelectedItem = true;
-      }
-    }
-    this.syncFormState();
   }
 
   setQuery(query: string, event?: Event) {
     this.#controller?.setQuery(query, event);
-  }
-
-  select(item: unknown, event?: Event) {
-    this.#controller?.select(item, event);
-  }
-
-  formDisabledCallback(disabled: boolean) {
-    const input = findInput(this);
-    if (input) input.disabled = disabled || this.disabled;
-  }
-
-  formResetCallback() {
-    const controller = this.#controller;
-    const item = this.#initialSelectedItem;
-    this.#selectedItem = item;
-    controller?.setSelectedItem(item);
-    const label = item == null ? '' : controller?.getItemLabel(item) ?? '';
-    const input = findInput(this);
-    if (input) input.value = label;
-    controller?.search.setQuery(label);
-    this.syncFormState();
-  }
-
-  /** Synchronizes the selected item's stable value with native form state. */
-  syncFormState() {
-    const controller = this.#controller;
-    const value =
-      controller?.selectedItem == null
-        ? null
-        : controller.getItemValue(controller.selectedItem);
-    const internals = this.#internals;
-    if (
-      !internals ||
-      typeof internals.setFormValue !== 'function' ||
-      typeof internals.setValidity !== 'function'
-    ) {
-      return;
-    }
-    internals.setFormValue(value);
-    if (this.required && value == null) {
-      internals.setValidity(
-        {valueMissing: true},
-        'Select an option.',
-        findInput(this) ?? undefined,
-      );
-      return;
-    }
-    internals.setValidity({});
   }
 
   #setSearch(value: SearchController<unknown> | undefined, owned: boolean) {
@@ -577,6 +457,6 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'floating-combobox': FloatingComboboxElement;
+    'floating-query': FloatingQueryElement;
   }
 }

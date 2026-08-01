@@ -305,6 +305,7 @@ export class FloatingPortalTargetElement extends FloatingPortalTargetBase {
     list: undefined,
     delayGroup: undefined,
     composite: undefined,
+    query: undefined,
     combobox: undefined,
     topLayer: undefined,
   };

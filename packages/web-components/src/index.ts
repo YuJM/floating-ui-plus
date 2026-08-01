@@ -2,6 +2,21 @@ export * from '@floating-ui-plus/web';
 
 export {FloatingArrowElement} from './FloatingArrowElement';
 export {
+  FloatingQueryElement,
+  type FloatingQueryActivateDetail,
+  type FloatingQueryStateChangeDetail,
+} from './FloatingQueryElement';
+export {createFloatingQueryStatusFormatter} from './query-types';
+export type {
+  FloatingQueryConfiguration,
+  FloatingQuerySearchConfiguration,
+  FloatingQueryStatusMessages,
+  FloatingQueryStatusContext,
+  FloatingQueryStatusFormatter,
+  FloatingQueryStatusText,
+} from './query-types';
+export {
+  /** @deprecated Use `FloatingQueryElement` for a generic editable query. */
   FloatingComboboxElement,
   type FloatingComboboxSelectDetail,
   type FloatingComboboxStateChangeDetail,
