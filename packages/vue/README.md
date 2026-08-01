@@ -82,14 +82,10 @@ Use the component layer for ordinary popovers, menus, and dialogs:
 ```vue
 <FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
   <FloatingReference>Open settings</FloatingReference>
-  <FloatingPortal>
-    <FloatingFocusManager :options="{modal: false, initialFocus: -1}">
-      <FloatingContent class="popover">
-        Settings
-        <FloatingClose>Close</FloatingClose>
-      </FloatingContent>
-    </FloatingFocusManager>
-  </FloatingPortal>
+  <FloatingContent class="popover">
+    Settings
+    <FloatingClose>Close</FloatingClose>
+  </FloatingContent>
 </FloatingRoot>
 ```
 
@@ -116,10 +112,25 @@ The surface stays in the Vue component tree, so provide/inject remains direct.
 </FloatingRoot>
 ```
 
-For a modal, render `<FloatingContent as="dialog">`. The native dialog supplies modal focus and
-inertness. `FloatingPortal` automatically stays in place for either native
-top-layer mode; use the normal Teleport composition as the fallback for older
-browsers.
+For a modal, render `<FloatingContent as="dialog">`. The native dialog supplies
+modal focus and inertness:
+
+```vue
+<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+  <FloatingReference>Open account settings</FloatingReference>
+  <FloatingContent as="dialog" aria-labelledby="account-title">
+    <h2 id="account-title">Account settings</h2>
+    <FloatingClose>Close</FloatingClose>
+  </FloatingContent>
+</FloatingRoot>
+```
+
+Keep the content in the root's Vue tree for native top-layer mode; do not wrap
+the same surface in `FloatingPortal`. Use `FloatingPortal` when a body-level
+Teleport is explicitly needed (for example, to escape a clipping ancestor), or
+as the fallback composition when `supportsFloatingTopLayer()` is unavailable.
+`FloatingFocusManager` and `FloatingOverlay` remain available for custom
+non-native modal compositions.
 
 For menus, `FloatingList` can own active-index state, item refs, roving
 `tabindex`, arrow navigation, and typeahead. `FloatingListItem` registers and
@@ -127,20 +138,18 @@ binds each rendered item:
 
 ```vue
 <FloatingList navigation typeahead loop>
-  <FloatingPortal>
-    <FloatingContent>
-      <FloatingListItem
-        v-for="action in actions"
-        :key="action.id"
-        tag="button"
-        :label="action.label"
-        role="menuitem"
-        close-on-click
-      >
-        {{ action.label }}
-      </FloatingListItem>
-    </FloatingContent>
-  </FloatingPortal>
+  <FloatingContent>
+    <FloatingListItem
+      v-for="action in actions"
+      :key="action.id"
+      tag="button"
+      :label="action.label"
+      role="menuitem"
+      close-on-click
+    >
+      {{ action.label }}
+    </FloatingListItem>
+  </FloatingContent>
 </FloatingList>
 ```
 
@@ -168,6 +177,38 @@ application still owns markup, classes, labels, and ARIA names.
 | `FloatingFocusManager` | `context`/`floating`, `options`, `enabled` | Connects modal focus trapping, restoration, and nested portal awareness |
 | `FloatingArrow` | `context`/`floating`, `width`, `height`, `staticOffset`, `rotation` | Renders and registers an arrow; emits `element-change` when its SVG changes |
 | `FloatingTransition` | required `open`, `placement`, `styles` | Provides presence-aware transition slot props `{status, style}` |
+
+`FloatingClose` is the template-friendly option. For imperative code, set the
+same ref bound with `v-model:open` to `false`:
+
+```ts
+open.value = false;
+```
+
+The root routes that change through the controller, so native top-layer state,
+dismissal events, and focus restoration stay synchronized. Avoid calling
+`HTMLDialogElement.close()` directly.
+
+Pass `onBeforeClose` through `FloatingRoot` options to validate or report a
+close request. Return `false` to keep the surface open:
+
+```vue
+<FloatingRoot
+  v-model:open="open"
+  :options="{
+    onBeforeClose: (event, reason) => {
+      sendCloseMetric(reason);
+      return canClose();
+    },
+  }"
+>
+  …
+</FloatingRoot>
+```
+
+The callback is shared by `FloatingClose`, `dismiss()` interactions, and native
+Popover/`dialog` dismissal. It is synchronous; perform asynchronous work first
+and set `open` to `false` after it completes.
 
 Collections use `FloatingTree` and `FloatingNode` for nested roots,
 `FloatingList` for ordered items, `FloatingListItem` for registration and
@@ -385,6 +426,7 @@ their state is owned elsewhere.
 | `useCombobox()` value | Purpose |
 | --- | --- |
 | `open`, `activeIndex`, `selectedItem` | Writable refs for root, list, and selected-result state |
+| `selectedValue` | Read-only stable value from `getItemValue()`; bind it to a hidden input for native form submission |
 | `inputProps` | Reactive value, loading ARIA/state attributes, plus focus, input, IME, and Enter handlers from the Web binding contract |
 | `loading` | Reactive input-level pending state from the associated search |
 | `getOptionProps(item, index)` | Option ID, active/selected ARIA, blur prevention, and selection handlers from the same Web contract |
@@ -402,7 +444,9 @@ Use `FloatingList navigation` for conventional listbox navigation, or compose
 `FloatingTree`, `FloatingNode`, `FloatingList`, `FloatingListItem`,
 `Composite`, `CompositeItem`, and `FloatingDelayGroup` provide nested-menu and
 keyboard-collection structure. `FloatingPortal` uses Vue Teleport and defaults
-to `body`; pass `to` to choose a target or `disabled` to render in place.
+to `body`; pass `to` to choose a target or `disabled` to render in place. It is
+optional for the native Popover/`dialog` compositions above and should be
+added only when the surface needs a different DOM target.
 
 Imports are SSR-safe and DOM work begins after mount. The package re-exports
 the upstream positioning composable, middleware, and typed `PLACEMENT` /

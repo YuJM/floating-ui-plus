@@ -4,7 +4,11 @@ import type {OpenChangeReason} from './types';
 export type FloatingTopLayer = 'none' | 'popover' | 'dialog';
 
 export interface FloatingTopLayerOptions {
-  onOpenChange(open: boolean, event?: Event, reason?: OpenChangeReason): void;
+  onOpenChange(
+    open: boolean,
+    event?: Event,
+    reason?: OpenChangeReason,
+  ): boolean | void;
 }
 
 type PopoverElement = HTMLElement & {
@@ -150,11 +154,12 @@ export class FloatingTopLayerController {
       const handleToggle = (event: Event) => {
         const open = element.matches(':popover-open');
         if (open === this.#open) return;
-        this.#options.onOpenChange(
+        const accepted = this.#options.onOpenChange(
           open,
           event,
           open ? 'click' : 'outside-press',
         );
+        if (!open && accepted === false) this.sync(true);
       };
       element.addEventListener('toggle', handleToggle);
       this.#cleanup = () => element.removeEventListener('toggle', handleToggle);
@@ -164,11 +169,17 @@ export class FloatingTopLayerController {
       const handleCancel = (event: Event) => {
         if (!this.#open) return;
         event.preventDefault();
-        this.#options.onOpenChange(false, event, 'escape-key');
+        const accepted = this.#options.onOpenChange(
+          false,
+          event,
+          'escape-key',
+        );
+        if (accepted === false) this.sync(true);
       };
       const handleClose = (event: Event) => {
         if (!this.#open) return;
-        this.#options.onOpenChange(false, event, 'click');
+        const accepted = this.#options.onOpenChange(false, event, 'click');
+        if (accepted === false) this.sync(true);
       };
       element.addEventListener('cancel', handleCancel);
       element.addEventListener('close', handleClose);

@@ -79,6 +79,44 @@ automatically provides modal focus and inertness.
 `data-fup-close` closes the surface that owns the marked control, including
 fresh clones created from a native template.
 
+For imperative code, call the root method instead of adding
+`data-fup-close`:
+
+```ts
+import type {FloatingRootElement} from '@floating-ui-plus/web-components';
+
+const root = document.querySelector<FloatingRootElement>('floating-root');
+root?.close();
+```
+
+`root.close(event, reason)` uses the same controller path as the attribute,
+including `openchange` and focus restoration. Keep a user event when one is
+available (`root.close(event, 'click')`) so consumers can inspect its source;
+do not call a native dialog's `.close()` directly because that bypasses the
+Floating UI Plus controller state.
+
+Every close request emits a cancelable `floatingbeforeclose` event first. Use
+it for synchronous validation or analytics before the surface closes:
+
+```ts
+root.addEventListener('floatingbeforeclose', (event) => {
+  if (!canClose()) event.preventDefault();
+  sendCloseMetric(event.detail.reason);
+});
+```
+
+Its detail contains `reason` and `sourceEvent`. A canceled event keeps the
+surface open and suppresses `openchange`; asynchronous approval is not built
+in, so finish the async work and call `root.close()` afterward.
+
+For an anchored non-modal surface, a `floating-root` with a `dialog`, `menu`,
+or `listbox` role promotes its root-owned content template to the native
+Popover API where supported. Keep that template as a child of the root; no
+`floating-portal` is required for the normal case. For a modal, use a real
+`<dialog>` as the content surface so the browser owns `showModal()`, focus, and
+inertness. Reserve `floating-portal` for a body-level layer that is explicitly
+needed, such as a nested surface escaping a clipping ancestor.
+
 ## Component API
 
 The elements are headless composition pieces. They preserve your light-DOM
@@ -97,6 +135,13 @@ markup and classes while binding the nearest `floating-root` controller.
 | `floating-transition` | No required attributes | Reflects the nearest root's open/close state as `data-status` for CSS |
 | `floating-combobox` | `name`, `required`, `disabled`, `input-selector`, `item-label-key`, `option-id-prefix`, `query-trigger-selector`, `status-selector`; properties `search`, `getItemKey`, `getItemValue`, `getItemLabel`, `selectedItem`, `configure()` | Form-associated editable combobox with search, virtual focus, selection, status, query presets, and combobox ARIA |
 | `floating-search` | Native phase templates and `data-search-text` bindings | Repeats result templates and automatically supplies list-item labels and values |
+
+`floating-combobox` is form-associated. Give it a `name` and configure
+`getItemValue()` when the submitted identifier differs from the visible label.
+With `required`, an empty selection participates in native constraint
+validation; form reset restores the `selectedItem` given to `configure()`, its
+input label, and submitted value. This happens on the Custom Element itself,
+so no hidden input or form-event listener is needed.
 
 `floating-root` also exposes `controller`, `referenceElement`,
 `floatingElement`, and `contentTemplate` properties for imperative integration.
@@ -377,21 +422,30 @@ All constructors are also exported for scoped registries and tests.
 
 ## Modal pattern
 
-Wrap dialog content with an overlay and focus manager:
+For the modal shown in the demo, keep the surface in the same root and use a
+native dialog:
 
 ```html
-<floating-portal>
-  <floating-overlay lock-scroll>
-    <floating-focus-manager modal return-focus outside-elements-inert>
-      <template slot="content"><section aria-label="Account settings">…</section></template>
-    </floating-focus-manager>
-  </floating-overlay>
-</floating-portal>
+<floating-root placement="bottom" strategy="fixed" interactions="click dismiss">
+  <floating-reference>
+    <button>Open account settings</button>
+  </floating-reference>
+
+  <dialog slot="floating" aria-labelledby="account-settings-title">
+    <h2 id="account-settings-title">Account settings</h2>
+    <p>The browser owns modal focus, inertness, Escape, and the top layer.</p>
+    <button data-fup-close>Close</button>
+  </dialog>
+</floating-root>
 ```
 
-`floating-portal` accepts the same `slot="content"` contract when a body-level
-target is explicitly needed. Mark exactly one content template when a portal
-owns multiple templates; `data-fup-content` remains a compatibility alias.
+Use a root-owned `<template slot="content">` for ordinary anchored popovers;
+the demo intentionally does not wrap those surfaces in a portal. Add
+`<floating-overlay>` and `<floating-focus-manager>` only when you need a
+non-native or custom modal composition. Use `<floating-portal>` only when a
+body-level target is explicitly needed, such as escaping a clipping ancestor;
+it still accepts the `slot="content"` contract, and `data-fup-content` remains
+a compatibility alias when a portal owns multiple templates.
 
 Imports are SSR-safe. Positioning, portals, observers, and focus management
 start only after the corresponding elements connect.

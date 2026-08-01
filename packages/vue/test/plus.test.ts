@@ -38,6 +38,42 @@ import {
 afterEach(() => cleanup());
 
 describe('Floating UI Plus Vue adapter', () => {
+  test('can cancel a close request before Vue commits open state', async () => {
+    const beforeClose = vi.fn(() => false);
+    const App = defineComponent({
+      setup() {
+        const open = ref(true);
+        return {open, beforeClose};
+      },
+      template: `
+        <FloatingRoot
+          v-model:open="open"
+          :options="{onBeforeClose: beforeClose}"
+        >
+          <FloatingReference>Open</FloatingReference>
+          <FloatingContent>
+            <FloatingClose>Close</FloatingClose>
+          </FloatingContent>
+        </FloatingRoot>
+      `,
+    });
+
+    const {getByRole} = render(App, {
+      global: {
+        components: {
+          FloatingRoot,
+          FloatingReference,
+          FloatingContent,
+          FloatingClose,
+        },
+      },
+    });
+    await fireEvent.click(getByRole('button', {name: 'Close'}));
+
+    expect(beforeClose).toHaveBeenCalledWith(expect.any(MouseEvent), 'click');
+    expect(getByRole('button', {name: 'Close'})).toBeVisible();
+  });
+
   test('marks the default arrow SVG with the shared arrow attribute', async () => {
     const App = defineComponent(() => () =>
       h(

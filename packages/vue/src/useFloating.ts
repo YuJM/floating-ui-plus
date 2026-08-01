@@ -70,6 +70,9 @@ export function useFloating<T extends ReferenceElement = ReferenceElement>(
     ...(options.onOpenChange
       ? {onOpenChange: options.onOpenChange}
       : {}),
+    ...(options.onBeforeClose
+      ? {onBeforeClose: options.onBeforeClose}
+      : {}),
     ...(options.whileElementsMounted
       ? {
           whileElementsMounted: (

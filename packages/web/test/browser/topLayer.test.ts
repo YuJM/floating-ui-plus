@@ -57,4 +57,25 @@ describe('FloatingTopLayerController', () => {
     expect(element.open).toBe(false);
     topLayer.destroy();
   });
+
+  test('reopens a native surface when a close request is rejected', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    const onOpenChange = vi.fn(() => false);
+    const topLayer = createFloatingTopLayer({onOpenChange});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    element.hidePopover();
+    await vi.waitFor(() => expect(element.matches(':popover-open')).toBe(true));
+    expect(onOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.any(Event),
+      'outside-press',
+    );
+    topLayer.destroy();
+  });
 });

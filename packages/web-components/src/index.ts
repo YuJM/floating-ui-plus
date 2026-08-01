@@ -33,6 +33,7 @@ export {
   type FloatingRootConfiguration,
   type FloatingRootEventDetailMap,
   type FloatingRootEventType,
+  type FloatingBeforeCloseDetail,
   type FloatingOpenChangeDetail,
   type FloatingTemplateLifecycleDetail,
 } from './FloatingRootElement';

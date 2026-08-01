@@ -72,6 +72,12 @@ implementation: `/tooltip` defaults to Web Components, while
 `/tooltip?framework=vue` shows the Vue version. Invalid or omitted query values
 fall back to Web Components.
 
+The Combobox demo has a second URL state for its search implementation:
+`/combobox?source=fuzzy` and `/combobox?source=server`. Combine it with the
+framework selection to compare the same source across implementations, for
+example `/combobox?framework=vue&source=server`. Switching framework or locale
+preserves these query parameters.
+
 Run the complete development environment from the repository root:
 
 ```sh

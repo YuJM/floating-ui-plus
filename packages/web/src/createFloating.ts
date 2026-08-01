@@ -136,6 +136,12 @@ export function createFloating(
     attributes,
     nested: false,
     onOpenChange(open, event, reason) {
+      if (
+        !open &&
+        resolveOptions(optionsSource).onBeforeClose?.(event, reason) === false
+      ) {
+        return;
+      }
       data.openEvent = open ? event : undefined;
       const value = {open, event, reason, nested: context.nested};
       events.emit('openchange', value);

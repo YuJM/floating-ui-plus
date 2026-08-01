@@ -127,6 +127,36 @@ Use `popover` for a non-modal surface and a real `<dialog>` for `dialog`.
 browsers. This controller does not move DOM nodes, so a framework's existing
 context/provide relationship remains intact.
 
+This is the 0.6 composition for a normal anchored popover or modal dialog:
+keep the application surface in its existing render tree, attach it with
+`setElement()`, and synchronize browser state from application `open` state.
+Use a native Popover for a non-modal panel; use an actual `<dialog>` when the
+browser should own modal focus, inertness, and the top-layer stack. Do not also
+portal the same surface.
+
+The renderer owns the markup and chooses the native element:
+
+```html
+<!-- non-modal: keep the panel beside its reference -->
+<button id="settings-trigger" popovertarget="settings-panel">Settings</button>
+<section id="settings-panel" popover aria-label="Settings">
+  <button popovertarget="settings-panel" popovertargetaction="hide">Close</button>
+</section>
+
+<!-- modal: use dialog when focus and inertness should be modal -->
+<dialog id="account-dialog" aria-labelledby="account-title">
+  <h2 id="account-title">Account settings</h2>
+  <form method="dialog"><button>Close</button></form>
+</dialog>
+```
+
+Bind the panel or dialog with `topLayer.setElement()` and call
+`topLayer.sync(open)` after every application-state change. If
+`supportsFloatingTopLayer()` is false, render the same surface in your normal
+conditional branch and use `createPortalBridge()` only when it must move to a
+body-level target. A portal is a placement escape hatch, not the default
+rendering step for a native top-layer surface.
+
 ## Interaction plugins
 
 The root entry exports the interaction plugins used by most floating patterns:
@@ -302,6 +332,42 @@ element and its accessible announcement policy.
 `getItemValue(item)` returns the stable value for form submission and defaults
 to the item key, so a consumer can keep a human-readable label separate from
 the submitted identifier.
+
+To close an imperative surface, use the same open-state callback that the
+interaction plugins use:
+
+```ts
+floating.context.onOpenChange(false);
+```
+
+This keeps controller state, native top-layer state, dismissal reason, and
+focus restoration synchronized. Prefer this over directly setting `open` or
+calling `HTMLDialogElement.close()`.
+
+For a synchronous guard before any close request, provide `onBeforeClose`:
+
+```ts
+const floating = createFloating(() => ({
+  open,
+  onBeforeClose: (event, reason) => {
+    sendCloseMetric(reason);
+    return canClose(); // return false to keep the surface open
+  },
+  onOpenChange: setOpen,
+}));
+```
+
+The callback receives the original source event and dismissal reason. It runs
+for `dismiss()` interactions and imperative `context.onOpenChange(false, …)`
+calls, but not for opening. Async approval is intentionally outside this
+contract; complete it before issuing the close request instead.
+
+The 0.6 combobox surface is intentionally function-based: pass
+`getItemLabel`, `getItemValue`, and (when needed) `getItemKey` to the controller,
+then bind the returned `getInputProps()`, `getOptionProps()`, and
+`getQueryTriggerProps()` instead of duplicating input, selection, and ARIA event
+handlers. `getItemValue()` is the value to submit; it does not have to be the
+label displayed in the option.
 
 For direct DOM or Custom Element renderers, `createSearchRenderer()` removes
 the repetitive subscription, phase switch, and `replaceChildren()` lifecycle.

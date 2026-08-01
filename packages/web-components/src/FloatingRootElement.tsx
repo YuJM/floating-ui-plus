@@ -28,6 +28,11 @@ export interface FloatingOpenChangeDetail {
   sourceEvent?: Event | undefined;
 }
 
+export interface FloatingBeforeCloseDetail {
+  reason?: OpenChangeReason | undefined;
+  sourceEvent?: Event | undefined;
+}
+
 export interface FloatingTemplateLifecycleDetail {
   root: FloatingRootElement;
   template: HTMLTemplateElement;
@@ -246,7 +251,9 @@ export class FloatingRootElement extends FloatingRootBase {
   }
 
   close(event?: Event, reason?: OpenChangeReason) {
+    const wasOpen = this.open;
     this.controller.context.onOpenChange(false, event, reason);
+    return !wasOpen || !this.open;
   }
 
   setPositionReference(reference: ReferenceElement | null) {
@@ -269,7 +276,19 @@ export class FloatingRootElement extends FloatingRootBase {
     open: boolean,
     event?: Event,
     reason?: OpenChangeReason,
-  ) {
+  ): boolean {
+    if (!open) {
+      const beforeClose = new CustomEvent<FloatingBeforeCloseDetail>(
+        'floatingbeforeclose',
+        {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          detail: {reason, sourceEvent: event},
+        },
+      );
+      if (!this.dispatchEvent(beforeClose)) return false;
+    }
     this.open = open;
     this.dispatchEvent(
       new CustomEvent<FloatingOpenChangeDetail>('openchange', {
@@ -278,6 +297,7 @@ export class FloatingRootElement extends FloatingRootBase {
         detail: {open, reason, sourceEvent: event},
       }),
     );
+    return true;
   }
 }
 
@@ -289,5 +309,6 @@ declare global {
   interface HTMLElementEventMap {
     floatingmount: CustomEvent<FloatingTemplateLifecycleDetail>;
     floatingunmount: CustomEvent<FloatingTemplateLifecycleDetail>;
+    floatingbeforeclose: CustomEvent<FloatingBeforeCloseDetail>;
   }
 }

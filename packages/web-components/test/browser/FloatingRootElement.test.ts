@@ -128,6 +128,32 @@ describe('FloatingRootElement', () => {
     });
   });
 
+  test('dispatches a cancelable before-close event for imperative closes', () => {
+    const root = document.createElement('floating-root');
+    root.open = true;
+    document.body.append(root);
+    const beforeClose = vi.fn((event: Event) => event.preventDefault());
+    const changed = vi.fn();
+    root.addEventListener('floatingbeforeclose', beforeClose);
+    root.addEventListener('openchange', changed);
+
+    const sourceEvent = new MouseEvent('click');
+    expect(root.close(sourceEvent, 'click')).toBe(false);
+    expect(beforeClose).toHaveBeenCalledOnce();
+    expect(beforeClose.mock.calls[0]?.[0]).toMatchObject({
+      type: 'floatingbeforeclose',
+      cancelable: true,
+      detail: {reason: 'click', sourceEvent},
+    });
+    expect(root.open).toBe(true);
+    expect(changed).not.toHaveBeenCalled();
+
+    root.removeEventListener('floatingbeforeclose', beforeClose);
+    expect(root.close(sourceEvent, 'click')).toBe(true);
+    expect(root.open).toBe(false);
+    expect(changed).toHaveBeenCalledOnce();
+  });
+
   test('keeps a slotted native popover in its root context', async () => {
     if (!supportsFloatingTopLayer('popover')) return;
     const root = document.createElement('floating-root');
@@ -167,6 +193,30 @@ describe('FloatingRootElement', () => {
     dialog.dispatchEvent(new Event('cancel', {cancelable: true}));
     await vi.waitFor(() => expect(root.open).toBe(false));
     expect(dialog.hidden).toBe(true);
+  });
+
+  test('reopens a native modal when floatingbeforeclose is canceled', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <dialog slot="floating">Content</dialog>
+    `;
+    const beforeClose = (event: Event) => event.preventDefault();
+    root.addEventListener('floatingbeforeclose', beforeClose);
+    document.body.append(root);
+    await root.updateComplete;
+    const dialog = root.floatingElement as HTMLDialogElement;
+    await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+    dialog.dispatchEvent(new Event('cancel', {cancelable: true}));
+
+    await vi.waitFor(() => {
+      expect(root.open).toBe(true);
+      expect(dialog.open).toBe(true);
+    });
+    root.removeEventListener('floatingbeforeclose', beforeClose);
   });
 
   test('maps click interactions to reflected state and a DOM event', async () => {

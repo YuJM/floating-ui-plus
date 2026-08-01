@@ -1,5 +1,12 @@
 # @floating-ui-plus/web
 
+## 0.6.1
+
+### Patch Changes
+
+- Clarify the 0.6 native Popover and Dialog composition, Custom Element combobox
+  form behavior, and Vue `selectedValue` form binding in the package READMEs.
+
 ## 0.6.0
 
 ### Minor Changes

@@ -80,7 +80,7 @@ export class FloatingRootRuntime {
     this.#host = host;
     this.topLayer = createFloatingTopLayer({
       onOpenChange: (open, event, reason) => {
-        host.commitOpenChange(open, event, reason);
+        return host.commitOpenChange(open, event, reason);
       },
     });
     this.#contentScopes.set(host, null);
@@ -92,7 +92,7 @@ export class FloatingRootRuntime {
       middleware: host.middleware,
       whileElementsMounted: autoUpdate,
       onOpenChange: (open, event, reason) => {
-        host.commitOpenChange(open, event, reason);
+        return host.commitOpenChange(open, event, reason);
       },
     }));
   }

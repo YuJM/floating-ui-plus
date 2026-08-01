@@ -99,6 +99,7 @@ export const FloatingRoot = defineComponent({
       transform: () => toValue(props.options.transform),
       open: localOpen,
       whileElementsMounted: props.options.whileElementsMounted,
+      onBeforeClose: props.options.onBeforeClose,
       onOpenChange(open, event, reason) {
         localOpen.value = open;
         emit('update:open', open);
@@ -109,9 +110,16 @@ export const FloatingRoot = defineComponent({
     const topLayer = computed<FloatingTopLayer>(() => props.topLayer);
     const nativeTopLayer = createFloatingTopLayer({
       onOpenChange(open, event, reason) {
+        if (
+          !open &&
+          props.options.onBeforeClose?.(event, reason) === false
+        ) {
+          return false;
+        }
         localOpen.value = open;
         emit('update:open', open);
         emit('open-change', open, event, reason);
+        return true;
       },
     });
     nativeTopLayer.connect();
