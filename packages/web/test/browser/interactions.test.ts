@@ -199,7 +199,12 @@ describe('native interaction plugins', () => {
     );
 
     harness.setOpen(true);
-    fireEvent.keyDown(document, {key: 'Escape'});
+    const escape = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      cancelable: true,
+    });
+    document.dispatchEvent(escape);
+    expect(escape.defaultPrevented).toBe(true);
     expect(harness.onOpenChange).toHaveBeenLastCalledWith(
       false,
       expect.any(KeyboardEvent),

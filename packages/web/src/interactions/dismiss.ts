@@ -95,6 +95,10 @@ export function dismiss(
             return;
           }
         }
+        // The library owns this Escape action. Prevent the browser's native
+        // dialog cancel default so a parent top-layer dialog cannot dismiss
+        // after a nested floating surface has handled the same key.
+        event.preventDefault();
         context.onOpenChange(false, event, 'escape-key');
       };
 

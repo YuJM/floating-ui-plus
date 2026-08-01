@@ -19,9 +19,17 @@ export type * from '@floating-ui/dom';
 export {createFloating} from './createFloating';
 export type * from './types';
 export {
+  createFloatingTopLayer,
+  FloatingTopLayerController,
+  supportsFloatingTopLayer,
+} from './topLayer';
+export type {FloatingTopLayer, FloatingTopLayerOptions} from './topLayer';
+export {
   createAsyncSearchSource,
   createSearch,
+  createSearchRenderer,
   SearchController,
+  SearchRenderer,
 } from './search';
 export type {
   AsyncSearchSourceOptions,
@@ -31,10 +39,34 @@ export type {
   SearchOptions,
   SearchPage,
   SearchRequest,
+  SearchPhase,
+  SearchRenderContext,
+  SearchRendererOptions,
+  SearchRenderers,
+  SearchRenderOutput,
   SearchSnapshot,
   SearchSource,
+  SearchSourceHandler,
+  SearchSourceInput,
   SearchSourceItem,
 } from './search';
+export {
+  ComboboxController,
+  createCombobox,
+  createComboboxStatusFormatter,
+} from './combobox';
+export type {
+  ComboboxInputProps,
+  ComboboxNavigationOptions,
+  ComboboxOptionProps,
+  ComboboxOptions,
+  ComboboxQueryTriggerProps,
+  ComboboxSnapshot,
+  ComboboxStatusContext,
+  ComboboxStatusFormatter,
+  ComboboxStatusMessages,
+  ComboboxStatusText,
+} from './combobox';
 export {
   createFuzzyMatcher,
   createFuzzySearch,

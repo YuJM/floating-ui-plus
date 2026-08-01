@@ -16,40 +16,32 @@
           Open coordinates <span aria-hidden="true">＋</span>
         </button>
       </floating-reference>
-      <floating-portal>
-        <template data-popover-content>
-          <div class="popover-panel">
-            <span class="panel-kicker">REFERENCE / 42.8°</span>
-            <strong>Portal, still connected.</strong>
-            <p>ARIA and outside-press behavior are owned by the component.</p>
-            <button class="text-button" data-fup-close>Close panel</button>
-          </div>
-        </template>
-      </floating-portal>
+      <template slot="content" data-popover-content>
+        <div class="popover-panel">
+          <span class="panel-kicker">NATIVE POPOVER / 42.8°</span>
+          <strong>Popover, still connected.</strong>
+          <p>ARIA and outside-press behavior are owned by the component.</p>
+          <button class="text-button" data-fup-close>Close panel</button>
+        </div>
+      </template>
     </floating-root>
   </div>
-  <code>&lt;floating-portal&gt; + &lt;template&gt;</code>
+  <code>&lt;template slot="content"&gt; + native popover</code>
 </article>
 
 <script>
-  import {flip, offset, shift} from '@floating-ui-plus/web-components';
   import {
-    emitExampleAction,
-    floatingRoot,
-    initializeExample,
-    onFloatingOpenChange,
-  } from './example-client';
+    FloatingRootElement,
+    flip,
+    offset,
+    shift,
+  } from '@floating-ui-plus/web-components';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('popover', (scope) => {
-    const floating = floatingRoot(scope, '[data-popover-root]');
-    floating.middleware = [offset(12), flip(), shift({padding: 18})];
-    onFloatingOpenChange(floating, ({open}) => {
-      emitExampleAction(
-        scope,
-        open
-          ? 'Popover opened from its custom element'
-          : 'Popover dismissed',
-      );
+    const floating = FloatingRootElement.query(scope, '[data-popover-root]');
+    floating.configure({
+      middleware: [offset(12), flip(), shift({padding: 18})],
     });
   });
 </script>

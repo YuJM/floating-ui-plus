@@ -24,10 +24,13 @@ export default defineConfig({
     '/en/menu': '/menu',
     '/en/nested-menu': '/nested-menu',
     '/en/client-point': '/client-point',
-    '/en/combobox': '/combobox',
+    '/en/combobox': '/combobox/fuzzy',
     '/en/placement': '/placement',
     '/en/middleware': '/middleware',
     '/en/modal': '/modal',
+    '/combobox': '/combobox/fuzzy',
+    '/ko/combobox': '/ko/combobox/fuzzy',
+    '/ja/combobox': '/ja/combobox/fuzzy',
   },
   integrations: [
     vue(),
@@ -41,6 +44,13 @@ export default defineConfig({
   vite: {
     define: {
       __DEV__: 'true',
+    },
+    optimizeDeps: {
+      exclude: [
+        '@floating-ui-plus/web',
+        '@floating-ui-plus/web-components',
+        '@floating-ui-plus/vue',
+      ],
     },
     plugins: [
       paraglideVitePlugin({

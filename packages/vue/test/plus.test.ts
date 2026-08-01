@@ -22,12 +22,14 @@ import {
   FloatingListItem,
   FloatingReference,
   FloatingRoot,
+  FloatingSearch,
   click,
   createFuzzySearchSource,
   createFloatingContextScope,
   dismiss,
   requestFloatingContext,
   role,
+  useCombobox,
   useFloating,
   useSearch,
   vFloating,
@@ -100,6 +102,161 @@ describe('Floating UI Plus Vue adapter', () => {
     await waitFor(() => {
       expect(getByText('北京')).toHaveAttribute('data-query', 'bejing');
     });
+  });
+
+  test('composes combobox input, active option, and selection state', async () => {
+    const App = defineComponent({
+      setup() {
+        const search = useSearch({
+          items: [
+            {id: 'alpha', label: 'Alpha'},
+            {id: 'beta', label: 'Beta'},
+          ],
+          getItemKey: (item) => item.id,
+        });
+        const combobox = useCombobox({
+          search,
+          getItemLabel: (item) => item.label,
+          optionIdPrefix: 'vue-test-option',
+        });
+        return {combobox, beta: search.items.value[1]};
+      },
+      template: `
+        <div>
+          <input data-testid="input" v-bind="combobox.inputProps.value" />
+          <button
+            data-testid="option"
+            v-bind="combobox.getOptionProps(beta, 1)"
+          >Beta</button>
+          <button @click="combobox.activeIndex.value = 1">Activate Beta</button>
+          <output>
+            {{ combobox.open.value }}:{{ combobox.selectedItem.value?.label ?? '' }}
+          </output>
+        </div>
+      `,
+    });
+
+    const {getByTestId, getByRole, getByText} = render(App);
+    const input = getByTestId('input');
+    const option = getByTestId('option');
+    await fireEvent.focus(input);
+    expect(getByText('true:')).toBeVisible();
+
+    await fireEvent.click(getByRole('button', {name: 'Activate Beta'}));
+    await nextTick();
+    expect(option).toHaveAttribute('id', 'vue-test-option-beta');
+    expect(option).toHaveAttribute('role', 'option');
+    expect(option).toHaveAttribute('data-active', 'true');
+    await fireEvent.keyDown(input, {key: 'Enter'});
+
+    expect(input).toHaveValue('Beta');
+    expect(getByText('false:Beta')).toBeVisible();
+    expect(option).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('exposes search loading through combobox input props', async () => {
+    let search: ReturnType<typeof useSearch<{id: string; label: string}>>;
+    const App = defineComponent({
+      setup() {
+        search = useSearch({
+          items: [{id: 'alpha', label: 'Alpha'}],
+          getItemKey: (item) => item.id,
+        });
+        const combobox = useCombobox({
+          search,
+          getItemLabel: (item) => item.label,
+        });
+        return {combobox};
+      },
+      template: `<input data-testid="input" v-bind="combobox.inputProps.value" />`,
+    });
+
+    const {getByTestId} = render(App);
+    const input = getByTestId('input');
+    expect(input).toHaveAttribute('aria-busy', 'false');
+
+    search!.controller.setControlledState({
+      items: [{id: 'alpha', label: 'Alpha'}],
+      loading: true,
+    });
+    await nextTick();
+    expect(input).toHaveAttribute('aria-busy', 'true');
+    expect(input).toHaveAttribute('data-loading', 'true');
+  });
+
+  test('renders Vue search phase slots and shares combobox status/query bindings', async () => {
+    let search: ReturnType<typeof useSearch<{id: string; label: string}>>;
+    const App = defineComponent({
+      components: {FloatingSearch},
+      setup() {
+        search = useSearch({
+          items: [
+            {id: 'alpha', label: 'Alpha'},
+            {id: 'beta', label: 'Beta'},
+          ],
+          getItemKey: (item) => item.id,
+        });
+        const combobox = useCombobox({
+          search,
+          getItemLabel: (item) => item.label,
+          status: {
+            closed: 'Suggestions closed',
+            selected: (item) => `${item.label} selected`,
+            idle: 'Start searching',
+            loading: 'Searching',
+            error: 'Search failed',
+            empty: 'No results',
+            results: ({search: state}) => `${state.items.length} results`,
+          },
+        });
+        return {combobox, search};
+      },
+      template: `
+        <div>
+          <input data-testid="input" v-bind="combobox.inputProps.value" />
+          <button data-testid="preset" v-bind="combobox.getQueryTriggerProps('beta')">
+            Try beta
+          </button>
+          <FloatingSearch :search="search">
+            <template #results>
+              <output data-testid="phase">{{ search.items.value.length }} result slots</output>
+            </template>
+          </FloatingSearch>
+          <output data-testid="status">{{ combobox.statusText.value }}</output>
+        </div>
+      `,
+    });
+
+    const {getByTestId} = render(App);
+    const input = getByTestId('input');
+    expect(getByTestId('phase')).toHaveTextContent('2 result slots');
+    expect(getByTestId('status')).toHaveTextContent('Suggestions closed');
+
+    search!.controller.setControlledState({
+      items: [
+        {id: 'alpha', label: 'Alpha'},
+        {id: 'beta', label: 'Beta'},
+      ],
+      loading: true,
+    });
+    await nextTick();
+    expect(getByTestId('phase')).toHaveTextContent('2 result slots');
+
+    await fireEvent.focus(input);
+    expect(getByTestId('status')).toHaveTextContent('Searching');
+
+    search!.controller.setControlledState({
+      items: [
+        {id: 'alpha', label: 'Alpha'},
+        {id: 'beta', label: 'Beta'},
+      ],
+    });
+    await nextTick();
+    expect(getByTestId('status')).toHaveTextContent('2 results');
+
+    await fireEvent.click(getByTestId('preset'));
+    expect(input).toHaveValue('beta');
+    expect(input).toHaveFocus();
   });
 
   test('offers a declarative root, reference, and content API alongside useFloating', async () => {
@@ -322,6 +479,42 @@ describe('Floating UI Plus Vue adapter', () => {
       expect(reference).toHaveAttribute('aria-controls', content.id);
       expect(content).toHaveAttribute('role', 'dialog');
     });
+  });
+
+  test('lets a portal follow the nearest FloatingRoot open state', async () => {
+    const App = defineComponent({
+      components: {
+        FloatingClose,
+        FloatingContent,
+        FloatingPortal,
+        FloatingReference,
+        FloatingRoot,
+      },
+      setup() {
+        const open = ref(false);
+        return {open, plugins: [click()]};
+      },
+      template: `
+        <FloatingRoot v-model:open="open" :plugins="plugins">
+          <FloatingReference data-testid="reference">Open</FloatingReference>
+          <FloatingPortal>
+            <FloatingContent data-testid="content">
+              Content
+              <FloatingClose data-testid="close">Close</FloatingClose>
+            </FloatingContent>
+          </FloatingPortal>
+        </FloatingRoot>
+      `,
+    });
+
+    const {getByTestId, queryByTestId} = render(App);
+    expect(queryByTestId('content')).toBeNull();
+
+    await fireEvent.click(getByTestId('reference'));
+    await waitFor(() => expect(getByTestId('content')).toBeVisible());
+
+    await fireEvent.click(getByTestId('close'));
+    await waitFor(() => expect(queryByTestId('content')).toBeNull());
   });
 
   test('uses Vue Teleport and supports disabling it', async () => {

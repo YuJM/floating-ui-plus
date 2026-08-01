@@ -5,6 +5,9 @@
 - Use Bun for workspace dependency management, scripts, builds, and tests.
 - Run commands from the repository root unless a package-specific command
   explicitly requires another working directory.
+- When starting the demo for development, run both `bun run dev:packages` and
+  `bun run dev:demo` as separate long-running processes. Keep the package
+  process running so changes rebuild package `dist` outputs in watch mode.
 - Use `git mv` or the operating system's `mv` command when renaming or moving
   files.
 

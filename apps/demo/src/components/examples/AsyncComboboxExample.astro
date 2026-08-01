@@ -1,0 +1,179 @@
+---
+import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
+---
+
+<section
+  class="combobox-panel combobox-server-panel"
+  data-demo="async-combobox"
+  id="combobox-panel-server"
+  role="tabpanel"
+  aria-labelledby="combobox-tab-server"
+>
+  <h3>Server-side search</h3>
+  <p>
+    MSW simulates a cursor API over {FAKE_SERVER_DESTINATION_TOTAL} distinct countries with debounce,
+    cancellation, and page loading.
+  </p>
+
+  <div class="combobox-shell">
+    <label class="combobox-label" for="remote-destination-search">
+      Remote destination
+    </label>
+    <floating-root data-async-combobox-root placement="bottom-start">
+      <floating-list navigation loop allow-escape>
+        <floating-combobox
+          data-async-combobox
+          option-id-prefix="remote-destination-option"
+        >
+          <floating-reference>
+            <input
+              id="remote-destination-search"
+              class="combobox-input"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="remote-combobox-status"
+              placeholder="Try korea, japan, china…"
+            />
+            <span class="combobox-loading-indicator" aria-hidden="true"></span>
+          </floating-reference>
+          <template slot="content">
+              <div
+                class="combobox-popup async-combobox-popup"
+                aria-label="Remote destination suggestions"
+              >
+                <floating-search>
+                  <template data-search-loading>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Querying remote endpoint…
+                    </div>
+                  </template>
+                  <template data-search-error>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Remote search failed.
+                    </div>
+                  </template>
+                  <template data-search-empty>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      The server found no match for “<span
+                        data-search-text="$query"
+                      ></span>”
+                    </div>
+                  </template>
+                  <template data-search-result>
+                    <floating-list-item>
+                      <div class="combobox-option">
+                        <span>
+                          <strong data-search-text="label"></strong>
+                          <small data-search-text="region"></small>
+                        </span>
+                        <span class="language-badge">API</span>
+                      </div>
+                    </floating-list-item>
+                  </template>
+                  <template data-search-more>
+                    <div class="combobox-pagination" role="status">
+                      <span class="combobox-pagination-progress">
+                        <strong data-search-text="$count"></strong> of
+                        <span data-search-text="$total"></span> loaded
+                      </span>
+                      <button
+                        class="combobox-load-more"
+                        type="button"
+                        data-search-load-more
+                      >
+                        <span class="combobox-load-more-label">Show next 8</span>
+                        <span class="combobox-load-more-pending">Loading…</span>
+                      </button>
+                    </div>
+                  </template>
+                </floating-search>
+              </div>
+          </template>
+          <p
+            id="remote-combobox-status"
+            class="sr-only"
+            aria-live="polite"
+            data-combobox-status
+          >
+            Remote destination suggestions closed
+          </p>
+        </floating-combobox>
+      </floating-list>
+    </floating-root>
+    <span class="combobox-icon" aria-hidden="true">⌕</span>
+  </div>
+
+  <div class="combobox-server-meta" aria-label="Server search behavior">
+    <code>MSW Service Worker</code>
+    <span>{FAKE_SERVER_DESTINATION_TOTAL} countries</span>
+    <span>8 / page</span>
+    <span>AbortSignal</span>
+    <span>cursor API</span>
+  </div>
+
+    <code>application source + &lt;floating-combobox&gt;</code>
+</section>
+
+<script>
+  import {
+    FloatingRootElement,
+    dismiss,
+    flip,
+    offset,
+    shift,
+    type FloatingComboboxElement,
+  } from '@floating-ui-plus/web-components';
+  import type {MultilingualDestination} from '../../multilingual-destinations';
+  import {FAKE_SERVER_DESTINATION_PAGE_SIZE} from '../../fake-server-destinations';
+  import {searchDestinationsOnServer} from '../../server-destination-search';
+  import {initializeExample} from './initialize-example';
+
+  initializeExample('async-combobox', (scope) => {
+    const floating = FloatingRootElement.query(
+      scope,
+      '[data-async-combobox-root]',
+    );
+    const combobox = scope.querySelector<FloatingComboboxElement>(
+      '[data-async-combobox]',
+    );
+    if (!combobox) return;
+
+    combobox.configure<MultilingualDestination>({
+      search: {
+        source: searchDestinationsOnServer,
+        getItemKey: (item) => item.id,
+        debounceMs: 180,
+        cacheTtlMs: 5_000,
+        limit: FAKE_SERVER_DESTINATION_PAGE_SIZE,
+      },
+      getItemLabel: (item) => item.label,
+      status: {
+        closed: 'Remote destination suggestions closed',
+        selected: (item) => `${item.label} selected from the server`,
+        idle: 'Remote destination search is idle',
+        loading: 'Querying remote destinations',
+        error: 'Remote destination search failed',
+        empty: ({search}) => `No remote matches for ${search.query}`,
+        results: ({search}) =>
+          `${search.items.length} remote destinations available`,
+      },
+    });
+    floating.configure({
+      middleware: [offset(8), flip(), shift({padding: 18})],
+      plugins: [dismiss()],
+    });
+  });
+</script>

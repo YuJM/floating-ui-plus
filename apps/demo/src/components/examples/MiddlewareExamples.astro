@@ -20,7 +20,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-static">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-cyan">Floating</div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-cyan">Floating</div>
+            </template>
           </floating-root>
         </div>
         <div class="mw-static-stage">
@@ -29,7 +31,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-static">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-cyan">Floating</div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-cyan">Floating</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -50,9 +54,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-shift">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-lavender">
-              Still on top
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-lavender">Still on top</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -73,9 +77,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-flip">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-coral">
-              Final placement
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-coral">Final placement</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -96,18 +100,17 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-arrow">
               Reference
             </button>
-            <div
-              slot="floating"
-              class="mw-panel mw-panel-ink mw-panel-arrow"
-            >
-              Floating
-              <floating-arrow
-                class="mw-arrow"
-                width={MIDDLEWARE_ARROW.width}
-                height={MIDDLEWARE_ARROW.height}
-                static-offset={MIDDLEWARE_ARROW.staticOffset}
-              ></floating-arrow>
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-ink mw-panel-arrow">
+                Floating
+                <floating-arrow
+                  class="mw-arrow"
+                  width={MIDDLEWARE_ARROW.width}
+                  height={MIDDLEWARE_ARROW.height}
+                  static-offset={MIDDLEWARE_ARROW.staticOffset}
+                ></floating-arrow>
+              </div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -128,14 +131,13 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-size">
               Reference
             </button>
-            <div
-              slot="floating"
-              class="mw-panel mw-panel-paper mw-panel-size"
-            >
-              <strong>Floating content</strong>
-              <span>One</span><span>Two</span><span>Three</span>
-              <span>Four</span><span>Five</span>
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-paper mw-panel-size">
+                <strong>Floating content</strong>
+                <span>One</span><span>Two</span><span>Three</span>
+                <span>Four</span><span>Five</span>
+              </div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -159,9 +161,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-auto">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-mint mw-panel-auto">
-              Final placement
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-mint mw-panel-auto">Final placement</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -186,9 +188,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-hide">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-paper mw-panel-hide">
-              Floating
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-paper mw-panel-hide">Floating</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -212,7 +214,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
               </floating-reference>
               after.
             </p>
-            <template data-fup-content>
+            <template slot="content">
               <div class="mw-panel mw-panel-paper mw-panel-inline">
                 Bounding box
               </div>
@@ -231,7 +233,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
               </floating-reference>
               after.
             </p>
-            <template data-fup-content>
+            <template slot="content">
               <div class="mw-panel mw-panel-ink mw-panel-inline">
                 Client rect
               </div>
@@ -246,6 +248,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
 
 <script>
   import {
+    FloatingRootElement,
     arrow,
     autoPlacement,
     flip,
@@ -256,20 +259,23 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     size,
   } from '@floating-ui-plus/web-components';
   import {MIDDLEWARE_ARROW} from '../../middleware-registry';
-  import {
-    floatingRoot,
-    initializeExample,
-  } from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('middleware', (scope) => {
-    const offsetZero = floatingRoot(scope, '[data-offset-root="0"]');
-    const offsetTen = floatingRoot(scope, '[data-offset-root="10"]');
+    const offsetZero = FloatingRootElement.query(
+      scope,
+      '[data-offset-root="0"]',
+    );
+    const offsetTen = FloatingRootElement.query(
+      scope,
+      '[data-offset-root="10"]',
+    );
     offsetZero.middleware = [offset(0)];
     offsetTen.middleware = [offset(10)];
 
     const shiftStage =
       scope.querySelector<HTMLElement>('.mw-stage-shift');
-    const shiftRoot = floatingRoot(scope, '[data-shift-root]');
+    const shiftRoot = FloatingRootElement.query(scope, '[data-shift-root]');
     shiftRoot.middleware = [
       shift({
         boundary: shiftStage ?? undefined,
@@ -279,7 +285,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     ];
 
     const flipStage = scope.querySelector<HTMLElement>('.mw-stage-flip');
-    const flipRoot = floatingRoot(scope, '[data-flip-root]');
+    const flipRoot = FloatingRootElement.query(scope, '[data-flip-root]');
     flipRoot.middleware = [
       offset(8),
       flip({
@@ -296,7 +302,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
 
     const arrowStage =
       scope.querySelector<HTMLElement>('.mw-stage-arrow');
-    const arrowRoot = floatingRoot(scope, '[data-arrow-root]');
+    const arrowRoot = FloatingRootElement.query(scope, '[data-arrow-root]');
     const arrowElement =
       scope.querySelector<HTMLElement>('floating-arrow');
     arrowRoot.middleware = [
@@ -312,7 +318,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     ];
 
     const sizeStage = scope.querySelector<HTMLElement>('.mw-stage-size');
-    const sizeRoot = floatingRoot(scope, '[data-size-root]');
+    const sizeRoot = FloatingRootElement.query(scope, '[data-size-root]');
     sizeRoot.middleware = [
       offset(8),
       size({
@@ -331,7 +337,10 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     const autoStage = scope.querySelector<HTMLElement>(
       '.mw-stage-auto-placement',
     );
-    const autoRoot = floatingRoot(scope, '[data-auto-placement-root]');
+    const autoRoot = FloatingRootElement.query(
+      scope,
+      '[data-auto-placement-root]',
+    );
     autoRoot.middleware = [
       autoPlacement({
         boundary: autoStage ?? undefined,
@@ -346,7 +355,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     ];
 
     const hideStage = scope.querySelector<HTMLElement>('.mw-stage-hide');
-    const hideRoot = floatingRoot(scope, '[data-hide-root]');
+    const hideRoot = FloatingRootElement.query(scope, '[data-hide-root]');
     hideRoot.middleware = [
       offset(8),
       hide({
@@ -360,11 +369,14 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       }),
     ];
 
-    const withoutInline = floatingRoot(
+    const withoutInline = FloatingRootElement.query(
       scope,
       '[data-inline-root="without"]',
     );
-    const withInline = floatingRoot(scope, '[data-inline-root="with"]');
+    const withInline = FloatingRootElement.query(
+      scope,
+      '[data-inline-root="with"]',
+    );
     withoutInline.middleware = [offset(8)];
     withInline.middleware = [inline(), offset(8)];
 

@@ -1,12 +1,50 @@
 ---
 import {multilingualSearchPrompts} from '../../multilingual-destinations';
+import type {ComboboxSource} from '../../i18n';
+import AsyncComboboxExample from './AsyncComboboxExample.astro';
+
+const {source = 'fuzzy'} = Astro.props as {source?: ComboboxSource};
+const comboboxPath = Astro.url.pathname.replace(/\/(?:fuzzy|server)$/, '');
+const sourceHref = (nextSource: ComboboxSource) =>
+  `${comboboxPath}/${nextSource}${Astro.url.search}`;
 ---
 
-<article class="demo-card combobox-card" data-demo="combobox">
+<div class="combobox-examples">
+  <article class="demo-card combobox-card">
   <div class="card-top">
     <span class="number">F</span>
-    <span class="chip">framework-neutral search</span>
+    <span class="chip">search sources</span>
   </div>
+  <div class="combobox-tabs" role="tablist" aria-label="Combobox search source" data-combobox-tabs>
+    <a
+      id="combobox-tab-local"
+      href={sourceHref('fuzzy')}
+      role="tab"
+      aria-selected={source === 'fuzzy' ? 'true' : 'false'}
+      aria-controls="combobox-panel-local"
+      tabindex={source === 'fuzzy' ? undefined : '-1'}
+    >
+      Fuzzy search
+    </a>
+    <a
+      id="combobox-tab-server"
+      href={sourceHref('server')}
+      role="tab"
+      aria-selected={source === 'server' ? 'true' : 'false'}
+      aria-controls="combobox-panel-server"
+      tabindex={source === 'server' ? undefined : '-1'}
+    >
+      Server search
+    </a>
+  </div>
+  {source === 'fuzzy' && (
+  <section
+    class="combobox-panel"
+    data-demo="combobox"
+    id="combobox-panel-local"
+    role="tabpanel"
+    aria-labelledby="combobox-tab-local"
+  >
   <h3>Multilingual combobox</h3>
   <p>Search by city, country, local script, alias, or forgiving typo.</p>
 
@@ -15,26 +53,86 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
       Destination
     </label>
     <floating-root data-combobox-root placement="bottom-start">
-      <floating-reference>
-        <input
-          id="destination-search"
-          class="combobox-input"
-          type="text"
-          autocomplete="off"
-          spellcheck="false"
-          aria-describedby="combobox-hints combobox-status"
-          placeholder="Search city or country…"
-        />
-      </floating-reference>
-      <floating-portal>
-        <template data-combobox-content>
-          <div
-            class="combobox-popup"
-            data-combobox-popup
-            aria-label="Destination suggestions"
-          ></div>
-        </template>
-      </floating-portal>
+      <floating-list navigation loop allow-escape>
+        <floating-combobox
+          data-combobox
+          option-id-prefix="destination-option"
+          query-trigger-selector="#combobox-hints [data-search-sample]"
+        >
+          <floating-reference>
+            <input
+              id="destination-search"
+              class="combobox-input"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="combobox-hints combobox-status"
+              placeholder="Search city or country…"
+            />
+          </floating-reference>
+          <template slot="content" data-combobox-content>
+              <div
+                class="combobox-popup"
+                data-combobox-popup
+                aria-label="Destination suggestions"
+              >
+                <floating-search>
+                  <template data-search-loading>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Searching…
+                    </div>
+                  </template>
+                  <template data-search-error>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Search failed.
+                    </div>
+                  </template>
+                  <template data-search-empty>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      No destination found for “<span
+                        data-search-text="$query"
+                      ></span>”
+                    </div>
+                  </template>
+                  <template data-search-result>
+                    <floating-list-item>
+                      <div class="combobox-option">
+                        <span>
+                          <strong data-search-text="label"></strong>
+                          <small data-search-text="region"></small>
+                        </span>
+                        <span
+                          class="language-badge"
+                          data-search-text="language"
+                        ></span>
+                      </div>
+                    </floating-list-item>
+                  </template>
+                </floating-search>
+              </div>
+          </template>
+          <p
+            id="combobox-status"
+            class="sr-only"
+            aria-live="polite"
+            data-combobox-status
+          >
+            Destination suggestions closed
+          </p>
+        </floating-combobox>
+      </floating-list>
     </floating-root>
     <span class="combobox-icon" aria-hidden="true">⌕</span>
   </div>
@@ -42,209 +140,96 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   <div id="combobox-hints" class="combobox-hints">
     {
       multilingualSearchPrompts.map(([sample, destination]) => (
-        <button type="button" data-search-sample={sample}>
+        <button type="button" value={sample} data-search-sample={sample}>
           <code>{sample}</code><span>→ {destination}</span>
         </button>
       ))
     }
   </div>
-  <p id="combobox-status" class="sr-only" aria-live="polite">
-    Destination suggestions closed
-  </p>
-  <code>SearchController + &lt;floating-root&gt; + listNavigation()</code>
-</article>
+
+  <code>
+    &lt;floating-combobox&gt; + &lt;floating-search&gt; +
+    &lt;floating-list-item&gt;
+  </code>
+  </section>
+  )}
+
+  {source === 'server' && <AsyncComboboxExample />}
+  </article>
+</div>
 
 <script>
   import {
-    SearchController,
+    FloatingRootElement,
     createFuzzySearchSource,
     dismiss,
     flip,
-    listNavigation,
     offset,
-    role,
     shift,
+    type FloatingComboboxElement,
   } from '@floating-ui-plus/web-components';
   import {
     multilingualDestinations,
     multilingualSearchKeys,
     type MultilingualDestination,
   } from '../../multilingual-destinations';
-  import {
-    configureFloating,
-    emitExampleAction,
-    floatingRoot,
-    floatingTemplate,
-    initializeExample,
-    onFloatingTemplateMount,
-    onFloatingOpenChange,
-  } from './example-client';
-
-  function createEmptyOption(message: string) {
-    const element = document.createElement('div');
-    element.className = 'combobox-empty';
-    element.role = 'option';
-    element.setAttribute('aria-disabled', 'true');
-    element.textContent = message;
-    return element;
-  }
+  import {initializeExample} from './initialize-example';
 
   initializeExample('combobox', (scope) => {
-    const floating = floatingRoot(scope, '[data-combobox-root]');
-    const template = floatingTemplate(scope, '[data-combobox-content]');
-    const input =
-      scope.querySelector<HTMLInputElement>('#destination-search');
-    const status = scope.querySelector<HTMLElement>('#combobox-status');
-    if (!input || !status) return;
-    let popup: HTMLElement | null = null;
+    const floating = FloatingRootElement.query(
+      scope,
+      '[data-combobox-root]',
+    );
+    const combobox = scope.querySelector<FloatingComboboxElement>(
+      '[data-combobox]',
+    );
+    if (!combobox) return;
 
-    const source = createFuzzySearchSource(multilingualDestinations, {
-      keys: multilingualSearchKeys,
-      threshold: 0.35,
+    combobox.configure<MultilingualDestination>({
+      search: {
+        source: createFuzzySearchSource(multilingualDestinations, {
+          keys: multilingualSearchKeys,
+          threshold: 0.35,
+        }),
+        getItemKey: (item) => item.id,
+        debounceMs: 0,
+      },
+      getItemLabel: (item) => item.label,
+      status: {
+        closed: 'Destination suggestions closed',
+        selected: (item) => `${item.label} selected`,
+        idle: 'Start typing to search',
+        loading: 'Searching destinations',
+        error: 'Destination search failed',
+        empty: ({search: state}) =>
+          `No destinations found for ${state.query}`,
+        results: ({search: state}) =>
+          `${state.items.length} destinations available`,
+      },
     });
-    const search = new SearchController<MultilingualDestination>({
-      source,
-      getItemKey: (item) => item.id,
-      debounceMs: 0,
-    });
-    const listRef = {current: [] as Array<HTMLElement | null>};
-    let activeIndex: number | null = null;
-    let selected: MultilingualDestination | null = null;
 
-    const optionId = (index: number) =>
-      `destination-option-${search.items[index]?.id ?? index}`;
-    const setActive = (index: number | null) => {
-      activeIndex = index;
-      if (index == null) {
-        input.removeAttribute('aria-activedescendant');
-      } else {
-        input.setAttribute('aria-activedescendant', optionId(index));
-      }
-      listRef.current.forEach((item, itemIndex) => {
-        if (!item) return;
-        item.dataset.active = String(itemIndex === index);
-      });
-      floating.controller.refresh();
-    };
-    const select = (item: MultilingualDestination) => {
-      selected = item;
-      input.value = item.label;
-      search.setQuery(item.label);
-      setActive(null);
-      floating.open = false;
-      emitExampleAction(scope, `${item.label} selected`);
-    };
-    const render = () => {
-      const currentPopup = popup;
-      if (!currentPopup) return;
-      currentPopup.replaceChildren();
-      if (search.loading) {
-        currentPopup.append(createEmptyOption('Searching…'));
-      } else if (search.error) {
-        currentPopup.append(createEmptyOption('Search failed.'));
-      } else if (!search.items.length) {
-        currentPopup.append(
-          createEmptyOption(`No destination found for “${search.query}”`),
-        );
-      } else {
-        search.items.forEach((item, index) => {
-          const option = document.createElement('div');
-          option.id = optionId(index);
-          option.className = 'combobox-option';
-          option.role = 'option';
-          option.dataset.active = String(activeIndex === index);
-          option.setAttribute(
-            'aria-selected',
-            String(selected?.id === item.id),
-          );
-          option.innerHTML =
-            `<span><strong>${item.label}</strong><small>${item.region}</small></span>` +
-            `<span class="language-badge">${item.language}</span>`;
-          option.addEventListener('mousedown', (event) =>
-            event.preventDefault(),
-          );
-          option.addEventListener('click', () => select(item));
-          currentPopup.append(option);
-        });
-      }
-      listRef.current = [
-        ...currentPopup.querySelectorAll<HTMLElement>(
-          '[role="option"]:not([aria-disabled="true"])',
-        ),
-      ];
-      status.textContent = floating.open
-        ? search.items.length
-          ? `${search.items.length} destinations available`
-          : `No destinations found for ${search.query}`
-        : selected
-          ? `${selected.label} selected`
-          : 'Destination suggestions closed';
-      floating.controller.refresh();
-    };
-
-    configureFloating(floating, {
+    floating.configure({
       middleware: [offset(8), flip(), shift({padding: 18})],
-      plugins: [
-        dismiss(),
-        role(() => ({
-          role: 'combobox',
-          activeIndex,
-          getItemId: optionId,
-        })),
-        listNavigation(() => ({
-          listRef,
-          activeIndex,
-          virtual: true,
-          loop: true,
-          allowEscape: true,
-          focusItemOnOpen: false,
-          onNavigate: setActive,
-        })),
-      ],
+      plugins: [dismiss()],
     });
 
-    onFloatingTemplateMount(template, (element) => {
-      popup = element.matches('[data-combobox-popup]')
-        ? element
-        : element.querySelector<HTMLElement>('[data-combobox-popup]');
-      render();
-    });
-    search.subscribe(render);
-    void search.refresh();
-    input.addEventListener('focus', () => {
-      floating.open = true;
-    });
-    input.addEventListener('input', () => {
-      setActive(null);
-      floating.open = true;
-      search.setQuery(input.value);
-    });
-    input.addEventListener('compositionstart', () =>
-      search.startComposition(),
-    );
-    input.addEventListener('compositionend', () =>
-      search.endComposition(input.value),
-    );
-    input.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter' || activeIndex == null) return;
-      const item = search.items[activeIndex];
-      if (!item) return;
-      event.preventDefault();
-      select(item);
-    });
-    scope
-      .querySelectorAll<HTMLElement>('[data-search-sample]')
-      .forEach((button) => {
-        button.addEventListener('click', () => {
-          input.value = button.dataset.searchSample ?? '';
-          floating.open = true;
-          search.setQuery(input.value);
-          input.focus();
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-combobox-tabs]').forEach(
+    (tablist) => {
+      const tabs = Array.from(
+        tablist.querySelectorAll<HTMLAnchorElement>('[role="tab"]'),
+      );
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('keydown', (event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          event.preventDefault();
+          const direction = event.key === 'ArrowRight' ? 1 : -1;
+          const next = tabs[(index + direction + tabs.length) % tabs.length];
+          if (next) window.location.assign(next.href);
         });
       });
-    onFloatingOpenChange(floating, ({open}) => {
-      if (!open) setActive(null);
-      render();
-    });
-  });
+    },
+  );
+
 </script>

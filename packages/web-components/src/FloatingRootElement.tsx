@@ -14,6 +14,7 @@ import type {
   FloatingOptions,
   FloatingPlugin,
   FloatingRole,
+  FloatingTopLayer,
   OpenChangeReason,
   ReferenceElement,
 } from '@floating-ui-plus/web';
@@ -33,6 +34,20 @@ export interface FloatingTemplateLifecycleDetail {
   element: HTMLElement;
 }
 
+export interface FloatingRootEventDetailMap {
+  openchange: FloatingOpenChangeDetail;
+  floatingmount: FloatingTemplateLifecycleDetail;
+  floatingunmount: FloatingTemplateLifecycleDetail;
+}
+
+export type FloatingRootEventType = keyof FloatingRootEventDetailMap;
+
+export interface FloatingRootConfiguration {
+  middleware?: FloatingOptions['middleware'];
+  plugins?: FloatingPlugin[] | undefined;
+  topLayer?: FloatingTopLayer | undefined;
+}
+
 const contentsStyles = `
   :host,
   slot {
@@ -47,6 +62,7 @@ interface FloatingRootHost extends HTMLElement {
   transform: boolean;
   interactions: string;
   floatingRole: FloatingRole | '';
+  topLayer: FloatingTopLayer;
   middleware: FloatingOptions['middleware'];
   plugins: FloatingPlugin[];
 }
@@ -74,8 +90,9 @@ const FloatingRootBase = c(
         ...inheritedContext,
         root: host as FloatingRootElement,
         open: host.open,
+        topLayer: host.topLayer,
       }),
-      [host, host.open, inheritedContext],
+      [host, host.open, host.topLayer, inheritedContext],
     );
 
     useProvider(floatingComponentContext, contextValue);
@@ -91,6 +108,7 @@ const FloatingRootBase = c(
       host.transform,
       host.interactions,
       host.floatingRole,
+      host.topLayer,
       host.middleware,
       host.plugins,
       referenceChildren,
@@ -128,6 +146,11 @@ const FloatingRootBase = c(
         type: atomicoType<FloatingRole | ''>(String),
         value: (): FloatingRole | '' => '',
       },
+      topLayer: {
+        type: atomicoType<FloatingTopLayer>(String),
+        value: (): FloatingTopLayer => 'none',
+        attr: 'top-layer',
+      },
     },
   },
 );
@@ -138,6 +161,14 @@ export class FloatingRootElement extends FloatingRootBase {
 
   get updateComplete() {
     return this.updated;
+  }
+
+  static query(scope: ParentNode, selector: string) {
+    const element = scope.querySelector(selector);
+    if (!(element instanceof FloatingRootElement)) {
+      throw new Error(`Missing FloatingRootElement for ${selector}`);
+    }
+    return element;
   }
 
   get middleware() {
@@ -179,6 +210,43 @@ export class FloatingRootElement extends FloatingRootBase {
   use(...plugins: FloatingPlugin[]) {
     getFloatingRootRuntime(this).pipe(...plugins);
     return this;
+  }
+
+  configure(configuration: FloatingRootConfiguration) {
+    if (configuration.middleware !== undefined) {
+      this.middleware = configuration.middleware;
+    }
+    if (configuration.plugins !== undefined) {
+      this.plugins = configuration.plugins;
+    }
+    if (configuration.topLayer !== undefined) {
+      this.topLayer = configuration.topLayer;
+    }
+    return this;
+  }
+
+  on<Type extends FloatingRootEventType>(
+    type: Type,
+    listener: (detail: FloatingRootEventDetailMap[Type]) => void,
+  ) {
+    const handleEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<
+        FloatingRootEventDetailMap[Type]
+      >;
+      if (type === 'openchange') {
+        if (event.target !== this) return;
+      } else {
+        const detail = customEvent.detail as FloatingTemplateLifecycleDetail;
+        if (detail.root !== this) return;
+      }
+      listener(customEvent.detail);
+    };
+    this.addEventListener(type, handleEvent);
+    return () => this.removeEventListener(type, handleEvent);
+  }
+
+  close(event?: Event, reason?: OpenChangeReason) {
+    this.controller.context.onOpenChange(false, event, reason);
   }
 
   setPositionReference(reference: ReferenceElement | null) {

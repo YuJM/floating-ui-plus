@@ -1,17 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#f6f3ea"/>
-  <path d="M0 0h1200v84H0z" fill="#101a17"/>
-  <circle cx="64" cy="42" r="9" fill="#ff6b3d"/>
-  <text x="92" y="50" fill="#f6f3ea" font-family="DejaVu Sans Mono, monospace" font-size="20">FLOATING-UI-PLUS / INTERACTIVE LAB</text>
-  <circle cx="999" cy="337" r="178" fill="none" stroke="#42b883" stroke-width="2"/>
-  <circle cx="999" cy="337" r="116" fill="none" stroke="#ff6b3d" stroke-width="2" stroke-dasharray="12 16"/>
-  <circle cx="999" cy="337" r="43" fill="#101a17"/>
-  <circle cx="895" cy="205" r="10" fill="#ff6b3d"/>
-  <circle cx="1119" cy="400" r="10" fill="#42b883"/>
-  <text x="64" y="205" fill="#101a17" font-family="DejaVu Sans, sans-serif" font-size="82" font-weight="700">Floating UI</text>
-  <text x="64" y="292" fill="#ff6b3d" font-family="DejaVu Serif, serif" font-size="92" font-style="italic">Plus</text>
-  <text x="64" y="386" fill="#101a17" font-family="DejaVu Sans, sans-serif" font-size="38" font-weight="600">Web Components + Vue</text>
-  <text x="64" y="440" fill="#54625d" font-family="DejaVu Sans, sans-serif" font-size="25">Accessible positioning, interactions, focus, and search.</text>
-  <path d="M64 506h690" stroke="#c7cec9"/>
-  <text x="64" y="550" fill="#54625d" font-family="DejaVu Sans Mono, monospace" font-size="18">POSITIONING  ·  INTERACTIONS  ·  FOCUS</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">Floating UI Plus</title>
+  <desc id="description">Floating UI primitives for Web Components and Vue.</desc>
+
+  <rect width="1200" height="630" fill="#101a17"/>
+  <rect x="0" y="0" width="1200" height="1" fill="#f6f3ea" fill-opacity=".13"/>
+
+  <circle cx="70" cy="74" r="10" fill="#ff6b3d"/>
+  <text x="96" y="81" fill="#f6f3ea" font-family="Arial, sans-serif" font-size="20" font-weight="600" letter-spacing="-.4">Floating UI Plus</text>
+
+  <text x="66" y="259" fill="#f6f3ea" font-family="Arial, sans-serif" font-size="95" font-weight="500" letter-spacing="-6">Floating UI</text>
+  <text x="66" y="358" fill="#ff6b3d" font-family="Arial, sans-serif" font-size="95" font-weight="500" letter-spacing="-6">Plus</text>
+  <text x="70" y="433" fill="#c6ccc0" font-family="Arial, sans-serif" font-size="27">Primitives for positioned product UI.</text>
+
+  <rect x="70" y="511" width="183" height="42" rx="21" fill="#192521" stroke="#f6f3ea" stroke-opacity=".2"/>
+  <text x="94" y="538" fill="#f6f3ea" font-family="Arial, sans-serif" font-size="15" font-weight="600">Web Components</text>
+  <rect x="267" y="511" width="80" height="42" rx="21" fill="#192521" stroke="#f6f3ea" stroke-opacity=".2"/>
+  <text x="293" y="538" fill="#f6f3ea" font-family="Arial, sans-serif" font-size="15" font-weight="600">Vue</text>
+
+  <g opacity=".72">
+    <rect x="766" y="102" width="330" height="330" rx="82" fill="#192521" stroke="#f6f3ea" stroke-opacity=".2" stroke-width="2"/>
+    <circle cx="838" cy="176" r="17" fill="#ff6b3d"/>
+    <path d="M820 361V215h116c62 0 101 31 101 77s-39 69-101 69h-35v-50h35c25 0 41-9 41-28s-16-28-41-28h-56v106H820Zm61-50v-56h54c25 0 42 9 42 28s-17 28-42 28h-54Z" fill="#f6f3ea"/>
+  </g>
+  <path d="M723 161c-47 49-72 113-72 183 0 60 19 116 52 162" fill="none" stroke="#f6f3ea" stroke-opacity=".16" stroke-linecap="round" stroke-width="2"/>
+  <path d="M1134 166c23 42 35 89 35 139 0 53-14 104-40 148" fill="none" stroke="#ff6b3d" stroke-opacity=".56" stroke-linecap="round" stroke-width="2"/>
+  <circle cx="706" cy="507" r="7" fill="#ff6b3d"/>
 </svg>

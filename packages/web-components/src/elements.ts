@@ -1,4 +1,6 @@
 import {FloatingArrowElement} from './FloatingArrowElement';
+import {FloatingComboboxElement} from './FloatingComboboxElement';
+import {FloatingSearchElement} from './FloatingSearchElement';
 import {FloatingRootElement} from './FloatingRootElement';
 import {
   FloatingItemElement,
@@ -6,6 +8,7 @@ import {
 } from './RootParts';
 import {
   FloatingFocusManagerElement,
+  FloatingContentElement,
   FloatingOverlayElement,
   FloatingPortalElement,
   FloatingPortalTargetElement,
@@ -27,6 +30,7 @@ const floatingElements = [
   ['floating-reference', FloatingReferenceElement],
   ['floating-item', FloatingItemElement],
   ['floating-portal', FloatingPortalElement],
+  ['floating-content', FloatingContentElement],
   ['floating-portal-target', FloatingPortalTargetElement],
   ['floating-overlay', FloatingOverlayElement],
   ['floating-arrow', FloatingArrowElement],
@@ -36,6 +40,8 @@ const floatingElements = [
   ['floating-node', FloatingNodeElement],
   ['floating-list', FloatingListElement],
   ['floating-list-item', FloatingListItemElement],
+  ['floating-combobox', FloatingComboboxElement],
+  ['floating-search', FloatingSearchElement],
   ['floating-delay-group', FloatingDelayGroupElement],
   ['next-floating-delay-group', NextFloatingDelayGroupElement],
   ['floating-composite', FloatingCompositeElement],

@@ -72,6 +72,29 @@ Pass interaction plugins to `.pipe()` according to the UI pattern.
 Keep the interactions that match the behavior you want. For example, a modal
 also needs `focusManager()` and usually an overlay supplied by your renderer.
 
+## Native Popover and Dialog
+
+Use `createFloatingTopLayer()` when the renderer can keep the surface in its
+logical DOM position. It maps native `toggle`, `cancel`, and `close` events
+back to the same callback that owns your controller state.
+
+```ts
+import {createFloatingTopLayer} from '@floating-ui-plus/web';
+
+const nativeSurface = createFloatingTopLayer({onOpenChange: setOpen});
+nativeSurface.setKind('popover');
+nativeSurface.setElement(panel);
+nativeSurface.connect();
+
+function render() {
+  nativeSurface.sync(open);
+}
+```
+
+Pass `dialog` as the kind only when `panel` is an `HTMLDialogElement`; then
+`sync(true)` calls `showModal()`. Keep the normal portal implementation as the
+fallback when `supportsFloatingTopLayer(kind)` is false.
+
 ## Modal focus
 
 Use `focusManager()` for focus trapping and `dismiss()` for Escape and outside
@@ -85,16 +108,21 @@ const dialog = createFloating(dialogOptions)
 
 ## Search and comboboxes
 
-Search is request state, not a Combobox component. `createSearch()` handles
+`createSearch()` handles
 debouncing, IME completion, cancellation, stale responses, cache TTL, and
-cursor pagination. Your UI owns input markup, open state, selection,
-`aria-activedescendant`, and rendering.
+cursor pagination. Compose it with `createCombobox()` to own input events,
+IME wiring, active-option ARIA, Enter selection, and virtual list navigation.
+Your UI still owns markup and result rendering.
 
 ```ts
-import {createAsyncSearchSource, createSearch} from '@floating-ui-plus/web/search';
+import {
+  createCombobox,
+  createComboboxStatusFormatter,
+} from '@floating-ui-plus/web/combobox';
+import {createSearch} from '@floating-ui-plus/web/search';
 
-const source = createAsyncSearchSource<Product>({
-  async search({query, signal, limit, cursor}) {
+const search = createSearch({
+  source: async ({query, signal, limit, cursor}) => {
     const url = new URL('/api/products/search', location.origin);
     url.searchParams.set('q', query);
     url.searchParams.set('limit', String(limit));
@@ -104,13 +132,41 @@ const source = createAsyncSearchSource<Product>({
     if (!response.ok) throw new Error('Search failed');
     return response.json();
   },
-});
-
-const search = createSearch({
-  source,
   getItemKey: (product) => product.id,
 });
+
+const combobox = createCombobox({
+  search,
+  getItemLabel: (product) => product.name,
+  getItemValue: (product) => product.id,
+  onOpenChange: setOpen,
+});
+
+const formatStatus = createComboboxStatusFormatter({
+  closed: 'Suggestions closed',
+  selected: (item) => `${item.name} selected`,
+  idle: 'Start typing to search',
+  loading: 'Searching products',
+  error: 'Product search failed',
+  empty: ({search}) => `No product found for ${search.query}`,
+  results: ({search}) => `${search.items.length} products available`,
+});
+
+// Framework adapters bind these objects to their input, options, and list.
+const inputProps = combobox.getInputProps();
+const optionProps = combobox.getOptionProps(search.items[0]!, 0);
+const navigationOptions = combobox.getNavigationOptions({loop: true});
+const queryTriggerProps = combobox.getQueryTriggerProps('laptop');
+
+// Direct DOM consumers can use the equivalent imperative helpers.
+combobox.bindInput(input);
+floating.pipe(...combobox.interactions({loop: true}));
 ```
+
+Render a live region with `formatStatus({...combobox.snapshot, open})`, where
+`open` is the floating surface state owned by the consuming renderer. Bind an
+external preset button with `queryTriggerProps`, or use
+`combobox.bindQueryTrigger(button, 'laptop')` in direct DOM code.
 
 For data fetched by your application or a query library, use controlled state:
 
@@ -128,6 +184,35 @@ Use `createFuzzySearchSource()` from `@floating-ui-plus/web/fuzzy` for local,
 typo-tolerant search. Use `typeahead()` for non-editable menus and selects;
 pass `findMatch` only when the default multilingual fuzzy matching is not right
 for your data.
+
+### Render search phases in direct DOM integrations
+
+Use `createSearchRenderer()` when the consumer is native DOM or Custom
+Elements. It subscribes to `SearchController`, chooses the renderer for
+`idle`, `loading`, `error`, `empty`, or `results`, and replaces only the bound
+container's children. Your application still supplies nodes, markup, and copy.
+When items already exist, a new request keeps the `results` renderer active and
+passes `loading: true`; use that flag to keep the rows visible with a pending
+indicator. The standalone `loading` renderer is for an empty result set.
+
+```ts
+import {createSearchRenderer} from '@floating-ui-plus/web/search';
+
+const renderer = createSearchRenderer({
+  search,
+  render: {
+    idle: () => renderExamples(),
+    loading: () => renderMessage('Searching…'),
+    error: () => renderMessage('Search failed.'),
+    empty: ({query}) => renderMessage(`No match for ${query}`),
+    results: ({items}) => items.map(renderOption),
+  },
+});
+
+const releasePortalContent = renderer.bind(optionsElement);
+// Call releasePortalContent() when that portal clone is removed.
+// Call renderer.destroy() when its owner is disposed.
+```
 
 ## Collections, trees, and portals
 

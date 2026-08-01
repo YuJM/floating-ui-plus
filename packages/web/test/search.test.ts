@@ -1,8 +1,8 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
 
 import {
-  createAsyncSearchSource,
   createSearch,
+  createSearchRenderer,
   type SearchPage,
   type SearchRequest,
 } from '../src';
@@ -19,7 +19,7 @@ function createOptions(
   search: (request: SearchRequest) => Promise<SearchPage<Item>>,
 ) {
   return {
-    source: createAsyncSearchSource({search}),
+    source: search,
     getItemKey: (item: Item) => item.id,
   };
 }
@@ -29,6 +29,28 @@ afterEach(() => {
 });
 
 describe('SearchController', () => {
+  test('accepts an application-owned request handler without a transport adapter', async () => {
+    const request = vi.fn(async ({query}: SearchRequest) => ({
+      items: [{id: query, label: query}],
+    }));
+    const searchController = createSearch({
+      source: request,
+      getItemKey: (item: Item) => item.id,
+      debounceMs: 0,
+    });
+
+    searchController.setQuery('custom-sdk');
+    await Promise.resolve();
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({query: 'custom-sdk'}),
+    );
+    expect(searchController.items).toEqual([
+      {id: 'custom-sdk', label: 'custom-sdk'},
+    ]);
+    searchController.destroy();
+  });
+
   test('debounces input and exposes loading and results', async () => {
     vi.useFakeTimers();
     const search = vi.fn(async () => ({items: [alpha], total: 1}));
@@ -74,6 +96,30 @@ describe('SearchController', () => {
     await Promise.resolve();
 
     expect(searchController.items).toEqual([beta]);
+    searchController.destroy();
+  });
+
+  test('does not restart an active request when connected again', async () => {
+    let resolve: ((page: SearchPage<Item>) => void) | undefined;
+    const request = vi.fn(
+      () =>
+        new Promise<SearchPage<Item>>((next) => {
+          resolve = next;
+        }),
+    );
+    const searchController = createSearch({
+      ...createOptions(request),
+      debounceMs: 0,
+    });
+
+    const pending = searchController.refresh();
+    expect(searchController.loading).toBe(true);
+    searchController.connect();
+    expect(request).toHaveBeenCalledOnce();
+
+    resolve?.({items: [alpha]});
+    await pending;
+    expect(searchController.items).toEqual([alpha]);
     searchController.destroy();
   });
 
@@ -139,9 +185,104 @@ describe('SearchController', () => {
     });
     expect(searchController.items).toEqual([alpha, beta]);
     expect(searchController.loading).toBe(true);
+    expect(searchController.phase).toBe('results');
     expect(searchController.snapshot).not.toHaveProperty('activeIndex');
     expect(searchController.snapshot).not.toHaveProperty('selectedItem');
     expect(searchController.snapshot).not.toHaveProperty('open');
+    expect(searchController.getItemKey(beta)).toBe('beta');
+    searchController.destroy();
+  });
+
+  test('reports idle, empty, and results phases without choosing presentation', () => {
+    const searchController = createSearch<Item>({
+      items: [],
+      getItemKey: (item) => item.id,
+    });
+
+    expect(searchController.snapshot.phase).toBe('idle');
+    searchController.setControlledState({items: [alpha]});
+    expect(searchController.phase).toBe('results');
+    searchController.setControlledState({items: []});
+    expect(searchController.phase).toBe('idle');
+
+    searchController.setQuery('seoul');
+    expect(searchController.phase).toBe('empty');
+
+    searchController.setControlledState({items: [alpha]});
+    expect(searchController.phase).toBe('results');
+    searchController.setControlledState({items: [alpha], loading: true});
+    expect(searchController.phase).toBe('results');
+    expect(searchController.loading).toBe(true);
+    searchController.setControlledState({items: [], loading: true});
+    expect(searchController.phase).toBe('loading');
+    searchController.setControlledState({items: [], error: new Error('offline')});
+    expect(searchController.phase).toBe('error');
+    searchController.destroy();
+  });
+
+  test('does not refresh a source below its minimum query length', async () => {
+    const request = vi.fn(async () => ({items: [alpha]}));
+    const searchController = createSearch({
+      ...createOptions(request),
+      debounceMs: 0,
+      minQueryLength: 1,
+    });
+
+    await searchController.refresh();
+    expect(request).not.toHaveBeenCalled();
+    expect(searchController.phase).toBe('idle');
+
+    searchController.setQuery('a');
+    await Promise.resolve();
+    expect(request).toHaveBeenCalledOnce();
+    expect(searchController.phase).toBe('results');
+    searchController.destroy();
+  });
+
+  test('renders every search phase into a bound DOM container', () => {
+    const searchController = createSearch<Item>({
+      items: [],
+      getItemKey: (item) => item.id,
+    });
+    const container = document.createElement('div');
+    const phases: string[] = [];
+    const renderer = createSearchRenderer({
+      search: searchController,
+      render: {
+        idle: () => renderPhase('idle', phases),
+        loading: () => renderPhase('loading', phases),
+        error: () => renderPhase('error', phases),
+        empty: ({query}) => renderPhase(`empty:${query}`, phases),
+        results: ({items, loading}) =>
+          renderPhase(`results:${items.length}:${loading}`, phases),
+      },
+    });
+
+    renderer.bind(container);
+    expect(container.textContent).toBe('idle');
+
+    searchController.setQuery('seoul');
+    expect(container.textContent).toBe('empty:seoul');
+
+    searchController.setControlledState({items: [alpha]});
+    expect(container.textContent).toBe('results:1:false');
+
+    searchController.setControlledState({items: [alpha], loading: true});
+    expect(container.textContent).toBe('results:1:true');
+
+    searchController.setControlledState({items: [], error: new Error('offline')});
+    expect(container.textContent).toBe('error');
+    expect(phases).toEqual([
+      'idle',
+      'empty:seoul',
+      'results:1:false',
+      'results:1:true',
+      'error',
+    ]);
+
+    renderer.destroy();
+    searchController.setControlledState({items: [beta]});
+    expect(container.textContent).toBe('error');
     searchController.destroy();
   });
 
@@ -166,3 +307,10 @@ describe('SearchController', () => {
     expect(searchController.items).toEqual([]);
   });
 });
+
+function renderPhase(label: string, phases: string[]) {
+  phases.push(label);
+  const element = document.createElement('div');
+  element.textContent = label;
+  return element;
+}

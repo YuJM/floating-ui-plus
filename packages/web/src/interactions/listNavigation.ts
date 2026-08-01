@@ -216,7 +216,7 @@ export function listNavigation(
             pendingFocusOnOpen = true;
             pendingFocusDirection = 'start';
             context.onOpenChange(true, event, 'list-navigation');
-            focusPendingItem();
+            scheduleFocusPending();
           }
           return;
         }
@@ -457,6 +457,23 @@ export function listNavigation(
         navigate(index);
       }
 
+      function scheduleFocusPending() {
+        const view =
+          floating?.ownerDocument.defaultView ??
+          reference?.ownerDocument.defaultView;
+        // A native popover/dialog is promoted after the current DOM turn.
+        // Other floating surfaces retain the microtask timing used by the
+        // framework-neutral interaction contract.
+        const waitsForTopLayerPaint =
+          floating instanceof HTMLDialogElement ||
+          floating?.hasAttribute('popover');
+        if (view && waitsForTopLayerPaint) {
+          view.requestAnimationFrame(focusPendingItem);
+          return;
+        }
+        enqueueMicrotask(focusPendingItem);
+      }
+
       const cleanups = [
         addListener(reference, 'keydown', onKeyDown),
         addListener(floating, 'keydown', onKeyDown),
@@ -495,12 +512,12 @@ export function listNavigation(
           (current.focusItemOnOpen === 'auto' && lastInput === 'keyboard');
         if (!shouldFocus) return;
         pendingFocusOnOpen = true;
-        enqueueMicrotask(focusPendingItem);
+        scheduleFocusPending();
       });
       cleanups.push(unsubscribe);
 
       if (context.open && pendingFocusOnOpen) {
-        enqueueMicrotask(focusPendingItem);
+        scheduleFocusPending();
       }
 
       return cleanupAll([

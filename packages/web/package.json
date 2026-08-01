@@ -50,6 +50,11 @@
       "types": "./dist/search.d.ts",
       "import": "./dist/search.js",
       "require": "./dist/search.cjs"
+    },
+    "./combobox": {
+      "types": "./dist/combobox.d.ts",
+      "import": "./dist/combobox.js",
+      "require": "./dist/combobox.cjs"
     }
   },
   "publishConfig": {

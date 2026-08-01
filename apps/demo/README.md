@@ -25,6 +25,16 @@ For example, use `/tooltip`, `/tooltip?framework=vue`, or
 
 Every gallery includes a working interaction, not just a static example.
 
+## Mock server for the async combobox
+
+The async combobox calls `/api/demo/destinations` with `q`, `limit`, and
+`cursor` just as it would call a remote API. In development, MSW starts in the
+browser and serves 480 deterministic fake records in cursor pages. For a
+Cloudflare Pages build, set `PUBLIC_ENABLE_DEMO_MOCK_SERVER=true` to publish
+the same browser-only mock API; Pages only needs to serve the generated
+`public/mockServiceWorker.js` asset. Leave the flag unset when a real API owns
+that route.
+
 ## Verification
 
 ```sh

@@ -13,6 +13,13 @@ export const EXAMPLE_IDS = [
 ] as const;
 export type ExampleId = (typeof EXAMPLE_IDS)[number];
 
+export const COMBOBOX_SOURCES = ['fuzzy', 'server'] as const;
+export type ComboboxSource = (typeof COMBOBOX_SOURCES)[number];
+
+export function isComboboxSource(value: string | undefined): value is ComboboxSource {
+  return (COMBOBOX_SOURCES as readonly string[]).includes(value ?? '');
+}
+
 const COMPONENT_NAMES: Record<ExampleId, string> = {
   tooltip: 'Tooltip',
   popover: 'Popover',
@@ -27,14 +34,20 @@ const COMPONENT_NAMES: Record<ExampleId, string> = {
 
 const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
   tooltip: ['floating-root', 'hover()', 'focus()', 'dismiss()', 'role()', 'safePolygon()', 'arrow'],
-  popover: ['floating-root', 'floating-portal', 'click()', 'dismiss()', 'offset()', 'flip()', 'shift()'],
+  popover: ['floating-root', 'click()', 'dismiss()', 'offset()', 'flip()', 'shift()'],
   menu: ['floating-list', 'navigation', 'typeahead', 'loop'],
   'nested-menu': ['floating-tree', 'floating-node', 'floating-list', 'dismiss()'],
   'client-point': ['clientPoint()', 'hover({move: true})', 'flip()', 'shift()'],
-  combobox: ['SearchController', 'createFuzzySearchSource()', 'listNavigation()', 'role()', 'floating-portal'],
+  combobox: [
+    'floating-combobox',
+    'floating-list',
+    'floating-list-item',
+    'createFuzzySearchSource()',
+    'application search source',
+  ],
   placement: ['Placement', 'offset()'],
   middleware: ['floating-root', 'offset', 'shift', 'flip', 'arrow', 'size', 'autoPlacement', 'hide', 'inline'],
-  modal: ['floating-tree', 'floating-node', 'floating-portal', 'floating-overlay', 'floating-focus-manager'],
+  modal: ['dialog', 'floating-node', 'click()', 'dismiss()', 'role()'],
 };
 
 export function getExamples(locale: Locale) {

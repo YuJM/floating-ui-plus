@@ -52,12 +52,14 @@ test('opens Teleport-backed nested menus', async ({page}) => {
 
 test('traps modal focus and closes on Escape', async ({page}) => {
   await page.goto('/modal?framework=vue');
-  const trigger = page.getByRole('button', {name: /Enter focus room/});
+  const demo = page.locator('[data-framework-panel="vue"]');
+  const trigger = demo.getByRole('button', {name: /Enter focus room/});
   await trigger.click();
-  const dialog = page.getByRole('dialog', {
+  const dialog = demo.getByRole('dialog', {
     name: /You are inside the focus trap/,
   });
   await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(true);
   const dialogBox = await dialog.boundingBox();
   const viewport = page.viewportSize();
   expect(dialogBox).not.toBeNull();
@@ -69,9 +71,9 @@ test('traps modal focus and closes on Escape', async ({page}) => {
     Math.abs(dialogBox!.y + dialogBox!.height / 2 - viewport!.height / 2),
   ).toBeLessThanOrEqual(1);
 
-  const hintTrigger = page.getByRole('button', {name: 'Show placement hint'});
+  const hintTrigger = demo.getByRole('button', {name: 'Show placement hint'});
   await hintTrigger.hover();
-  const tooltip = page.getByRole('tooltip');
+  const tooltip = demo.getByRole('tooltip');
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveCSS('z-index', '30');
   await expect(tooltip).toHaveCSS('background-color', 'rgb(23, 58, 50)');
@@ -80,30 +82,32 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await expect(tooltip).toBeHidden();
   await expect(dialog).toBeVisible();
 
-  await page.getByRole('button', {name: 'Open room details'}).click();
-  const popover = page.getByRole('dialog', {name: 'Room details'});
+  await demo.getByRole('button', {name: 'Open room details'}).click();
+  const popover = demo.getByRole('dialog', {name: 'Room details'});
   await expect(popover).toBeVisible();
-  await expect(popover).toHaveCSS('z-index', '20');
   expect(
     await popover.evaluate((element) => {
-      const portal = element.closest('[data-fup-portal]');
-      return portal?.parentElement?.matches('[data-fup-portal]');
+      return element.matches(':popover-open') &&
+        document.querySelector('.vue-modal-demo')?.contains(element);
     }),
   ).toBe(true);
-  await page.getByRole('button', {name: 'Close details'}).click();
+  await demo.getByRole('button', {name: 'Close details'}).click();
   await expect(popover).toBeHidden();
-  await page.getByRole('button', {name: 'Open room details'}).click();
+  await demo.getByRole('button', {name: 'Open room details'}).click();
   await expect(popover).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
 
-  const nestedDialogTrigger = page.getByRole('button', {
+  const nestedDialogTrigger = demo.getByRole('button', {
     name: 'Open nested dialog',
   });
   await nestedDialogTrigger.click();
-  const nestedDialog = page.getByRole('dialog', {name: 'Nested dialog'});
+  const nestedDialog = demo.getByRole('dialog', {name: 'Nested dialog'});
   await expect(nestedDialog).toBeVisible();
+  expect(await nestedDialog.evaluate((element) => element.matches(':modal'))).toBe(
+    true,
+  );
   const nestedDialogBox = await nestedDialog.boundingBox();
   expect(nestedDialogBox).not.toBeNull();
   expect(
@@ -116,16 +120,6 @@ test('traps modal focus and closes on Escape', async ({page}) => {
       nestedDialogBox!.y + nestedDialogBox!.height / 2 - viewport!.height / 2,
     ),
   ).toBeLessThanOrEqual(1);
-  const nestedOverlay = page.locator('.demo-overlay').filter({
-    has: nestedDialog,
-  });
-  await expect(nestedOverlay).toHaveCSS('z-index', '20');
-  expect(
-    await nestedOverlay.evaluate((element) => {
-      const portal = element.closest('[data-fup-portal]');
-      return portal?.parentElement?.matches('[data-fup-portal]');
-    }),
-  ).toBe(true);
   await page
     .getByRole('button', {name: 'Return to focus room'})
     .click();
@@ -139,7 +133,7 @@ test('traps modal focus and closes on Escape', async ({page}) => {
 
   await trigger.click();
   await expect(dialog).toBeVisible();
-  await page.getByRole('button', {name: 'Leave room'}).click();
+  await demo.getByRole('button', {name: 'Leave room'}).click();
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
 });
@@ -309,10 +303,22 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
   page,
 }) => {
   await page.goto('/combobox?framework=vue');
-  const input = page.getByRole('combobox', {name: 'Destination'});
+  const input = page.getByRole('combobox', {
+    name: 'Destination',
+    exact: true,
+  });
+  const vuePanel = page.locator('[data-framework-panel="vue"]');
 
   await input.focus();
   await expect(page.getByRole('option')).toHaveCount(4);
+  await vuePanel.locator('[data-search-sample="bejing"]').click();
+  await expect(input).toBeFocused();
+  await expect(input).toHaveValue('bejing');
+  const firstResult = page.getByRole('option', {name: /^北京/});
+  await expect(firstResult).toBeVisible();
+  await expect(firstResult).toHaveCSS('min-height', '58px');
+  await expect(firstResult).toHaveCSS('padding', '9px 11px');
+  await expect(firstResult).toHaveCSS('border-radius', '8px');
 
   for (const [query, expected] of [
     ['서을', '서울'],
@@ -328,6 +334,9 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
     await expect(page.getByRole('option', {name: new RegExp(expected)}))
       .toBeVisible();
   }
+
+  await input.fill('');
+  await expect(page.getByRole('option')).toHaveCount(4);
 
   await input.fill('bejing');
   const option = page.getByRole('option', {name: /北京/});
@@ -366,5 +375,35 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
   });
   expect(violations).toEqual([]);
   await input.press('Escape');
+  await expect(popup).toBeHidden();
+});
+
+test('async Vue server combobox renders loading and ignores stale requests', async ({
+  page,
+}) => {
+  await page.goto('/combobox?framework=vue');
+  const input = page.getByRole('combobox', {name: 'Remote destination'});
+  const popup = page.locator('.vue-async-combobox-popup');
+
+  await input.focus();
+  await input.fill('seo');
+  await expect(popup.getByText('Querying remote endpoint…')).toBeVisible();
+  await input.fill('bei');
+  await expect(popup.getByRole('option', {name: /^北京/})).toBeVisible();
+  await expect(popup.getByRole('option', {name: /^서울/})).toHaveCount(0);
+
+  await input.fill('no-remote-match');
+  await expect(popup.getByText(/server found no match/)).toBeVisible();
+  await input.fill('');
+  await expect(popup.getByRole('option')).toHaveCount(4);
+
+  await input.fill('tokyo');
+  await expect(popup.getByText('Querying remote endpoint…')).toBeVisible();
+  await expect(popup.getByRole('option')).toHaveCount(1);
+  const option = popup.getByRole('option', {name: /^東京/});
+  await expect(option).toBeVisible();
+  await input.press('ArrowDown');
+  await input.press('Enter');
+  await expect(input).toHaveValue('東京');
   await expect(popup).toBeHidden();
 });

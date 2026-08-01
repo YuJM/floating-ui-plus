@@ -1,0 +1,3150 @@
+[
+  {
+    "id": "remote-u1twza",
+    "label": "Djibouti",
+    "region": "Global destination · record 001",
+    "language": "SU1238 · Aeroflot",
+    "keywords": [
+      "Djibouti"
+    ],
+    "countryKeywords": [
+      "Djibouti"
+    ],
+    "value": "djibouti"
+  },
+  {
+    "id": "remote-7bulsr",
+    "label": "Åland Islands",
+    "region": "Global destination · record 002",
+    "language": "LY0770 · El Al",
+    "keywords": [
+      "Åland Islands"
+    ],
+    "countryKeywords": [
+      "Åland Islands"
+    ],
+    "value": "åland islands"
+  },
+  {
+    "id": "remote-so4qp5",
+    "label": "Gambia",
+    "region": "Global destination · record 003",
+    "language": "A30010 · Aegean Airlines",
+    "keywords": [
+      "Gambia"
+    ],
+    "countryKeywords": [
+      "Gambia"
+    ],
+    "value": "gambia"
+  },
+  {
+    "id": "remote-w0clbu",
+    "label": "French Southern Territories",
+    "region": "Global destination · record 004",
+    "language": "7C0316 · Jeju Air",
+    "keywords": [
+      "French Southern Territories"
+    ],
+    "countryKeywords": [
+      "French Southern Territories"
+    ],
+    "value": "french southern territories"
+  },
+  {
+    "id": "remote-heq5qm",
+    "label": "Brazil",
+    "region": "Global destination · record 005",
+    "language": "CI2719 · China Airlines",
+    "keywords": [
+      "Brazil"
+    ],
+    "countryKeywords": [
+      "Brazil"
+    ],
+    "value": "brazil"
+  },
+  {
+    "id": "remote-u6rhrz",
+    "label": "Norfolk Island",
+    "region": "Global destination · record 006",
+    "language": "TG0026 · Thai Airways",
+    "keywords": [
+      "Norfolk Island"
+    ],
+    "countryKeywords": [
+      "Norfolk Island"
+    ],
+    "value": "norfolk island"
+  },
+  {
+    "id": "remote-lkf7gp",
+    "label": "Belarus",
+    "region": "Global destination · record 007",
+    "language": "LN7578 · Libyan Airlines",
+    "keywords": [
+      "Belarus"
+    ],
+    "countryKeywords": [
+      "Belarus"
+    ],
+    "value": "belarus"
+  },
+  {
+    "id": "remote-6mamtx",
+    "label": "Jersey",
+    "region": "Global destination · record 008",
+    "language": "MH0826 · Malaysia Airlines",
+    "keywords": [
+      "Jersey"
+    ],
+    "countryKeywords": [
+      "Jersey"
+    ],
+    "value": "jersey"
+  },
+  {
+    "id": "remote-yg1cck",
+    "label": "Syrian Arab Republic",
+    "region": "Global destination · record 009",
+    "language": "BR9162 · EVA Air",
+    "keywords": [
+      "Syrian Arab Republic"
+    ],
+    "countryKeywords": [
+      "Syrian Arab Republic"
+    ],
+    "value": "syrian arab republic"
+  },
+  {
+    "id": "remote-n2jjvf",
+    "label": "Cayman Islands",
+    "region": "Global destination · record 010",
+    "language": "SK4215 · SAS",
+    "keywords": [
+      "Cayman Islands"
+    ],
+    "countryKeywords": [
+      "Cayman Islands"
+    ],
+    "value": "cayman islands"
+  },
+  {
+    "id": "remote-tfg15h",
+    "label": "Gabon",
+    "region": "Global destination · record 011",
+    "language": "TN0831 · Air Tahiti Nui",
+    "keywords": [
+      "Gabon"
+    ],
+    "countryKeywords": [
+      "Gabon"
+    ],
+    "value": "gabon"
+  },
+  {
+    "id": "remote-qzqgcg",
+    "label": "Saint Pierre and Miquelon",
+    "region": "Global destination · record 012",
+    "language": "MK9493 · Air Mauritius",
+    "keywords": [
+      "Saint Pierre and Miquelon"
+    ],
+    "countryKeywords": [
+      "Saint Pierre and Miquelon"
+    ],
+    "value": "saint pierre and miquelon"
+  },
+  {
+    "id": "remote-40zpzm",
+    "label": "United States of America",
+    "region": "Global destination · record 013",
+    "language": "CI1264 · China Airlines",
+    "keywords": [
+      "United States of America"
+    ],
+    "countryKeywords": [
+      "United States of America"
+    ],
+    "value": "united states of america"
+  },
+  {
+    "id": "remote-1g5x7h",
+    "label": "Guinea",
+    "region": "Global destination · record 014",
+    "language": "QF0006 · Qantas Group",
+    "keywords": [
+      "Guinea"
+    ],
+    "countryKeywords": [
+      "Guinea"
+    ],
+    "value": "guinea"
+  },
+  {
+    "id": "remote-6wnjtl",
+    "label": "Somalia",
+    "region": "Global destination · record 015",
+    "language": "CM0281 · Copa Airlines",
+    "keywords": [
+      "Somalia"
+    ],
+    "countryKeywords": [
+      "Somalia"
+    ],
+    "value": "somalia"
+  },
+  {
+    "id": "remote-aj2ctg",
+    "label": "Ukraine",
+    "region": "Global destination · record 016",
+    "language": "MS0357 · Egyptair",
+    "keywords": [
+      "Ukraine"
+    ],
+    "countryKeywords": [
+      "Ukraine"
+    ],
+    "value": "ukraine"
+  },
+  {
+    "id": "remote-mjd05o",
+    "label": "Andorra",
+    "region": "Global destination · record 017",
+    "language": "JD0002 · Beijing Capital Airlines",
+    "keywords": [
+      "Andorra"
+    ],
+    "countryKeywords": [
+      "Andorra"
+    ],
+    "value": "andorra"
+  },
+  {
+    "id": "remote-j1nbwd",
+    "label": "Russian Federation",
+    "region": "Global destination · record 018",
+    "language": "AV0004 · Avianca",
+    "keywords": [
+      "Russian Federation"
+    ],
+    "countryKeywords": [
+      "Russian Federation"
+    ],
+    "value": "russian federation"
+  },
+  {
+    "id": "remote-kzdgq4",
+    "label": "Malaysia",
+    "region": "Global destination · record 019",
+    "language": "JL0003 · Japan Airlines",
+    "keywords": [
+      "Malaysia"
+    ],
+    "countryKeywords": [
+      "Malaysia"
+    ],
+    "value": "malaysia"
+  },
+  {
+    "id": "remote-vsfj4n",
+    "label": "Poland",
+    "region": "Global destination · record 020",
+    "language": "8J0002 · EcoJet",
+    "keywords": [
+      "Poland"
+    ],
+    "countryKeywords": [
+      "Poland"
+    ],
+    "value": "poland"
+  },
+  {
+    "id": "remote-6e9urf",
+    "label": "Burkina Faso",
+    "region": "Global destination · record 021",
+    "language": "FJ0550 · Fiji Airways",
+    "keywords": [
+      "Burkina Faso"
+    ],
+    "countryKeywords": [
+      "Burkina Faso"
+    ],
+    "value": "burkina faso"
+  },
+  {
+    "id": "remote-2rfylg",
+    "label": "Cape Verde",
+    "region": "Global destination · record 022",
+    "language": "5J0858 · Cebu Pacific Air",
+    "keywords": [
+      "Cape Verde"
+    ],
+    "countryKeywords": [
+      "Cape Verde"
+    ],
+    "value": "cape verde"
+  },
+  {
+    "id": "remote-k0kd90",
+    "label": "Malawi",
+    "region": "Global destination · record 023",
+    "language": "UX0056 · Air Europa",
+    "keywords": [
+      "Malawi"
+    ],
+    "countryKeywords": [
+      "Malawi"
+    ],
+    "value": "malawi"
+  },
+  {
+    "id": "remote-3p9uvk",
+    "label": "Qatar",
+    "region": "Global destination · record 024",
+    "language": "CX5523 · Cathay Pacific",
+    "keywords": [
+      "Qatar"
+    ],
+    "countryKeywords": [
+      "Qatar"
+    ],
+    "value": "qatar"
+  },
+  {
+    "id": "remote-ti44ou",
+    "label": "Guatemala",
+    "region": "Global destination · record 025",
+    "language": "6E3740 · IndiGo Airlines",
+    "keywords": [
+      "Guatemala"
+    ],
+    "countryKeywords": [
+      "Guatemala"
+    ],
+    "value": "guatemala"
+  },
+  {
+    "id": "remote-1q98fc",
+    "label": "Sao Tome and Principe",
+    "region": "Global destination · record 026",
+    "language": "3U0033 · Sichuan Airlines",
+    "keywords": [
+      "Sao Tome and Principe"
+    ],
+    "countryKeywords": [
+      "Sao Tome and Principe"
+    ],
+    "value": "sao tome and principe"
+  },
+  {
+    "id": "remote-hac0ym",
+    "label": "Namibia",
+    "region": "Global destination · record 027",
+    "language": "G90341 · Air Arabia",
+    "keywords": [
+      "Namibia"
+    ],
+    "countryKeywords": [
+      "Namibia"
+    ],
+    "value": "namibia"
+  },
+  {
+    "id": "remote-rfm785",
+    "label": "Tajikistan",
+    "region": "Global destination · record 028",
+    "language": "VA0007 · Virgin Australia",
+    "keywords": [
+      "Tajikistan"
+    ],
+    "countryKeywords": [
+      "Tajikistan"
+    ],
+    "value": "tajikistan"
+  },
+  {
+    "id": "remote-ypkdsz",
+    "label": "Tuvalu",
+    "region": "Global destination · record 029",
+    "language": "AS5953 · Alaska Airlines",
+    "keywords": [
+      "Tuvalu"
+    ],
+    "countryKeywords": [
+      "Tuvalu"
+    ],
+    "value": "tuvalu"
+  },
+  {
+    "id": "remote-kkueqv",
+    "label": "Hong Kong",
+    "region": "Global destination · record 030",
+    "language": "JA0468 · JetSMART",
+    "keywords": [
+      "Hong Kong"
+    ],
+    "countryKeywords": [
+      "Hong Kong"
+    ],
+    "value": "hong kong"
+  },
+  {
+    "id": "remote-n54w28",
+    "label": "Moldova",
+    "region": "Global destination · record 031",
+    "language": "BA0847 · British Airways",
+    "keywords": [
+      "Moldova"
+    ],
+    "countryKeywords": [
+      "Moldova"
+    ],
+    "value": "moldova"
+  },
+  {
+    "id": "remote-tkz31h",
+    "label": "Saint Helena",
+    "region": "Global destination · record 032",
+    "language": "AY0023 · Finnair",
+    "keywords": [
+      "Saint Helena"
+    ],
+    "countryKeywords": [
+      "Saint Helena"
+    ],
+    "value": "saint helena"
+  },
+  {
+    "id": "remote-flqoe6",
+    "label": "Austria",
+    "region": "Global destination · record 033",
+    "language": "FJ0221 · Fiji Airways",
+    "keywords": [
+      "Austria"
+    ],
+    "countryKeywords": [
+      "Austria"
+    ],
+    "value": "austria"
+  },
+  {
+    "id": "remote-s5t65b",
+    "label": "Mali",
+    "region": "Global destination · record 034",
+    "language": "TP5589 · TAP Air Portugal",
+    "keywords": [
+      "Mali"
+    ],
+    "countryKeywords": [
+      "Mali"
+    ],
+    "value": "mali"
+  },
+  {
+    "id": "remote-uxydsq",
+    "label": "Pakistan",
+    "region": "Global destination · record 035",
+    "language": "LN0082 · Libyan Airlines",
+    "keywords": [
+      "Pakistan"
+    ],
+    "countryKeywords": [
+      "Pakistan"
+    ],
+    "value": "pakistan"
+  },
+  {
+    "id": "remote-9hqrj5",
+    "label": "Jamaica",
+    "region": "Global destination · record 036",
+    "language": "FJ5423 · Fiji Airways",
+    "keywords": [
+      "Jamaica"
+    ],
+    "countryKeywords": [
+      "Jamaica"
+    ],
+    "value": "jamaica"
+  },
+  {
+    "id": "remote-i5me89",
+    "label": "South Georgia and the South Sandwich Islands",
+    "region": "Global destination · record 037",
+    "language": "WS0091 · WestJet",
+    "keywords": [
+      "South Georgia and the South Sandwich Islands"
+    ],
+    "countryKeywords": [
+      "South Georgia and the South Sandwich Islands"
+    ],
+    "value": "south georgia and the south sandwich islands"
+  },
+  {
+    "id": "remote-k727cy",
+    "label": "Singapore",
+    "region": "Global destination · record 038",
+    "language": "S70246 · S7 Airlines",
+    "keywords": [
+      "Singapore"
+    ],
+    "countryKeywords": [
+      "Singapore"
+    ],
+    "value": "singapore"
+  },
+  {
+    "id": "remote-9u43ef",
+    "label": "Sri Lanka",
+    "region": "Global destination · record 039",
+    "language": "JT7027 · Lion Air",
+    "keywords": [
+      "Sri Lanka"
+    ],
+    "countryKeywords": [
+      "Sri Lanka"
+    ],
+    "value": "sri lanka"
+  },
+  {
+    "id": "remote-4bdcfq",
+    "label": "Mayotte",
+    "region": "Global destination · record 040",
+    "language": "P50029 · Wingo",
+    "keywords": [
+      "Mayotte"
+    ],
+    "countryKeywords": [
+      "Mayotte"
+    ],
+    "value": "mayotte"
+  },
+  {
+    "id": "remote-2ds9b2",
+    "label": "Ethiopia",
+    "region": "Global destination · record 041",
+    "language": "FR0592 · Ryanair",
+    "keywords": [
+      "Ethiopia"
+    ],
+    "countryKeywords": [
+      "Ethiopia"
+    ],
+    "value": "ethiopia"
+  },
+  {
+    "id": "remote-b5b13j",
+    "label": "North Macedonia",
+    "region": "Global destination · record 042",
+    "language": "MH0013 · Malaysia Airlines",
+    "keywords": [
+      "North Macedonia"
+    ],
+    "countryKeywords": [
+      "North Macedonia"
+    ],
+    "value": "north macedonia"
+  },
+  {
+    "id": "remote-hjxwai",
+    "label": "Timor-Leste",
+    "region": "Global destination · record 043",
+    "language": "FO0001 · Flybondi",
+    "keywords": [
+      "Timor-Leste"
+    ],
+    "countryKeywords": [
+      "Timor-Leste"
+    ],
+    "value": "timor-leste"
+  },
+  {
+    "id": "remote-0b5rax",
+    "label": "Bangladesh",
+    "region": "Global destination · record 044",
+    "language": "BY7816 · TUI Airways",
+    "keywords": [
+      "Bangladesh"
+    ],
+    "countryKeywords": [
+      "Bangladesh"
+    ],
+    "value": "bangladesh"
+  },
+  {
+    "id": "remote-wx2cu8",
+    "label": "Turkmenistan",
+    "region": "Global destination · record 045",
+    "language": "LY0052 · El Al",
+    "keywords": [
+      "Turkmenistan"
+    ],
+    "countryKeywords": [
+      "Turkmenistan"
+    ],
+    "value": "turkmenistan"
+  },
+  {
+    "id": "remote-i1wrbo",
+    "label": "French Polynesia",
+    "region": "Global destination · record 046",
+    "language": "AZ0869 · Alitalia",
+    "keywords": [
+      "French Polynesia"
+    ],
+    "countryKeywords": [
+      "French Polynesia"
+    ],
+    "value": "french polynesia"
+  },
+  {
+    "id": "remote-utjrqr",
+    "label": "Czechia",
+    "region": "Global destination · record 047",
+    "language": "AC0001 · Air Canada",
+    "keywords": [
+      "Czechia"
+    ],
+    "countryKeywords": [
+      "Czechia"
+    ],
+    "value": "czechia"
+  },
+  {
+    "id": "remote-jromjz",
+    "label": "Benin",
+    "region": "Global destination · record 048",
+    "language": "FR3304 · Ryanair",
+    "keywords": [
+      "Benin"
+    ],
+    "countryKeywords": [
+      "Benin"
+    ],
+    "value": "benin"
+  },
+  {
+    "id": "remote-27f25p",
+    "label": "Hungary",
+    "region": "Global destination · record 049",
+    "language": "F90090 · Frontier Airlines",
+    "keywords": [
+      "Hungary"
+    ],
+    "countryKeywords": [
+      "Hungary"
+    ],
+    "value": "hungary"
+  },
+  {
+    "id": "remote-koxvoz",
+    "label": "Philippines",
+    "region": "Global destination · record 050",
+    "language": "8J0007 · EcoJet",
+    "keywords": [
+      "Philippines"
+    ],
+    "countryKeywords": [
+      "Philippines"
+    ],
+    "value": "philippines"
+  },
+  {
+    "id": "remote-c8ia3j",
+    "label": "Venezuela",
+    "region": "Global destination · record 051",
+    "language": "OB0003 · Boliviana de Aviacion",
+    "keywords": [
+      "Venezuela"
+    ],
+    "countryKeywords": [
+      "Venezuela"
+    ],
+    "value": "venezuela"
+  },
+  {
+    "id": "remote-j5gpl6",
+    "label": "Cuba",
+    "region": "Global destination · record 052",
+    "language": "SU0004 · Aeroflot",
+    "keywords": [
+      "Cuba"
+    ],
+    "countryKeywords": [
+      "Cuba"
+    ],
+    "value": "cuba"
+  },
+  {
+    "id": "remote-awg0h2",
+    "label": "Tunisia",
+    "region": "Global destination · record 053",
+    "language": "U20033 · EasyJet",
+    "keywords": [
+      "Tunisia"
+    ],
+    "countryKeywords": [
+      "Tunisia"
+    ],
+    "value": "tunisia"
+  },
+  {
+    "id": "remote-lbh2g4",
+    "label": "Brunei Darussalam",
+    "region": "Global destination · record 054",
+    "language": "LY3559 · El Al",
+    "keywords": [
+      "Brunei Darussalam"
+    ],
+    "countryKeywords": [
+      "Brunei Darussalam"
+    ],
+    "value": "brunei darussalam"
+  },
+  {
+    "id": "remote-lu2tw2",
+    "label": "Bosnia and Herzegovina",
+    "region": "Global destination · record 055",
+    "language": "MH0550 · Malaysia Airlines",
+    "keywords": [
+      "Bosnia and Herzegovina"
+    ],
+    "countryKeywords": [
+      "Bosnia and Herzegovina"
+    ],
+    "value": "bosnia and herzegovina"
+  },
+  {
+    "id": "remote-iwnujd",
+    "label": "Chad",
+    "region": "Global destination · record 056",
+    "language": "9C0243 · Spring Airlines",
+    "keywords": [
+      "Chad"
+    ],
+    "countryKeywords": [
+      "Chad"
+    ],
+    "value": "chad"
+  },
+  {
+    "id": "remote-rm41q8",
+    "label": "Bahamas",
+    "region": "Global destination · record 057",
+    "language": "AI0053 · Air India",
+    "keywords": [
+      "Bahamas"
+    ],
+    "countryKeywords": [
+      "Bahamas"
+    ],
+    "value": "bahamas"
+  },
+  {
+    "id": "remote-de8kdq",
+    "label": "Mongolia",
+    "region": "Global destination · record 058",
+    "language": "VE0058 · Easyfly",
+    "keywords": [
+      "Mongolia"
+    ],
+    "countryKeywords": [
+      "Mongolia"
+    ],
+    "value": "mongolia"
+  },
+  {
+    "id": "remote-ga5q7w",
+    "label": "Curaçao",
+    "region": "Global destination · record 059",
+    "language": "P50998 · Wingo",
+    "keywords": [
+      "Curaçao"
+    ],
+    "countryKeywords": [
+      "Curaçao"
+    ],
+    "value": "curaçao"
+  },
+  {
+    "id": "remote-39qaro",
+    "label": "Netherlands",
+    "region": "Global destination · record 060",
+    "language": "W60004 · Wizz Air",
+    "keywords": [
+      "Netherlands"
+    ],
+    "countryKeywords": [
+      "Netherlands"
+    ],
+    "value": "netherlands"
+  },
+  {
+    "id": "remote-goagxn",
+    "label": "Falkland Islands (Malvinas)",
+    "region": "Global destination · record 061",
+    "language": "AH0005 · Air Algerie",
+    "keywords": [
+      "Falkland Islands (Malvinas)"
+    ],
+    "countryKeywords": [
+      "Falkland Islands (Malvinas)"
+    ],
+    "value": "falkland islands (malvinas)"
+  },
+  {
+    "id": "remote-fdgdmc",
+    "label": "Georgia",
+    "region": "Global destination · record 062",
+    "language": "SQ0099 · Singapore Airlines",
+    "keywords": [
+      "Georgia"
+    ],
+    "countryKeywords": [
+      "Georgia"
+    ],
+    "value": "georgia"
+  },
+  {
+    "id": "remote-3qsg0i",
+    "label": "Eswatini",
+    "region": "Global destination · record 063",
+    "language": "PK0007 · Pakistan International Airlines",
+    "keywords": [
+      "Eswatini"
+    ],
+    "countryKeywords": [
+      "Eswatini"
+    ],
+    "value": "eswatini"
+  },
+  {
+    "id": "remote-jwzmxv",
+    "label": "Cyprus",
+    "region": "Global destination · record 064",
+    "language": "PS2597 · Ukraine International",
+    "keywords": [
+      "Cyprus"
+    ],
+    "countryKeywords": [
+      "Cyprus"
+    ],
+    "value": "cyprus"
+  },
+  {
+    "id": "remote-vgfaog",
+    "label": "Spain",
+    "region": "Global destination · record 065",
+    "language": "CA0691 · Air China",
+    "keywords": [
+      "Spain"
+    ],
+    "countryKeywords": [
+      "Spain"
+    ],
+    "value": "spain"
+  },
+  {
+    "id": "remote-fx25q8",
+    "label": "Madagascar",
+    "region": "Global destination · record 066",
+    "language": "UL0085 · SriLankan Airlines",
+    "keywords": [
+      "Madagascar"
+    ],
+    "countryKeywords": [
+      "Madagascar"
+    ],
+    "value": "madagascar"
+  },
+  {
+    "id": "remote-u9858i",
+    "label": "France",
+    "region": "Global destination · record 067",
+    "language": "EY0002 · Etihad Airways",
+    "keywords": [
+      "France"
+    ],
+    "countryKeywords": [
+      "France"
+    ],
+    "value": "france"
+  },
+  {
+    "id": "remote-gv9xf0",
+    "label": "New Zealand",
+    "region": "Global destination · record 068",
+    "language": "AT4334 · Royal Air Maroc",
+    "keywords": [
+      "New Zealand"
+    ],
+    "countryKeywords": [
+      "New Zealand"
+    ],
+    "value": "new zealand"
+  },
+  {
+    "id": "remote-w9e8dv",
+    "label": "Montenegro",
+    "region": "Global destination · record 069",
+    "language": "G40054 · Allegiant Air",
+    "keywords": [
+      "Montenegro"
+    ],
+    "countryKeywords": [
+      "Montenegro"
+    ],
+    "value": "montenegro"
+  },
+  {
+    "id": "remote-n4882l",
+    "label": "Botswana",
+    "region": "Global destination · record 070",
+    "language": "QF0789 · Qantas Group",
+    "keywords": [
+      "Botswana"
+    ],
+    "countryKeywords": [
+      "Botswana"
+    ],
+    "value": "botswana"
+  },
+  {
+    "id": "remote-oo1q7o",
+    "label": "Azerbaijan",
+    "region": "Global destination · record 071",
+    "language": "SG0009 · SpiceJet",
+    "keywords": [
+      "Azerbaijan"
+    ],
+    "countryKeywords": [
+      "Azerbaijan"
+    ],
+    "value": "azerbaijan"
+  },
+  {
+    "id": "remote-11muz0",
+    "label": "Morocco",
+    "region": "Global destination · record 072",
+    "language": "KL0004 · KLM Royal Dutch Airlines",
+    "keywords": [
+      "Morocco"
+    ],
+    "countryKeywords": [
+      "Morocco"
+    ],
+    "value": "morocco"
+  },
+  {
+    "id": "remote-0tvlaf",
+    "label": "Niger",
+    "region": "Global destination · record 073",
+    "language": "AY0280 · Finnair",
+    "keywords": [
+      "Niger"
+    ],
+    "countryKeywords": [
+      "Niger"
+    ],
+    "value": "niger"
+  },
+  {
+    "id": "remote-s8y2pz",
+    "label": "Paraguay",
+    "region": "Global destination · record 074",
+    "language": "OB0006 · Boliviana de Aviacion",
+    "keywords": [
+      "Paraguay"
+    ],
+    "countryKeywords": [
+      "Paraguay"
+    ],
+    "value": "paraguay"
+  },
+  {
+    "id": "remote-5mt09f",
+    "label": "Myanmar",
+    "region": "Global destination · record 075",
+    "language": "TK0001 · Turkish Airlines",
+    "keywords": [
+      "Myanmar"
+    ],
+    "countryKeywords": [
+      "Myanmar"
+    ],
+    "value": "myanmar"
+  },
+  {
+    "id": "remote-rwpdpe",
+    "label": "Taiwan",
+    "region": "Global destination · record 076",
+    "language": "TU0005 · Tunisair",
+    "keywords": [
+      "Taiwan"
+    ],
+    "countryKeywords": [
+      "Taiwan"
+    ],
+    "value": "taiwan"
+  },
+  {
+    "id": "remote-qje8bs",
+    "label": "South Sudan",
+    "region": "Global destination · record 077",
+    "language": "5J0068 · Cebu Pacific Air",
+    "keywords": [
+      "South Sudan"
+    ],
+    "countryKeywords": [
+      "South Sudan"
+    ],
+    "value": "south sudan"
+  },
+  {
+    "id": "remote-jdat8l",
+    "label": "Honduras",
+    "region": "Global destination · record 078",
+    "language": "AK8713 · AirAsia",
+    "keywords": [
+      "Honduras"
+    ],
+    "countryKeywords": [
+      "Honduras"
+    ],
+    "value": "honduras"
+  },
+  {
+    "id": "remote-69x8kt",
+    "label": "Cambodia",
+    "region": "Global destination · record 079",
+    "language": "SU0011 · Aeroflot",
+    "keywords": [
+      "Cambodia"
+    ],
+    "countryKeywords": [
+      "Cambodia"
+    ],
+    "value": "cambodia"
+  },
+  {
+    "id": "remote-7q4ou0",
+    "label": "American Samoa",
+    "region": "Global destination · record 080",
+    "language": "HO0009 · Juneyao Airlines",
+    "keywords": [
+      "American Samoa"
+    ],
+    "countryKeywords": [
+      "American Samoa"
+    ],
+    "value": "american samoa"
+  },
+  {
+    "id": "remote-y1q10f",
+    "label": "Iraq",
+    "region": "Global destination · record 081",
+    "language": "LO0009 · LOT Polish Airlines",
+    "keywords": [
+      "Iraq"
+    ],
+    "countryKeywords": [
+      "Iraq"
+    ],
+    "value": "iraq"
+  },
+  {
+    "id": "remote-jmcrf0",
+    "label": "Cameroon",
+    "region": "Global destination · record 082",
+    "language": "TK0944 · Turkish Airlines",
+    "keywords": [
+      "Cameroon"
+    ],
+    "countryKeywords": [
+      "Cameroon"
+    ],
+    "value": "cameroon"
+  },
+  {
+    "id": "remote-cmx0u3",
+    "label": "Congo",
+    "region": "Global destination · record 083",
+    "language": "DL0004 · Delta Air Lines",
+    "keywords": [
+      "Congo"
+    ],
+    "countryKeywords": [
+      "Congo"
+    ],
+    "value": "congo"
+  },
+  {
+    "id": "remote-sna74y",
+    "label": "Turks and Caicos Islands",
+    "region": "Global destination · record 084",
+    "language": "FJ4164 · Fiji Airways",
+    "keywords": [
+      "Turks and Caicos Islands"
+    ],
+    "countryKeywords": [
+      "Turks and Caicos Islands"
+    ],
+    "value": "turks and caicos islands"
+  },
+  {
+    "id": "remote-vqjx9g",
+    "label": "Lao People's Democratic Republic",
+    "region": "Global destination · record 085",
+    "language": "AC0866 · Air Canada",
+    "keywords": [
+      "Lao People's Democratic Republic"
+    ],
+    "countryKeywords": [
+      "Lao People's Democratic Republic"
+    ],
+    "value": "lao people's democratic republic"
+  },
+  {
+    "id": "remote-8gw07t",
+    "label": "Guam",
+    "region": "Global destination · record 086",
+    "language": "TN0021 · Air Tahiti Nui",
+    "keywords": [
+      "Guam"
+    ],
+    "countryKeywords": [
+      "Guam"
+    ],
+    "value": "guam"
+  },
+  {
+    "id": "remote-nyuv1k",
+    "label": "Canada",
+    "region": "Global destination · record 087",
+    "language": "9R0007 · Satena",
+    "keywords": [
+      "Canada"
+    ],
+    "countryKeywords": [
+      "Canada"
+    ],
+    "value": "canada"
+  },
+  {
+    "id": "remote-6s93gw",
+    "label": "Vietnam",
+    "region": "Global destination · record 088",
+    "language": "SB0248 · Aircalin",
+    "keywords": [
+      "Vietnam"
+    ],
+    "countryKeywords": [
+      "Vietnam"
+    ],
+    "value": "vietnam"
+  },
+  {
+    "id": "remote-zrtkta",
+    "label": "Faroe Islands",
+    "region": "Global destination · record 089",
+    "language": "2Z0643 · VOEPASS Linhas Aereas",
+    "keywords": [
+      "Faroe Islands"
+    ],
+    "countryKeywords": [
+      "Faroe Islands"
+    ],
+    "value": "faroe islands"
+  },
+  {
+    "id": "remote-vvl5i4",
+    "label": "Cocos (Keeling) Islands",
+    "region": "Global destination · record 090",
+    "language": "FA0055 · FlySafair",
+    "keywords": [
+      "Cocos (Keeling) Islands"
+    ],
+    "countryKeywords": [
+      "Cocos (Keeling) Islands"
+    ],
+    "value": "cocos (keeling) islands"
+  },
+  {
+    "id": "remote-harh1f",
+    "label": "Saint Vincent and the Grenadines",
+    "region": "Global destination · record 091",
+    "language": "NZ0579 · Air New Zealand",
+    "keywords": [
+      "Saint Vincent and the Grenadines"
+    ],
+    "countryKeywords": [
+      "Saint Vincent and the Grenadines"
+    ],
+    "value": "saint vincent and the grenadines"
+  },
+  {
+    "id": "remote-2cdc35",
+    "label": "Burundi",
+    "region": "Global destination · record 092",
+    "language": "FZ7014 · Flydubai",
+    "keywords": [
+      "Burundi"
+    ],
+    "countryKeywords": [
+      "Burundi"
+    ],
+    "value": "burundi"
+  },
+  {
+    "id": "remote-lpwpoj",
+    "label": "Christmas Island",
+    "region": "Global destination · record 093",
+    "language": "G80053 · Go First",
+    "keywords": [
+      "Christmas Island"
+    ],
+    "countryKeywords": [
+      "Christmas Island"
+    ],
+    "value": "christmas island"
+  },
+  {
+    "id": "remote-b051ar",
+    "label": "Bulgaria",
+    "region": "Global destination · record 094",
+    "language": "AI0002 · Air India",
+    "keywords": [
+      "Bulgaria"
+    ],
+    "countryKeywords": [
+      "Bulgaria"
+    ],
+    "value": "bulgaria"
+  },
+  {
+    "id": "remote-qez4xi",
+    "label": "Guyana",
+    "region": "Global destination · record 095",
+    "language": "EK0498 · Emirates Airlines",
+    "keywords": [
+      "Guyana"
+    ],
+    "countryKeywords": [
+      "Guyana"
+    ],
+    "value": "guyana"
+  },
+  {
+    "id": "remote-ywf8qc",
+    "label": "Algeria",
+    "region": "Global destination · record 096",
+    "language": "PC0041 · Pegasus Airlines",
+    "keywords": [
+      "Algeria"
+    ],
+    "countryKeywords": [
+      "Algeria"
+    ],
+    "value": "algeria"
+  },
+  {
+    "id": "remote-vrr22r",
+    "label": "Saint Lucia",
+    "region": "Global destination · record 097",
+    "language": "DE8276 · Condor",
+    "keywords": [
+      "Saint Lucia"
+    ],
+    "countryKeywords": [
+      "Saint Lucia"
+    ],
+    "value": "saint lucia"
+  },
+  {
+    "id": "remote-2ahqzc",
+    "label": "Japan",
+    "region": "Global destination · record 098",
+    "language": "MS2742 · Egyptair",
+    "keywords": [
+      "Japan",
+      "とうきょう",
+      "tokyo",
+      "toukyou"
+    ],
+    "countryKeywords": [
+      "Japan",
+      "日本",
+      "일본",
+      "japan",
+      "jp"
+    ],
+    "value": "japan"
+  },
+  {
+    "id": "remote-djprjn",
+    "label": "Kuwait",
+    "region": "Global destination · record 099",
+    "language": "VS0030 · Virgin Atlantic Airways",
+    "keywords": [
+      "Kuwait"
+    ],
+    "countryKeywords": [
+      "Kuwait"
+    ],
+    "value": "kuwait"
+  },
+  {
+    "id": "remote-4wreqh",
+    "label": "Suriname",
+    "region": "Global destination · record 100",
+    "language": "DY7436 · Norwegian Air Shuttle",
+    "keywords": [
+      "Suriname"
+    ],
+    "countryKeywords": [
+      "Suriname"
+    ],
+    "value": "suriname"
+  },
+  {
+    "id": "remote-2aaezy",
+    "label": "Cook Islands",
+    "region": "Global destination · record 101",
+    "language": "PX0194 · Air Niugini",
+    "keywords": [
+      "Cook Islands"
+    ],
+    "countryKeywords": [
+      "Cook Islands"
+    ],
+    "value": "cook islands"
+  },
+  {
+    "id": "remote-wn8ofi",
+    "label": "Svalbard & Jan Mayen Islands",
+    "region": "Global destination · record 102",
+    "language": "MU0090 · China Eastern Airlines",
+    "keywords": [
+      "Svalbard & Jan Mayen Islands"
+    ],
+    "countryKeywords": [
+      "Svalbard & Jan Mayen Islands"
+    ],
+    "value": "svalbard & jan mayen islands"
+  },
+  {
+    "id": "remote-pjun2z",
+    "label": "Luxembourg",
+    "region": "Global destination · record 103",
+    "language": "MH0032 · Malaysia Airlines",
+    "keywords": [
+      "Luxembourg"
+    ],
+    "countryKeywords": [
+      "Luxembourg"
+    ],
+    "value": "luxembourg"
+  },
+  {
+    "id": "remote-q82h6a",
+    "label": "Dominican Republic",
+    "region": "Global destination · record 104",
+    "language": "PS0048 · Ukraine International",
+    "keywords": [
+      "Dominican Republic"
+    ],
+    "countryKeywords": [
+      "Dominican Republic"
+    ],
+    "value": "dominican republic"
+  },
+  {
+    "id": "remote-heijn3",
+    "label": "Rwanda",
+    "region": "Global destination · record 105",
+    "language": "HA0510 · Hawaiian Airlines",
+    "keywords": [
+      "Rwanda"
+    ],
+    "countryKeywords": [
+      "Rwanda"
+    ],
+    "value": "rwanda"
+  },
+  {
+    "id": "remote-wy16s9",
+    "label": "Niue",
+    "region": "Global destination · record 106",
+    "language": "SQ0001 · Singapore Airlines",
+    "keywords": [
+      "Niue"
+    ],
+    "countryKeywords": [
+      "Niue"
+    ],
+    "value": "niue"
+  },
+  {
+    "id": "remote-1pv0w1",
+    "label": "Panama",
+    "region": "Global destination · record 107",
+    "language": "SC0006 · Shandong Airlines",
+    "keywords": [
+      "Panama"
+    ],
+    "countryKeywords": [
+      "Panama"
+    ],
+    "value": "panama"
+  },
+  {
+    "id": "remote-z7y8q9",
+    "label": "Tokelau",
+    "region": "Global destination · record 108",
+    "language": "YX0356 · Republic Airways",
+    "keywords": [
+      "Tokelau"
+    ],
+    "countryKeywords": [
+      "Tokelau"
+    ],
+    "value": "tokelau"
+  },
+  {
+    "id": "remote-xerqcl",
+    "label": "United Arab Emirates",
+    "region": "Global destination · record 109",
+    "language": "TP0760 · TAP Air Portugal",
+    "keywords": [
+      "United Arab Emirates"
+    ],
+    "countryKeywords": [
+      "United Arab Emirates"
+    ],
+    "value": "united arab emirates"
+  },
+  {
+    "id": "remote-ul2i8v",
+    "label": "Australia",
+    "region": "Global destination · record 110",
+    "language": "VE0419 · Easyfly",
+    "keywords": [
+      "Australia"
+    ],
+    "countryKeywords": [
+      "Australia"
+    ],
+    "value": "australia"
+  },
+  {
+    "id": "remote-v2hami",
+    "label": "Antigua and Barbuda",
+    "region": "Global destination · record 111",
+    "language": "NH1093 · All Nippon Airways",
+    "keywords": [
+      "Antigua and Barbuda"
+    ],
+    "countryKeywords": [
+      "Antigua and Barbuda"
+    ],
+    "value": "antigua and barbuda"
+  },
+  {
+    "id": "remote-cx1wud",
+    "label": "Ghana",
+    "region": "Global destination · record 112",
+    "language": "QF0009 · Qantas Group",
+    "keywords": [
+      "Ghana"
+    ],
+    "countryKeywords": [
+      "Ghana"
+    ],
+    "value": "ghana"
+  },
+  {
+    "id": "remote-k7r8t1",
+    "label": "Latvia",
+    "region": "Global destination · record 113",
+    "language": "SK0657 · SAS",
+    "keywords": [
+      "Latvia"
+    ],
+    "countryKeywords": [
+      "Latvia"
+    ],
+    "value": "latvia"
+  },
+  {
+    "id": "remote-jkv23x",
+    "label": "Switzerland",
+    "region": "Global destination · record 114",
+    "language": "BR0061 · EVA Air",
+    "keywords": [
+      "Switzerland"
+    ],
+    "countryKeywords": [
+      "Switzerland"
+    ],
+    "value": "switzerland"
+  },
+  {
+    "id": "remote-09b669",
+    "label": "Nigeria",
+    "region": "Global destination · record 115",
+    "language": "MU0558 · China Eastern Airlines",
+    "keywords": [
+      "Nigeria"
+    ],
+    "countryKeywords": [
+      "Nigeria"
+    ],
+    "value": "nigeria"
+  },
+  {
+    "id": "remote-nwrhlj",
+    "label": "San Marino",
+    "region": "Global destination · record 116",
+    "language": "JT8287 · Lion Air",
+    "keywords": [
+      "San Marino"
+    ],
+    "countryKeywords": [
+      "San Marino"
+    ],
+    "value": "san marino"
+  },
+  {
+    "id": "remote-psu3ra",
+    "label": "Equatorial Guinea",
+    "region": "Global destination · record 117",
+    "language": "MN0005 · Kulula.com",
+    "keywords": [
+      "Equatorial Guinea"
+    ],
+    "countryKeywords": [
+      "Equatorial Guinea"
+    ],
+    "value": "equatorial guinea"
+  },
+  {
+    "id": "remote-wl2439",
+    "label": "Nepal",
+    "region": "Global destination · record 118",
+    "language": "AM9529 · Aeromexico",
+    "keywords": [
+      "Nepal"
+    ],
+    "countryKeywords": [
+      "Nepal"
+    ],
+    "value": "nepal"
+  },
+  {
+    "id": "remote-ai5d5r",
+    "label": "Guadeloupe",
+    "region": "Global destination · record 119",
+    "language": "KL0411 · KLM Royal Dutch Airlines",
+    "keywords": [
+      "Guadeloupe"
+    ],
+    "countryKeywords": [
+      "Guadeloupe"
+    ],
+    "value": "guadeloupe"
+  },
+  {
+    "id": "remote-4hrphp",
+    "label": "Bonaire, Sint Eustatius and Saba",
+    "region": "Global destination · record 120",
+    "language": "LO0051 · LOT Polish Airlines",
+    "keywords": [
+      "Bonaire, Sint Eustatius and Saba"
+    ],
+    "countryKeywords": [
+      "Bonaire, Sint Eustatius and Saba"
+    ],
+    "value": "bonaire, sint eustatius and saba"
+  },
+  {
+    "id": "remote-zfb7l1",
+    "label": "Mozambique",
+    "region": "Global destination · record 121",
+    "language": "VE0610 · Easyfly",
+    "keywords": [
+      "Mozambique"
+    ],
+    "countryKeywords": [
+      "Mozambique"
+    ],
+    "value": "mozambique"
+  },
+  {
+    "id": "remote-brmkrh",
+    "label": "Germany",
+    "region": "Global destination · record 122",
+    "language": "SA0064 · South African Airways",
+    "keywords": [
+      "Germany",
+      "munich",
+      "muenchen"
+    ],
+    "countryKeywords": [
+      "Germany",
+      "Deutschland",
+      "독일",
+      "germany",
+      "de"
+    ],
+    "value": "germany"
+  },
+  {
+    "id": "remote-cmwyw4",
+    "label": "Saint Barthélemy",
+    "region": "Global destination · record 123",
+    "language": "AZ5397 · Alitalia",
+    "keywords": [
+      "Saint Barthélemy"
+    ],
+    "countryKeywords": [
+      "Saint Barthélemy"
+    ],
+    "value": "saint barthélemy"
+  },
+  {
+    "id": "remote-f1j6ti",
+    "label": "Liberia",
+    "region": "Global destination · record 124",
+    "language": "ET6652 · Ethiopian Airlines",
+    "keywords": [
+      "Liberia"
+    ],
+    "countryKeywords": [
+      "Liberia"
+    ],
+    "value": "liberia"
+  },
+  {
+    "id": "remote-2f82zq",
+    "label": "Trinidad and Tobago",
+    "region": "Global destination · record 125",
+    "language": "AC7732 · Air Canada",
+    "keywords": [
+      "Trinidad and Tobago"
+    ],
+    "countryKeywords": [
+      "Trinidad and Tobago"
+    ],
+    "value": "trinidad and tobago"
+  },
+  {
+    "id": "remote-7apa0s",
+    "label": "Western Sahara",
+    "region": "Global destination · record 126",
+    "language": "WN0031 · Southwest Airlines",
+    "keywords": [
+      "Western Sahara"
+    ],
+    "countryKeywords": [
+      "Western Sahara"
+    ],
+    "value": "western sahara"
+  },
+  {
+    "id": "remote-68bed6",
+    "label": "Fiji",
+    "region": "Global destination · record 127",
+    "language": "YX0004 · Republic Airways",
+    "keywords": [
+      "Fiji"
+    ],
+    "countryKeywords": [
+      "Fiji"
+    ],
+    "value": "fiji"
+  },
+  {
+    "id": "remote-u2vqgi",
+    "label": "Sweden",
+    "region": "Global destination · record 128",
+    "language": "U60003 · Ural Airlines",
+    "keywords": [
+      "Sweden"
+    ],
+    "countryKeywords": [
+      "Sweden"
+    ],
+    "value": "sweden"
+  },
+  {
+    "id": "remote-kdmgz3",
+    "label": "Monaco",
+    "region": "Global destination · record 129",
+    "language": "8J9309 · EcoJet",
+    "keywords": [
+      "Monaco"
+    ],
+    "countryKeywords": [
+      "Monaco"
+    ],
+    "value": "monaco"
+  },
+  {
+    "id": "remote-v4d18d",
+    "label": "British Indian Ocean Territory (Chagos Archipelago)",
+    "region": "Global destination · record 130",
+    "language": "PK0001 · Pakistan International Airlines",
+    "keywords": [
+      "British Indian Ocean Territory (Chagos Archipelago)"
+    ],
+    "countryKeywords": [
+      "British Indian Ocean Territory (Chagos Archipelago)"
+    ],
+    "value": "british indian ocean territory (chagos archipelago)"
+  },
+  {
+    "id": "remote-gcvv7y",
+    "label": "Italy",
+    "region": "Global destination · record 131",
+    "language": "DE0049 · Condor",
+    "keywords": [
+      "Italy"
+    ],
+    "countryKeywords": [
+      "Italy"
+    ],
+    "value": "italy"
+  },
+  {
+    "id": "remote-c963ec",
+    "label": "Guernsey",
+    "region": "Global destination · record 132",
+    "language": "XQ7241 · SunExpress",
+    "keywords": [
+      "Guernsey"
+    ],
+    "countryKeywords": [
+      "Guernsey"
+    ],
+    "value": "guernsey"
+  },
+  {
+    "id": "remote-vz7lnk",
+    "label": "Thailand",
+    "region": "Global destination · record 133",
+    "language": "SY0002 · Sun Country Airlines",
+    "keywords": [
+      "Thailand"
+    ],
+    "countryKeywords": [
+      "Thailand"
+    ],
+    "value": "thailand"
+  },
+  {
+    "id": "remote-0vhzld",
+    "label": "Lebanon",
+    "region": "Global destination · record 134",
+    "language": "SB0004 · Aircalin",
+    "keywords": [
+      "Lebanon"
+    ],
+    "countryKeywords": [
+      "Lebanon"
+    ],
+    "value": "lebanon"
+  },
+  {
+    "id": "remote-i8hgte",
+    "label": "Republic of Korea",
+    "region": "Global destination · record 135",
+    "language": "LH3009 · Lufthansa",
+    "keywords": [
+      "Republic of Korea",
+      "seoul",
+      "서울",
+      "seol"
+    ],
+    "countryKeywords": [
+      "Republic of Korea",
+      "대한민국",
+      "한국",
+      "south korea",
+      "korea",
+      "kr"
+    ],
+    "value": "republic of korea"
+  },
+  {
+    "id": "remote-wzw35r",
+    "label": "Belize",
+    "region": "Global destination · record 136",
+    "language": "FJ5681 · Fiji Airways",
+    "keywords": [
+      "Belize"
+    ],
+    "countryKeywords": [
+      "Belize"
+    ],
+    "value": "belize"
+  },
+  {
+    "id": "remote-sx2mxi",
+    "label": "Wallis and Futuna",
+    "region": "Global destination · record 137",
+    "language": "FJ0073 · Fiji Airways",
+    "keywords": [
+      "Wallis and Futuna"
+    ],
+    "countryKeywords": [
+      "Wallis and Futuna"
+    ],
+    "value": "wallis and futuna"
+  },
+  {
+    "id": "remote-6fjtoz",
+    "label": "Uganda",
+    "region": "Global destination · record 138",
+    "language": "AH2181 · Air Algerie",
+    "keywords": [
+      "Uganda"
+    ],
+    "countryKeywords": [
+      "Uganda"
+    ],
+    "value": "uganda"
+  },
+  {
+    "id": "remote-urekg2",
+    "label": "Samoa",
+    "region": "Global destination · record 139",
+    "language": "FZ7980 · Flydubai",
+    "keywords": [
+      "Samoa"
+    ],
+    "countryKeywords": [
+      "Samoa"
+    ],
+    "value": "samoa"
+  },
+  {
+    "id": "remote-78oct0",
+    "label": "Virgin Islands, British",
+    "region": "Global destination · record 140",
+    "language": "AF7999 · Air France",
+    "keywords": [
+      "Virgin Islands, British"
+    ],
+    "countryKeywords": [
+      "Virgin Islands, British"
+    ],
+    "value": "virgin islands, british"
+  },
+  {
+    "id": "remote-z0odqt",
+    "label": "Indonesia",
+    "region": "Global destination · record 141",
+    "language": "MS0110 · Egyptair",
+    "keywords": [
+      "Indonesia"
+    ],
+    "countryKeywords": [
+      "Indonesia"
+    ],
+    "value": "indonesia"
+  },
+  {
+    "id": "remote-zwr24q",
+    "label": "Mexico",
+    "region": "Global destination · record 142",
+    "language": "FZ0674 · Flydubai",
+    "keywords": [
+      "Mexico"
+    ],
+    "countryKeywords": [
+      "Mexico"
+    ],
+    "value": "mexico"
+  },
+  {
+    "id": "remote-mgdiuk",
+    "label": "Grenada",
+    "region": "Global destination · record 143",
+    "language": "AY0416 · Finnair",
+    "keywords": [
+      "Grenada"
+    ],
+    "countryKeywords": [
+      "Grenada"
+    ],
+    "value": "grenada"
+  },
+  {
+    "id": "remote-eh6uiq",
+    "label": "Chile",
+    "region": "Global destination · record 144",
+    "language": "SG0052 · SpiceJet",
+    "keywords": [
+      "Chile"
+    ],
+    "countryKeywords": [
+      "Chile"
+    ],
+    "value": "chile"
+  },
+  {
+    "id": "remote-ukbe5j",
+    "label": "Jordan",
+    "region": "Global destination · record 145",
+    "language": "FA0015 · FlySafair",
+    "keywords": [
+      "Jordan"
+    ],
+    "countryKeywords": [
+      "Jordan"
+    ],
+    "value": "jordan"
+  },
+  {
+    "id": "remote-zk0spc",
+    "label": "Lesotho",
+    "region": "Global destination · record 146",
+    "language": "FR0004 · Ryanair",
+    "keywords": [
+      "Lesotho"
+    ],
+    "countryKeywords": [
+      "Lesotho"
+    ],
+    "value": "lesotho"
+  },
+  {
+    "id": "remote-ceesq2",
+    "label": "Ecuador",
+    "region": "Global destination · record 147",
+    "language": "FD0001 · Thai AirAsia",
+    "keywords": [
+      "Ecuador"
+    ],
+    "countryKeywords": [
+      "Ecuador"
+    ],
+    "value": "ecuador"
+  },
+  {
+    "id": "remote-kqeqfs",
+    "label": "Argentina",
+    "region": "Global destination · record 148",
+    "language": "WS0082 · WestJet",
+    "keywords": [
+      "Argentina"
+    ],
+    "countryKeywords": [
+      "Argentina"
+    ],
+    "value": "argentina"
+  },
+  {
+    "id": "remote-7nzb7j",
+    "label": "Togo",
+    "region": "Global destination · record 149",
+    "language": "XQ0096 · SunExpress",
+    "keywords": [
+      "Togo"
+    ],
+    "countryKeywords": [
+      "Togo"
+    ],
+    "value": "togo"
+  },
+  {
+    "id": "remote-dym64r",
+    "label": "Malta",
+    "region": "Global destination · record 150",
+    "language": "F90097 · Frontier Airlines",
+    "keywords": [
+      "Malta"
+    ],
+    "countryKeywords": [
+      "Malta"
+    ],
+    "value": "malta"
+  },
+  {
+    "id": "remote-8e7ant",
+    "label": "Bolivia",
+    "region": "Global destination · record 151",
+    "language": "B60289 · JetBlue Airways",
+    "keywords": [
+      "Bolivia"
+    ],
+    "countryKeywords": [
+      "Bolivia"
+    ],
+    "value": "bolivia"
+  },
+  {
+    "id": "remote-zwx7ax",
+    "label": "South Africa",
+    "region": "Global destination · record 152",
+    "language": "AA0837 · American Airlines",
+    "keywords": [
+      "South Africa"
+    ],
+    "countryKeywords": [
+      "South Africa"
+    ],
+    "value": "south africa"
+  },
+  {
+    "id": "remote-lqmhyv",
+    "label": "Uruguay",
+    "region": "Global destination · record 153",
+    "language": "FO0007 · Flybondi",
+    "keywords": [
+      "Uruguay"
+    ],
+    "countryKeywords": [
+      "Uruguay"
+    ],
+    "value": "uruguay"
+  },
+  {
+    "id": "remote-0a7lg8",
+    "label": "Northern Mariana Islands",
+    "region": "Global destination · record 154",
+    "language": "DE0005 · Condor",
+    "keywords": [
+      "Northern Mariana Islands"
+    ],
+    "countryKeywords": [
+      "Northern Mariana Islands"
+    ],
+    "value": "northern mariana islands"
+  },
+  {
+    "id": "remote-sykxjo",
+    "label": "Mauritius",
+    "region": "Global destination · record 155",
+    "language": "G80004 · Go First",
+    "keywords": [
+      "Mauritius"
+    ],
+    "countryKeywords": [
+      "Mauritius"
+    ],
+    "value": "mauritius"
+  },
+  {
+    "id": "remote-jiypm6",
+    "label": "Central African Republic",
+    "region": "Global destination · record 156",
+    "language": "F90046 · Frontier Airlines",
+    "keywords": [
+      "Central African Republic"
+    ],
+    "countryKeywords": [
+      "Central African Republic"
+    ],
+    "value": "central african republic"
+  },
+  {
+    "id": "remote-k2anos",
+    "label": "Pitcairn Islands",
+    "region": "Global destination · record 157",
+    "language": "G40117 · Allegiant Air",
+    "keywords": [
+      "Pitcairn Islands"
+    ],
+    "countryKeywords": [
+      "Pitcairn Islands"
+    ],
+    "value": "pitcairn islands"
+  },
+  {
+    "id": "remote-5e3a2a",
+    "label": "Vanuatu",
+    "region": "Global destination · record 158",
+    "language": "ET0003 · Ethiopian Airlines",
+    "keywords": [
+      "Vanuatu"
+    ],
+    "countryKeywords": [
+      "Vanuatu"
+    ],
+    "value": "vanuatu"
+  },
+  {
+    "id": "remote-cb12vb",
+    "label": "Tanzania",
+    "region": "Global destination · record 159",
+    "language": "TP0070 · TAP Air Portugal",
+    "keywords": [
+      "Tanzania"
+    ],
+    "countryKeywords": [
+      "Tanzania"
+    ],
+    "value": "tanzania"
+  },
+  {
+    "id": "remote-yie8jb",
+    "label": "Montserrat",
+    "region": "Global destination · record 160",
+    "language": "SC0083 · Shandong Airlines",
+    "keywords": [
+      "Montserrat"
+    ],
+    "countryKeywords": [
+      "Montserrat"
+    ],
+    "value": "montserrat"
+  },
+  {
+    "id": "remote-leihlg",
+    "label": "Nicaragua",
+    "region": "Global destination · record 161",
+    "language": "AF0058 · Air France",
+    "keywords": [
+      "Nicaragua"
+    ],
+    "countryKeywords": [
+      "Nicaragua"
+    ],
+    "value": "nicaragua"
+  },
+  {
+    "id": "remote-5bqcd9",
+    "label": "Serbia",
+    "region": "Global destination · record 162",
+    "language": "JT0052 · Lion Air",
+    "keywords": [
+      "Serbia"
+    ],
+    "countryKeywords": [
+      "Serbia"
+    ],
+    "value": "serbia"
+  },
+  {
+    "id": "remote-6wct3t",
+    "label": "Colombia",
+    "region": "Global destination · record 163",
+    "language": "AR0992 · Aerolineas Argentinas",
+    "keywords": [
+      "Colombia"
+    ],
+    "countryKeywords": [
+      "Colombia"
+    ],
+    "value": "colombia"
+  },
+  {
+    "id": "remote-6qvxcj",
+    "label": "Réunion",
+    "region": "Global destination · record 164",
+    "language": "VA0009 · Virgin Australia",
+    "keywords": [
+      "Réunion"
+    ],
+    "countryKeywords": [
+      "Réunion"
+    ],
+    "value": "réunion"
+  },
+  {
+    "id": "remote-cnva5x",
+    "label": "Eritrea",
+    "region": "Global destination · record 165",
+    "language": "G43938 · Allegiant Air",
+    "keywords": [
+      "Eritrea"
+    ],
+    "countryKeywords": [
+      "Eritrea"
+    ],
+    "value": "eritrea"
+  },
+  {
+    "id": "remote-2s8at4",
+    "label": "Saint Kitts and Nevis",
+    "region": "Global destination · record 166",
+    "language": "QF0400 · Qantas Group",
+    "keywords": [
+      "Saint Kitts and Nevis"
+    ],
+    "countryKeywords": [
+      "Saint Kitts and Nevis"
+    ],
+    "value": "saint kitts and nevis"
+  },
+  {
+    "id": "remote-k25916",
+    "label": "Virgin Islands, U.S.",
+    "region": "Global destination · record 167",
+    "language": "KE5362 · Korean Air",
+    "keywords": [
+      "Virgin Islands, U.S."
+    ],
+    "countryKeywords": [
+      "Virgin Islands, U.S."
+    ],
+    "value": "virgin islands, u.s."
+  },
+  {
+    "id": "remote-22vm4e",
+    "label": "Bouvet Island",
+    "region": "Global destination · record 168",
+    "language": "DY0943 · Norwegian Air Shuttle",
+    "keywords": [
+      "Bouvet Island"
+    ],
+    "countryKeywords": [
+      "Bouvet Island"
+    ],
+    "value": "bouvet island"
+  },
+  {
+    "id": "remote-upd9rg",
+    "label": "Guinea-Bissau",
+    "region": "Global destination · record 169",
+    "language": "KE0024 · Korean Air",
+    "keywords": [
+      "Guinea-Bissau"
+    ],
+    "countryKeywords": [
+      "Guinea-Bissau"
+    ],
+    "value": "guinea-bissau"
+  },
+  {
+    "id": "remote-yl6144",
+    "label": "Democratic People's Republic of Korea",
+    "region": "Global destination · record 170",
+    "language": "SV6529 · Saudia",
+    "keywords": [
+      "Democratic People's Republic of Korea"
+    ],
+    "countryKeywords": [
+      "Democratic People's Republic of Korea"
+    ],
+    "value": "democratic people's republic of korea"
+  },
+  {
+    "id": "remote-0rc6fz",
+    "label": "Ireland",
+    "region": "Global destination · record 171",
+    "language": "JD0005 · Beijing Capital Airlines",
+    "keywords": [
+      "Ireland"
+    ],
+    "countryKeywords": [
+      "Ireland"
+    ],
+    "value": "ireland"
+  },
+  {
+    "id": "remote-l14tff",
+    "label": "Iran",
+    "region": "Global destination · record 172",
+    "language": "G30075 · Gol Linhas Aereas Inteligentes",
+    "keywords": [
+      "Iran"
+    ],
+    "countryKeywords": [
+      "Iran"
+    ],
+    "value": "iran"
+  },
+  {
+    "id": "remote-2iml4q",
+    "label": "Finland",
+    "region": "Global destination · record 173",
+    "language": "TG0035 · Thai Airways",
+    "keywords": [
+      "Finland"
+    ],
+    "countryKeywords": [
+      "Finland"
+    ],
+    "value": "finland"
+  },
+  {
+    "id": "remote-7iffom",
+    "label": "Kiribati",
+    "region": "Global destination · record 174",
+    "language": "CM0006 · Copa Airlines",
+    "keywords": [
+      "Kiribati"
+    ],
+    "countryKeywords": [
+      "Kiribati"
+    ],
+    "value": "kiribati"
+  },
+  {
+    "id": "remote-xy4zsn",
+    "label": "Saudi Arabia",
+    "region": "Global destination · record 175",
+    "language": "6E0036 · IndiGo Airlines",
+    "keywords": [
+      "Saudi Arabia"
+    ],
+    "countryKeywords": [
+      "Saudi Arabia"
+    ],
+    "value": "saudi arabia"
+  },
+  {
+    "id": "remote-fdvti2",
+    "label": "Albania",
+    "region": "Global destination · record 176",
+    "language": "BY0003 · TUI Airways",
+    "keywords": [
+      "Albania"
+    ],
+    "countryKeywords": [
+      "Albania"
+    ],
+    "value": "albania"
+  },
+  {
+    "id": "remote-fbxxtz",
+    "label": "Armenia",
+    "region": "Global destination · record 177",
+    "language": "CI0281 · China Airlines",
+    "keywords": [
+      "Armenia"
+    ],
+    "countryKeywords": [
+      "Armenia"
+    ],
+    "value": "armenia"
+  },
+  {
+    "id": "remote-ejvyhh",
+    "label": "Holy See (Vatican City State)",
+    "region": "Global destination · record 178",
+    "language": "D70001 · AirAsia X",
+    "keywords": [
+      "Holy See (Vatican City State)"
+    ],
+    "countryKeywords": [
+      "Holy See (Vatican City State)"
+    ],
+    "value": "holy see (vatican city state)"
+  },
+  {
+    "id": "remote-dqgrez",
+    "label": "Slovakia",
+    "region": "Global destination · record 179",
+    "language": "SQ0561 · Singapore Airlines",
+    "keywords": [
+      "Slovakia"
+    ],
+    "countryKeywords": [
+      "Slovakia"
+    ],
+    "value": "slovakia"
+  },
+  {
+    "id": "remote-y9o2w3",
+    "label": "Democratic Republic of the Congo",
+    "region": "Global destination · record 180",
+    "language": "D70301 · AirAsia X",
+    "keywords": [
+      "Democratic Republic of the Congo"
+    ],
+    "countryKeywords": [
+      "Democratic Republic of the Congo"
+    ],
+    "value": "democratic republic of the congo"
+  },
+  {
+    "id": "remote-yya6kb",
+    "label": "Bermuda",
+    "region": "Global destination · record 181",
+    "language": "VA0815 · Virgin Australia",
+    "keywords": [
+      "Bermuda"
+    ],
+    "countryKeywords": [
+      "Bermuda"
+    ],
+    "value": "bermuda"
+  },
+  {
+    "id": "remote-66bcjr",
+    "label": "Sierra Leone",
+    "region": "Global destination · record 182",
+    "language": "F90009 · Frontier Airlines",
+    "keywords": [
+      "Sierra Leone"
+    ],
+    "countryKeywords": [
+      "Sierra Leone"
+    ],
+    "value": "sierra leone"
+  },
+  {
+    "id": "remote-1o5yao",
+    "label": "Saint Martin",
+    "region": "Global destination · record 183",
+    "language": "SA6173 · South African Airways",
+    "keywords": [
+      "Saint Martin"
+    ],
+    "countryKeywords": [
+      "Saint Martin"
+    ],
+    "value": "saint martin"
+  },
+  {
+    "id": "remote-h7wd14",
+    "label": "Papua New Guinea",
+    "region": "Global destination · record 184",
+    "language": "AS8971 · Alaska Airlines",
+    "keywords": [
+      "Papua New Guinea"
+    ],
+    "countryKeywords": [
+      "Papua New Guinea"
+    ],
+    "value": "papua new guinea"
+  },
+  {
+    "id": "remote-xcaqgb",
+    "label": "Maldives",
+    "region": "Global destination · record 185",
+    "language": "CZ9045 · China Southern Airlines",
+    "keywords": [
+      "Maldives"
+    ],
+    "countryKeywords": [
+      "Maldives"
+    ],
+    "value": "maldives"
+  },
+  {
+    "id": "remote-5f26ia",
+    "label": "Afghanistan",
+    "region": "Global destination · record 186",
+    "language": "UA0078 · United Airlines",
+    "keywords": [
+      "Afghanistan"
+    ],
+    "countryKeywords": [
+      "Afghanistan"
+    ],
+    "value": "afghanistan"
+  },
+  {
+    "id": "remote-pzvs36",
+    "label": "Palau",
+    "region": "Global destination · record 187",
+    "language": "CI0037 · China Airlines",
+    "keywords": [
+      "Palau"
+    ],
+    "countryKeywords": [
+      "Palau"
+    ],
+    "value": "palau"
+  },
+  {
+    "id": "remote-nx2tdy",
+    "label": "Dominica",
+    "region": "Global destination · record 188",
+    "language": "VT0132 · Air Tahiti",
+    "keywords": [
+      "Dominica"
+    ],
+    "countryKeywords": [
+      "Dominica"
+    ],
+    "value": "dominica"
+  },
+  {
+    "id": "remote-nua26p",
+    "label": "Libyan Arab Jamahiriya",
+    "region": "Global destination · record 189",
+    "language": "FD0008 · Thai AirAsia",
+    "keywords": [
+      "Libyan Arab Jamahiriya"
+    ],
+    "countryKeywords": [
+      "Libyan Arab Jamahiriya"
+    ],
+    "value": "libyan arab jamahiriya"
+  },
+  {
+    "id": "remote-gjgex8",
+    "label": "Bahrain",
+    "region": "Global destination · record 190",
+    "language": "AY0271 · Finnair",
+    "keywords": [
+      "Bahrain"
+    ],
+    "countryKeywords": [
+      "Bahrain"
+    ],
+    "value": "bahrain"
+  },
+  {
+    "id": "remote-tcvgf4",
+    "label": "Liechtenstein",
+    "region": "Global destination · record 191",
+    "language": "Y40098 · Volaris",
+    "keywords": [
+      "Liechtenstein"
+    ],
+    "countryKeywords": [
+      "Liechtenstein"
+    ],
+    "value": "liechtenstein"
+  },
+  {
+    "id": "remote-j3mtdc",
+    "label": "Seychelles",
+    "region": "Global destination · record 192",
+    "language": "D73015 · AirAsia X",
+    "keywords": [
+      "Seychelles"
+    ],
+    "countryKeywords": [
+      "Seychelles"
+    ],
+    "value": "seychelles"
+  },
+  {
+    "id": "remote-lvrtzk",
+    "label": "Marshall Islands",
+    "region": "Global destination · record 193",
+    "language": "HU0016 · Hainan Airlines",
+    "keywords": [
+      "Marshall Islands"
+    ],
+    "countryKeywords": [
+      "Marshall Islands"
+    ],
+    "value": "marshall islands"
+  },
+  {
+    "id": "remote-pk7rrk",
+    "label": "Mauritania",
+    "region": "Global destination · record 194",
+    "language": "MS0575 · Egyptair",
+    "keywords": [
+      "Mauritania"
+    ],
+    "countryKeywords": [
+      "Mauritania"
+    ],
+    "value": "mauritania"
+  },
+  {
+    "id": "remote-oiqnod",
+    "label": "Kazakhstan",
+    "region": "Global destination · record 195",
+    "language": "SQ0005 · Singapore Airlines",
+    "keywords": [
+      "Kazakhstan"
+    ],
+    "countryKeywords": [
+      "Kazakhstan"
+    ],
+    "value": "kazakhstan"
+  },
+  {
+    "id": "remote-fk2uv1",
+    "label": "Macao",
+    "region": "Global destination · record 196",
+    "language": "FO0094 · Flybondi",
+    "keywords": [
+      "Macao"
+    ],
+    "countryKeywords": [
+      "Macao"
+    ],
+    "value": "macao"
+  },
+  {
+    "id": "remote-ynzmmh",
+    "label": "Aruba",
+    "region": "Global destination · record 197",
+    "language": "NK5491 · Spirit Airlines",
+    "keywords": [
+      "Aruba"
+    ],
+    "countryKeywords": [
+      "Aruba"
+    ],
+    "value": "aruba"
+  },
+  {
+    "id": "remote-dzyxei",
+    "label": "Greece",
+    "region": "Global destination · record 198",
+    "language": "WN0005 · Southwest Airlines",
+    "keywords": [
+      "Greece"
+    ],
+    "countryKeywords": [
+      "Greece"
+    ],
+    "value": "greece"
+  },
+  {
+    "id": "remote-4623bc",
+    "label": "Iceland",
+    "region": "Global destination · record 199",
+    "language": "SG0007 · SpiceJet",
+    "keywords": [
+      "Iceland"
+    ],
+    "countryKeywords": [
+      "Iceland"
+    ],
+    "value": "iceland"
+  },
+  {
+    "id": "remote-bgz2mw",
+    "label": "Romania",
+    "region": "Global destination · record 200",
+    "language": "TK0978 · Turkish Airlines",
+    "keywords": [
+      "Romania"
+    ],
+    "countryKeywords": [
+      "Romania"
+    ],
+    "value": "romania"
+  },
+  {
+    "id": "remote-dycdv0",
+    "label": "Estonia",
+    "region": "Global destination · record 201",
+    "language": "SG5896 · SpiceJet",
+    "keywords": [
+      "Estonia"
+    ],
+    "countryKeywords": [
+      "Estonia"
+    ],
+    "value": "estonia"
+  },
+  {
+    "id": "remote-xx59ro",
+    "label": "Belgium",
+    "region": "Global destination · record 202",
+    "language": "FO3534 · Flybondi",
+    "keywords": [
+      "Belgium"
+    ],
+    "countryKeywords": [
+      "Belgium"
+    ],
+    "value": "belgium"
+  },
+  {
+    "id": "remote-ofsq09",
+    "label": "Gibraltar",
+    "region": "Global destination · record 203",
+    "language": "HO0962 · Juneyao Airlines",
+    "keywords": [
+      "Gibraltar"
+    ],
+    "countryKeywords": [
+      "Gibraltar"
+    ],
+    "value": "gibraltar"
+  },
+  {
+    "id": "remote-0vs11z",
+    "label": "French Guiana",
+    "region": "Global destination · record 204",
+    "language": "VA0007 · Virgin Australia",
+    "keywords": [
+      "French Guiana"
+    ],
+    "countryKeywords": [
+      "French Guiana"
+    ],
+    "value": "french guiana"
+  },
+  {
+    "id": "remote-per4fk",
+    "label": "Haiti",
+    "region": "Global destination · record 205",
+    "language": "SK5833 · SAS",
+    "keywords": [
+      "Haiti"
+    ],
+    "countryKeywords": [
+      "Haiti"
+    ],
+    "value": "haiti"
+  },
+  {
+    "id": "remote-6t2ly8",
+    "label": "Antarctica",
+    "region": "Global destination · record 206",
+    "language": "WS0049 · WestJet",
+    "keywords": [
+      "Antarctica"
+    ],
+    "countryKeywords": [
+      "Antarctica"
+    ],
+    "value": "antarctica"
+  },
+  {
+    "id": "remote-14vgp3",
+    "label": "Puerto Rico",
+    "region": "Global destination · record 207",
+    "language": "NZ0066 · Air New Zealand",
+    "keywords": [
+      "Puerto Rico"
+    ],
+    "countryKeywords": [
+      "Puerto Rico"
+    ],
+    "value": "puerto rico"
+  },
+  {
+    "id": "remote-149k5e",
+    "label": "Tonga",
+    "region": "Global destination · record 208",
+    "language": "S70007 · S7 Airlines",
+    "keywords": [
+      "Tonga"
+    ],
+    "countryKeywords": [
+      "Tonga"
+    ],
+    "value": "tonga"
+  },
+  {
+    "id": "remote-ax92vl",
+    "label": "Slovenia",
+    "region": "Global destination · record 209",
+    "language": "EK0059 · Emirates Airlines",
+    "keywords": [
+      "Slovenia"
+    ],
+    "countryKeywords": [
+      "Slovenia"
+    ],
+    "value": "slovenia"
+  },
+  {
+    "id": "remote-28kpz1",
+    "label": "Sudan",
+    "region": "Global destination · record 210",
+    "language": "P50050 · Wingo",
+    "keywords": [
+      "Sudan"
+    ],
+    "countryKeywords": [
+      "Sudan"
+    ],
+    "value": "sudan"
+  },
+  {
+    "id": "remote-8hp9uw",
+    "label": "Denmark",
+    "region": "Global destination · record 211",
+    "language": "F90831 · Frontier Airlines",
+    "keywords": [
+      "Denmark"
+    ],
+    "countryKeywords": [
+      "Denmark"
+    ],
+    "value": "denmark"
+  },
+  {
+    "id": "remote-e8b59w",
+    "label": "Senegal",
+    "region": "Global destination · record 212",
+    "language": "G35816 · Gol Linhas Aereas Inteligentes",
+    "keywords": [
+      "Senegal"
+    ],
+    "countryKeywords": [
+      "Senegal"
+    ],
+    "value": "senegal"
+  },
+  {
+    "id": "remote-aac2a3",
+    "label": "Heard Island and McDonald Islands",
+    "region": "Global destination · record 213",
+    "language": "S75028 · S7 Airlines",
+    "keywords": [
+      "Heard Island and McDonald Islands"
+    ],
+    "countryKeywords": [
+      "Heard Island and McDonald Islands"
+    ],
+    "value": "heard island and mcdonald islands"
+  },
+  {
+    "id": "remote-qqwvyt",
+    "label": "Turkey",
+    "region": "Global destination · record 214",
+    "language": "CZ0390 · China Southern Airlines",
+    "keywords": [
+      "Turkey"
+    ],
+    "countryKeywords": [
+      "Turkey"
+    ],
+    "value": "turkey"
+  },
+  {
+    "id": "remote-x2k1iy",
+    "label": "Egypt",
+    "region": "Global destination · record 215",
+    "language": "N40512 · Nordwind Airlines",
+    "keywords": [
+      "Egypt"
+    ],
+    "countryKeywords": [
+      "Egypt"
+    ],
+    "value": "egypt"
+  },
+  {
+    "id": "remote-n5tqgf",
+    "label": "Norway",
+    "region": "Global destination · record 216",
+    "language": "MS0983 · Egyptair",
+    "keywords": [
+      "Norway"
+    ],
+    "countryKeywords": [
+      "Norway"
+    ],
+    "value": "norway"
+  },
+  {
+    "id": "remote-pj7mcn",
+    "label": "Yemen",
+    "region": "Global destination · record 217",
+    "language": "TU0075 · Tunisair",
+    "keywords": [
+      "Yemen"
+    ],
+    "countryKeywords": [
+      "Yemen"
+    ],
+    "value": "yemen"
+  },
+  {
+    "id": "remote-6g4pge",
+    "label": "Greenland",
+    "region": "Global destination · record 218",
+    "language": "VN0009 · Vietnam Airlines",
+    "keywords": [
+      "Greenland"
+    ],
+    "countryKeywords": [
+      "Greenland"
+    ],
+    "value": "greenland"
+  },
+  {
+    "id": "remote-fka5fv",
+    "label": "Palestine",
+    "region": "Global destination · record 219",
+    "language": "JD0008 · Beijing Capital Airlines",
+    "keywords": [
+      "Palestine"
+    ],
+    "countryKeywords": [
+      "Palestine"
+    ],
+    "value": "palestine"
+  },
+  {
+    "id": "remote-nngb1t",
+    "label": "Anguilla",
+    "region": "Global destination · record 220",
+    "language": "SA0006 · South African Airways",
+    "keywords": [
+      "Anguilla"
+    ],
+    "countryKeywords": [
+      "Anguilla"
+    ],
+    "value": "anguilla"
+  },
+  {
+    "id": "remote-9jjzy1",
+    "label": "Micronesia",
+    "region": "Global destination · record 221",
+    "language": "EK1451 · Emirates Airlines",
+    "keywords": [
+      "Micronesia"
+    ],
+    "countryKeywords": [
+      "Micronesia"
+    ],
+    "value": "micronesia"
+  },
+  {
+    "id": "remote-2ur04i",
+    "label": "Uzbekistan",
+    "region": "Global destination · record 222",
+    "language": "KE2565 · Korean Air",
+    "keywords": [
+      "Uzbekistan"
+    ],
+    "countryKeywords": [
+      "Uzbekistan"
+    ],
+    "value": "uzbekistan"
+  },
+  {
+    "id": "remote-i2yfe2",
+    "label": "Barbados",
+    "region": "Global destination · record 223",
+    "language": "TK0069 · Turkish Airlines",
+    "keywords": [
+      "Barbados"
+    ],
+    "countryKeywords": [
+      "Barbados"
+    ],
+    "value": "barbados"
+  },
+  {
+    "id": "remote-w5m7m9",
+    "label": "United Kingdom",
+    "region": "Global destination · record 224",
+    "language": "PS8194 · Ukraine International",
+    "keywords": [
+      "United Kingdom"
+    ],
+    "countryKeywords": [
+      "United Kingdom"
+    ],
+    "value": "united kingdom"
+  },
+  {
+    "id": "remote-i4978n",
+    "label": "India",
+    "region": "Global destination · record 225",
+    "language": "AK0059 · AirAsia",
+    "keywords": [
+      "India"
+    ],
+    "countryKeywords": [
+      "India"
+    ],
+    "value": "india"
+  },
+  {
+    "id": "remote-al4y98",
+    "label": "United States Minor Outlying Islands",
+    "region": "Global destination · record 226",
+    "language": "AC0058 · Air Canada",
+    "keywords": [
+      "United States Minor Outlying Islands"
+    ],
+    "countryKeywords": [
+      "United States Minor Outlying Islands"
+    ],
+    "value": "united states minor outlying islands"
+  },
+  {
+    "id": "remote-csmwbk",
+    "label": "Solomon Islands",
+    "region": "Global destination · record 227",
+    "language": "D76439 · AirAsia X",
+    "keywords": [
+      "Solomon Islands"
+    ],
+    "countryKeywords": [
+      "Solomon Islands"
+    ],
+    "value": "solomon islands"
+  },
+  {
+    "id": "remote-g53ypm",
+    "label": "Croatia",
+    "region": "Global destination · record 228",
+    "language": "VA0002 · Virgin Australia",
+    "keywords": [
+      "Croatia"
+    ],
+    "countryKeywords": [
+      "Croatia"
+    ],
+    "value": "croatia"
+  },
+  {
+    "id": "remote-6er7f6",
+    "label": "Comoros",
+    "region": "Global destination · record 229",
+    "language": "DE0001 · Condor",
+    "keywords": [
+      "Comoros"
+    ],
+    "countryKeywords": [
+      "Comoros"
+    ],
+    "value": "comoros"
+  },
+  {
+    "id": "remote-je3u9u",
+    "label": "Lithuania",
+    "region": "Global destination · record 230",
+    "language": "AC0008 · Air Canada",
+    "keywords": [
+      "Lithuania"
+    ],
+    "countryKeywords": [
+      "Lithuania"
+    ],
+    "value": "lithuania"
+  },
+  {
+    "id": "remote-uzcvw4",
+    "label": "China",
+    "region": "Global destination · record 231",
+    "language": "MU0474 · China Eastern Airlines",
+    "keywords": [
+      "China",
+      "北京",
+      "beijing",
+      "peking"
+    ],
+    "countryKeywords": [
+      "China",
+      "中国",
+      "중국",
+      "china",
+      "cn"
+    ],
+    "value": "china"
+  },
+  {
+    "id": "remote-swdt2g",
+    "label": "El Salvador",
+    "region": "Global destination · record 232",
+    "language": "CM0817 · Copa Airlines",
+    "keywords": [
+      "El Salvador"
+    ],
+    "countryKeywords": [
+      "El Salvador"
+    ],
+    "value": "el salvador"
+  },
+  {
+    "id": "remote-j00jyg",
+    "label": "Sint Maarten",
+    "region": "Global destination · record 233",
+    "language": "VB0009 · VivaAerobus",
+    "keywords": [
+      "Sint Maarten"
+    ],
+    "countryKeywords": [
+      "Sint Maarten"
+    ],
+    "value": "sint maarten"
+  },
+  {
+    "id": "remote-6xzuf9",
+    "label": "Costa Rica",
+    "region": "Global destination · record 234",
+    "language": "UX2294 · Air Europa",
+    "keywords": [
+      "Costa Rica"
+    ],
+    "countryKeywords": [
+      "Costa Rica"
+    ],
+    "value": "costa rica"
+  },
+  {
+    "id": "remote-jry5s8",
+    "label": "Côte d'Ivoire",
+    "region": "Global destination · record 235",
+    "language": "FZ0598 · Flydubai",
+    "keywords": [
+      "Côte d'Ivoire"
+    ],
+    "countryKeywords": [
+      "Côte d'Ivoire"
+    ],
+    "value": "côte d'ivoire"
+  },
+  {
+    "id": "remote-egl7ok",
+    "label": "Portugal",
+    "region": "Global destination · record 236",
+    "language": "MU0019 · China Eastern Airlines",
+    "keywords": [
+      "Portugal"
+    ],
+    "countryKeywords": [
+      "Portugal"
+    ],
+    "value": "portugal"
+  },
+  {
+    "id": "remote-5pcnr4",
+    "label": "Angola",
+    "region": "Global destination · record 237",
+    "language": "OB0840 · Boliviana de Aviacion",
+    "keywords": [
+      "Angola"
+    ],
+    "countryKeywords": [
+      "Angola"
+    ],
+    "value": "angola"
+  },
+  {
+    "id": "remote-5qffdo",
+    "label": "Oman",
+    "region": "Global destination · record 238",
+    "language": "VT5858 · Air Tahiti",
+    "keywords": [
+      "Oman"
+    ],
+    "countryKeywords": [
+      "Oman"
+    ],
+    "value": "oman"
+  },
+  {
+    "id": "remote-enaxzp",
+    "label": "Kenya",
+    "region": "Global destination · record 239",
+    "language": "JA0257 · JetSMART",
+    "keywords": [
+      "Kenya"
+    ],
+    "countryKeywords": [
+      "Kenya"
+    ],
+    "value": "kenya"
+  },
+  {
+    "id": "remote-nq2uvn",
+    "label": "Nauru",
+    "region": "Global destination · record 240",
+    "language": "U62338 · Ural Airlines",
+    "keywords": [
+      "Nauru"
+    ],
+    "countryKeywords": [
+      "Nauru"
+    ],
+    "value": "nauru"
+  }
+]

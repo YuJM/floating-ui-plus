@@ -2,6 +2,7 @@ import {defineConfig} from 'tsdown';
 
 export default defineConfig({
   entry: {
+    combobox: 'src/combobox.ts',
     fuzzy: 'src/fuzzy.ts',
     index: 'src/index.ts',
     search: 'src/search.ts',

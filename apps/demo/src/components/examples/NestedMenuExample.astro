@@ -23,7 +23,7 @@ import {
               Open actions <span aria-hidden="true">⌄</span>
             </button>
           </floating-reference>
-          <template data-fup-content data-nested-menu-content>
+          <template slot="content" data-nested-menu-content>
             <div class="menu-panel nested-menu-root">
               <div class="menu-heading">Tree coordinated actions</div>
               <floating-list
@@ -63,7 +63,7 @@ import {
                       nested
                       item-selector="[data-project-menu-item]"
                     >
-                      <template data-fup-content data-project-menu-content>
+                      <template slot="content" data-project-menu-content>
                         <div
                           class="menu-panel nested-menu-submenu"
                           aria-label="Move to project"
@@ -109,6 +109,7 @@ import {
 
 <script>
   import {
+    FloatingRootElement,
     click,
     dismiss,
     flip,
@@ -118,26 +119,13 @@ import {
     safePolygon,
     shift,
   } from '@floating-ui-plus/web-components';
-  import {
-    closeFloating,
-    configureFloating,
-    emitExampleAction,
-    floatingRoot,
-    floatingTemplate,
-    initializeExample,
-    onFloatingTemplateMount,
-    onFloatingOpenChange,
-  } from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('nested-menu', (scope) => {
-    const parent = floatingRoot(scope, '[data-nested-root]');
-    const parentTemplate = floatingTemplate(
-      scope,
-      '[data-nested-menu-content]',
-    );
-    let child: ReturnType<typeof floatingRoot> | null = null;
+    const parent = FloatingRootElement.query(scope, '[data-nested-root]');
+    let child: FloatingRootElement | null = null;
 
-    configureFloating(parent, {
+    parent.configure({
       middleware: [offset(8), flip(), shift({padding: 18})],
       plugins: [
         click(),
@@ -151,9 +139,9 @@ import {
       ],
     });
 
-    onFloatingTemplateMount(parentTemplate, (element) => {
-      child = floatingRoot(element, '[data-projects-root]');
-      configureFloating(child, {
+    parent.on('floatingmount', ({element}) => {
+      child = FloatingRootElement.query(element, '[data-projects-root]');
+      child.configure({
         middleware: [
           offset({mainAxis: 6, alignmentAxis: -6}),
           flip(),
@@ -171,32 +159,18 @@ import {
         ],
       });
 
-      const childTemplate = floatingTemplate(
-        element,
-        '[data-project-menu-content]',
-      );
-      onFloatingTemplateMount(childTemplate, (childElement) => {
+      child.on('floatingmount', ({element: childElement}) => {
         childElement.addEventListener('click', (event) => {
           if (!(event.target instanceof Element)) return;
           const item = event.target.closest<HTMLElement>(
             '[data-project-menu-item]',
           );
           if (!item || !childElement.contains(item)) return;
-          emitExampleAction(scope, `Moved to ${item.dataset.label}`);
-          closeFloating(parent, event);
+          parent.close(event, 'click');
         });
       });
 
-      element.addEventListener('click', (event) => {
-        if (!(event.target instanceof Element)) return;
-        const item = event.target.closest<HTMLElement>(
-          '[data-root-menu-action]',
-        );
-        if (!item || !element.contains(item)) return;
-        emitExampleAction(scope, `${item.dataset.label} selected`);
-      });
-
-      onFloatingOpenChange(child, ({open, reason}) => {
+      child.on('openchange', ({open, reason}) => {
         if (!open) {
           if (reason === 'escape-key' || reason === 'focus-out') {
             window.setTimeout(() => {
@@ -207,14 +181,10 @@ import {
             }, 0);
           }
         }
-        emitExampleAction(
-          scope,
-          open ? 'Project submenu opened' : 'Project submenu closed',
-        );
       });
     });
 
-    onFloatingOpenChange(parent, ({open, reason}) => {
+    parent.on('openchange', ({open, reason}) => {
       if (!open) {
         if (child) child.open = false;
         if (reason === 'escape-key') {
@@ -226,10 +196,6 @@ import {
           });
         }
       }
-      emitExampleAction(
-        scope,
-        open ? 'Nested menu opened' : 'Nested menu closed',
-      );
     });
   });
 </script>

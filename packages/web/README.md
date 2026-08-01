@@ -12,9 +12,30 @@ interaction layer that is more readily available in its React integration:
 coordinated open state, dismissal, focus, collections, portals, and robust
 search. Your application continues to own UI semantics and rendering.
 
+## How this differs from Floating UI
+
+Floating UI remains the positioning engine: `computePosition()`, middleware,
+`autoUpdate()`, and placement data still come from the upstream package. Plus
+adds the state and interaction layer around that engine without introducing a
+renderer or a design system.
+
+| Concern | Floating UI primitives | Floating UI Plus |
+| --- | --- | --- |
+| Positioning | `computePosition()` and middleware | The same primitives, plus controller lifecycle and arrow offset coordination |
+| Open state | Consumer-managed | `context.open`, `onOpenChange()`, presence, and controller refresh/update helpers |
+| Interaction | Consumer wires events | Composable `click()`, `hover()`, `focus()`, `dismiss()`, `role()`, navigation, and typeahead plugins |
+| Cross-surface behavior | Consumer composes it | Focus manager, portals, nested trees, lists, composites, delay groups, and scroll locking |
+| Search and combobox behavior | No query/data controller | `SearchController` plus `ComboboxController` for request state, editable-input behavior, ARIA, and selection |
+
+This package is intentionally headless. It does not render a combobox, menu, or
+dialog and does not choose labels, selection rules, or ARIA names. It gives a
+framework adapter the state and attributes needed to render those patterns.
+
 ## Install
 
 ```sh
+npm install @floating-ui-plus/web
+pnpm add @floating-ui-plus/web
 bun add @floating-ui-plus/web
 ```
 
@@ -54,6 +75,76 @@ tooltip.connect();
 Your renderer applies the reactive attributes and positioning output from the
 controller. Call `disconnect()` when the surface is temporarily removed and
 `destroy()` when its owner is disposed.
+
+## Controller API
+
+`createFloating()` returns a `FloatingController`. It is the framework-neutral
+owner of one reference/floating pair and can be shared with your renderer,
+focus manager, list, or portal bridge.
+
+| Member | Purpose |
+| --- | --- |
+| `context` | Read-only open state, elements, position, attributes, events, and `onOpenChange()` |
+| `context.attributes.reference` / `context.attributes.floating` | ARIA and interaction attributes for your reference and surface elements |
+| `floatingStyles` / `position` | Current `top`, `left`, `transform`, placement, and middleware data |
+| `setReference()` / `setPositionReference()` / `setFloating()` | Bind DOM or virtual reference elements and the floating element |
+| `pipe(...plugins)` | Compose interaction and behavior plugins; cleanup runs in reverse order |
+| `node()` / `withList()` / `delayGroup()` | Attach nested-tree, ordered-list, and delay-group services |
+| `connect()` / `disconnect()` | Start or pause event listeners, plugins, and positioning |
+| `refresh()` / `update()` / `whenPositioned()` | Reconcile plugins or request a new position, including an awaitable positioned state |
+| `destroy()` | Permanently release listeners, plugins, and controller resources |
+
+Every controller starts with the dialog ARIA relationship from `role()`. Add a
+pattern-specific role plugin when the surface is a tooltip, menu, listbox, or
+select. Your renderer still owns the element type, label, class names, visual
+state, and whether a closed surface is mounted.
+
+## Native top-layer surfaces
+
+`createFloatingTopLayer()` is the browser-DOM adapter for native Popover and
+modal Dialog surfaces. It keeps open state in the same `onOpenChange()`
+contract as `createFloating()` while the browser owns top-layer stacking,
+Escape, and (for popovers) light dismissal.
+
+```ts
+import {createFloatingTopLayer} from '@floating-ui-plus/web';
+
+const topLayer = createFloatingTopLayer({
+  onOpenChange(nextOpen, event, reason) {
+    open = nextOpen;
+    render();
+  },
+});
+
+topLayer.setKind('popover'); // or 'dialog'
+topLayer.setElement(panel);
+topLayer.connect();
+topLayer.sync(open);
+```
+
+Use `popover` for a non-modal surface and a real `<dialog>` for `dialog`.
+`supportsFloatingTopLayer()` lets renderers retain a portal fallback for older
+browsers. This controller does not move DOM nodes, so a framework's existing
+context/provide relationship remains intact.
+
+## Interaction plugins
+
+The root entry exports the interaction plugins used by most floating patterns:
+
+| Plugin | Typical use |
+| --- | --- |
+| `click()` | Toggle a surface from a reference press |
+| `hover()` / `safePolygon()` | Pointer intent and submenu corridors |
+| `focus()` | Open from keyboard focus |
+| `dismiss()` | Outside press, Escape, ancestor scroll, and focus-out dismissal |
+| `clientPoint()` | Use pointer coordinates or a virtual reference |
+| `listNavigation()` / `typeahead()` | Arrow-key movement and text matching in ordered items |
+| `role()` | Replace the baseline dialog semantics with tooltip, menu, select, or another supported role |
+
+Plugins accept a plain object or a getter, so options can follow application
+state without rebuilding the controller. Use `focusManager()` alongside
+`dismiss()` when the surface is a modal dialog, and `registerFloatingArrow()`
+when a custom renderer owns an arrow element.
 
 ## Arrow spacing
 
@@ -99,46 +190,164 @@ slot, upstream `offset()` semantics remain unchanged.
 | Positioning and interaction lifecycle | `createFloating()` with `.pipe()` |
 | Standard placement values | `PLACEMENT` and `PLACEMENTS` |
 | Async or controlled search requests | `createSearch()` from `/search` |
+| Direct DOM search-phase rendering | `createSearchRenderer()` from `/search` |
 | Local typo-tolerant search | `createFuzzySearchSource()` from `/fuzzy` |
+| Editable combobox input and selection | `createCombobox()` from `/combobox` |
+| Phase-aware combobox status text | `createComboboxStatusFormatter()` from `/combobox` |
 | Nested menus and ordered items | tree, list, and composite controllers |
 | Modal focus | `focusManager()` with `dismiss()` |
 | A DOM target outside the current renderer | `createPortalBridge()` |
 
-## Search is state, not UI
+## SearchController and ComboboxController
 
-`createSearch()` handles debounce, IME completion, cancellation, stale
-responses, caching, and pagination. The application keeps ownership of the
-combobox markup, open state, selection, focus, and ARIA.
+`createSearch()` (or `new SearchController(...)`) returns the framework-neutral
+`SearchController`. It handles
+debounce, minimum query length, IME composition, `AbortSignal` cancellation,
+stale-response protection, TTL caching, de-duplication by `getItemKey`, and
+cursor pagination through `loadMore()`.
+
+`createCombobox()` composes that search state with the repeated editable
+combobox behavior: focus/input opening, IME events, active option state,
+`aria-activedescendant`, Enter selection, option mouse binding, and the
+`role()` plus virtual `listNavigation()` plugins. `SearchSnapshot.phase`
+provides the neutral `idle`, `loading`, `error`, `empty`, and `results` states;
+the application still owns their copy and markup.
+
+When a replacement search or cursor page starts with results already present,
+`phase` stays `results` and `loading` becomes `true`. Result renderers can keep
+the current list mounted and decorate it with a non-blocking pending indicator;
+only an empty result set uses the standalone `loading` phase.
+
+Framework adapters consume the same `getInputProps()`,
+`getQueryTriggerProps()`, `getOptionProps()`, and `getNavigationOptions()`
+contract. Input props expose `aria-busy` and `data-loading` from the search
+lifecycle, so an input-level pending indicator can stay in sync without
+duplicating subscription code. The imperative `bindInput()`, `bindQueryTrigger()`, `bindOption()`,
+and `navigationPlugin()` helpers
+are built from those props, so Web Components, Vue, and direct DOM integrations
+share one behavior source.
+
+The demo's multilingual combobox is the concrete composition to copy. Its core
+wiring is:
 
 ```ts
-import {createAsyncSearchSource, createSearch} from '@floating-ui-plus/web/search';
+import {createFloating, dismiss} from '@floating-ui-plus/web';
+import {createCombobox} from '@floating-ui-plus/web/combobox';
+import {createFuzzySearchSource} from '@floating-ui-plus/web/fuzzy';
+import {SearchController} from '@floating-ui-plus/web/search';
 
-const source = createAsyncSearchSource<Product>({
-  async search({query, signal}) {
-    const response = await fetch(`/api/products?q=${encodeURIComponent(query)}`, {
-      signal,
-    });
-    if (!response.ok) throw new Error('Search failed');
-    return response.json();
+const source = createFuzzySearchSource(destinations, {
+  keys: destinationSearchKeys,
+  threshold: 0.35,
+});
+const search = new SearchController({
+  source,
+  getItemKey: (destination) => destination.id,
+  debounceMs: 0,
+});
+
+const floating = createFloating(() => ({open, onOpenChange: setOpen}));
+const combobox = createCombobox({
+  search,
+  getItemLabel: (item) => item.label,
+  getItemValue: (item) => item.id,
+  onOpenChange: (next, event, reason) =>
+    floating.context.onOpenChange(next, event, reason),
+});
+
+floating.pipe(dismiss(), ...combobox.interactions({loop: true, allowEscape: true}));
+combobox.subscribe(render);
+combobox.bindInput(input); // Attempts the initial source refresh.
+
+// After rendering options:
+combobox.setListElements(optionElements);
+optionElements.forEach((element, index) => {
+  combobox.bindOption(element, search.items[index], index);
+});
+
+// Call this when the results viewport reaches the end.
+const loadMore = () => void search.loadMore();
+
+// On unmount:
+combobox.destroy();
+search.destroy();
+```
+
+The controller's small lifecycle surface is deliberate:
+
+| API | Use |
+| --- | --- |
+| `setQuery(query)` | Update the query and schedule a debounced source request |
+| `getItemKey(item)` | Reuse the configured stable key in render adapters |
+| `subscribe(listener)` | Receive the initial and every subsequent `SearchSnapshot` |
+| `refresh()` | Re-run the current query immediately |
+| `loadMore()` | Request the next `nextCursor` page and append de-duplicated items |
+| `setControlledState(state)` | Feed results owned by another data-fetching library |
+| `connect()` / `disconnect()` / `destroy()` | Pause requests or release the controller lifecycle |
+
+`ComboboxController` exposes `setQuery()`, `activateQuery()`, `select()`, `setActiveIndex()`,
+`getInputProps()`, `getQueryTriggerProps()`, `getOptionProps()`,
+`getNavigationOptions()`, `bindInput()`, `bindQueryTrigger()`, `bindOption()`,
+and `setListElements()`. Framework renderers should bind the prop-returning
+methods declaratively; direct DOM and Custom Element adapters can use the
+imperative binding helpers. `activateQuery()` is intended for
+external query presets: it updates the query, opens the surface, and restores
+focus to the bound input without treating the preset as a result option.
+
+Use `createComboboxStatusFormatter()` when a framework renders an owned live
+region. It resolves `closed`, optional `selected`, and each search phase from
+one shared status map, while the consumer continues to own the live-region
+element and its accessible announcement policy.
+
+`getItemValue(item)` returns the stable value for form submission and defaults
+to the item key, so a consumer can keep a human-readable label separate from
+the submitted identifier.
+
+For direct DOM or Custom Element renderers, `createSearchRenderer()` removes
+the repetitive subscription, phase switch, and `replaceChildren()` lifecycle.
+All five phase renderers are required, so an empty query, pending request,
+failure, no-result outcome, and result list cannot accidentally leave stale
+content behind. A refreshing result list continues through the `results`
+renderer with `loading: true`, so the callback can retain its rows and add a
+pending affordance. The callbacks retain complete control of nodes and copy:
+
+```ts
+import {createSearchRenderer} from '@floating-ui-plus/web/search';
+
+const resultsRenderer = createSearchRenderer({
+  search,
+  render: {
+    idle: () => queryExamples(),
+    loading: () => message('Searching…'),
+    error: () => message('Search failed.'),
+    empty: ({query}) => message(`No match for ${query}`),
+    results: ({items}) => items.map(renderProductOption),
   },
 });
 
-const search = createSearch({
-  source,
-  getItemKey: (product) => product.id,
-});
+// Re-bind this whenever a portal creates a fresh content clone.
+const unbindResults = resultsRenderer.bind(resultsElement);
+// On portal unmount: unbindResults(); On owner disposal: resultsRenderer.destroy();
 ```
 
-For application-owned fetching, pass `items`, `loading`, `error`, and
-`onQueryChange` instead. `typeahead()` is for non-editable menus and selects;
-it supports multilingual fuzzy matching by default and accepts `findMatch` for
-custom matching.
+Vue applications should instead use their native `v-if` / `v-for` template
+branches with `useSearch().phase`; the renderer is intentionally a DOM adapter,
+not a replacement for framework rendering.
+
+`createFuzzySearchSource()` normalizes compatibility forms and diacritics,
+ranks exact/prefix/fuzzy matches, and exposes match ranges for highlighting.
+For application-owned fetching, pass its async request function directly as
+`source`, or omit `source` and call `setControlledState()` as the query library
+updates. The request function may use any transport and only normalizes its
+result to `{items, total?, nextCursor?}`.
+`typeahead()` is for non-editable menus and selects; it supports multilingual
+fuzzy matching by default and accepts `findMatch` for custom matching.
 
 ## Imports and compatibility
 
 The package is safe to import during SSR; DOM work begins when a controller is
-connected. Use `/search` when fuzzy search is unnecessary, `/fuzzy` when it
-is needed, and `/utils` for shared utility exports. The root entry also
+connected. Use `/search` for request state, `/fuzzy` for local fuzzy search,
+`/combobox` for editable combobox behavior, and `/utils` for shared utilities. The root entry also
 re-exports them for convenience.
 
 Run the package checks from the workspace root:

@@ -42,7 +42,7 @@ const plugins = [
           Open navigator <span>⌄</span>
         </FloatingReference>
         <FloatingList navigation typeahead loop>
-          <FloatingPortal v-if="open" :active="open">
+          <FloatingPortal>
             <Transition name="vue-surface">
               <FloatingContent class="menu-panel">
                 <div class="menu-heading">

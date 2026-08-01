@@ -15,17 +15,19 @@ interface Props {
   title?: string;
   description?: string;
   example?: ExampleId;
+  examplePath?: string;
   locale: Locale;
   noindex?: boolean;
 }
 
-const {title, description, example, noindex, locale} = Astro.props;
+const {title, description, example, examplePath, noindex, locale} = Astro.props;
 const options = {locale};
 const examples = getExamples(locale);
 const activeExample = examples.find((item) => item.id === example);
 const ActiveExampleIcon = activeExample ? EXAMPLE_ICONS[activeExample.id] : House;
 const framework = Astro.url.searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
 const frameworkSearch = `?framework=${framework}`;
+const localizedExamplePath = examplePath ?? example ?? '';
 const routeMetadata = getSeoMetadata(Astro.url.pathname, locale);
 const metadata = {
   ...routeMetadata,
@@ -48,6 +50,11 @@ const metadata = {
           : 'web-components';
     </script>
     <script>
+      import {enableDemoMockServer} from '../mocks/browser';
+
+      // The Service Worker must be active before either framework creates an
+      // async search source, otherwise the first request can bypass MSW.
+      await enableDemoMockServer();
       // Upgrade floating elements before per-example configuration modules run.
       import '@floating-ui-plus/web-components';
     </script>
@@ -57,10 +64,10 @@ const metadata = {
     <div class="global-utilities border-b border-border/70 bg-surface/60">
       <div class="container mx-auto flex items-center justify-end gap-3 px-5 py-3 sm:px-8">
         <div class="framework-switch" role="group" aria-label={m.framework_label(undefined, options)} title={m.framework_switch_title(undefined, options)}>
-          <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, example ?? '')}?framework=web-components`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
+          <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=web-components`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
             <Box aria-hidden="true" size={15} strokeWidth={1.8} />
           </a>
-          <a data-framework-switch="vue" href={`${getRelativeLocaleUrl(locale, example ?? '')}?framework=vue`} aria-label="Vue" title={m.framework_vue_title(undefined, options)}>
+          <a data-framework-switch="vue" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=vue`} aria-label="Vue" title={m.framework_vue_title(undefined, options)}>
             <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
               <path d={siVuedotjs.path} />
             </svg>
@@ -68,7 +75,7 @@ const metadata = {
         </div>
         <nav class="language-switch" aria-label={m.language_label(undefined, options)}>
           {(['en', 'ko', 'ja'] as const).map((target) => (
-            <a data-language-switch data-preserve-framework href={`${getRelativeLocaleUrl(target, example ?? '')}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
+            <a data-language-switch data-preserve-framework href={`${getRelativeLocaleUrl(target, localizedExamplePath)}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
               {{en: 'English', ko: '한국어', ja: '日本語'}[target]}
             </a>
           ))}
@@ -138,6 +145,20 @@ const metadata = {
           new URL(window.location.href).searchParams.get('framework'),
         );
         document.documentElement.dataset.framework = framework;
+        const frameworkPackage =
+          framework === 'vue'
+            ? '@floating-ui-plus/vue'
+            : '@floating-ui-plus/web-components';
+        document
+          .querySelectorAll<HTMLElement>('[data-framework-package]')
+          .forEach((element) => {
+            element.textContent = frameworkPackage;
+          });
+        document
+          .querySelectorAll<HTMLElement>('[data-framework-name]')
+          .forEach((element) => {
+            element.textContent = framework;
+          });
         document
           .querySelector('meta[name="theme-color"]')
           ?.setAttribute('content', framework === 'vue' ? '#effaf5' : '#edf3ff');

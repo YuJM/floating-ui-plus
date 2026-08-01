@@ -4,6 +4,7 @@ import {
   h,
   inject,
   mergeProps,
+  onMounted,
   onBeforeUnmount,
   provide,
   shallowRef,
@@ -12,14 +13,29 @@ import {
   withDirectives,
   type InjectionKey,
   type PropType,
+  type Ref,
 } from 'vue';
 
 import {vFloating} from './directives';
-import type {FloatingPlugin, ItemState} from '@floating-ui-plus/web';
+import {
+  createFloatingTopLayer,
+  supportsFloatingTopLayer,
+  type FloatingTopLayerController,
+  type FloatingPlugin,
+  type FloatingTopLayer,
+  type ItemState,
+} from '@floating-ui-plus/web';
 import type {UseFloatingOptions, UseFloatingReturn} from './types';
 import {useFloating} from './useFloating';
+import {useFloatingPortalTopLayer} from './topLayerContext';
 
 const FloatingRootKey: InjectionKey<UseFloatingReturn> = Symbol('FloatingRoot');
+const FloatingRootOpenKey: InjectionKey<Readonly<Ref<boolean>>> =
+  Symbol('FloatingRootOpen');
+const FloatingRootTopLayerKey: InjectionKey<Readonly<Ref<FloatingTopLayer>>> =
+  Symbol('FloatingRootTopLayer');
+const FloatingRootTopLayerControllerKey: InjectionKey<FloatingTopLayerController> =
+  Symbol('FloatingRootTopLayerController');
 export interface FloatingRootHierarchy {
   floating: UseFloatingReturn;
   parent: FloatingRootHierarchy | null;
@@ -29,6 +45,18 @@ const FloatingRootHierarchyKey: InjectionKey<FloatingRootHierarchy> =
 
 export function useFloatingRoot(explicit?: UseFloatingReturn | null) {
   return explicit ?? inject(FloatingRootKey, null);
+}
+
+export function useFloatingRootOpen() {
+  return inject(FloatingRootOpenKey, null);
+}
+
+export function useFloatingRootTopLayer() {
+  return inject(FloatingRootTopLayerKey, null);
+}
+
+function useFloatingRootTopLayerController() {
+  return inject(FloatingRootTopLayerControllerKey, null);
 }
 
 export function useFloatingRootHierarchy() {
@@ -50,6 +78,10 @@ export const FloatingRoot = defineComponent({
     plugins: {
       type: Array as PropType<FloatingPlugin[]>,
       default: () => [],
+    },
+    topLayer: {
+      type: String as PropType<FloatingTopLayer>,
+      default: 'none',
     },
   },
   emits: ['update:open', 'open-change'],
@@ -73,6 +105,26 @@ export const FloatingRoot = defineComponent({
         emit('open-change', open, event, reason);
       },
     });
+    const open = computed(() => localOpen.value);
+    const topLayer = computed<FloatingTopLayer>(() => props.topLayer);
+    const nativeTopLayer = createFloatingTopLayer({
+      onOpenChange(open, event, reason) {
+        localOpen.value = open;
+        emit('update:open', open);
+        emit('open-change', open, event, reason);
+      },
+    });
+    nativeTopLayer.connect();
+    watch(
+      [topLayer, open],
+      ([kind, nextOpen]) => {
+        // Surface declarations take precedence; this keeps the root prop as
+        // a backwards-compatible default rather than a competing owner.
+        if (kind !== 'none') nativeTopLayer.setKind(kind);
+        nativeTopLayer.sync(nextOpen);
+      },
+      {flush: 'post', immediate: true},
+    );
     let unregisterPlugins: (() => void) | undefined;
     watch(
       () => props.plugins,
@@ -82,8 +134,14 @@ export const FloatingRoot = defineComponent({
       },
       {immediate: true},
     );
-    onBeforeUnmount(() => unregisterPlugins?.());
+    onBeforeUnmount(() => {
+      unregisterPlugins?.();
+      nativeTopLayer.destroy();
+    });
     provide(FloatingRootKey, api);
+    provide(FloatingRootOpenKey, open);
+    provide(FloatingRootTopLayerKey, topLayer);
+    provide(FloatingRootTopLayerControllerKey, nativeTopLayer);
     provide(FloatingRootHierarchyKey, {
       floating: api,
       parent: parentHierarchy,
@@ -92,7 +150,7 @@ export const FloatingRoot = defineComponent({
     return () =>
       slots.default?.({
         floating: api,
-        open: computed(() => localOpen.value),
+        open,
       });
   },
 });
@@ -132,27 +190,97 @@ export const FloatingContent = defineComponent({
   props: {
     floating: Object as PropType<UseFloatingReturn>,
     as: {type: String, default: 'div'},
+    topLayer: String as PropType<FloatingTopLayer | undefined>,
   },
   setup(props, {attrs, slots}) {
     const injected = useFloatingRoot();
+    const topLayer = useFloatingRootTopLayer();
+    const portalTopLayer = useFloatingPortalTopLayer();
+    const topLayerController = useFloatingRootTopLayerController();
+    const rootOpen = useFloatingRootOpen();
     const floating = props.floating ?? injected;
     if (!floating) {
       throw new Error('FloatingContent requires a FloatingRoot or a floating prop.');
     }
-    return () =>
-      withDirectives(
-        h(
-          props.as,
-          mergeProps(attrs, floating.floatingAttrs, {
-            ref: (element: unknown) =>
-              floating.controller.setFloating(
-                element instanceof HTMLElement ? element : null,
-              ),
-          }),
-          slots.default?.({floating}),
+    const surfaceTopLayer = (): FloatingTopLayer => {
+      if (props.topLayer) return props.topLayer;
+      if (portalTopLayer?.value && portalTopLayer.value !== 'none') {
+        return portalTopLayer.value;
+      }
+      if (topLayer?.value && topLayer.value !== 'none') return topLayer.value;
+      // Native dialogs are unambiguous. Popup roles get the native Popover
+      // API automatically, while ordinary positioned content keeps the
+      // existing non-top-layer behavior.
+      if (props.as === 'dialog') return 'dialog';
+      const role = floating.floatingAttrs.role;
+      return role === 'dialog' || role === 'menu' || role === 'listbox'
+        ? 'popover'
+        : 'none';
+    };
+    const usesNativeDialog = () =>
+      surfaceTopLayer() === 'dialog' && supportsFloatingTopLayer('dialog');
+    let surfaceElement: HTMLElement | null = null;
+    const syncNativeTopLayer = () => {
+      if (!topLayerController || !rootOpen) return;
+      topLayerController.setKind(surfaceTopLayer());
+      if (surfaceElement && !surfaceElement.isConnected) return;
+      topLayerController.sync(rootOpen.value);
+    };
+    onMounted(syncNativeTopLayer);
+    watch(
+      [rootOpen ?? shallowRef(false), surfaceTopLayer],
+      syncNativeTopLayer,
+      {flush: 'post'},
+    );
+    const setFloatingElement = (element: unknown) => {
+      const floatingElement =
+        element instanceof HTMLElement ? element : null;
+      surfaceElement = floatingElement;
+      floating.controller.setFloating(floatingElement);
+      topLayerController?.setKind(surfaceTopLayer());
+      topLayerController?.setElement(floatingElement);
+      if (topLayerController && rootOpen) {
+        const syncTopLayer = () => syncNativeTopLayer();
+        // Vue invokes template refs before the containing portal wrapper is
+        // inserted. Native `showModal()` rejects disconnected dialogs, so
+        // retry once the same render turn has committed the DOM.
+        if (floatingElement?.isConnected || floatingElement == null) {
+          syncTopLayer();
+        } else {
+          queueMicrotask(syncTopLayer);
+        }
+      }
+      // `vFloating` normally owns presence. Native dialogs deliberately skip
+      // that directive because the browser owns their position, so retain the
+      // same mount lifecycle here.
+      if (usesNativeDialog()) {
+        floating.controller.presence.set(
+          floatingElement ? 'mounted' : 'unmounted',
+        );
+      }
+    };
+    return () => {
+      const content = h(
+        props.as,
+        mergeProps(
+          {
+            // Portals used to remove closed content from the render tree. A
+            // direct surface keeps its DOM ownership, so it needs the same
+            // closed-state visibility contract without requiring Teleport.
+            hidden: rootOpen ? !rootOpen.value : undefined,
+          },
+          attrs,
+          floating.floatingAttrs,
+          {
+            ref: setFloatingElement,
+          },
         ),
-        [[vFloating, floating]],
+        slots.default?.({floating}),
       );
+      return usesNativeDialog()
+        ? content
+        : withDirectives(content, [[vFloating, floating]]);
+    };
   },
 });
 

@@ -4,6 +4,13 @@ export type * from './types';
 export {useFloating} from './useFloating';
 export {useSearch} from './search';
 export type {UseSearchReturn} from './search';
+export {FloatingSearch} from './search-content';
+export {useCombobox} from './combobox';
+export type {
+  ComboboxInputLifecycleProps,
+  UseComboboxOptions,
+  UseComboboxReturn,
+} from './combobox';
 export {
   FloatingContent,
   FloatingClose,
@@ -11,18 +18,23 @@ export {
   FloatingReference,
   FloatingRoot,
   useFloatingRoot,
+  useFloatingRootTopLayer,
 } from './root';
 export {
   autoPlacement,
   autoUpdate,
   computePosition,
   createAsyncSearchSource,
+  createCombobox,
+  createComboboxStatusFormatter,
   createFloating,
   createFloatingContextScope,
+  createFloatingTopLayer,
   createFuzzyMatcher,
   createFuzzySearch,
   createFuzzySearchSource,
   createSearch,
+  createSearchRenderer,
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   createOverlayElement,
@@ -48,12 +60,15 @@ export {
   platform,
   PortalBridge,
   PortalNodeController,
+  SearchRenderer,
+  FloatingTopLayerController,
   provideFloatingContext,
   removePortalNode,
   resolvePortalRoot,
   requestFloatingContext,
   shift,
   size,
+  supportsFloatingTopLayer,
 } from '@floating-ui-plus/web';
 export type {
   ClickOptions,
@@ -81,6 +96,7 @@ export type {
   FloatingPosition,
   FloatingRole,
   FloatingStyles,
+  FloatingTopLayer,
   FocusManagerOptions,
   FocusOptions,
   FocusTarget,
@@ -113,9 +129,24 @@ export type {
   SearchOptions,
   SearchPage,
   SearchRequest,
+  SearchPhase,
+  SearchRenderContext,
+  SearchRendererOptions,
+  SearchRenderers,
+  SearchRenderOutput,
   SearchSnapshot,
   SearchSource,
+  SearchSourceHandler,
+  SearchSourceInput,
   SearchSourceItem,
+  ComboboxOptions,
+  ComboboxNavigationOptions,
+  ComboboxQueryTriggerProps,
+  ComboboxSnapshot,
+  ComboboxStatusContext,
+  ComboboxStatusFormatter,
+  ComboboxStatusMessages,
+  ComboboxStatusText,
   SafePolygonOptions,
   TransitionStatus,
   TransitionStyles,

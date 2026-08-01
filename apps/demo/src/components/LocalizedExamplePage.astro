@@ -12,21 +12,28 @@ import TooltipExample from './examples/TooltipExample.astro';
 import DemoLayout from '../layouts/DemoLayout.astro';
 import ExampleView from '../vue/views/ExampleView.vue';
 import * as m from '../paraglide/messages';
-import {getExample, type ExampleId, type Locale} from '../i18n';
+import {
+  getExample,
+  type ComboboxSource,
+  type ExampleId,
+  type Locale,
+} from '../i18n';
 
-const {locale, example} = Astro.props as {locale: Locale; example: ExampleId};
+const {locale, example, source} = Astro.props as {
+  locale: Locale;
+  example: ExampleId;
+  source?: ComboboxSource;
+};
 const details = getExample(locale, example);
 const webExamples = {tooltip: TooltipExample, popover: PopoverExample, menu: MenuExample, 'nested-menu': NestedMenuExample, 'client-point': ClientPointExample, combobox: ComboboxExample, placement: PlacementExample, middleware: MiddlewareExamples, modal: ModalExample};
 const WebExample = webExamples[example];
 const variant = example === 'middleware' ? 'full' : example === 'placement' ? 'wide' : 'default';
-const frameworkPackage = Astro.url.searchParams.get('framework') === 'vue'
-  ? '@floating-ui-plus/vue'
-  : '@floating-ui-plus/web-components';
+const examplePath = source ? `${example}/${source}` : example;
 ---
 
-<DemoLayout locale={locale} example={example}>
-  <ExampleRoute locale={locale} heading={details.heading} description={details.description} build={details.build} features={details.features} frameworkPackage={frameworkPackage} variant={variant}>
-    <section data-framework-panel="web-components" class="framework-panel"><WebExample /></section>
-    <section data-framework-panel="vue" class="framework-panel"><ExampleView exampleName={example} locale={locale} client:only="vue"><p>{m.loading_example(undefined, {locale})}</p></ExampleView></section>
+<DemoLayout locale={locale} example={example} examplePath={examplePath}>
+  <ExampleRoute locale={locale} heading={details.heading} description={details.description} build={details.build} features={details.features} variant={variant}>
+    <section data-framework-panel="web-components" class="framework-panel"><WebExample source={source} /></section>
+    <section data-framework-panel="vue" class="framework-panel"><ExampleView exampleName={example} locale={locale} source={source} client:only="vue"><p>{m.loading_example(undefined, {locale})}</p></ExampleView></section>
   </ExampleRoute>
 </DemoLayout>

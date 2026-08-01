@@ -1,6 +1,7 @@
 import {
   SearchController as WebSearchController,
   type SearchOptions,
+  type SearchPhase,
   type SearchSnapshot,
 } from '@floating-ui-plus/web';
 import {
@@ -21,6 +22,7 @@ export interface UseSearchReturn<T> {
   state: Readonly<ShallowRef<SearchSnapshot<T>>>;
   query: ComputedRef<string>;
   items: ComputedRef<readonly T[]>;
+  phase: ComputedRef<SearchPhase>;
   loading: ComputedRef<boolean>;
   error: ComputedRef<unknown>;
 }
@@ -66,6 +68,7 @@ export function useSearch<T>(
     state,
     query: computed(() => state.value.query),
     items: computed(() => state.value.items),
+    phase: computed(() => state.value.phase),
     loading: computed(() => state.value.loading),
     error: computed(() => state.value.error),
   };

@@ -16,8 +16,8 @@
           <i aria-hidden="true"></i>
         </div>
       </floating-reference>
-      <template data-fup-content>
-        <div class="cursor-tooltip">Pointer is the <b>reference</b></div>
+      <template slot="content">
+          <div class="cursor-tooltip">Pointer is the <b>reference</b></div>
       </template>
     </floating-root>
   </div>
@@ -26,6 +26,7 @@
 
 <script>
   import {
+    FloatingRootElement,
     clientPoint,
     dismiss,
     flip,
@@ -34,21 +35,18 @@
     role,
     shift,
   } from '@floating-ui-plus/web-components';
-  import {
-    configureFloating,
-    emitExampleAction,
-    floatingRoot,
-    initializeExample,
-    onFloatingOpenChange,
-  } from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('client-point', (scope) => {
-    const floating = floatingRoot(scope, '[data-client-point-root]');
+    const floating = FloatingRootElement.query(
+      scope,
+      '[data-client-point-root]',
+    );
     const field = scope.querySelector<HTMLElement>('.cursor-field');
     const label = scope.querySelector<HTMLElement>('[data-pointer-label]');
     if (!field || !label) return;
 
-    configureFloating(floating, {
+    floating.configure({
       middleware: [offset(16), flip(), shift({padding: 18})],
       plugins: [
         hover({move: true}),
@@ -68,14 +66,6 @@
         frame = null;
         label.textContent = nextLabel;
       });
-    });
-    onFloatingOpenChange(floating, ({open}) => {
-      emitExampleAction(
-        scope,
-        open
-          ? 'Cursor reference is now tracking the pointer'
-          : 'Cursor reference released',
-      );
     });
   });
 </script>
