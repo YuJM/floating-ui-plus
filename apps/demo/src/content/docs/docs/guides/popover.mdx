@@ -25,6 +25,12 @@ Escape handling, and the top layer. In Web Components this is
 Both forms use the browser's standard [`<dialog>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog),
 including its modal focus and inertness behavior.
 
+When a native dialog is open, Floating UI Plus also applies a ref-counted
+document scroll lock. It uses the platform's `overflow: hidden` behavior and
+does not install a touch-event interception layer by default. Applications
+targeting legacy iOS Safari or a constrained WebView can add an app-specific
+touch guard when needed.
+
 Use a portal only when the surface must move to a body-level target, such as
 escaping a clipping ancestor. Add an overlay or focus manager for a custom
 non-native modal composition.

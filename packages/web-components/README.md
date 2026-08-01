@@ -53,6 +53,11 @@ These are browser Web Standards APIs—the Popover API for anchored non-modal
 surfaces and the native `<dialog>` element for modal surfaces—not a portal
 emulation. The browser owns the corresponding top-layer behavior.
 
+Opening a native dialog also applies a ref-counted document scroll lock using
+CSS `overflow: hidden`. No touch-event interception is installed by default;
+add an application-specific touch guard only when targeting a legacy iOS or
+WebView environment that needs one.
+
 Use a real `<dialog slot="floating">` for a modal. The browser then owns the
 top layer, focus, and inertness. Reserve `<floating-portal>` for a surface that
 explicitly must escape a clipping ancestor or render at a custom target.

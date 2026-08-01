@@ -1,4 +1,5 @@
 import type {OpenChangeReason} from './types';
+import {lockScroll} from './overlay';
 
 /** Browser-managed surface modes. `none` keeps the renderer's normal surface. */
 export type FloatingTopLayer = 'none' | 'popover' | 'dialog';
@@ -47,6 +48,7 @@ export class FloatingTopLayerController {
   #open = false;
   #connected = false;
   #cleanup: (() => void) | undefined;
+  #unlockScroll: (() => void) | undefined;
 
   constructor(options: FloatingTopLayerOptions) {
     this.#options = options;
@@ -67,6 +69,7 @@ export class FloatingTopLayerController {
   setElement(element: HTMLElement | null) {
     if (element === this.#element) return;
     this.#hideNative();
+    this.#releaseScrollLock();
     this.#cleanup?.();
     this.#cleanup = undefined;
     this.#element = element;
@@ -76,6 +79,7 @@ export class FloatingTopLayerController {
   setKind(kind: FloatingTopLayer) {
     if (kind === this.#kind) return;
     this.#hideNative();
+    this.#releaseScrollLock();
     this.#cleanup?.();
     this.#cleanup = undefined;
     this.#kind = kind;
@@ -92,6 +96,7 @@ export class FloatingTopLayerController {
     if (!this.#connected) return;
     this.#open = false;
     this.#hideNative();
+    this.#releaseScrollLock();
     this.#connected = false;
     this.#cleanup?.();
     this.#cleanup = undefined;
@@ -107,6 +112,7 @@ export class FloatingTopLayerController {
     this.#open = open;
     const element = this.#element;
     if (!this.#connected || !element || !element.isConnected || !this.supported) {
+      if (!open) this.#releaseScrollLock();
       return false;
     }
 
@@ -135,10 +141,15 @@ export class FloatingTopLayerController {
           // Their post-render sync retries after the DOM commit.
           return false;
         }
+        this.#acquireScrollLock(element);
+      } else if (open) {
+        this.#acquireScrollLock(element);
       } else if (!open && element.open) {
+        this.#releaseScrollLock();
         element.close();
         element.hidden = true;
       } else if (!open) {
+        this.#releaseScrollLock();
         element.hidden = true;
       }
       return true;
@@ -177,6 +188,7 @@ export class FloatingTopLayerController {
         if (accepted === false) this.sync(true);
       };
       const handleClose = (event: Event) => {
+        this.#releaseScrollLock();
         if (!this.#open) return;
         const accepted = this.#options.onOpenChange(false, event, 'click');
         if (accepted === false) this.sync(true);
@@ -200,6 +212,16 @@ export class FloatingTopLayerController {
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {
       if (element.open) element.close();
     }
+  }
+
+  #acquireScrollLock(element: HTMLDialogElement) {
+    if (this.#unlockScroll) return;
+    this.#unlockScroll = lockScroll(element.ownerDocument);
+  }
+
+  #releaseScrollLock() {
+    this.#unlockScroll?.();
+    this.#unlockScroll = undefined;
   }
 }
 

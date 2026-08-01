@@ -73,6 +73,11 @@ teleported.
 coordinates the reference, positioning, and interactions without replacing
 those platform behaviors.
 
+Native dialogs also acquire a ref-counted document scroll lock while open.
+The default uses CSS `overflow: hidden`; touch-event interception is not
+installed. Add a touch guard in the host application only for legacy iOS or a
+WebView that still requires it.
+
 ## Search and `useQuery()`
 
 `useSearch()` owns request state: debouncing, IME composition, cancellation,
