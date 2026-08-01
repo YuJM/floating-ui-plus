@@ -344,7 +344,7 @@ describe('Floating UI Plus Vue adapter', () => {
           default: () => [
             h(FloatingReference, {'data-testid': 'reference'}, {default: () => 'Open'}),
             open.value
-              ? h(FloatingContent, {'data-testid': 'content'}, {default: () => 'Content'})
+            ? h(FloatingContent, {topLayer: 'none', 'data-testid': 'content'}, {default: () => 'Content'})
               : null,
           ],
         },

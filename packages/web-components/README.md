@@ -45,9 +45,9 @@ not needed for the usual case.
 
 The root-owned `template[slot="content"]` is the explicit native Popover
 composition. A direct `<dialog slot="floating">` (or a top-level dialog in
-the template) uses native dialog behavior. For a direct non-dialog surface,
-set `top-layer="popover"` explicitly; `floating-role` only sets ARIA
-semantics and does not select a top layer.
+the template) uses native dialog behavior. Direct slotted non-dialog surfaces
+also use the Popover API by default; set `top-layer="none"` for an intentionally
+positioned/custom surface. `floating-role` only sets ARIA semantics.
 
 These are browser Web Standards APIs—the Popover API for anchored non-modal
 surfaces and the native `<dialog>` element for modal surfaces—not a portal

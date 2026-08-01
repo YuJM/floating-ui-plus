@@ -285,7 +285,9 @@ export class FloatingRootRuntime {
     if (explicitTopLayer === 'popover' || explicitTopLayer === 'dialog') {
       return explicitTopLayer;
     }
-    return 'none';
+    // A direct slotted surface mirrors template content and uses the native
+    // Popover API by default. `top-layer="none"` remains the opt-out.
+    return 'popover';
   }
 
   #resolveSlottedSurface(

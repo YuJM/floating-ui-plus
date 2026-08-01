@@ -36,7 +36,7 @@ const plugins = [click(), dismiss(), role({role: 'dialog'})];
 <template>
   <FloatingRoot v-model:open="open" :plugins="plugins">
     <FloatingReference>Open settings</FloatingReference>
-    <FloatingContent top-layer="popover">
+    <FloatingContent>
       Settings
       <FloatingClose>Close</FloatingClose>
     </FloatingContent>
@@ -48,9 +48,9 @@ Use `FloatingRoot` when descendants should share the provided controller. Use
 `useFloating()` when your component already owns its reference and floating
 element refs.
 
-`role()` controls ARIA semantics only. Use `top-layer="popover"` for a native
-Popover surface and `as="dialog"` for a native dialog; a role alone does not
-promote the surface.
+`FloatingContent` uses the browser Popover API by default. Use
+`top-layer="none"` for an intentionally positioned/custom surface and
+`as="dialog"` for a native dialog. `role()` controls ARIA semantics only.
 
 ## What gets installed
 

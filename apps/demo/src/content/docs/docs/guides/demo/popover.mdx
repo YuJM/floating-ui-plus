@@ -35,6 +35,6 @@ surface in the root tree so the platform owns top-layer stacking and light
 dismissal; it does not emulate a popover with a portal.
 
 The demo uses `offset(12)`, `flip()`, and `shift({padding: 18})`. The Vue
-version uses `FloatingContent top-layer="popover"` to make the same native
-Popover contract explicit. Use a portal only when the panel must escape a
-clipping ancestor; it is not required for this composition.
+version receives the same native Popover behavior by default. Use a portal
+only when the panel must escape a clipping ancestor; it is not required for
+this composition.

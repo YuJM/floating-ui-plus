@@ -101,7 +101,6 @@ watch(rootOpen, (open) => {
             >
               <Transition name="vue-surface">
                 <FloatingContent
-                  top-layer="popover"
                   class="menu-panel"
                   data-testid="actions-menu"
                 >
@@ -141,7 +140,6 @@ watch(rootOpen, (open) => {
                       <FloatingList navigation typeahead loop nested>
                         <Transition name="vue-surface">
                           <FloatingContent
-                            top-layer="popover"
                             class="menu-panel nested-menu-submenu"
                             data-testid="project-menu"
                           >

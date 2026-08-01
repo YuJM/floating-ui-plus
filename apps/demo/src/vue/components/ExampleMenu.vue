@@ -42,7 +42,7 @@ const plugins = [
         </FloatingReference>
         <FloatingList navigation typeahead loop>
           <Transition name="vue-surface">
-              <FloatingContent top-layer="popover" class="menu-panel">
+              <FloatingContent class="menu-panel">
                 <div class="menu-heading">
                   <span>Jump to a field</span>
                   <span class="menu-shortcuts" aria-label="Arrow keys to navigate, Enter to select, Escape to close">

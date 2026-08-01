@@ -215,11 +215,13 @@ export const FloatingContent = defineComponent({
       // A native dialog is an explicit surface contract. ARIA roles describe
       // semantics only and must not promote an ordinary positioned element.
       if (props.as === 'dialog') return 'dialog';
-      if (portalTopLayer?.value && portalTopLayer.value !== 'none') {
-        return portalTopLayer.value;
-      }
+      // A portal explicitly owns the surface policy. Its default `none`
+      // keeps custom portal/overlay compositions out of the native top layer.
+      if (portalTopLayer) return portalTopLayer.value;
       if (topLayer?.value && topLayer.value !== 'none') return topLayer.value;
-      return 'none';
+      // Vue declarative content mirrors Web Components template content:
+      // ordinary surfaces use the browser Popover API by default.
+      return 'popover';
     };
     const usesNativeDialog = () =>
       surfaceTopLayer() === 'dialog' && supportsFloatingTopLayer('dialog');

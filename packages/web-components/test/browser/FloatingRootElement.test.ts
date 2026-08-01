@@ -178,7 +178,7 @@ describe('FloatingRootElement', () => {
     expect(root.floatingElement?.hidden).toBe(true);
   });
 
-  test('does not infer a native popover from an ARIA role alone', async () => {
+  test('uses a native popover for a direct slotted surface by default', async () => {
     if (!supportsFloatingTopLayer('popover')) return;
     const root = document.createElement('floating-root');
     root.open = true;
@@ -191,7 +191,7 @@ describe('FloatingRootElement', () => {
     await root.updateComplete;
     await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
 
-    expect(root.floatingElement).not.toHaveAttribute('popover');
+    expect(root.floatingElement).toHaveAttribute('popover', 'manual');
     expect(root.floatingElement?.hidden).toBe(false);
   });
 

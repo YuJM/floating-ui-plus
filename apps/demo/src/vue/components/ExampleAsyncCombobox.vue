@@ -134,7 +134,6 @@ const loadMore = () => void search.controller.loadMore();
 
         <Transition name="vue-surface">
             <FloatingContent
-              top-layer="popover"
               class="vue-combobox-popup vue-async-combobox-popup"
               data-floating-query-popup
             >

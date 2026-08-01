@@ -6,8 +6,8 @@ description: Choose native Popover, dialog, template, and portal composition.
 ## Non-modal anchored surfaces
 
 Keep the surface in the same render tree. Web Components use a root-owned
-`<template slot="content">`; Vue uses `FloatingContent top-layer="popover"`; direct Web uses
-`createFloatingTopLayer({onOpenChange})` and binds the existing element.
+`<template slot="content">`; Vue uses `FloatingContent` with the same default;
+direct Web uses `createFloatingTopLayer({onOpenChange})` and binds the existing element.
 
 These compositions opt into the browser's standard [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API),
 so stacking and light-dismiss behavior come from the platform rather than a

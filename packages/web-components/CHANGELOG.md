@@ -1,5 +1,24 @@
 # @floating-ui-plus/web-components
 
+## 0.7.2
+
+### Patch Changes
+
+- 0952e81: Use the browser Popover API by default for ordinary floating surfaces in both
+  adapters. Native dialogs remain explicit, and `top-layer="none"` opts out for
+  custom positioned or portal-based surfaces.
+  - @floating-ui-plus/web@0.7.2
+
+## 0.7.1
+
+### Patch Changes
+
+- 1bf217d: Make native top-layer selection explicit across adapters. Web Components keep
+  the template and native dialog contracts, while Vue surfaces now use
+  `top-layer="popover"` or `as="dialog"`; ARIA roles no longer implicitly
+  promote positioned content to the native Popover API.
+  - @floating-ui-plus/web@0.7.1
+
 ## 0.7.0
 
 ### Minor Changes

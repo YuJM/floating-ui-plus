@@ -135,7 +135,6 @@ const navigationOptions = getNavigationOptions({
 
         <Transition name="vue-surface">
             <FloatingContent
-              top-layer="popover"
               class="vue-combobox-popup"
               data-floating-query-popup
             >
