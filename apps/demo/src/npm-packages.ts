@@ -19,20 +19,7 @@ export const npmPackageDefinitions = [
   },
 ] as const;
 
-export interface NpmPackageInfo {
-  id: 'web' | 'web-components' | 'vue';
-  name: string;
-  href: string;
-  label: string;
-  version: string | null;
-  description: string | null;
-}
-
-/** Provides stable markup until the browser loads current npm data. */
+/** Provides the package links shown on the demo home page. */
 export function getNpmPackages() {
-  return npmPackageDefinitions.map((definition) => ({
-    ...definition,
-    version: null,
-    description: null,
-  }));
+  return npmPackageDefinitions;
 }
