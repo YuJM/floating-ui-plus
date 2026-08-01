@@ -37,7 +37,6 @@
         "starlight-links-validator": "^0.25.2",
         "starlight-package-managers": "^0.12.0",
         "starlight-typedoc": "^0.23.0",
-        "starlight-versions": "^0.9.1",
         "typedoc": "^0.28.20",
         "typedoc-plugin-markdown": "^4.12.0",
         "vue": "^3.5.22",
@@ -1811,8 +1810,6 @@
 
     "starlight-typedoc": ["starlight-typedoc@0.23.0", "", { "dependencies": { "github-slugger": "^2.0.0" }, "peerDependencies": { "@astrojs/starlight": ">=0.39.0", "typedoc": ">=0.28.0", "typedoc-plugin-markdown": ">=4.6.0" } }, "sha512-GB0tB/15nL3l9tt1aGpkV8EixnSXbApZNZaSBRt8KfIsDAJet7pRiyItk5dxBSbDTXilF2whOMXPqqkbm8dNWA=="],
 
-    "starlight-versions": ["starlight-versions@0.9.1", "", { "dependencies": { "@pagefind/default-ui": "^1.3.0", "github-slugger": "^2.0.0", "mdast-util-mdx-jsx": "^3.2.0", "mdast-util-mdxjs-esm": "^2.0.1", "remark": "^15.0.1", "remark-directive": "^4.0.0", "remark-frontmatter": "^5.0.0", "remark-mdx": "^3.1.1", "unist-util-visit": "^5.1.0", "vfile": "^6.0.3", "yaml": "^2.8.2" }, "peerDependencies": { "@astrojs/starlight": ">=0.39.0" } }, "sha512-wtYZhlcWcKsnyTO0BZoWXHzHUrNIvSr5ukEMLg3RFKesFEEcMepngn15Igw5pj8DBlkKMo7bBhF2fR0bfiXcpA=="],
-
     "statuses": ["statuses@2.0.2", "", {}, "sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw=="],
 
     "std-env": ["std-env@4.2.0", "", {}, "sha512-oCUKSupKTHX53EyjDtuZQ64pjLJ6yYCtpmEw0goYxtjG9KpbRe8KAsl2tBUGU9DyMcJ0RwJ8GqJAFzMXcXW1Rw=="],
@@ -2222,8 +2219,6 @@
     "rolldown-plugin-dts/get-tsconfig": ["get-tsconfig@5.0.0-beta.5", "", { "dependencies": { "resolve-pkg-maps": "^1.0.0" } }, "sha512-/6gFNr0N04nob252sTQxyFLi3eKFRqIg1I87YcqAMT1i6SQrSF6KujUEQrtrjMV0H/eejTCltLdDSTEMzHbnsQ=="],
 
     "sitemap/@types/node": ["@types/node@24.13.3", "", { "dependencies": { "undici-types": "~7.18.0" } }, "sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q=="],
-
-    "starlight-versions/yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
 
     "string-width/strip-ansi": ["strip-ansi@7.2.0", "", { "dependencies": { "ansi-regex": "^6.2.2" } }, "sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w=="],
 

@@ -40,7 +40,7 @@ bun add @floating-ui-plus/web
 ```
 
 For complete patterns—menus, dialogs, search, collections, and portals—see the
-[usage guide](./USAGE.md).
+[usage guide](https://fup.polcaneli.com/docs/guides/usage).
 
 ## Start with a tooltip
 

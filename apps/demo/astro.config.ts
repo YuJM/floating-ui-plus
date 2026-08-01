@@ -6,7 +6,6 @@ import {defineConfig} from 'astro/config';
 import {paraglideVitePlugin} from '@inlang/paraglide-js';
 import starlightLinksValidator from 'starlight-links-validator';
 import starlightTypeDoc, {typeDocSidebarGroup} from 'starlight-typedoc';
-import starlightVersions from 'starlight-versions';
 import {DEFAULT_SITE} from './src/seo';
 
 const site = process.env.PUBLIC_SITE_URL ?? DEFAULT_SITE;
@@ -86,10 +85,6 @@ export default defineConfig({
             return !/^\/(?:[^/]+\/)?docs(?:\/|$)/.test(pathname) ||
               pathname.includes('/docs/api');
           },
-        }),
-        starlightVersions({
-          current: {label: '0.6.1'},
-          versions: [{slug: '0.6.0', label: '0.6.0'}],
         }),
       ],
     }),

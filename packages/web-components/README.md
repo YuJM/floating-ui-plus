@@ -45,7 +45,7 @@ import '@floating-ui-plus/web-components';
 ```
 
 For complete templates and programmatic configuration, see the
-[usage guide](./USAGE.md).
+[usage guide](https://fup.polcaneli.com/docs/guides/usage).
 
 ## Start with a popover
 

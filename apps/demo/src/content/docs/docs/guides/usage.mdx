@@ -1,0 +1,458 @@
+---
+title: Usage recipes
+description: Complete usage recipes for the Web, Web Components, and Vue adapters.
+---
+
+import {PackageManagers} from 'starlight-package-managers';
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+This page contains the longer recipes that do not fit well in a package
+README. API signatures, options, and types are generated automatically in the
+[API Reference](/docs/api/readme); this page focuses on composition and
+renderer decisions.
+
+<PackageManagers type="add" pkg="@floating-ui-plus/web" />
+
+## Install the adapter you render with
+
+<Tabs syncKey="usage-package">
+<TabItem label="Web">
+
+```sh
+bun add @floating-ui-plus/web
+```
+
+The Web package is SSR-safe. Create and connect controllers after the browser
+elements exist; your renderer owns DOM, styles, ARIA labels, and presence.
+
+</TabItem>
+<TabItem label="Web Components">
+
+```sh
+bun add @floating-ui-plus/web-components
+```
+
+```ts
+import '@floating-ui-plus/web-components';
+```
+
+Register the elements once on the client. Importing during SSR is safe; DOM
+behavior starts when the elements connect.
+
+</TabItem>
+<TabItem label="Vue">
+
+```sh
+bun add @floating-ui-plus/vue
+```
+
+Vue 3.3 or later is required. Imports are SSR-safe and listeners connect after
+mount.
+
+</TabItem>
+</Tabs>
+
+## Build a floating surface
+
+<Tabs syncKey="usage-tooltip">
+<TabItem label="Web">
+
+Use one controller for a reference/floating pair. `pipe()` composes plugins
+left to right and cleans them up in reverse order.
+
+```ts
+import {
+  autoUpdate,
+  createFloating,
+  dismiss,
+  focus,
+  hover,
+  offset,
+  role,
+} from '@floating-ui-plus/web';
+
+let open = false;
+const tooltip = createFloating(() => ({
+  open,
+  onOpenChange(nextOpen) {
+    open = nextOpen;
+    render();
+  },
+  middleware: [offset(6)],
+  whileElementsMounted: autoUpdate,
+})).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
+
+tooltip.setReference(button);
+tooltip.setFloating(panel);
+tooltip.connect();
+```
+
+Apply the controller's reference/floating attributes and positioning output in
+`render()`. Call `disconnect()` when the view is temporarily detached and
+`destroy()` when its owner is disposed.
+
+</TabItem>
+<TabItem label="Web Components">
+
+```html
+<floating-root placement="top" interactions="hover focus dismiss">
+  <floating-reference><button>Help</button></floating-reference>
+  <template slot="content">
+    <div role="tooltip">Describes the control.</div>
+  </template>
+</floating-root>
+```
+
+The root owns the controller lifecycle. Keep normal conditional content in a
+root-owned `<template slot="content">`; the template is inert while closed.
+
+</TabItem>
+<TabItem label="Vue">
+
+Use `useFloating()` when your component owns the refs directly:
+
+```vue
+<script setup lang="ts">
+import {ref} from 'vue';
+import {
+  autoUpdate, dismiss, focus, hover, offset, role, useFloating, vFloating,
+} from '@floating-ui-plus/vue';
+
+const open = ref(false);
+const reference = ref<HTMLElement | null>(null);
+const panel = ref<HTMLElement | null>(null);
+const tooltip = useFloating(reference, panel, {
+  open,
+  onOpenChange: (next) => { open.value = next; },
+  middleware: [offset(6)],
+  whileElementsMounted: autoUpdate,
+}).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
+</script>
+
+<template>
+  <button ref="reference" v-bind="tooltip.referenceAttrs">Help</button>
+  <div v-if="open" ref="panel" v-floating="tooltip" v-bind="tooltip.floatingAttrs">
+    Describes the control.
+  </div>
+</template>
+```
+
+Use `FloatingRoot`/`FloatingContent` instead when descendants should receive a
+provided controller.
+
+</TabItem>
+</Tabs>
+
+## Popovers, dialogs, and portals
+
+Use native top-layer behavior when the surface can stay in its logical render
+tree. Use a portal only when the element must move to a body-level target.
+
+<Tabs syncKey="usage-top-layer">
+<TabItem label="Web">
+
+```ts
+import {createFloatingTopLayer, supportsFloatingTopLayer} from '@floating-ui-plus/web';
+
+const topLayer = createFloatingTopLayer({onOpenChange: setOpen});
+topLayer.setKind('popover'); // Use 'dialog' for an HTMLDialogElement.
+topLayer.setElement(panel);
+topLayer.connect();
+
+function render() {
+  if (supportsFloatingTopLayer('popover')) topLayer.sync(open);
+  else renderPositionedFallback();
+}
+```
+
+`createFloatingTopLayer()` does not move nodes. A `createPortalBridge()` is a
+fallback context bridge when your renderer intentionally mounts elsewhere.
+
+</TabItem>
+<TabItem label="Web Components">
+
+```html
+<!-- Non-modal anchored surface: keep the template beside the reference. -->
+<floating-root interactions="click dismiss" floating-role="dialog">
+  <floating-reference><button>Open settings</button></floating-reference>
+  <template slot="content">
+    <section aria-label="Settings">
+      Settings
+      <button data-fup-close>Close</button>
+    </section>
+  </template>
+</floating-root>
+
+<!-- Modal: let the browser own focus, inertness, and the top layer. -->
+<floating-root interactions="click dismiss" floating-role="dialog">
+  <floating-reference><button>Open account</button></floating-reference>
+  <dialog slot="floating" aria-label="Account settings">
+    Account settings
+    <button data-fup-close>Close</button>
+  </dialog>
+</floating-root>
+```
+
+Use `<floating-portal>` only when a body-level target is required. A portal is
+not needed for the normal template or native dialog composition.
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<!-- Anchored Popover: keep FloatingContent in the root tree. -->
+<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+  <FloatingReference>Open settings</FloatingReference>
+  <FloatingContent>Settings <FloatingClose>Close</FloatingClose></FloatingContent>
+</FloatingRoot>
+
+<!-- Modal dialog: use the native element. -->
+<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+  <FloatingReference>Open account</FloatingReference>
+  <FloatingContent as="dialog" aria-label="Account settings">
+    Account settings <FloatingClose>Close</FloatingClose>
+  </FloatingContent>
+</FloatingRoot>
+```
+
+Use `FloatingPortal` only when Teleporting is intentional, such as escaping a
+clipping ancestor. `FloatingOverlay` and `FloatingFocusManager` remain
+available for custom non-native modal compositions.
+
+</TabItem>
+</Tabs>
+
+## Modal focus and collections
+
+For a custom modal, compose an overlay and focus manager with a dialog role.
+Use a real `<dialog>` instead when the browser's modal focus and inertness are
+enough.
+
+<Tabs syncKey="usage-modal">
+<TabItem label="Web Components">
+
+```html
+<floating-root interactions="click dismiss" floating-role="dialog">
+  <floating-reference><button>Open</button></floating-reference>
+  <floating-portal>
+    <floating-overlay lock-scroll>
+      <floating-focus-manager modal return-focus outside-elements-inert>
+        <template slot="content">
+          <section aria-label="Settings">
+            Settings <button data-fup-close>Close</button>
+          </section>
+        </template>
+      </floating-focus-manager>
+    </floating-overlay>
+  </floating-portal>
+</floating-root>
+```
+
+Use `floating-list` for ordered items, `floating-composite` for general roving
+focus, and `floating-tree`/`floating-node` for nested roots. Add `nested` to a
+submenu list and `data-fup-close` to leaf actions when the selected action
+should dismiss its owner.
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+  <FloatingReference>Open</FloatingReference>
+  <FloatingPortal>
+    <FloatingOverlay :lock-scroll="true">
+      <FloatingFocusManager :options="{modal: true, returnFocus: true}">
+        <FloatingContent aria-label="Settings">
+          Settings <FloatingClose>Close</FloatingClose>
+        </FloatingContent>
+      </FloatingFocusManager>
+    </FloatingOverlay>
+  </FloatingPortal>
+</FloatingRoot>
+```
+
+Use `FloatingList navigation` and `FloatingListItem` for ordered keyboard
+collections, `FloatingTree`/`FloatingNode` for nested menus, and
+`Composite`/`CompositeItem` for general roving collections.
+
+</TabItem>
+</Tabs>
+
+## Combobox search
+
+`createSearch()`/`useSearch()` own debounce, IME composition, cancellation,
+stale-response protection, caching, de-duplication, and cursor pagination.
+`createCombobox()`/`useCombobox()` add editable input behavior, virtual focus,
+selection, and combobox ARIA. Every renderer should provide `idle`, `loading`,
+`error`, `empty`, and `results` states.
+
+<Tabs syncKey="usage-search">
+<TabItem label="Web">
+
+```ts
+import {createCombobox} from '@floating-ui-plus/web/combobox';
+import {createSearch} from '@floating-ui-plus/web/search';
+
+const search = createSearch({
+  source: async ({query, signal, cursor}) => {
+    const response = await fetch(`/api/products?q=${encodeURIComponent(query)}&cursor=${cursor ?? ''}`, {signal});
+    if (!response.ok) throw new Error('Search failed');
+    return response.json(); // {items, total?, nextCursor?}
+  },
+  getItemKey: (item) => item.id,
+});
+const combobox = createCombobox({
+  search,
+  getItemLabel: (item) => item.name,
+  getItemValue: (item) => item.id,
+  onOpenChange: setOpen,
+});
+
+input.replaceWith(Object.assign(input, combobox.getInputProps()));
+combobox.bindOption(option, search.items[0]!, 0);
+await search.loadMore();
+```
+
+Use `createFuzzySearchSource()` for local collections. For data owned by a
+query library, omit `source` and push state through `setControlledState()`.
+
+</TabItem>
+<TabItem label="Web Components">
+
+```html
+<floating-root placement="bottom-start">
+  <floating-list navigation loop allow-escape>
+    <floating-combobox name="destination" data-destination-combobox>
+      <floating-reference><input aria-label="Destination" /></floating-reference>
+      <template slot="content">
+        <floating-search>
+          <template data-search-loading>Searching…</template>
+          <template data-search-error>Search failed</template>
+          <template data-search-empty>No matches</template>
+          <template data-search-result>
+            <floating-list-item><span data-search-text="label"></span></floating-list-item>
+          </template>
+          <template data-search-more>
+            <button data-search-load-more>Load more</button>
+          </template>
+        </floating-search>
+      </template>
+      <p data-combobox-status aria-live="polite"></p>
+    </floating-combobox>
+  </floating-list>
+</floating-root>
+```
+
+Configure `search`, `getItemLabel`, `getItemValue`, and `getItemKey` as
+properties. `floating-combobox` is form-associated: put `name`, `required`,
+and `disabled` on the element itself. The selected `getItemValue()` is
+submitted with `FormData`.
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<FloatingRoot v-model:open="open" :plugins="[dismiss(), rolePlugin]">
+  <FloatingList v-model:active-index="activeIndex" navigation loop>
+    <FloatingReference as="input" v-bind="inputProps" />
+    <FloatingContent>
+      <FloatingSearch :search="search">
+        <template #loading>Searching…</template>
+        <template #error>Search failed</template>
+        <template #empty>No matches</template>
+        <template #results>
+          <FloatingListItem
+            v-for="(item, index) in search.items"
+            :key="item.id"
+            tag="button"
+            :label="item.label"
+            :value="item"
+            v-bind="getOptionProps(item, index)"
+          >{{ item.label }}</FloatingListItem>
+        </template>
+      </FloatingSearch>
+    </FloatingContent>
+  </FloatingList>
+</FloatingRoot>
+```
+
+`useCombobox()` returns `inputProps`, `getOptionProps()`, `selectedValue`,
+`statusText`, and query-trigger props. Bind `selectedValue` to a hidden input
+for native form submission.
+
+</TabItem>
+</Tabs>
+
+## Close requests and before-close guards
+
+`dismiss()` detects outside press, Escape, reference press, and scroll; it is
+not the close API. Explicit close commands and dismissal requests share one
+synchronous guard.
+
+<Tabs syncKey="usage-before-close">
+<TabItem label="Web">
+
+```ts
+const floating = createFloating(() => ({
+  open,
+  onBeforeClose: (event, reason) => {
+    sendCloseMetric(reason);
+    return !hasUnsavedChanges();
+  },
+  onOpenChange: setOpen,
+}));
+
+floating.context.onOpenChange(false, sourceEvent, 'escape');
+```
+
+Return `false` to keep the surface open. Opening is never blocked.
+
+</TabItem>
+<TabItem label="Web Components">
+
+```ts
+root.addEventListener('floatingbeforeclose', (event) => {
+  if (hasUnsavedChanges()) event.preventDefault();
+});
+
+root.close(clickEvent, 'click');
+```
+
+`preventDefault()` suppresses `openchange` and preserves the current `open`
+state. `data-fup-close` remains supported for templates.
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<FloatingRoot
+  v-model:open="open"
+  :options="{
+    onBeforeClose: (_event, reason) => {
+      sendCloseMetric(reason);
+      return !hasUnsavedChanges();
+    },
+  }"
+>
+  <FloatingReference>Open</FloatingReference>
+  <FloatingContent>
+    Unsaved settings <FloatingClose>Close</FloatingClose>
+  </FloatingContent>
+</FloatingRoot>
+```
+
+Return `false` to cancel. Async approval is not part of this API; complete the
+async work first and then issue a new close request.
+
+</TabItem>
+</Tabs>
+
+## Placement and lifecycle checklist
+
+- Use `PLACEMENT`/`PLACEMENTS` or ordinary strings such as `bottom-start`.
+- Apply `offset()` as the desired visual gap; arrows add their own height.
+- Keep native Popover/dialog surfaces in the logical render tree.
+- Use portals only for an intentional DOM target change.
+- Disconnect temporary views and destroy long-lived controllers on teardown.
+- Let TypeDoc generate API signatures; update this guide only when a usage
+  flow or renderer composition changes.

@@ -39,7 +39,7 @@ bun add @floating-ui-plus/vue
 Vue `3.3` or later is required.
 
 For composition and component patterns in more detail, see the
-[usage guide](./USAGE.md).
+[usage guide](https://fup.polcaneli.com/docs/guides/usage).
 
 ## Start with a tooltip
 

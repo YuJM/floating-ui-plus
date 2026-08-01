@@ -1,0 +1,258 @@
+---
+title: Web Components and Vue
+description: Use the same Floating UI Plus contract from Custom Elements or Vue.
+---
+
+import {Tabs, TabItem} from '@astrojs/starlight/components';
+
+The Web Components and Vue packages expose the same interaction model. Choose
+the tab that matches your renderer; the close contract, native top-layer rules,
+and search lifecycle remain the same.
+
+## One contract, two renderers
+
+Both adapters provide a reference, a floating surface, an open model,
+interaction plugins, and an optional focus manager. The renderer still owns
+labels, classes, ARIA names, presence transitions, and result markup.
+
+<Tabs syncKey="framework-adapter">
+<TabItem label="Web Components">
+
+Register the elements once, then compose a root-owned template:
+
+```html
+<floating-root
+  placement="bottom-start"
+  interactions="click dismiss"
+  floating-role="dialog"
+>
+  <floating-reference>
+    <button type="button">Open settings</button>
+  </floating-reference>
+  <template slot="content">
+    <section aria-label="Settings">
+      Settings
+      <button type="button" data-fup-close>Close</button>
+    </section>
+  </template>
+</floating-root>
+```
+
+```ts
+import '@floating-ui-plus/web-components';
+import {flip, offset, shift} from '@floating-ui-plus/web';
+import type {FloatingRootElement} from '@floating-ui-plus/web-components';
+
+const root = document.querySelector<FloatingRootElement>('floating-root')!;
+root.middleware = [offset(8), flip(), shift({padding: 12})];
+root.addEventListener('openchange', ({detail}) => {
+  console.log(detail.open, detail.reason, detail.sourceEvent);
+});
+```
+
+Use a JavaScript property for functions and objects such as middleware,
+plugins, search sources, or virtual references. Attributes are for strings and
+booleans.
+
+</TabItem>
+<TabItem label="Vue">
+
+Use the component layer when descendants should receive the controller:
+
+```vue
+<script setup lang="ts">
+import {ref} from 'vue';
+import {
+  FloatingClose,
+  FloatingContent,
+  FloatingReference,
+  FloatingRoot,
+  click,
+  dismiss,
+  offset,
+  role,
+} from '@floating-ui-plus/vue';
+
+const open = ref(false);
+const plugins = [click(), dismiss(), role({role: 'dialog'})];
+const options = {placement: 'bottom-start', middleware: [offset(8)]};
+</script>
+
+<template>
+  <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+    <FloatingReference>Open settings</FloatingReference>
+    <FloatingContent>
+      Settings
+      <FloatingClose>Close</FloatingClose>
+    </FloatingContent>
+  </FloatingRoot>
+</template>
+```
+
+Use `useFloating()` instead when the component already owns its reference and
+panel refs. It exposes the same controller context as `FloatingRoot`, without
+requiring the declarative child components.
+
+</TabItem>
+</Tabs>
+
+## Native top-layer surfaces
+
+For an anchored non-modal surface, keep the content in the same tree and let
+the browser use Popover. For a modal, use a real dialog element:
+
+<Tabs syncKey="framework-native-top-layer">
+<TabItem label="Web Components">
+
+```html
+<floating-root interactions="click dismiss" floating-role="dialog">
+  <floating-reference><button>Open account</button></floating-reference>
+  <dialog slot="floating" aria-labelledby="account-title">
+    <h2 id="account-title">Account settings</h2>
+    <button data-fup-close>Close</button>
+  </dialog>
+</floating-root>
+```
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+  <FloatingReference>Open account</FloatingReference>
+  <FloatingContent as="dialog" aria-labelledby="account-title">
+    <h2 id="account-title">Account settings</h2>
+    <FloatingClose>Close</FloatingClose>
+  </FloatingContent>
+</FloatingRoot>
+```
+
+</TabItem>
+</Tabs>
+
+Do not portal the same native surface. Add `floating-portal` or
+`FloatingPortal` only when the element must move to a body-level target, such
+as escaping a clipping ancestor. For a custom non-native modal, compose a
+portal with an overlay and focus manager.
+
+## Close guards and dismissal
+
+`dismiss()` detects outside press, Escape, reference press, and ancestor
+scroll. It is not the close API. `close()`/`FloatingClose` are explicit close
+commands, and every close path runs the same synchronous before-close guard.
+
+<Tabs syncKey="framework-close-guard">
+<TabItem label="Web Components">
+
+```ts
+root.addEventListener('floatingbeforeclose', (event) => {
+  if (hasUnsavedChanges()) {
+    event.preventDefault();
+    return;
+  }
+  saveCloseMetric(event.detail.reason);
+});
+
+// Imperative close; keep the source event when one exists.
+root.close(clickEvent, 'click');
+```
+
+`preventDefault()` keeps `open` unchanged and suppresses `openchange`.
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<FloatingRoot
+  v-model:open="open"
+  :options="{
+    onBeforeClose: (event, reason) => {
+      saveCloseMetric(reason);
+      return !hasUnsavedChanges();
+    },
+  }"
+>
+  <FloatingReference>Open</FloatingReference>
+  <FloatingContent>
+    Unsaved settings
+    <FloatingClose>Close</FloatingClose>
+  </FloatingContent>
+</FloatingRoot>
+```
+
+Return `false` to cancel. Async approval is not part of this contract: finish
+the async operation first, then set the open model to `false` or call the
+imperative close method.
+
+</TabItem>
+</Tabs>
+
+## Search and combobox
+
+The Web Components and Vue search adapters consume the same phases:
+`idle`, `loading`, `error`, `empty`, and `results`. Use fuzzy search for a
+local collection and an async source for a server-backed list. The controller
+owns debounce, cancellation, stale-response protection, de-duplication, and
+cursor pagination; each renderer owns the phase markup.
+
+<Tabs syncKey="framework-combobox">
+<TabItem label="Web Components">
+
+```html
+<floating-root interactions="click dismiss" floating-role="listbox">
+  <floating-combobox name="destination">
+    <floating-reference>
+      <input aria-label="Destination" />
+    </floating-reference>
+    <template slot="content">
+      <floating-search>
+        <template data-search-state="loading">Searching…</template>
+        <template data-search-state="empty">No matches</template>
+        <template data-search-state="results">
+          <floating-list-item data-search-text="label"></floating-list-item>
+        </template>
+      </floating-search>
+    </template>
+  </floating-combobox>
+</floating-root>
+```
+
+Configure `search`, `getItemLabel`, `getItemValue`, and `getItemKey` as
+properties in JavaScript. Use `data-search-load-more` for cursor pagination.
+
+</TabItem>
+<TabItem label="Vue">
+
+```vue
+<FloatingRoot v-model:open="open" :plugins="[dismiss(), rolePlugin]">
+  <FloatingList v-model:active-index="activeIndex" navigation loop>
+    <FloatingReference as="input" v-bind="inputProps" />
+    <FloatingContent>
+      <FloatingSearch :search="search">
+        <template #loading>Searching…</template>
+        <template #empty>No matches</template>
+        <template #results>
+          <FloatingListItem
+            v-for="(item, index) in search.items"
+            :key="item.id"
+            tag="button"
+            :label="item.label"
+            :value="item"
+            v-bind="getOptionProps(item, index)"
+          >{{ item.label }}</FloatingListItem>
+        </template>
+      </FloatingSearch>
+    </FloatingContent>
+  </FloatingList>
+</FloatingRoot>
+```
+
+Use `useSearch()` and `useCombobox()` to create the reactive `search`,
+`inputProps`, `getOptionProps`, and `selectedValue` values.
+
+</TabItem>
+</Tabs>
+
+For a full fuzzy/server source implementation, see the
+[Combobox and search guide](/docs/guides/combobox). For the complete generated
+function and type signatures, see the [API Reference](/docs/api/readme).

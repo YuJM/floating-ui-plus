@@ -31,14 +31,15 @@ The demo also hosts the Starlight documentation site at `/docs`. It combines
 human-written guides with generated API reference pages for the Web,
 Web Components, and Vue packages.
 
-- `/docs`: current documentation (0.6.1)
-- `/0.6.0/docs`: archived 0.6.0 documentation
+- `/docs`: latest documentation
 - `/docs/api/readme`: TypeDoc-generated API reference
 
 The Astro integration uses `starlight-typedoc`, `starlight-links-validator`,
-`starlight-package-managers`, and `starlight-versions`. TypeDoc output and
-version snapshots are generated during `typecheck`/`build` and are ignored by
-Git; edit the guides under `src/content/docs/docs` instead.
+and `starlight-package-managers`. TypeDoc output is generated during
+`typecheck`/`build` and is ignored by Git; edit the guides under
+`src/content/docs/docs` instead. Versioned archives will be introduced when a
+stable major release needs them; until then the site intentionally exposes only
+the latest documentation.
 
 ## Mock server for the async combobox
 
