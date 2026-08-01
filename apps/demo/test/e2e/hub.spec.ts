@@ -10,6 +10,49 @@ test('shows the package choices from the local catalog', async ({page}) => {
   await expect(page.locator('[data-npm-package="@floating-ui-plus/vue"]')).toBeVisible();
 });
 
+test('explains the custom-overlay foundation and React path', async ({page}) => {
+  await page.goto('/ko');
+
+  const foundation = page.locator('.why-plus');
+  await expect(foundation).toContainText('UI 키트가 아닙니다.');
+  await expect(
+    foundation.getByRole('link', {name: '@floating-ui/react를 사용하세요.'}),
+  ).toHaveAttribute('href', 'https://floating-ui.com/docs/react');
+});
+
+test('uses component names and applied-function badges on every example', async ({page}) => {
+  const examples = [
+    ['tooltip', 'Tooltip'],
+    ['popover', 'Popover'],
+    ['menu', 'Menu'],
+    ['nested-menu', 'Nested menu'],
+    ['client-point', 'Client point'],
+    ['combobox', 'Combobox'],
+    ['placement', 'Placement'],
+    ['middleware', 'Middleware'],
+    ['modal', 'Modal'],
+  ] as const;
+
+  for (const [path, title] of examples) {
+    await page.goto(`/${path}`);
+    const route = page.locator('.route-copy');
+    await expect(route.getByRole('heading', {level: 2, name: title})).toBeVisible();
+    await expect(route.locator(':scope > .section-kicker')).toHaveCount(0);
+    await expect(route.locator('.implementation-badge')).not.toHaveCount(0);
+    await expect(route.locator('.implementation-summary')).toBeVisible();
+  }
+
+  await page.goto('/tooltip');
+  await expect(page.locator('.implementation-badge[data-badge-tone]')).toHaveCount(7);
+  await expect(page.locator('.implementation-summary')).toContainText('pointer');
+  await expect(page.locator('.implementation-summary')).not.toContainText('hover()');
+  await expect(page.locator('.implementation-badge--cyan')).toHaveCount(2);
+  await expect(page.locator('.implementation-badge--lavender')).toHaveCount(2);
+  await expect(page.locator('.implementation-badge--coral')).toHaveCount(1);
+  await expect(page.locator('.implementation-badge--mint')).toHaveCount(1);
+  await expect(page.locator('.implementation-badge--gold')).toHaveCount(1);
+});
+
 test('redirects legacy prefixed English URLs to their canonical routes', async ({page}) => {
   await page.goto('/en');
   await expect(page).toHaveURL(/\/$/);

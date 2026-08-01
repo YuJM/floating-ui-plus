@@ -49,11 +49,12 @@ const packageCopy = {
   <section class="why-plus" aria-labelledby="why-plus-title">
     <div><h2 id="why-plus-title">{m.foundation_title(undefined, options)}</h2></div>
     <div class="why-plus-copy">
-      <p>{m.hero_copy(undefined, options)}</p>
+      <p>{m.foundation_copy(undefined, options)}</p>
       <div class="why-plus-points">
         <article><Workflow aria-hidden="true" size={22} strokeWidth={1.7} /><h3>{m.foundation_state_title(undefined, options)}</h3><p>{m.foundation_state_copy(undefined, options)}</p></article>
         <article><Search aria-hidden="true" size={22} strokeWidth={1.7} /><h3>{m.foundation_search_title(undefined, options)}</h3><p>{m.foundation_search_copy(undefined, options)}</p></article>
       </div>
+      <p class="why-plus-react">{m.react_path_copy(undefined, options)} <a href="https://floating-ui.com/docs/react">{m.react_path_link(undefined, options)}</a></p>
     </div>
   </section>
   <section class="npm-releases" aria-labelledby="npm-releases-title">

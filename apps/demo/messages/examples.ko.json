@@ -1,1 +1,13 @@
-{"built_with":"Floating UI Plus로 구현한 방식","implemented_with":"으로 구현","example_tooltip_build":"floating-root에 hover(), focus(), dismiss(), role(), safePolygon(), arrow middleware를 조합해 포인터와 키보드 모두에서 동작하는 맥락 도움말을 만들었습니다.","example_popover_build":"floating-root, floating-portal, 클릭 dismiss, offset/flip/shift middleware를 조합해 DOM에서 이동한 뒤에도 연결을 유지하는 고정 상세 패널을 만들었습니다.","example_menu_build":"floating-list의 navigation, typeahead, loop와 하나의 컬렉션 레지스트리를 사용해 믿을 수 있는 키보드 이동을 갖는 명령 내비게이터를 만들었습니다.","example_nested_menu_build":"floating-tree, floating-node, 중첩 floating-list, 자식 dismiss를 조율해 서브메뉴가 올바른 부모 포커스를 유지하는 명령 계층을 만들었습니다.","example_client_point_build":"clientPoint(), hover({move: true}), 가상 기준점, flip/shift middleware를 조합해 정확한 포인터 위치를 따라가는 맥락 UI를 만들었습니다.","example_combobox_build":"SearchController, createFuzzySearchSource(), listNavigation(), role(), floating-portal을 조합해 특정 UI 프레임워크에 검색을 묶지 않는 다국어 목적지 선택기를 만들었습니다.","example_placement_build":"타입 안전한 Placement 표면과 offset middleware로 하나의 제품 결정이 플로팅 표면을 즉시 갱신하는 배치 실험실을 만들었습니다.","example_middleware_build":"동일한 floating-root primitive에 offset, shift, flip, arrow, size, autoPlacement, hide, inline을 각각 적용해 각 레이아웃 제약을 실제 동작으로 볼 수 있게 만들었습니다.","example_modal_build":"floating-tree, floating-node, floating-portal, floating-overlay, floating-focus-manager를 조합해 inert 주변부, 스크롤 잠금, 포커스 복귀, 순서 있는 Escape dismiss를 갖춘 계층형 다이얼로그를 만들었습니다。"}
+{
+  "built_with": "Floating UI Plus로 구현한 방식",
+  "implemented_with": "으로 구현",
+  "example_tooltip_build": "포인터와 키보드 모두에서 동작하는 맥락 도움말을 만들었습니다.",
+  "example_popover_build": "DOM 안에서 이동해도 연결을 유지하는 고정 상세 패널을 만들었습니다.",
+  "example_menu_build": "하나의 컬렉션 레지스트리로 믿을 수 있는 키보드 명령 내비게이션을 만들었습니다.",
+  "example_nested_menu_build": "서브메뉴가 부모 포커스를 유지하는 명령 계층을 만들었습니다.",
+  "example_client_point_build": "고정된 요소가 아닌 정확한 포인터 위치를 따라가는 맥락 UI를 만들었습니다.",
+  "example_combobox_build": "특정 UI 프레임워크에 검색을 묶지 않는 다국어 목적지 선택기를 만들었습니다.",
+  "example_placement_build": "하나의 제품 결정이 플로팅 표면을 즉시 갱신하는 배치 실험실을 만들었습니다.",
+  "example_middleware_build": "각 레이아웃 제약의 효과를 실제 동작으로 확인할 수 있게 만들었습니다.",
+  "example_modal_build": "inert 주변부, 스크롤 잠금, 포커스 복귀, 순서 있는 Escape dismiss를 갖춘 계층형 다이얼로그를 만들었습니다."
+}

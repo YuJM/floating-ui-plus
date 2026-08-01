@@ -53,7 +53,7 @@ const metadata = {
     </script>
   </head>
   <body>
-    <floating-ui-demo>
+    <floating-ui-demo class:list={['demo-shell', example ? 'is-example' : 'is-home']}>
     <div class="global-utilities border-b border-border/70 bg-surface/60">
       <div class="container mx-auto flex items-center justify-end gap-3 px-5 py-3 sm:px-8">
         <div class="framework-switch" role="group" aria-label={m.framework_label(undefined, options)} title={m.framework_switch_title(undefined, options)}>

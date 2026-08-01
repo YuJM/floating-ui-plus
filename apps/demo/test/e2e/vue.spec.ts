@@ -152,7 +152,7 @@ test('routes to individual Vue examples and the middleware lab', async ({
 
   await page.goto('/tooltip?framework=vue');
   await expect(
-    page.getByRole('heading', {level: 2, name: 'Pointer and'}),
+    page.getByRole('heading', {level: 2, name: 'Tooltip'}),
   ).toBeVisible();
   const navigation = page.getByRole('navigation', {
     name: 'All patterns',
@@ -173,7 +173,7 @@ test('routes to individual Vue examples and the middleware lab', async ({
 
   await page.goto('/middleware?framework=vue');
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: /Position with the constraints/}),
+    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Middleware'}),
   ).toBeVisible();
   await expect(page.locator('.vue-middleware-card')).toHaveCount(8);
   await expect(page.locator('.vue-mw-panel')).toHaveCount(10);
@@ -277,7 +277,7 @@ test('placement constants drive all 12 Vue positions', async ({page}) => {
   await page.goto('/placement?framework=vue');
 
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: /Make placement a product decision/}),
+    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Placement'}),
   ).toBeVisible();
   const vuePanel = page.locator('[data-framework-panel="vue"]');
   await expect(vuePanel.locator('[data-placement-control]')).toHaveCount(12);

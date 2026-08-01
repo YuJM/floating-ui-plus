@@ -13,26 +13,33 @@ export const EXAMPLE_IDS = [
 ] as const;
 export type ExampleId = (typeof EXAMPLE_IDS)[number];
 
+const COMPONENT_NAMES: Record<ExampleId, string> = {
+  tooltip: 'Tooltip',
+  popover: 'Popover',
+  menu: 'Menu',
+  'nested-menu': 'Nested menu',
+  'client-point': 'Client point',
+  combobox: 'Combobox',
+  placement: 'Placement',
+  middleware: 'Middleware',
+  modal: 'Modal',
+};
+
+const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
+  tooltip: ['floating-root', 'hover()', 'focus()', 'dismiss()', 'role()', 'safePolygon()', 'arrow'],
+  popover: ['floating-root', 'floating-portal', 'click()', 'dismiss()', 'offset()', 'flip()', 'shift()'],
+  menu: ['floating-list', 'navigation', 'typeahead', 'loop'],
+  'nested-menu': ['floating-tree', 'floating-node', 'floating-list', 'dismiss()'],
+  'client-point': ['clientPoint()', 'hover({move: true})', 'flip()', 'shift()'],
+  combobox: ['SearchController', 'createFuzzySearchSource()', 'listNavigation()', 'role()', 'floating-portal'],
+  placement: ['Placement', 'offset()'],
+  middleware: ['floating-root', 'offset', 'shift', 'flip', 'arrow', 'size', 'autoPlacement', 'hide', 'inline'],
+  modal: ['floating-tree', 'floating-node', 'floating-portal', 'floating-overlay', 'floating-focus-manager'],
+};
+
 export function getExamples(locale: Locale) {
   const options = {locale};
-  return [
-    {id: 'tooltip' as const, label: m.pattern_tooltip_label(undefined, options), heading: m.pattern_tooltip_heading(undefined, options), description: m.pattern_tooltip_description(undefined, options)},
-    {id: 'popover' as const, label: m.pattern_popover_label(undefined, options), heading: m.pattern_popover_heading(undefined, options), description: m.pattern_popover_description(undefined, options)},
-    {id: 'menu' as const, label: m.pattern_menu_label(undefined, options), heading: m.pattern_menu_heading(undefined, options), description: m.pattern_menu_description(undefined, options)},
-    {id: 'nested-menu' as const, label: m.pattern_nested_menu_label(undefined, options), heading: m.pattern_nested_menu_heading(undefined, options), description: m.pattern_nested_menu_description(undefined, options)},
-    {id: 'client-point' as const, label: m.pattern_client_point_label(undefined, options), heading: m.pattern_client_point_heading(undefined, options), description: m.pattern_client_point_description(undefined, options)},
-    {id: 'combobox' as const, label: m.pattern_combobox_label(undefined, options), heading: m.pattern_combobox_heading(undefined, options), description: m.pattern_combobox_description(undefined, options)},
-    {id: 'placement' as const, label: m.pattern_placement_label(undefined, options), heading: m.pattern_placement_heading(undefined, options), description: m.pattern_placement_description(undefined, options)},
-    {id: 'middleware' as const, label: m.pattern_middleware_label(undefined, options), heading: m.pattern_middleware_heading(undefined, options), description: m.pattern_middleware_description(undefined, options)},
-    {id: 'modal' as const, label: m.pattern_modal_label(undefined, options), heading: m.pattern_modal_heading(undefined, options), description: m.pattern_modal_description(undefined, options)},
-  ];
-}
-
-export function getExample(locale: Locale, id: ExampleId) {
-  const example = getExamples(locale).find((item) => item.id === id);
-  if (!example) throw new Error(`Unknown example: ${id}`);
-  const options = {locale};
-  const build = {
+  const builds = {
     tooltip: m.example_tooltip_build,
     popover: m.example_popover_build,
     menu: m.example_menu_build,
@@ -42,8 +49,24 @@ export function getExample(locale: Locale, id: ExampleId) {
     placement: m.example_placement_build,
     middleware: m.example_middleware_build,
     modal: m.example_modal_build,
-  }[id]({'move: true': 'move: true'}, options);
-  return {...example, build};
+  };
+  return [
+    {id: 'tooltip' as const, label: m.pattern_tooltip_label(undefined, options), heading: COMPONENT_NAMES.tooltip, description: m.pattern_tooltip_description(undefined, options), build: builds.tooltip(undefined, options), features: APPLIED_FEATURES.tooltip},
+    {id: 'popover' as const, label: m.pattern_popover_label(undefined, options), heading: COMPONENT_NAMES.popover, description: m.pattern_popover_description(undefined, options), build: builds.popover(undefined, options), features: APPLIED_FEATURES.popover},
+    {id: 'menu' as const, label: m.pattern_menu_label(undefined, options), heading: COMPONENT_NAMES.menu, description: m.pattern_menu_description(undefined, options), build: builds.menu(undefined, options), features: APPLIED_FEATURES.menu},
+    {id: 'nested-menu' as const, label: m.pattern_nested_menu_label(undefined, options), heading: COMPONENT_NAMES['nested-menu'], description: m.pattern_nested_menu_description(undefined, options), build: builds['nested-menu'](undefined, options), features: APPLIED_FEATURES['nested-menu']},
+    {id: 'client-point' as const, label: m.pattern_client_point_label(undefined, options), heading: COMPONENT_NAMES['client-point'], description: m.pattern_client_point_description(undefined, options), build: builds['client-point'](undefined, options), features: APPLIED_FEATURES['client-point']},
+    {id: 'combobox' as const, label: m.pattern_combobox_label(undefined, options), heading: COMPONENT_NAMES.combobox, description: m.pattern_combobox_description(undefined, options), build: builds.combobox(undefined, options), features: APPLIED_FEATURES.combobox},
+    {id: 'placement' as const, label: m.pattern_placement_label(undefined, options), heading: COMPONENT_NAMES.placement, description: m.pattern_placement_description(undefined, options), build: builds.placement(undefined, options), features: APPLIED_FEATURES.placement},
+    {id: 'middleware' as const, label: m.pattern_middleware_label(undefined, options), heading: COMPONENT_NAMES.middleware, description: m.pattern_middleware_description(undefined, options), build: builds.middleware(undefined, options), features: APPLIED_FEATURES.middleware},
+    {id: 'modal' as const, label: m.pattern_modal_label(undefined, options), heading: COMPONENT_NAMES.modal, description: m.pattern_modal_description(undefined, options), build: builds.modal(undefined, options), features: APPLIED_FEATURES.modal},
+  ];
+}
+
+export function getExample(locale: Locale, id: ExampleId) {
+  const example = getExamples(locale).find((item) => item.id === id);
+  if (!example) throw new Error(`Unknown example: ${id}`);
+  return example;
 }
 
 export function ogLocale(locale: Locale) {

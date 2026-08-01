@@ -19,6 +19,17 @@ multilingual fuzzy or asynchronous search. Applications still own their
 markup, semantics, and rendering; Plus supplies the behavior that should work
 the same in every framework.
 
+Floating UI Plus is not a UI kit. It is a foundation for the custom overlay
+components a product needs when its design system no longer covers the
+interaction: the tooltips, popovers, menus, comboboxes, and dialogs shown in
+the [demo](./apps/demo). You keep the product's design system, markup, ARIA,
+and visual language; Plus supplies the positioning and interaction behavior.
+
+For React, use the official
+[`@floating-ui/react`](https://floating-ui.com/docs/react) package. It is the
+React-first set of primitives for building the same kinds of custom floating
+interfaces.
+
 ## Packages
 
 - [`@floating-ui-plus/web`](./packages/web): framework-neutral positioning,

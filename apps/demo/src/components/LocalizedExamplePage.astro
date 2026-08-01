@@ -25,7 +25,7 @@ const frameworkPackage = Astro.url.searchParams.get('framework') === 'vue'
 ---
 
 <DemoLayout locale={locale} example={example}>
-  <ExampleRoute locale={locale} kicker={details.label} heading={details.heading} description={details.description} build={details.build} frameworkPackage={frameworkPackage} variant={variant}>
+  <ExampleRoute locale={locale} heading={details.heading} description={details.description} build={details.build} features={details.features} frameworkPackage={frameworkPackage} variant={variant}>
     <section data-framework-panel="web-components" class="framework-panel"><WebExample /></section>
     <section data-framework-panel="vue" class="framework-panel"><ExampleView exampleName={example} locale={locale} client:only="vue"><p>{m.loading_example(undefined, {locale})}</p></ExampleView></section>
   </ExampleRoute>

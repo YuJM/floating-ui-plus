@@ -337,7 +337,7 @@ test('all middleware fixtures expose their observable behavior', async ({
     'true',
   );
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: /Position with the constraints/}),
+    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Middleware'}),
   ).toBeVisible();
   await expect(page.locator('.middleware-title a')).toHaveCount(8);
   await expect(
@@ -555,7 +555,7 @@ test('placement controls drive all 12 component positions', async ({page}) => {
 
   const webPanel = page.locator('[data-framework-panel="web-components"]');
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: /Make placement a product decision/}),
+    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Placement'}),
   ).toBeVisible();
   await expect(webPanel.locator('[data-placement-control]')).toHaveCount(12);
 
