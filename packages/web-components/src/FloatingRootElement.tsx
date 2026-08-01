@@ -33,6 +33,11 @@ export interface FloatingTemplateLifecycleDetail {
   element: HTMLElement;
 }
 
+export interface FloatingRootConfiguration {
+  middleware?: FloatingOptions['middleware'];
+  plugins?: FloatingPlugin[] | undefined;
+}
+
 const contentsStyles = `
   :host,
   slot {
@@ -178,6 +183,16 @@ export class FloatingRootElement extends FloatingRootBase {
 
   use(...plugins: FloatingPlugin[]) {
     getFloatingRootRuntime(this).pipe(...plugins);
+    return this;
+  }
+
+  configure(configuration: FloatingRootConfiguration) {
+    if (configuration.middleware !== undefined) {
+      this.middleware = configuration.middleware;
+    }
+    if (configuration.plugins !== undefined) {
+      this.plugins = configuration.plugins;
+    }
     return this;
   }
 

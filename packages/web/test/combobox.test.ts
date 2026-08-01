@@ -39,6 +39,12 @@ function setup() {
 }
 
 describe('ComboboxController', () => {
+  test('exposes the configured item label to renderer adapters', () => {
+    const {combobox} = setup();
+
+    expect(combobox.getItemLabel(alpha)).toBe('Alpha');
+  });
+
   test('binds focus, input, and IME composition to search state', () => {
     const {input, onOpenChange, search} = setup();
 

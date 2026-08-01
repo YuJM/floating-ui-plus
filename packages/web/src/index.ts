@@ -21,7 +21,9 @@ export type * from './types';
 export {
   createAsyncSearchSource,
   createSearch,
+  createSearchRenderer,
   SearchController,
+  SearchRenderer,
 } from './search';
 export type {
   AsyncSearchSourceOptions,
@@ -31,6 +33,11 @@ export type {
   SearchOptions,
   SearchPage,
   SearchRequest,
+  SearchPhase,
+  SearchRenderContext,
+  SearchRendererOptions,
+  SearchRenderers,
+  SearchRenderOutput,
   SearchSnapshot,
   SearchSource,
   SearchSourceItem,

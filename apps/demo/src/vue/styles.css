@@ -113,6 +113,7 @@
   .vue-mw-inline-reference { color: #268e61; text-decoration: underline; text-decoration-color: #42b883; text-decoration-thickness: 2px; }
   .vue-mw-panel-inline { min-width: 96px; padding: 6px 8px; text-align: center; }
   .vue-combobox-card { background: #dff5e9; }
+  .vue-combobox-examples { display: grid; gap: 14px; }
   .vue-combobox-card > p, .vue-combobox-card > code { color: #4e675e; }
   .vue-combobox-shell { position: relative; margin-top: 24px; }
   .vue-combobox-label { display: block; margin-bottom: 7px; color: #426057; font: 9px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
@@ -132,6 +133,15 @@
   .vue-combobox-hints button { display: flex; align-items: center; justify-content: space-between; gap: 6px; border: 0; border-radius: 7px; padding: 7px 8px; background: rgb(255 255 255 / .68); color: #4e675e; cursor: pointer; font-size: 9px; }
   .vue-combobox-hints button:hover { background: #fafffd; color: #173a32; }
   .vue-combobox-hints code { margin: 0; color: #176b49; font-size: 9px; }
+  .vue-server-combobox-card { background: #dff2ef; }
+  .vue-combobox-server-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .vue-combobox-server-meta > * { margin: 0; border: 1px solid rgb(38 142 97 / .2); border-radius: 999px; padding: 5px 8px; color: #176b49; background: rgb(255 255 255 / .62); font: 10px ui-monospace, monospace; }
+  .vue-combobox-popup { z-index: 60; width: min(400px, calc(100vw - 36px)); overflow: hidden; border: 1px solid rgb(23 58 50 / .18); border-radius: 12px; padding: 6px; background: #fafffd; box-shadow: 0 22px 55px rgb(23 58 50 / .22); }
+  .vue-combobox-option { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 58px; border-radius: 8px; padding: 9px 11px; color: #173a32; cursor: default; }
+  .vue-combobox-option[data-active="true"] { background: #caefdf; box-shadow: inset 3px 0 #42b883; }
+  .vue-combobox-option > span:first-child { display: grid; gap: 3px; }
+  .vue-combobox-option strong { font-size: 16px; letter-spacing: -.025em; }
+  .vue-combobox-option small { color: #60766e; font-size: 10px; }
   .vue-placement-view { display: grid; min-height: 680px; grid-template-columns: minmax(250px, .7fr) minmax(540px, 1.3fr); align-items: center; gap: 64px; padding: 28px 0 100px; }
   .vue-placement-copy { align-self: start; padding-top: 42px; }
   .vue-placement-copy .vue-kicker { display: block; margin-top: 54px; color: #268e61; }

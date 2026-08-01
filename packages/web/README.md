@@ -162,6 +162,7 @@ slot, upstream `offset()` semantics remain unchanged.
 | Positioning and interaction lifecycle | `createFloating()` with `.pipe()` |
 | Standard placement values | `PLACEMENT` and `PLACEMENTS` |
 | Async or controlled search requests | `createSearch()` from `/search` |
+| Direct DOM search-phase rendering | `createSearchRenderer()` from `/search` |
 | Local typo-tolerant search | `createFuzzySearchSource()` from `/fuzzy` |
 | Editable combobox input and selection | `createCombobox()` from `/combobox` |
 | Nested menus and ordered items | tree, list, and composite controllers |
@@ -179,13 +180,15 @@ cursor pagination through `loadMore()`.
 `createCombobox()` composes that search state with the repeated editable
 combobox behavior: focus/input opening, IME events, active option state,
 `aria-activedescendant`, Enter selection, option mouse binding, and the
-`role()` plus virtual `listNavigation()` plugins. The application still owns
-the option markup and loading, error, empty, and result rendering.
+`role()` plus virtual `listNavigation()` plugins. `SearchSnapshot.phase`
+provides the neutral `idle`, `loading`, `error`, `empty`, and `results` states;
+the application still owns their copy and markup.
 
 Framework adapters consume the same `getInputProps()`, `getOptionProps()`, and
 `getNavigationOptions()` contract. The imperative `bindInput()`,
-`bindOption()`, and `navigationPlugin()` helpers are built from those props, so
-Web Components, Vue, and direct DOM integrations share one behavior source.
+`bindOption()`, and `navigationPlugin()` helpers
+are built from those props, so Web Components, Vue, and direct DOM integrations
+share one behavior source.
 
 The demo's multilingual combobox is the concrete composition to copy. Its core
 wiring is:
@@ -216,7 +219,7 @@ const combobox = createCombobox({
 
 floating.pipe(dismiss(), ...combobox.interactions({loop: true, allowEscape: true}));
 combobox.subscribe(render);
-combobox.bindInput(input); // Also runs the initial search refresh.
+combobox.bindInput(input); // Attempts the initial source refresh.
 
 // After rendering options:
 combobox.setListElements(optionElements);
@@ -249,6 +252,35 @@ The controller's small lifecycle surface is deliberate:
 `bindOption()`, and `setListElements()`. Framework renderers should bind the
 prop-returning methods declaratively; direct DOM and Custom Element adapters
 can use the imperative binding helpers.
+
+For direct DOM or Custom Element renderers, `createSearchRenderer()` removes
+the repetitive subscription, phase switch, and `replaceChildren()` lifecycle.
+All five phase renderers are required, so an empty query, pending request,
+failure, no-result outcome, and result list cannot accidentally leave stale
+content behind. The callbacks retain complete control of nodes and copy:
+
+```ts
+import {createSearchRenderer} from '@floating-ui-plus/web/search';
+
+const resultsRenderer = createSearchRenderer({
+  search,
+  render: {
+    idle: () => queryExamples(),
+    loading: () => message('Searching…'),
+    error: () => message('Search failed.'),
+    empty: ({query}) => message(`No match for ${query}`),
+    results: ({items}) => items.map(renderProductOption),
+  },
+});
+
+// Re-bind this whenever a portal creates a fresh content clone.
+const unbindResults = resultsRenderer.bind(resultsElement);
+// On portal unmount: unbindResults(); On owner disposal: resultsRenderer.destroy();
+```
+
+Vue applications should instead use their native `v-if` / `v-for` template
+branches with `useSearch().phase`; the renderer is intentionally a DOM adapter,
+not a replacement for framework rendering.
 
 `createFuzzySearchSource()` normalizes compatibility forms and diacritics,
 ranks exact/prefix/fuzzy matches, and exposes match ranges for highlighting.

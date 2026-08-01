@@ -111,8 +111,10 @@ the dialog content.
 
 ## Combobox search
 
-`useSearch()` connects generic request state to Vue lifecycle. It does not
-render a Combobox. The application owns the input, menu, selection, and ARIA.
+`useSearch()` connects generic request state to Vue lifecycle. Its `phase`
+projection distinguishes `idle`, `loading`, `error`, `empty`, and `results`;
+it does not render a Combobox. The application owns the input, menu, selection,
+and ARIA.
 
 ```ts
 import {createAsyncSearchSource, useSearch} from '@floating-ui-plus/vue';
@@ -140,6 +142,10 @@ selection, or grid options. For fully custom behavior, compose
 `useFloating()`, `listNavigation()`, and `role()` directly. For data owned by a
 query library, pass controlled `items`, `loading`, and `error` values to
 `useSearch()`.
+
+`createSearchRenderer()` is re-exported for a direct-DOM island in a Vue
+application, but normal Vue components should render the same `phase` with
+their native template branches.
 
 ## Nested menus and keyboard collections
 

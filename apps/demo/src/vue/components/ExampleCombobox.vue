@@ -15,6 +15,7 @@ import {
   useCombobox,
   useSearch,
 } from '@floating-ui-plus/vue';
+import ExampleAsyncCombobox from './ExampleAsyncCombobox.vue';
 
 import {
   multilingualDestinations,
@@ -57,10 +58,21 @@ const plugins = [dismiss(), rolePlugin];
 const navigationOptions = getNavigationOptions({
   allowEscape: true,
 });
+
+function applySearchSample(query: string, event: MouseEvent) {
+  setQuery(query, event);
+  const card = (event.currentTarget as HTMLElement | null)?.closest(
+    '.vue-combobox-card',
+  );
+  card
+    ?.querySelector<HTMLInputElement>('[data-floating-combobox-input]')
+    ?.focus({preventScroll: true});
+}
 </script>
 
 <template>
-  <article class="vue-demo-card vue-combobox-card">
+  <div class="vue-combobox-examples">
+    <article class="vue-demo-card vue-combobox-card">
     <div class="vue-card-top">
       <span class="vue-number">F</span>
       <span>composed in Vue</span>
@@ -100,7 +112,7 @@ const navigationOptions = getNavigationOptions({
               data-floating-combobox-popup
             >
               <div
-                v-if="search.loading.value"
+                v-if="search.phase.value === 'loading'"
                 class="vue-combobox-empty"
                 role="option"
                 aria-disabled="true"
@@ -108,14 +120,14 @@ const navigationOptions = getNavigationOptions({
                 Searching…
               </div>
               <div
-                v-else-if="search.error.value"
+                v-else-if="search.phase.value === 'error'"
                 class="vue-combobox-empty"
                 role="option"
                 aria-disabled="true"
               >
                 Search failed.
               </div>
-              <template v-else-if="search.items.value.length">
+              <template v-else-if="search.phase.value === 'results'">
                 <FloatingListItem
                   v-for="(item, index) in search.items.value"
                   :key="item.id"
@@ -136,7 +148,7 @@ const navigationOptions = getNavigationOptions({
                 </FloatingListItem>
               </template>
               <div
-                v-else
+                v-else-if="search.phase.value === 'empty'"
                 class="vue-combobox-empty"
                 role="option"
                 aria-disabled="true"
@@ -154,17 +166,26 @@ const navigationOptions = getNavigationOptions({
         v-for="[sample, destination] in multilingualSearchPrompts"
         :key="sample"
         type="button"
-        @click="setQuery(sample)"
+        :data-search-sample="sample"
+        @mousedown.prevent
+        @click="applySearchSample(sample, $event)"
       >
         <code>{{ sample }}</code><span>→ {{ destination }}</span>
       </button>
     </div>
+
     <p id="vue-combobox-status" class="sr-only" aria-live="polite">
       {{
         open
-          ? search.items.value.length
-            ? `${search.items.value.length} destinations available`
-            : `No destinations found for ${search.query.value}`
+          ? search.phase.value === 'idle'
+            ? 'Start typing to search'
+            : search.phase.value === 'results'
+              ? `${search.items.value.length} destinations available`
+              : search.phase.value === 'empty'
+                ? `No destinations found for ${search.query.value}`
+                : search.phase.value === 'loading'
+                  ? 'Searching destinations'
+                  : 'Destination search failed'
           : selectedItem
             ? `${selectedItem.label} selected`
             : 'Destination suggestions closed'
@@ -172,5 +193,7 @@ const navigationOptions = getNavigationOptions({
     </p>
 
     <code>useSearch() + useCombobox() + &lt;FloatingList navigation&gt;</code>
-  </article>
+    </article>
+    <ExampleAsyncCombobox />
+  </div>
 </template>

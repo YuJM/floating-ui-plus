@@ -120,6 +120,10 @@ export class ComboboxController<T> {
     return `${this.#optionIdPrefix}-${encodedKey}`;
   }
 
+  getItemLabel(item: T) {
+    return this.#options.getItemLabel(item);
+  }
+
   setListElements(elements: Array<HTMLElement | null>) {
     this.listRef.current = elements;
     this.#syncActiveState();
@@ -140,6 +144,7 @@ export class ComboboxController<T> {
 
   setQuery(query: string, event?: Event) {
     this.setActiveIndex(null);
+    if (this.#input) this.#input.value = query;
     this.#requestOpen(true, event);
     this.search.setQuery(query);
   }

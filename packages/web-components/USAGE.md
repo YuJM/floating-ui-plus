@@ -127,6 +127,105 @@ the document scroll lock.
 </floating-root>
 ```
 
+## Editable fuzzy-search combobox
+
+The combobox creates and owns a `SearchController` from search options. It
+exposes a neutral `phase` of `idle`, `loading`, `error`, `empty`, or `results`.
+`<floating-combobox>` owns
+editable-input ARIA, virtual focus, Enter selection, and status updates.
+`<floating-search>` renders application-owned native templates.
+
+```html
+<floating-root placement="bottom-start">
+  <floating-list navigation loop allow-escape>
+    <floating-combobox data-destination-combobox>
+      <floating-reference>
+        <input aria-label="Destination" autocomplete="off" />
+      </floating-reference>
+      <floating-portal>
+        <template>
+          <div aria-label="Destination suggestions">
+            <floating-search>
+              <template data-search-loading><p>Searching…</p></template>
+              <template data-search-error><p>Search failed.</p></template>
+              <template data-search-empty>
+                <p>No match for <span data-search-text="$query"></span></p>
+              </template>
+              <template data-search-result>
+                <floating-list-item>
+                  <div>
+                    <strong data-search-text="label"></strong>
+                    <small data-search-text="region"></small>
+                  </div>
+                </floating-list-item>
+              </template>
+            </floating-search>
+          </div>
+        </template>
+      </floating-portal>
+      <p data-combobox-status aria-live="polite"></p>
+    </floating-combobox>
+  </floating-list>
+</floating-root>
+```
+
+```ts
+import {
+  createFuzzySearchSource,
+  type FloatingComboboxElement,
+} from '@floating-ui-plus/web-components';
+
+const combobox = document.querySelector<FloatingComboboxElement>(
+  '[data-destination-combobox]',
+)!;
+combobox.configure({
+  search: {
+    source: createFuzzySearchSource(destinations, {keys: searchKeys}),
+    getItemKey: (destination) => destination.id,
+  },
+  getItemLabel: (item) => item.label,
+  status: {
+    closed: 'Suggestions closed',
+    idle: 'Search examples available',
+    loading: 'Searching',
+    error: 'Search failed',
+    empty: ({search}) => `No match for ${search.query}`,
+    results: ({search}) => `${search.items.length} options`,
+  },
+});
+```
+
+For server-side search, replace only the source with the async adapter:
+
+```ts
+import {createAsyncSearchSource} from '@floating-ui-plus/web-components';
+
+combobox.configure({
+  search: {
+    source: createAsyncSearchSource({
+      async search({query, signal, limit, cursor}) {
+        return fetchDestinationPage({query, signal, limit, cursor});
+      },
+    }),
+    getItemKey: (destination) => destination.id,
+    debounceMs: 200,
+  },
+  getItemLabel: (destination) => destination.label,
+});
+```
+
+Both source factories implement `SearchSource<T>`. Pass an existing
+`SearchController` to `configure()` only when its state or lifecycle must be
+shared outside the element.
+
+The result template is repeated once per search item. Every generated
+`floating-list-item` receives its `label` and `value` automatically.
+`data-search-text="label"` reads an item field; `$query`, `$index`, `$count`,
+and `$error` read search metadata.
+
+Use the lower-level re-exported `createSearchRenderer()` when native templates
+are not appropriate for a direct DOM integration.
+
 ## Configure values in JavaScript
 
 Use attributes for strings and booleans. Assign middleware, plugins, virtual
@@ -134,6 +233,7 @@ references, service objects, and item values as element properties.
 
 ```ts
 import {
+  dismiss,
   flip,
   offset,
   shift,
@@ -141,7 +241,10 @@ import {
 } from '@floating-ui-plus/web-components';
 
 const root = document.querySelector<FloatingRootElement>('floating-root')!;
-root.middleware = [offset(8), flip(), shift({padding: 12})];
+root.configure({
+  middleware: [offset(8), flip(), shift({padding: 12})],
+  plugins: [dismiss()],
+});
 root.addEventListener('openchange', ({detail}) => {
   console.log(detail.open, detail.reason);
 });

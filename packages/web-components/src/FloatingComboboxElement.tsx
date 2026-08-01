@@ -10,12 +10,19 @@ import {
 import {
   ComboboxController,
   type ComboboxSnapshot,
-  type SearchController,
+  SearchController,
 } from '@floating-ui-plus/web';
 
+import {
+  createFloatingComboboxStatusFormatter,
+  type FloatingComboboxConfiguration,
+  type FloatingComboboxStatusFormatter,
+} from './combobox-types';
 import type {FloatingListElement} from './CollectionComponents';
 import {floatingComponentContext} from './component-context';
 import {getFloatingRootRuntime} from './FloatingController';
+import type {FloatingTemplateLifecycleDetail} from './FloatingRootElement';
+import type {FloatingSearchElement} from './FloatingSearchElement';
 
 const contentsStyles = `
   :host,
@@ -37,10 +44,13 @@ interface FloatingComboboxHost extends HTMLElement {
   inputSelector: string;
   itemLabelKey: string;
   optionIdPrefix: string;
+  statusSelector: string;
   search: SearchController<unknown> | undefined;
   getItemKey: ((item: unknown) => string | number) | undefined;
   getItemLabel: ((item: unknown) => string) | undefined;
   selectedItem: unknown | null;
+  statusFormatter: FloatingComboboxStatusFormatter<unknown> | undefined;
+  ownsSearch: boolean;
   setController(controller: ComboboxController<unknown> | undefined): void;
 }
 
@@ -58,6 +68,17 @@ function getDefaultItemLabel(item: unknown, key: string) {
     return String((item as Record<string, unknown>)[key] ?? '');
   }
   return String(item ?? '');
+}
+
+function getSearchViews(scope: Element) {
+  return [
+    ...(scope.matches('floating-search')
+      ? [scope as FloatingSearchElement]
+      : []),
+    ...Array.from(
+      scope.querySelectorAll<FloatingSearchElement>('floating-search'),
+    ),
+  ];
 }
 
 const FloatingComboboxBase = c(
@@ -112,10 +133,58 @@ const FloatingComboboxBase = c(
     );
     useProvider(floatingComponentContext, contextValue);
 
+    useEffect(() => {
+      const search = host.search;
+      if (!search || !host.ownsSearch) return;
+      search.connect();
+      return () => search.disconnect();
+    }, [host, host.search, host.ownsSearch]);
+
     useLayoutEffect(() => {
       host.setController(controller);
       return () => host.setController(undefined);
     }, [host, controller]);
+
+    useLayoutEffect(() => {
+      const search = host.search;
+      if (!search) return;
+      const boundViews = new Set<FloatingSearchElement>();
+      const getItemLabel = (item: unknown) =>
+        host.getItemLabel?.(item) ??
+        getDefaultItemLabel(item, host.itemLabelKey);
+      const bindViews = (scope: Element) => {
+        for (const view of getSearchViews(scope)) {
+          const owningCombobox = view.closest('floating-combobox');
+          if (owningCombobox && owningCombobox !== host) continue;
+          view.getItemLabel = getItemLabel;
+          view.onRender = () => root?.controller.refresh();
+          view.search = search;
+          boundViews.add(view);
+        }
+      };
+      const handleMount = (event: Event) => {
+        const {root: mountedRoot, element} = (
+          event as CustomEvent<FloatingTemplateLifecycleDetail>
+        ).detail;
+        if (mountedRoot !== root) return;
+        bindViews(element);
+      };
+
+      bindViews(host);
+      if (root?.floatingElement) {
+        bindViews(root.floatingElement);
+      }
+      host.addEventListener('floatingmount', handleMount);
+      return () => {
+        host.removeEventListener('floatingmount', handleMount);
+        for (const view of boundViews) {
+          if (view.search === search) {
+            view.search = undefined;
+            view.onRender = undefined;
+          }
+        }
+      };
+    }, [host, root, host.search, host.getItemLabel, host.itemLabelKey]);
 
     useLayoutEffect(() => {
       if (!root || !controller || !input) return;
@@ -144,6 +213,14 @@ const FloatingComboboxBase = c(
         'activeindexchange',
         onActiveIndexChange,
       );
+      const syncStatus = (snapshot = controller.snapshot) => {
+        const status = host.querySelector<HTMLElement>(host.statusSelector);
+        if (!status || !host.statusFormatter) return;
+        status.textContent = host.statusFormatter({
+          ...snapshot,
+          open: root.open,
+        });
+      };
       const unsubscribeController = controller.subscribe((snapshot) => {
         host.dispatchEvent(
           new CustomEvent<FloatingComboboxStateChangeDetail>(
@@ -155,11 +232,16 @@ const FloatingComboboxBase = c(
             },
           ),
         );
+        syncStatus(snapshot);
       });
+      const handleOpenChange = () => syncStatus();
+      root.addEventListener('openchange', handleOpenChange);
       syncList();
+      syncStatus();
       root.controller.refresh();
       return () => {
         unsubscribeController();
+        root.removeEventListener('openchange', handleOpenChange);
         listElement?.removeEventListener(
           'activeindexchange',
           onActiveIndexChange,
@@ -171,7 +253,15 @@ const FloatingComboboxBase = c(
           listElement.virtual = previousVirtual;
         }
       };
-    }, [host, root, listElement, controller, input]);
+    }, [
+      host,
+      root,
+      listElement,
+      controller,
+      input,
+      host.statusSelector,
+      host.statusFormatter,
+    ]);
 
     useEffect(() => {
       if (!controller) return;
@@ -210,6 +300,11 @@ const FloatingComboboxBase = c(
         value: (): string => '',
         attr: 'option-id-prefix',
       },
+      statusSelector: {
+        type: String,
+        value: (): string => '[data-combobox-status]',
+        attr: 'status-selector',
+      },
     },
   },
 );
@@ -221,6 +316,8 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
   #getItemLabel: ((item: unknown) => string) | undefined;
   #controller: ComboboxController<unknown> | undefined;
   #selectedItem: unknown | null = null;
+  #statusFormatter: FloatingComboboxStatusFormatter<unknown> | undefined;
+  #ownsSearch = false;
 
   get updateComplete() {
     return this.updated;
@@ -231,9 +328,11 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
   }
 
   set search(value: SearchController<unknown> | undefined) {
-    if (value === this.#search) return;
-    this.#search = value;
-    void this.update();
+    this.#setSearch(value, false);
+  }
+
+  get ownsSearch() {
+    return this.#ownsSearch;
   }
 
   get getItemKey() {
@@ -271,6 +370,39 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
     this.#controller?.setSelectedItem(value);
   }
 
+  get statusFormatter() {
+    return this.#statusFormatter;
+  }
+
+  set statusFormatter(
+    value: FloatingComboboxStatusFormatter<unknown> | undefined,
+  ) {
+    if (value === this.#statusFormatter) return;
+    this.#statusFormatter = value;
+    void this.update();
+  }
+
+  configure<T>(configuration: FloatingComboboxConfiguration<T>) {
+    this.getItemLabel = configuration.getItemLabel as (
+      item: unknown,
+    ) => string;
+    this.getItemKey = configuration.getItemKey as
+      | ((item: unknown) => string | number)
+      | undefined;
+    this.selectedItem = configuration.selectedItem ?? null;
+    this.statusFormatter = configuration.status
+      ? ((typeof configuration.status === 'function'
+          ? configuration.status
+          : createFloatingComboboxStatusFormatter(configuration.status)) as
+          FloatingComboboxStatusFormatter<unknown>)
+      : undefined;
+    const ownsSearch = !(configuration.search instanceof SearchController);
+    const search = ownsSearch
+      ? new SearchController(configuration.search)
+      : configuration.search;
+    this.#setSearch(search as SearchController<unknown>, ownsSearch);
+  }
+
   setController(controller: ComboboxController<unknown> | undefined) {
     this.#controller = controller;
     if (controller) controller.setSelectedItem(this.#selectedItem);
@@ -282,6 +414,16 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
 
   select(item: unknown, event?: Event) {
     this.#controller?.select(item, event);
+  }
+
+  #setSearch(value: SearchController<unknown> | undefined, owned: boolean) {
+    if (value === this.#search && owned === this.#ownsSearch) return;
+    if (this.#ownsSearch && this.#search !== value) {
+      this.#search?.destroy();
+    }
+    this.#search = value;
+    this.#ownsSearch = owned;
+    void this.update();
   }
 }
 

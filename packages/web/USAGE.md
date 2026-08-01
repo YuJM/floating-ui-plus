@@ -146,6 +146,32 @@ typo-tolerant search. Use `typeahead()` for non-editable menus and selects;
 pass `findMatch` only when the default multilingual fuzzy matching is not right
 for your data.
 
+### Render search phases in direct DOM integrations
+
+Use `createSearchRenderer()` when the consumer is native DOM or Custom
+Elements. It subscribes to `SearchController`, chooses the renderer for
+`idle`, `loading`, `error`, `empty`, or `results`, and replaces only the bound
+container's children. Your application still supplies nodes, markup, and copy.
+
+```ts
+import {createSearchRenderer} from '@floating-ui-plus/web/search';
+
+const renderer = createSearchRenderer({
+  search,
+  render: {
+    idle: () => renderExamples(),
+    loading: () => renderMessage('Searching…'),
+    error: () => renderMessage('Search failed.'),
+    empty: ({query}) => renderMessage(`No match for ${query}`),
+    results: ({items}) => items.map(renderOption),
+  },
+});
+
+const releasePortalContent = renderer.bind(optionsElement);
+// Call releasePortalContent() when that portal clone is removed.
+// Call renderer.destroy() when its owner is disposed.
+```
+
 ## Collections, trees, and portals
 
 Use a tree and nodes for nested menus, lists for ordered items, and composites

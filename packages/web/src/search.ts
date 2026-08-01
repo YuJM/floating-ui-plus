@@ -62,10 +62,17 @@ export interface SearchOptions<T> {
   onQueryChange?: ((query: string) => void) | undefined;
 }
 
+/**
+ * Rendering-oriented phase derived from a search request and its current
+ * query. `idle` means that both the query and current result set are empty.
+ */
+export type SearchPhase = 'idle' | 'loading' | 'error' | 'empty' | 'results';
+
 export interface SearchSnapshot<T> {
   query: string;
   items: readonly T[];
   hits: readonly SearchHit<T>[];
+  phase: SearchPhase;
   loading: boolean;
   error: unknown;
   composing: boolean;
@@ -137,6 +144,7 @@ export class SearchController<T> {
       query: this.query,
       items: this.items,
       hits: this.hits,
+      phase: this.phase,
       loading: this.loading,
       error: this.error,
       composing: this.composing,
@@ -148,6 +156,19 @@ export class SearchController<T> {
 
   get connected() {
     return this.#connected && !this.#destroyed;
+  }
+
+  /**
+   * The current rendering phase. This does not prescribe UI copy or markup;
+   * renderers can use `idle` for query prompts and `empty` for a no-results
+   * state without duplicating loading/error precedence rules.
+   */
+  get phase(): SearchPhase {
+    if (this.loading) return 'loading';
+    if (this.error != null) return 'error';
+    if (this.items.length) return 'results';
+    if (!this.query.trim()) return 'idle';
+    return 'empty';
   }
 
   getItemKey(item: T) {
@@ -213,6 +234,10 @@ export class SearchController<T> {
     ) {
       return Promise.resolve();
     }
+    if (!this.#hasMinimumQueryLength()) {
+      this.#clearForShortQuery();
+      return Promise.resolve();
+    }
     return this.#performSearch(undefined, false);
   }
 
@@ -232,7 +257,12 @@ export class SearchController<T> {
   connect() {
     if (this.#destroyed) return;
     this.#connected = true;
-    if (this.#options.source && !this.composing && !this.items.length) {
+    if (
+      this.#options.source &&
+      !this.composing &&
+      !this.loading &&
+      !this.items.length
+    ) {
       void this.refresh();
     }
   }
@@ -259,16 +289,8 @@ export class SearchController<T> {
   #scheduleSearch() {
     if (!this.#connected || this.#destroyed) return;
     this.#cancelScheduled();
-    const minQueryLength = this.#options.minQueryLength ?? 0;
-    if (this.query.length < minQueryLength) {
-      this.items = [];
-      this.hits = [];
-      this.loading = false;
-      this.error = null;
-      this.total = 0;
-      this.nextCursor = undefined;
-      this.hasMore = false;
-      this.#emit();
+    if (!this.#hasMinimumQueryLength()) {
+      this.#clearForShortQuery();
       return;
     }
     const debounceMs = this.#options.debounceMs ?? 150;
@@ -362,6 +384,21 @@ export class SearchController<T> {
     this.hasMore = Boolean(page.nextCursor);
   }
 
+  #hasMinimumQueryLength() {
+    return this.query.length >= (this.#options.minQueryLength ?? 0);
+  }
+
+  #clearForShortQuery() {
+    this.items = [];
+    this.hits = [];
+    this.loading = false;
+    this.error = null;
+    this.total = 0;
+    this.nextCursor = undefined;
+    this.hasMore = false;
+    this.#emit();
+  }
+
   #cancelScheduled() {
     if (this.#timer != null) {
       clearTimeout(this.#timer);
@@ -383,4 +420,96 @@ export class SearchController<T> {
 
 export function createSearch<T>(options: SearchOptions<T>) {
   return new SearchController(options);
+}
+
+/** A DOM node (or nodes) produced for one search phase. */
+export type SearchRenderOutput = Node | Iterable<Node> | null | undefined;
+
+/** Immutable search data passed to a phase renderer. */
+export interface SearchRenderContext<T> extends SearchSnapshot<T> {
+  search: SearchController<T>;
+}
+
+/**
+ * Render functions for every possible search phase.
+ *
+ * Requiring all phases makes an intentional blank state explicit instead of
+ * silently leaving a stale result list in the DOM.
+ */
+export type SearchRenderers<T> = {
+  readonly [Phase in SearchPhase]: (
+    context: SearchRenderContext<T>,
+  ) => SearchRenderOutput;
+};
+
+export interface SearchRendererOptions<T> {
+  search: SearchController<T>;
+  render: SearchRenderers<T>;
+}
+
+/**
+ * Subscribes a DOM container to a search controller and replaces its children
+ * through phase-specific render functions. It owns phase dispatch and the
+ * subscription lifecycle; applications continue to own their HTML, copy, and
+ * item bindings.
+ *
+ * This is useful for direct DOM and Custom Element renderers. Frameworks with
+ * declarative templates should render `SearchSnapshot.phase` themselves.
+ */
+export class SearchRenderer<T> {
+  #search: SearchController<T>;
+  #renderers: SearchRenderers<T>;
+  #container: Element | null = null;
+  #unsubscribe: (() => void) | null = null;
+  #destroyed = false;
+
+  constructor(options: SearchRendererOptions<T>) {
+    this.#search = options.search;
+    this.#renderers = options.render;
+    this.#unsubscribe = this.#search.subscribe(() => this.render());
+  }
+
+  /** Bind a container, immediately render its current phase, and return cleanup. */
+  bind(container: Element) {
+    this.#container = container;
+    this.render();
+    return () => {
+      if (this.#container === container) this.#container = null;
+    };
+  }
+
+  /** Re-render the currently bound container from the latest search snapshot. */
+  render() {
+    const container = this.#container;
+    if (this.#destroyed || !container) return;
+    const snapshot = this.#search.snapshot;
+    const output = this.#renderers[snapshot.phase]({
+      ...snapshot,
+      search: this.#search,
+    });
+    const nodes =
+      output == null
+        ? []
+        : isNode(output)
+          ? [output]
+          : [...output];
+    container.replaceChildren(...nodes);
+  }
+
+  destroy() {
+    if (this.#destroyed) return;
+    this.#destroyed = true;
+    this.#container = null;
+    this.#unsubscribe?.();
+    this.#unsubscribe = null;
+  }
+}
+
+/** Create a phase-aware DOM renderer for a `SearchController`. */
+export function createSearchRenderer<T>(options: SearchRendererOptions<T>) {
+  return new SearchRenderer(options);
+}
+
+function isNode(value: SearchRenderOutput): value is Node {
+  return typeof Node !== 'undefined' && value instanceof Node;
 }

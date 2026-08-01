@@ -7,6 +7,19 @@ export {
   type FloatingComboboxStateChangeDetail,
 } from './FloatingComboboxElement';
 export {
+  FLOATING_SEARCH_PHASES,
+  FloatingSearchElement,
+} from './FloatingSearchElement';
+export {createFloatingComboboxStatusFormatter} from './combobox-types';
+export type {
+  FloatingComboboxConfiguration,
+  FloatingComboboxSearchConfiguration,
+  FloatingComboboxStatusMessages,
+  FloatingComboboxStatusContext,
+  FloatingComboboxStatusFormatter,
+  FloatingComboboxStatusText,
+} from './combobox-types';
+export {
   FloatingItemElement,
   FloatingReferenceElement,
 } from './RootParts';
@@ -16,6 +29,7 @@ export {
 } from './constants';
 export {
   FloatingRootElement,
+  type FloatingRootConfiguration,
   type FloatingOpenChangeDetail,
   type FloatingTemplateLifecycleDetail,
 } from './FloatingRootElement';

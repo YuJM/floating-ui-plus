@@ -1,0 +1,165 @@
+<article
+  class="demo-card combobox-card combobox-server-card"
+  data-demo="async-combobox"
+>
+  <div class="card-top">
+    <span class="number">A</span>
+    <span class="chip">async server source</span>
+  </div>
+  <h3>Server-side search</h3>
+  <p>
+    A simulated endpoint demonstrates debounce, cancellation, and remote
+    result states.
+  </p>
+
+  <div class="combobox-shell">
+    <label class="combobox-label" for="remote-destination-search">
+      Remote destination
+    </label>
+    <floating-root data-async-combobox-root placement="bottom-start">
+      <floating-list navigation loop allow-escape>
+        <floating-combobox
+          data-async-combobox
+          option-id-prefix="remote-destination-option"
+        >
+          <floating-reference>
+            <input
+              id="remote-destination-search"
+              class="combobox-input"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="remote-combobox-status"
+              placeholder="Try seoul, japan, china…"
+            />
+          </floating-reference>
+          <floating-portal>
+            <template>
+              <div
+                class="combobox-popup async-combobox-popup"
+                aria-label="Remote destination suggestions"
+              >
+                <floating-search>
+                  <template data-search-loading>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Querying remote endpoint…
+                    </div>
+                  </template>
+                  <template data-search-error>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Remote search failed.
+                    </div>
+                  </template>
+                  <template data-search-empty>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      The server found no match for “<span
+                        data-search-text="$query"
+                      ></span>”
+                    </div>
+                  </template>
+                  <template data-search-result>
+                    <floating-list-item>
+                      <div class="combobox-option">
+                        <span>
+                          <strong data-search-text="label"></strong>
+                          <small data-search-text="region"></small>
+                        </span>
+                        <span class="language-badge">API</span>
+                      </div>
+                    </floating-list-item>
+                  </template>
+                </floating-search>
+              </div>
+            </template>
+          </floating-portal>
+          <p
+            id="remote-combobox-status"
+            class="sr-only"
+            aria-live="polite"
+            data-combobox-status
+          >
+            Remote destination suggestions closed
+          </p>
+        </floating-combobox>
+      </floating-list>
+    </floating-root>
+    <span class="combobox-icon" aria-hidden="true">⌕</span>
+  </div>
+
+  <div class="combobox-server-meta" aria-label="Server search behavior">
+    <code>320ms latency</code>
+    <span>AbortSignal</span>
+    <span>5s cache</span>
+  </div>
+
+  <code>createAsyncSearchSource() + &lt;floating-combobox&gt;</code>
+</article>
+
+<script>
+  import {
+    createAsyncSearchSource,
+    dismiss,
+    flip,
+    offset,
+    shift,
+    type FloatingComboboxElement,
+    type FloatingComboboxSelectDetail,
+  } from '@floating-ui-plus/web-components';
+  import type {MultilingualDestination} from '../../multilingual-destinations';
+  import {searchDestinationsOnServer} from '../../server-destination-search';
+  import {emitExampleAction, initializeExample} from './example-client';
+
+  initializeExample('async-combobox', (scope) => {
+    const floating = scope.querySelector('floating-root');
+    const combobox = scope.querySelector<FloatingComboboxElement>(
+      '[data-async-combobox]',
+    );
+    if (!floating || !combobox) return;
+
+    combobox.configure<MultilingualDestination>({
+      search: {
+        source: createAsyncSearchSource({
+          search: searchDestinationsOnServer,
+        }),
+        getItemKey: (item) => item.id,
+        debounceMs: 180,
+        cacheTtlMs: 5_000,
+      },
+      getItemLabel: (item) => item.label,
+      status: {
+        closed: 'Remote destination suggestions closed',
+        selected: (item) => `${item.label} selected from the server`,
+        idle: 'Remote destination search is idle',
+        loading: 'Querying remote destinations',
+        error: 'Remote destination search failed',
+        empty: ({search}) => `No remote matches for ${search.query}`,
+        results: ({search}) =>
+          `${search.items.length} remote destinations available`,
+      },
+    });
+    floating.configure({
+      middleware: [offset(8), flip(), shift({padding: 18})],
+      plugins: [dismiss()],
+    });
+    combobox.addEventListener('comboboxselect', (event) => {
+      const {item} = (event as CustomEvent<FloatingComboboxSelectDetail>)
+        .detail;
+      emitExampleAction(
+        scope,
+        `${(item as MultilingualDestination).label} selected from server search`,
+      );
+    });
+  });
+</script>

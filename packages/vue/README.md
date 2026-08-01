@@ -203,8 +203,9 @@ When the default component is used with `arrow({element})`, listen for
 debounce, minimum query length, IME composition, `AbortSignal` cancellation,
 stale-response protection, TTL caching, de-duplication, and cursor pagination;
 `useCombobox()` adds Vue refs and input bindings for open state, active option,
-IME, ARIA, Enter selection, and the combobox role. Your component still owns
-the result markup and loading, error, and empty states.
+IME, ARIA, Enter selection, and the combobox role. `search.phase` provides
+`idle`, `loading`, `error`, `empty`, and `results` for a concise template;
+your component still owns the result markup and copy.
 
 ```vue
 <script setup lang="ts">
@@ -301,6 +302,9 @@ const navigationOptions = getNavigationOptions({
 Local fuzzy indexing supplies results, `useCombobox()` supplies editable-input
 and selection behavior, and `FloatingList` supplies virtual keyboard
 navigation. The template keeps ownership of loading/error/empty presentation.
+`createSearchRenderer()` is also re-exported for direct DOM islands, but Vue
+templates should prefer `search.phase` with `v-if` / `v-for` rather than a DOM
+renderer.
 
 `createFuzzySearchSource()` normalizes compatibility forms and diacritics,
 then returns exact/prefix/fuzzy scores and match ranges through `hits`. For a
@@ -319,8 +323,8 @@ their state is owned elsewhere.
 
 | `useSearch()` value | Purpose |
 | --- | --- |
-| `query`, `items`, `loading`, `error` | Reactive projections for template rendering |
-| `state` | Full snapshot, including `hits`, `composing`, `hasMore`, `total`, and `nextCursor` |
+| `query`, `items`, `phase`, `loading`, `error` | Reactive projections for template rendering |
+| `state` | Full snapshot, including `phase`, `hits`, `composing`, `hasMore`, `total`, and `nextCursor` |
 | `controller.setQuery()` | Update the query from an input or custom event |
 | `controller.refresh()` / `loadMore()` | Re-run the current request or append the next page |
 | `controller.setControlledState()` | Bridge data owned by another request/cache library |

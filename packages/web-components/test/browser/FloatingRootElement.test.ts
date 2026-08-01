@@ -14,6 +14,7 @@ import {
   FloatingRootElement,
   SearchController,
   click,
+  createAsyncSearchSource,
   offset,
 } from '../../src';
 
@@ -57,6 +58,16 @@ describe('FloatingRootElement', () => {
     expect(root.referenceElement?.getAttribute('aria-controls')).toBe(
       root.floatingElement?.id,
     );
+  });
+
+  test('configures middleware and plugins as one root operation', () => {
+    const root = document.createElement('floating-root');
+    const middleware = [offset(8)];
+    const plugins = [click()];
+
+    expect(root.configure({middleware, plugins})).toBe(root);
+    expect(root.middleware).toBe(middleware);
+    expect(root.plugins).toBe(plugins);
   });
 
   test('maps click interactions to reflected state and a DOM event', async () => {
@@ -192,7 +203,7 @@ describe('FloatingRootElement', () => {
       {id: 'seoul', label: '서울'},
       {id: 'beijing', label: '北京'},
     ];
-    const search = new SearchController({
+    const search = new SearchController<(typeof destinations)[number]>({
       items: destinations,
       getItemKey: (item) => item.id,
     });
@@ -261,6 +272,130 @@ describe('FloatingRootElement', () => {
       expect(selectListener).toHaveBeenCalledOnce();
     });
     search.destroy();
+  });
+
+  test('renders combobox search phases and result items from native templates', async () => {
+    const destination = {id: 'beijing', label: '北京', region: 'China'};
+    const search = new SearchController<typeof destination>({
+      items: [],
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-list navigation>
+        <floating-combobox>
+          <floating-reference><input aria-label="Destination" /></floating-reference>
+          <floating-portal>
+            <template>
+              <section>
+                <floating-search>
+                  <template data-search-idle><p>Try a query</p></template>
+                  <template data-search-loading><p>Searching</p></template>
+                  <template data-search-error><p data-search-text="$error"></p></template>
+                  <template data-search-empty><p>No match for <span data-search-text="$query"></span></p></template>
+                  <template data-search-result>
+                    <floating-list-item>
+                      <div><strong data-search-text="label"></strong><small data-search-text="region"></small></div>
+                    </floating-list-item>
+                  </template>
+                </floating-search>
+              </section>
+            </template>
+          </floating-portal>
+          <p data-combobox-status></p>
+        </floating-combobox>
+      </floating-list>
+    `;
+    const combobox = root.querySelector('floating-combobox')!;
+    combobox.configure({
+      search,
+      getItemLabel: (item) => item.label,
+      status: {
+        closed: 'closed',
+        idle: 'idle',
+        loading: 'loading',
+        error: 'error',
+        empty: 'empty',
+        results: 'results',
+      },
+    });
+    document.body.append(root);
+    await root.updateComplete;
+    await combobox.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('floating-search')?.dataset.phase).toBe(
+        'idle',
+      );
+      expect(document.querySelector('floating-search')?.textContent).toContain(
+        'Try a query',
+      );
+      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+        'idle',
+      );
+    });
+
+    search.setQuery('bejing');
+    await vi.waitFor(() => {
+      expect(document.querySelector('floating-search')?.textContent).toContain(
+        'No match for bejing',
+      );
+    });
+
+    search.setControlledState({items: [destination]});
+    await vi.waitFor(() => {
+      const item = document.querySelector('floating-list-item');
+      expect(item?.label).toBe('北京');
+      expect(item?.value).toBe(destination);
+      expect(item?.textContent).toContain('北京China');
+      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+        'results',
+      );
+    });
+    search.destroy();
+  });
+
+  test('creates an owned controller from async search options', async () => {
+    const request = vi.fn(async ({query}: {query: string}) => ({
+      items: [{id: 'remote', label: `Remote ${query}`}],
+    }));
+    const combobox = document.createElement('floating-combobox');
+
+    combobox.configure<{id: string; label: string}>({
+      search: {
+        source: createAsyncSearchSource({search: request}),
+        getItemKey: (item) => item.id,
+        debounceMs: 0,
+      },
+      getItemLabel: (item) => item.label,
+    });
+
+    expect(combobox.search).toBeInstanceOf(SearchController);
+    expect(combobox.ownsSearch).toBe(true);
+    combobox.search?.setQuery('seoul');
+
+    await vi.waitFor(() => {
+      expect(request).toHaveBeenCalledOnce();
+      expect(combobox.search?.items).toEqual([
+        {id: 'remote', label: 'Remote seoul'},
+      ]);
+    });
+
+    const ownedSearch = combobox.search!;
+    const externalSearch = new SearchController({
+      items: [{id: 'local', label: 'Local'}],
+      getItemKey: (item) => item.id,
+    });
+    combobox.configure({
+      search: externalSearch,
+      getItemLabel: (item) => item.label,
+    });
+
+    expect(ownedSearch.connected).toBe(false);
+    expect(combobox.search).toBe(externalSearch);
+    expect(combobox.ownsSearch).toBe(false);
+    externalSearch.destroy();
   });
 
   test('connects and replaces plugins assigned after the root is connected', async () => {

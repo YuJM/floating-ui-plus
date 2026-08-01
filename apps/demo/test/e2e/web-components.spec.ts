@@ -590,10 +590,22 @@ test('multilingual combobox keeps input focus and renders results', async ({
     'data-initialized',
     'true',
   );
-  const input = page.getByRole('combobox', {name: 'Destination'});
+  const input = page.getByRole('combobox', {
+    name: 'Destination',
+    exact: true,
+  });
+  const webPanel = page.locator('[data-framework-panel="web-components"]');
 
   await input.focus();
   await expect(page.getByRole('option')).toHaveCount(4);
+  await webPanel.locator('[data-search-sample="bejing"]').click();
+  await expect(input).toBeFocused();
+  await expect(input).toHaveValue('bejing');
+  const firstResult = page.getByRole('option', {name: /^北京/});
+  await expect(firstResult).toBeVisible();
+  await expect(firstResult).toHaveCSS('min-height', '58px');
+  await expect(firstResult).toHaveCSS('padding', '9px 11px');
+  await expect(firstResult).toHaveCSS('border-radius', '8px');
 
   for (const [query, expected] of [
     ['서을', '서울'],
@@ -609,6 +621,9 @@ test('multilingual combobox keeps input focus and renders results', async ({
     await expect(page.getByRole('option', {name: new RegExp(expected)}))
       .toBeVisible();
   }
+
+  await input.fill('');
+  await expect(page.getByRole('option')).toHaveCount(4);
 
   await input.fill('bejing');
   const option = page.getByRole('option', {name: /北京/});
@@ -639,5 +654,39 @@ test('multilingual combobox keeps input focus and renders results', async ({
   });
   expect(violations).toEqual([]);
   await input.press('Escape');
+  await expect(popup).toBeHidden();
+});
+
+test('async server combobox renders loading and ignores stale requests', async ({
+  page,
+}) => {
+  await page.goto('/combobox');
+  await expect(page.locator('[data-demo="async-combobox"]')).toHaveAttribute(
+    'data-initialized',
+    'true',
+  );
+  const input = page.getByRole('combobox', {name: 'Remote destination'});
+  const popup = page.locator('.async-combobox-popup');
+
+  await input.focus();
+  await input.fill('seo');
+  await expect(popup.getByText('Querying remote endpoint…')).toBeVisible();
+  await input.fill('bei');
+  await expect(popup.getByRole('option', {name: /^北京/})).toBeVisible();
+  await expect(popup.getByRole('option', {name: /^서울/})).toHaveCount(0);
+
+  await input.fill('no-remote-match');
+  await expect(popup.getByText(/server found no match/)).toBeVisible();
+  await input.fill('');
+  await expect(popup.getByRole('option')).toHaveCount(4);
+
+  await input.fill('tokyo');
+  await expect(popup.getByText('Querying remote endpoint…')).toBeVisible();
+  await expect(popup.getByRole('option')).toHaveCount(1);
+  const option = popup.getByRole('option', {name: /^東京/});
+  await expect(option).toBeVisible();
+  await input.press('ArrowDown');
+  await input.press('Enter');
+  await expect(input).toHaveValue('東京');
   await expect(popup).toBeHidden();
 });
