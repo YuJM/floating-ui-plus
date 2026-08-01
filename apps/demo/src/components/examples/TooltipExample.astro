@@ -21,8 +21,8 @@ import {TOOLTIP_ARROW} from '../../example-config';
           Inspect signal <span aria-hidden="true">↗</span>
         </button>
       </floating-reference>
-      <floating-transition>
-        <template data-fup-content data-tooltip-content>
+      <floating-portal>
+        <template slot="content" data-tooltip-content>
           <div class="tooltip">
             Positioned by <b>autoUpdate</b>
             <floating-arrow
@@ -32,7 +32,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
             ></floating-arrow>
           </div>
         </template>
-      </floating-transition>
+      </floating-portal>
     </floating-root>
   </div>
   <code>hover() → focus() → dismiss()</code>
@@ -78,8 +78,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
     });
     const template = floatingTemplate(scope, '[data-tooltip-content]');
     onFloatingTemplateMount(template, (element) => {
-      const arrowElement =
-        element.querySelector<HTMLElement>('floating-arrow');
+      const arrowElement = element.querySelector<HTMLElement>('floating-arrow');
       floating.middleware = [
         offset(TOOLTIP_ARROW.gap),
         flip(),

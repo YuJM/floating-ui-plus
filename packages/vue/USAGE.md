@@ -100,6 +100,22 @@ that live for the full `useFloating()` scope.
 
 ## Portals and modal dialogs
 
+### Native browser top layer
+
+For dialog, menu, and listbox roles, `FloatingContent` automatically keeps a
+popover in the Vue tree while displaying it in the browser top layer:
+
+```vue
+<FloatingRoot v-model:open="open" :plugins="[role({role: 'dialog'})]">
+  <FloatingReference>Open</FloatingReference>
+  <FloatingContent>Popover content</FloatingContent>
+</FloatingRoot>
+```
+
+For a modal, use `as="dialog"` on `FloatingContent`. The framework-neutral Web controller synchronizes native
+`toggle`, `cancel`, and `close` events with `v-model:open`. Keep the ordinary
+`FloatingPortal` path as the compatibility fallback.
+
 `FloatingPortal` uses Vue Teleport and targets `body` by default. When nested
 under `FloatingRoot`, it follows that root's `open` state automatically, so a
 consumer does not need to repeat `v-if` or `:active`. The optional `active`
@@ -146,6 +162,14 @@ query library, pass controlled `items`, `loading`, and `error` values to
 `createSearchRenderer()` is re-exported for a direct-DOM island in a Vue
 application, but normal Vue components should render the same `phase` with
 their native template branches.
+
+`useCombobox()` also returns `selectedValue`, which follows the shared
+`getItemValue()` contract. Bind it to a hidden native input when the selection
+belongs to a standard form:
+
+```vue
+<input type="hidden" name="destination" :value="selectedValue ?? ''" />
+```
 
 ## Nested menus and keyboard collections
 

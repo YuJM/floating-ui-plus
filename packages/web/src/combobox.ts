@@ -15,6 +15,11 @@ export type ComboboxNavigationOptions = Omit<
 export interface ComboboxOptions<T> {
   search: SearchController<T>;
   getItemKey?: ((item: T) => string | number) | undefined;
+  /**
+   * Returns the value submitted by a form for a selected item. It defaults to
+   * `getItemKey`, so labels and submitted identifiers stay independent.
+   */
+  getItemValue?: ((item: T) => string) | undefined;
   getItemLabel(item: T): string;
   initialSelectedItem?: T | null | undefined;
   optionIdPrefix?: string | undefined;
@@ -32,6 +37,7 @@ export interface ComboboxOptions<T> {
 export interface ComboboxSnapshot<T> {
   activeIndex: number | null;
   selectedItem: T | null;
+  selectedValue: string | null;
   search: SearchSnapshot<T>;
 }
 
@@ -99,6 +105,9 @@ export class ComboboxController<T> {
     return {
       activeIndex: this.activeIndex,
       selectedItem: this.selectedItem,
+      selectedValue: this.selectedItem
+        ? this.getItemValue(this.selectedItem)
+        : null,
       search: this.search.snapshot,
     };
   }
@@ -122,6 +131,10 @@ export class ComboboxController<T> {
 
   getItemLabel(item: T) {
     return this.#options.getItemLabel(item);
+  }
+
+  getItemValue(item: T) {
+    return this.#options.getItemValue?.(item) ?? String(this.#getItemKey(item));
   }
 
   setListElements(elements: Array<HTMLElement | null>) {

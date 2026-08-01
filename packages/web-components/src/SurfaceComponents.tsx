@@ -15,13 +15,19 @@ import {
   FLOATING_UI_PLUS_PORTAL_ATTRIBUTE,
   focusManager,
   lockScroll,
+  supportsFloatingTopLayer,
+  type FloatingTopLayer,
 } from "@floating-ui-plus/web";
 
 import {
   floatingComponentContext,
   type FloatingComponentContext,
 } from "./component-context";
-import { FLOATING_UI_PLUS_CONTENT_ATTRIBUTE } from "./constants";
+import {
+  FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
+  FLOATING_UI_PLUS_CONTENT_SLOT,
+  isFloatingContentTemplate,
+} from "./constants";
 import { getFloatingRootRuntime } from "./FloatingController";
 import type { FloatingRootElement } from "./FloatingRootElement";
 
@@ -85,7 +91,7 @@ function clearAutoContentTemplate(runtime: PortalRuntime) {
   const template = runtime.autoContentTemplate;
   if (!template) return;
   if (autoContentTemplates.has(template)) {
-    template.removeAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE);
+    template.removeAttribute('slot');
     autoContentTemplates.delete(template);
   }
   runtime.autoContentTemplate = undefined;
@@ -126,8 +132,7 @@ function reconcilePortalContentTemplate(
   const templates = getPortalContentTemplates(host, runtime);
   const explicitTemplates = templates.filter(
     (template) =>
-      template.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE) &&
-      !autoContentTemplates.has(template),
+      isFloatingContentTemplate(template) && !autoContentTemplates.has(template),
   );
 
   if (explicitTemplates.length > 0) {
@@ -142,7 +147,7 @@ function reconcilePortalContentTemplate(
       clearAutoContentTemplate(runtime);
       runtime.autoContentTemplate = template;
       autoContentTemplates.add(template);
-      template.setAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE, "");
+      template.slot = FLOATING_UI_PLUS_CONTENT_SLOT;
     }
     runtime.templateWarning = false;
     return;
@@ -152,7 +157,7 @@ function reconcilePortalContentTemplate(
   if (templates.length > 1 && !runtime.templateWarning) {
     runtime.templateWarning = true;
     console.warn(
-      `[floating-ui-plus] A floating portal with multiple templates requires exactly one explicit template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}].`,
+      '[floating-ui-plus] A floating portal with multiple templates requires exactly one explicit template[slot="content"].',
       host,
     );
   } else if (templates.length < 2) {
@@ -190,7 +195,7 @@ function updatePortalTemplateScopes(
     });
     observer.observe(scope, {
       attributes: true,
-      attributeFilter: [FLOATING_UI_PLUS_CONTENT_ATTRIBUTE],
+      attributeFilter: [FLOATING_UI_PLUS_CONTENT_ATTRIBUTE, 'slot'],
       childList: true,
       subtree: true,
     });
@@ -301,6 +306,7 @@ export class FloatingPortalTargetElement extends FloatingPortalTargetBase {
     delayGroup: undefined,
     composite: undefined,
     combobox: undefined,
+    topLayer: undefined,
   };
 
   get contextValue() {
@@ -317,6 +323,7 @@ export class FloatingPortalTargetElement extends FloatingPortalTargetBase {
 interface FloatingPortalHost extends HTMLElement {
   to: string;
   disabled: boolean;
+  topLayer: FloatingTopLayer;
   target: Element | null;
 }
 
@@ -328,7 +335,13 @@ const FloatingPortalBase = c(
       [],
     );
     const portalSlot = useRef<HTMLSlotElement>();
-    const portalChildren = useSlot<Node>(portalSlot);
+    const contentSlot = useRef<HTMLSlotElement>();
+    const defaultPortalChildren = useSlot<Node>(portalSlot);
+    const contentPortalChildren = useSlot<Node>(contentSlot);
+    const portalChildren = useMemo(
+      () => [...defaultPortalChildren, ...contentPortalChildren],
+      [defaultPortalChildren, contentPortalChildren],
+    );
     const [providerReady, setProviderReady] = useState(false);
     const componentContext = useContext(floatingComponentContext);
     const capturedContext = useRef(componentContext);
@@ -336,9 +349,31 @@ const FloatingPortalBase = c(
       capturedContext.current = componentContext;
     }
     const targetReady = capturedContext.current.root !== undefined;
+    const containsNativeDialog = portalChildren.some(
+      (node) =>
+        node instanceof HTMLDialogElement ||
+        (node instanceof Element && node.querySelector(':scope > dialog')),
+    );
+    const containsContentTemplate = portalChildren.some(
+      (node) => node instanceof HTMLTemplateElement,
+    );
+    const explicitTopLayer =
+      host.hasAttribute('top-layer')
+        ? host.topLayer
+        : capturedContext.current.topLayer ?? 'none';
+    const nativeTopLayer = supportsFloatingTopLayer(
+      explicitTopLayer,
+    ) || containsNativeDialog || (
+      !host.hasAttribute('top-layer') &&
+      !host.hasAttribute('to') &&
+      host.target == null &&
+      containsContentTemplate &&
+      supportsFloatingTopLayer('popover')
+    );
+    const portalDisabled = host.disabled || nativeTopLayer;
     runtime.root = capturedContext.current.root;
     runtime.templateInferenceSuspended =
-      !host.disabled &&
+      !portalDisabled &&
       targetReady &&
       (!runtime.targetElement || !providerReady);
 
@@ -354,7 +389,7 @@ const FloatingPortalBase = c(
       // Mount portal content once its logical context is ready. Open state
       // controls visibility through the floating surface and overlay so the
       // Atomico subtree is not disconnected during an interaction.
-      if (host.disabled || !targetReady) {
+      if (portalDisabled || !targetReady) {
         destroyPortal(host as FloatingPortalElement, runtime);
         setProviderReady(false);
         updatePortalTemplateScopes(host as FloatingPortalElement, runtime);
@@ -436,7 +471,7 @@ const FloatingPortalBase = c(
       providerReady,
       targetReady,
       portalChildren,
-      host.disabled,
+      portalDisabled,
       host.target,
       host.to,
       capturedContext.current,
@@ -451,7 +486,12 @@ const FloatingPortalBase = c(
             display: none;
           }
         `}</style>
-        <slot ref={portalSlot} hidden={!host.disabled && !targetReady} />
+        <slot ref={portalSlot} hidden={!portalDisabled && !targetReady} />
+        <slot
+          name={FLOATING_UI_PLUS_CONTENT_SLOT}
+          ref={contentSlot}
+          hidden={!portalDisabled && !targetReady}
+        />
       </host>
     );
   },
@@ -462,6 +502,11 @@ const FloatingPortalBase = c(
         type: Boolean,
         value: (): boolean => false,
         reflect: true,
+      },
+      topLayer: {
+        type: String,
+        value: (): FloatingTopLayer => 'none',
+        attr: 'top-layer',
       },
     },
   },
@@ -496,6 +541,47 @@ export class FloatingPortalElement extends FloatingPortalBase {
     if (value === this.#target) return;
     this.#target = value;
     void this.update();
+  }
+}
+
+interface FloatingContentHost extends HTMLElement {
+  topLayer: FloatingTopLayer;
+}
+
+const FloatingContentBase = c(
+  () => {
+    const host = useHost<FloatingContentHost>().current;
+    const root = useContext(floatingComponentContext).root;
+
+    useLayoutEffect(() => {
+      if (!root) return;
+      const runtime = getFloatingRootRuntime(root);
+      runtime.setFloatingElement(host);
+      return () => runtime.setFloatingElement(null);
+    }, [host, root]);
+
+    return (
+      <host shadowDom>
+        <style>{`:host { display: block; } slot { display: contents; }`}</style>
+        <slot />
+      </host>
+    );
+  },
+  {
+    props: {
+      topLayer: {
+        type: String,
+        value: (): FloatingTopLayer => 'none',
+        attr: 'top-layer',
+      },
+    },
+  },
+);
+
+/** Direct floating surface. `top-layer="popover"` uses the Popover API. */
+export class FloatingContentElement extends FloatingContentBase {
+  get updateComplete() {
+    return this.updated;
   }
 }
 
@@ -701,6 +787,7 @@ export class FloatingTransitionElement extends FloatingTransitionBase {
 declare global {
   interface HTMLElementTagNameMap {
     "floating-portal": FloatingPortalElement;
+    "floating-content": FloatingContentElement;
     "floating-portal-target": FloatingPortalTargetElement;
     "floating-overlay": FloatingOverlayElement;
     "floating-focus-manager": FloatingFocusManagerElement;

@@ -47,11 +47,16 @@ interface FloatingComboboxHost extends HTMLElement {
   statusSelector: string;
   search: SearchController<unknown> | undefined;
   getItemKey: ((item: unknown) => string | number) | undefined;
+  getItemValue: ((item: unknown) => string) | undefined;
   getItemLabel: ((item: unknown) => string) | undefined;
   selectedItem: unknown | null;
   statusFormatter: FloatingComboboxStatusFormatter<unknown> | undefined;
   ownsSearch: boolean;
+  name: string;
+  required: boolean;
+  disabled: boolean;
   setController(controller: ComboboxController<unknown> | undefined): void;
+  syncFormState(): void;
 }
 
 function findInput(host: FloatingComboboxHost) {
@@ -98,6 +103,7 @@ const FloatingComboboxBase = c(
           host.getItemLabel?.(item) ??
           getDefaultItemLabel(item, host.itemLabelKey),
         ...(host.getItemKey ? {getItemKey: host.getItemKey} : {}),
+        ...(host.getItemValue ? {getItemValue: host.getItemValue} : {}),
         ...(host.optionIdPrefix
           ? {optionIdPrefix: host.optionIdPrefix}
           : {}),
@@ -109,6 +115,7 @@ const FloatingComboboxBase = c(
           root.controller.refresh();
         },
         onSelect: (item, sourceEvent) => {
+          host.syncFormState();
           host.dispatchEvent(
             new CustomEvent<FloatingComboboxSelectDetail>('comboboxselect', {
               bubbles: true,
@@ -222,6 +229,7 @@ const FloatingComboboxBase = c(
         });
       };
       const unsubscribeController = controller.subscribe((snapshot) => {
+        host.syncFormState();
         host.dispatchEvent(
           new CustomEvent<FloatingComboboxStateChangeDetail>(
             'comboboxstatechange',
@@ -261,6 +269,9 @@ const FloatingComboboxBase = c(
       input,
       host.statusSelector,
       host.statusFormatter,
+      host.name,
+      host.required,
+      host.disabled,
     ]);
 
     useEffect(() => {
@@ -305,17 +316,29 @@ const FloatingComboboxBase = c(
         value: (): string => '[data-combobox-status]',
         attr: 'status-selector',
       },
+      name: {type: String, value: (): string => '', reflect: true},
+      required: {type: Boolean, value: (): boolean => false, reflect: true},
+      disabled: {type: Boolean, value: (): boolean => false, reflect: true},
     },
   },
 );
 
 /** Connects search, editable input, list, selection, and combobox ARIA. */
 export class FloatingComboboxElement extends FloatingComboboxBase {
+  static readonly formAssociated = true;
+
+  #internals =
+    typeof this.attachInternals === 'function'
+      ? this.attachInternals()
+      : undefined;
   #search: SearchController<unknown> | undefined;
   #getItemKey: ((item: unknown) => string | number) | undefined;
+  #getItemValue: ((item: unknown) => string) | undefined;
   #getItemLabel: ((item: unknown) => string) | undefined;
   #controller: ComboboxController<unknown> | undefined;
   #selectedItem: unknown | null = null;
+  #initialSelectedItem: unknown | null = null;
+  #hasInitialSelectedItem = false;
   #statusFormatter: FloatingComboboxStatusFormatter<unknown> | undefined;
   #ownsSearch = false;
 
@@ -347,6 +370,16 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
     void this.update();
   }
 
+  get getItemValue() {
+    return this.#getItemValue;
+  }
+
+  set getItemValue(value: ((item: unknown) => string) | undefined) {
+    if (value === this.#getItemValue) return;
+    this.#getItemValue = value;
+    void this.update();
+  }
+
   get getItemLabel() {
     return this.#getItemLabel;
   }
@@ -368,6 +401,7 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
   set selectedItem(value: unknown | null) {
     this.#selectedItem = value;
     this.#controller?.setSelectedItem(value);
+    this.syncFormState();
   }
 
   get statusFormatter() {
@@ -389,7 +423,12 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
     this.getItemKey = configuration.getItemKey as
       | ((item: unknown) => string | number)
       | undefined;
+    this.getItemValue = configuration.getItemValue as
+      | ((item: unknown) => string)
+      | undefined;
     this.selectedItem = configuration.selectedItem ?? null;
+    this.#initialSelectedItem = configuration.selectedItem ?? null;
+    this.#hasInitialSelectedItem = true;
     this.statusFormatter = configuration.status
       ? ((typeof configuration.status === 'function'
           ? configuration.status
@@ -405,7 +444,14 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
 
   setController(controller: ComboboxController<unknown> | undefined) {
     this.#controller = controller;
-    if (controller) controller.setSelectedItem(this.#selectedItem);
+    if (controller) {
+      controller.setSelectedItem(this.#selectedItem);
+      if (!this.#hasInitialSelectedItem) {
+        this.#initialSelectedItem = this.#selectedItem;
+        this.#hasInitialSelectedItem = true;
+      }
+    }
+    this.syncFormState();
   }
 
   setQuery(query: string, event?: Event) {
@@ -414,6 +460,50 @@ export class FloatingComboboxElement extends FloatingComboboxBase {
 
   select(item: unknown, event?: Event) {
     this.#controller?.select(item, event);
+  }
+
+  formDisabledCallback(disabled: boolean) {
+    const input = findInput(this);
+    if (input) input.disabled = disabled || this.disabled;
+  }
+
+  formResetCallback() {
+    const controller = this.#controller;
+    const item = this.#initialSelectedItem;
+    this.#selectedItem = item;
+    controller?.setSelectedItem(item);
+    const label = item == null ? '' : controller?.getItemLabel(item) ?? '';
+    const input = findInput(this);
+    if (input) input.value = label;
+    controller?.search.setQuery(label);
+    this.syncFormState();
+  }
+
+  /** Synchronizes the selected item's stable value with native form state. */
+  syncFormState() {
+    const controller = this.#controller;
+    const value =
+      controller?.selectedItem == null
+        ? null
+        : controller.getItemValue(controller.selectedItem);
+    const internals = this.#internals;
+    if (
+      !internals ||
+      typeof internals.setFormValue !== 'function' ||
+      typeof internals.setValidity !== 'function'
+    ) {
+      return;
+    }
+    internals.setFormValue(value);
+    if (this.required && value == null) {
+      internals.setValidity(
+        {valueMissing: true},
+        'Select an option.',
+        findInput(this) ?? undefined,
+      );
+      return;
+    }
+    internals.setValidity({});
   }
 
   #setSearch(value: SearchController<unknown> | undefined, owned: boolean) {

@@ -16,9 +16,11 @@
           <i aria-hidden="true"></i>
         </div>
       </floating-reference>
-      <template data-fup-content>
-        <div class="cursor-tooltip">Pointer is the <b>reference</b></div>
-      </template>
+      <floating-portal>
+        <template slot="content">
+          <div class="cursor-tooltip">Pointer is the <b>reference</b></div>
+        </template>
+      </floating-portal>
     </floating-root>
   </div>
   <code>&lt;floating-root&gt; + clientPoint()</code>

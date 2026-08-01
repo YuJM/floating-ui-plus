@@ -33,3 +33,25 @@ examples in both Web Components and Vue demos.
 
 Add `FloatingRootElement.configure()` for setting middleware and plugin
 functions together without application-owned assignment helpers.
+
+Add a framework-neutral `FloatingTopLayerController` for native modal Dialog
+lifecycle. Native top layers are inferred from real `<dialog>` surfaces, so
+modal Web Components and Vue composition does not need a root-level
+`top-layer` setting; explicit values remain an escape hatch. Web Components
+use a root-owned `<template slot="content">` for normal conditional surfaces,
+keeping them inert before Custom Element registration and promoting them to a
+native Popover where supported. A direct native dialog remains the exception
+because the browser already hides it while closed. `data-fup-content` remains
+as a compatibility alias for the public content slot.
+
+Allow `floating-content` to register as the nearest Web Components root's
+surface even when it is composed inside another behavior element such as
+`floating-combobox`. It remains available for advanced always-mounted
+composition, while ordinary overlays and combobox result surfaces use the
+portal/template pattern and retain native search phase templates.
+
+Add a framework-neutral combobox `getItemValue()` contract. Web Components
+`floating-combobox` is form-associated and submits its selected value through
+`name`, participates in `required` validation, and restores its configured
+selection on native form reset. Vue exposes the same selected value ref for a
+hidden native form input.

@@ -46,6 +46,8 @@ export interface UseComboboxReturn<T> {
   open: Ref<boolean>;
   activeIndex: Ref<number | null>;
   selectedItem: ShallowRef<T | null> | Ref<T | null>;
+  /** Native-form friendly selected value. Bind it to a hidden input in Vue. */
+  selectedValue: ComputedRef<string | null>;
   inputProps: ComputedRef<ComboboxInputProps>;
   rolePlugin: FloatingPlugin;
   setQuery(query: string, event?: Event): void;
@@ -113,6 +115,12 @@ export function useCombobox<T>(
     void revision.value;
     return controller.getInputProps();
   });
+  const selectedValue = computed(() => {
+    void revision.value;
+    return controller.selectedItem == null
+      ? null
+      : controller.getItemValue(controller.selectedItem);
+  });
 
   onScopeDispose(() => {
     stopActiveIndexWatch();
@@ -126,6 +134,7 @@ export function useCombobox<T>(
     open,
     activeIndex,
     selectedItem,
+    selectedValue,
     inputProps,
     rolePlugin,
     setQuery: (query, event) => controller.setQuery(query, event),

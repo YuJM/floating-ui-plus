@@ -59,16 +59,20 @@ For complete templates and programmatic configuration, see the
     <button>Open settings</button>
   </floating-reference>
 
-  <floating-portal>
-    <template>
-      <section aria-label="Settings">
-        Popover content
-        <button data-fup-close>Close</button>
-      </section>
-    </template>
-  </floating-portal>
+  <template slot="content">
+    <section aria-label="Settings">
+      Popover content
+      <button data-fup-close>Close</button>
+    </section>
+  </template>
 </floating-root>
 ```
+
+Use a root-owned `<template slot="content">` for normal floating surfaces. The
+browser keeps it inert before Custom Element registration, and the root creates
+a fresh native Popover only while it is open. Use a real `<dialog slot="floating">`
+for a modal: a closed native dialog is already hidden by the browser and
+automatically provides modal focus and inertness.
 
 `open` reflects to an attribute. User actions emit a bubbling, composed
 `openchange` event whose detail contains `open` and `reason`.
@@ -82,15 +86,16 @@ markup and classes while binding the nearest `floating-root` controller.
 
 | Element | Main attributes / properties | Role |
 | --- | --- | --- |
-| `floating-root` | `open`, `placement`, `strategy`, `transform`, `interactions`, `floating-role`; properties `middleware`, `plugins`, `configure()` | Owns one reference/surface controller and the baseline dialog ARIA relationship |
+| `floating-root` | `open`, `placement`, `strategy`, `transform`, `interactions`, `floating-role`; properties `middleware`, `plugins`, `configure()` | Owns one reference/surface controller |
 | `floating-reference` | First light-DOM child | Binds the child to the root reference and interaction attributes |
 | `floating-item` | `active`, `selected`, `index` | Applies interaction attributes to its first child |
-| `floating-portal` | `to`, `disabled`; property `target` | Moves children to `body`, a selector target, or a nested portal target while preserving context |
+| `floating-portal` | `to`, `disabled`; property `target` | Moves non-native children to `body`, a selector target, or a nested portal target while preserving context |
+| `floating-content` | optional `top-layer` escape hatch | Advanced always-mounted floating surface; use a portal template for the default conditional surface |
 | `floating-overlay` | `lock-scroll` | Provides a fixed overlay and optional document scroll lock |
 | `floating-focus-manager` | `enabled`, `modal`, `initial-focus`, `return-focus`, `outside-elements-inert` | Connects focus trapping, focus restoration, and inert outside elements |
 | `floating-arrow` | `width`, `height`, `static-offset`, `rotation` | Registers arrow geometry and renders the default or slotted SVG |
 | `floating-transition` | No required attributes | Reflects the nearest root's open/close state as `data-status` for CSS |
-| `floating-combobox` | `input-selector`, `item-label-key`, `option-id-prefix`, `status-selector`; properties `search`, `getItemKey`, `getItemLabel`, `selectedItem`, `configure()` | Connects an editable input, search state, virtual-focus list, selection, status, and combobox ARIA |
+| `floating-combobox` | `name`, `required`, `disabled`, `input-selector`, `item-label-key`, `option-id-prefix`, `status-selector`; properties `search`, `getItemKey`, `getItemValue`, `getItemLabel`, `selectedItem`, `configure()` | Form-associated editable combobox with search, virtual focus, selection, status, and combobox ARIA |
 | `floating-search` | Native phase templates and `data-search-text` bindings | Repeats result templates and automatically supplies list-item labels and values |
 
 `floating-root` also exposes `controller`, `referenceElement`,
@@ -118,7 +123,7 @@ element}` when a fresh clone is created or removed.
 
 | Need | Elements |
 | --- | --- |
-| Reference and floating surface | `floating-root`, `floating-reference`, native `template` |
+| Reference and floating surface | `floating-root`, `floating-reference`, native `<template slot="content">` |
 | Portal, arrow, overlay, and focus | `floating-portal`, `floating-arrow`, `floating-overlay`, `floating-focus-manager` |
 | Nested menus and collections | `floating-tree`, `floating-node`, `floating-list`, `floating-list-item` |
 | Editable fuzzy-search combobox | `floating-combobox`, `floating-search`, `floating-list`, `floating-list-item` |
@@ -179,8 +184,7 @@ search data, status copy, and markup.
         <input aria-label="Destination" autocomplete="off" />
       </floating-reference>
 
-      <floating-portal>
-        <template>
+      <template slot="content">
           <div aria-label="Destination suggestions">
             <floating-search>
               <template data-search-loading><p>Searching…</p></template>
@@ -198,8 +202,7 @@ search data, status copy, and markup.
               </template>
             </floating-search>
           </div>
-        </template>
-      </floating-portal>
+      </template>
       <p data-combobox-status aria-live="polite"></p>
     </floating-combobox>
   </floating-list>
@@ -365,15 +368,15 @@ Wrap dialog content with an overlay and focus manager:
 <floating-portal>
   <floating-overlay lock-scroll>
     <floating-focus-manager modal return-focus outside-elements-inert>
-      <template><section aria-label="Account settings">…</section></template>
+      <template slot="content"><section aria-label="Account settings">…</section></template>
     </floating-focus-manager>
   </floating-overlay>
 </floating-portal>
 ```
 
-`floating-portal` automatically marks its single owned template with
-`data-fup-content`. Mark a template explicitly when a portal owns more than one
-template, or when conditional content is used without a portal.
+`floating-portal` accepts the same `slot="content"` contract when a body-level
+target is explicitly needed. Mark exactly one content template when a portal
+owns multiple templates; `data-fup-content` remains a compatibility alias.
 
 Imports are SSR-safe. Positioning, portals, observers, and focus management
 start only after the corresponding elements connect.

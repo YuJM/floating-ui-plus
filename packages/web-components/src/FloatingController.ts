@@ -3,6 +3,7 @@ import {
   autoUpdate,
   click,
   createFloating,
+  createFloatingTopLayer,
   dismiss,
   focus,
   getContextArrowStyles,
@@ -12,6 +13,8 @@ import {
   type FloatingController,
   type FloatingContext,
   type FloatingPlugin,
+  type FloatingTopLayerController,
+  type FloatingTopLayer,
   type OpenChangeReason,
   type ReferenceElement,
 } from '@floating-ui-plus/web';
@@ -20,6 +23,7 @@ import {setAttributes} from '@floating-ui-plus/web/utils';
 import {
   FLOATING_UI_PLUS_CLOSE_ATTRIBUTE,
   FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
+  FLOATING_UI_PLUS_CONTENT_TEMPLATE_SELECTOR,
 } from './constants';
 import type {FloatingRootElement} from './FloatingRootElement';
 
@@ -37,13 +41,16 @@ export function getFloatingRootRuntime(host: FloatingRootElement) {
 
 export class FloatingRootRuntime {
   readonly engine: FloatingController;
+  readonly topLayer: FloatingTopLayerController;
 
   readonly #host: FloatingRootElement;
   #reference: Element | null = null;
   #floatingElement: HTMLElement | null = null;
   #manualFloatingElement: HTMLElement | null = null;
   #slottedFloatingElement: HTMLElement | null = null;
+  #slottedTopLayer: FloatingTopLayer = 'none';
   #templateFloatingElement: HTMLElement | null = null;
+  #templateTopLayer: FloatingTopLayer = 'none';
   #contentTemplate: HTMLTemplateElement | null = null;
   #templateNodes: Node[] = [];
   #contentScopes = new Map<Element, MutationObserver | null>();
@@ -71,6 +78,11 @@ export class FloatingRootRuntime {
 
   constructor(host: FloatingRootElement) {
     this.#host = host;
+    this.topLayer = createFloatingTopLayer({
+      onOpenChange: (open, event, reason) => {
+        host.commitOpenChange(open, event, reason);
+      },
+    });
     this.#contentScopes.set(host, null);
     this.engine = createFloating(() => ({
       open: host.open,
@@ -118,6 +130,7 @@ export class FloatingRootRuntime {
   connect() {
     if (this.#connected) return;
     this.#connected = true;
+    this.topLayer.connect();
     this.#syncComponentPlugins();
     this.#installComponentPluginBridge();
     this.engine.setContextParent(
@@ -146,6 +159,7 @@ export class FloatingRootRuntime {
       this.#disconnectQueued = false;
       if (this.#host.isConnected || !this.#connected) return;
       this.#connected = false;
+      this.topLayer.disconnect();
       this.#unsubscribePosition?.();
       this.#unsubscribePosition = null;
       this.#unmountTemplate();
@@ -238,10 +252,58 @@ export class FloatingRootRuntime {
   }
 
   #setSlottedFloatingElement(floating: HTMLElement | null) {
-    if (floating === this.#slottedFloatingElement) return;
-    this.#slottedFloatingElement = floating;
+    const topLayer = this.#resolveSlottedTopLayer(floating);
+    const surface = this.#resolveSlottedSurface(floating, topLayer);
+    if (
+      surface === this.#slottedFloatingElement &&
+      topLayer === this.#slottedTopLayer
+    ) {
+      return;
+    }
+    this.#slottedFloatingElement = surface;
+    this.#slottedTopLayer = topLayer;
     this.#syncTemplateMount();
     this.#syncEffectiveFloatingElement();
+  }
+
+  #resolveSlottedTopLayer(element: HTMLElement | null): FloatingTopLayer {
+    const explicitTopLayer = (element as
+      | (HTMLElement & {topLayer?: unknown})
+      | null)?.topLayer;
+    if (element?.hasAttribute('top-layer')) {
+      return explicitTopLayer === 'popover' || explicitTopLayer === 'dialog'
+        ? explicitTopLayer
+        : 'none';
+    }
+    if (
+      element?.localName === 'floating-portal' &&
+      element.querySelector(':scope > dialog')
+    ) {
+      return 'dialog';
+    }
+    if (element?.localName === 'dialog') return 'dialog';
+    if (explicitTopLayer === 'popover' || explicitTopLayer === 'dialog') {
+      return explicitTopLayer;
+    }
+    const role =
+      this.engine.context.attributes.floating?.role ?? this.#host.floatingRole;
+    if (
+      element?.localName === 'floating-content' &&
+      (role === 'dialog' || role === 'menu' || role === 'listbox')
+    ) {
+      return 'popover';
+    }
+    return 'none';
+  }
+
+  #resolveSlottedSurface(
+    element: HTMLElement | null,
+    topLayer: FloatingTopLayer,
+  ) {
+    if (topLayer !== 'dialog' || element?.localName !== 'floating-portal') {
+      return element;
+    }
+    return element.querySelector<HTMLDialogElement>('dialog');
   }
 
   #syncEffectiveFloatingElement() {
@@ -250,6 +312,22 @@ export class FloatingRootRuntime {
         this.#slottedFloatingElement ??
         this.#templateFloatingElement,
     );
+  }
+
+  #resolveTemplateTopLayer() {
+    const template = this.#contentTemplate;
+    if (!template) return 'none' as const;
+    const portal = template.closest('floating-portal') as
+      | (HTMLElement & {topLayer?: unknown})
+      | null;
+    if (portal?.hasAttribute('top-layer')) {
+      return portal.topLayer === 'dialog' || portal.topLayer === 'popover'
+        ? portal.topLayer
+        : 'none';
+    }
+    const templateDialog = template.content.querySelector(':scope > dialog');
+    if (templateDialog) return 'dialog' as const;
+    return 'popover' as const;
   }
 
   #bindFloatingElement(floating: HTMLElement | null) {
@@ -282,6 +360,9 @@ export class FloatingRootRuntime {
         ) {
           return;
         }
+        // Closing a conditional child removes its owner synchronously. Do not
+        // let the same click continue to a parent surface after that cleanup.
+        event.stopPropagation();
         this.engine.context.onOpenChange(false, event, 'click');
       };
       floating.addEventListener('click', handleClick);
@@ -309,10 +390,10 @@ export class FloatingRootRuntime {
             (node) =>
               node instanceof Element &&
               (node.matches(
-                `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
+                FLOATING_UI_PLUS_CONTENT_TEMPLATE_SELECTOR,
               ) ||
                 node.querySelector(
-                  `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
+                  FLOATING_UI_PLUS_CONTENT_TEMPLATE_SELECTOR,
                 )),
           ) ||
           Array.from(record.removedNodes).some(
@@ -327,7 +408,7 @@ export class FloatingRootRuntime {
     });
     observer.observe(scope, {
       attributes: true,
-      attributeFilter: [FLOATING_UI_PLUS_CONTENT_ATTRIBUTE],
+      attributeFilter: [FLOATING_UI_PLUS_CONTENT_ATTRIBUTE, 'slot'],
       childList: true,
       subtree: true,
     });
@@ -353,7 +434,7 @@ export class FloatingRootRuntime {
     for (const scope of this.#contentScopes.keys()) {
       for (const template of Array.from(
         scope.querySelectorAll<HTMLTemplateElement>(
-          `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
+          FLOATING_UI_PLUS_CONTENT_TEMPLATE_SELECTOR,
         ),
       )) {
         if (
@@ -368,7 +449,7 @@ export class FloatingRootRuntime {
     const nextTemplate = templates.length === 1 ? templates[0]! : null;
     if (templates.length > 1) {
       this.#warnContent(
-        `A floating root can own only one template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}].`,
+        'A floating root can own only one template[slot="content"] (or legacy data-fup-content template).',
       );
     } else {
       this.#contentWarning = null;
@@ -378,6 +459,7 @@ export class FloatingRootRuntime {
     this.#unmountTemplate();
     this.#templateContentObserver?.disconnect();
     this.#contentTemplate = nextTemplate;
+    this.#templateTopLayer = this.#resolveTemplateTopLayer();
     if (!nextTemplate) {
       this.#templateContentObserver = null;
       return;
@@ -434,7 +516,7 @@ export class FloatingRootRuntime {
       sourceElement.namespaceURI !== 'http://www.w3.org/1999/xhtml'
     ) {
       this.#warnContent(
-        `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}] must contain exactly one top-level HTMLElement.`,
+        'template[slot="content"] must contain exactly one top-level HTMLElement.',
       );
       return;
     }
@@ -492,16 +574,34 @@ export class FloatingRootRuntime {
         this.#referenceAttributes,
       );
     }
+    const surfaceTopLayer = this.#resolveSlottedTopLayer(
+      this.#manualFloatingElement ?? this.#slottedFloatingElement,
+    );
+    const topLayer =
+      surfaceTopLayer !== 'none'
+        ? surfaceTopLayer
+        : this.#templateFloatingElement && this.#templateTopLayer !== 'none'
+          ? this.#templateTopLayer
+          : this.#host.topLayer;
+    this.topLayer.setKind(
+      topLayer,
+    );
+    this.topLayer.setElement(this.#floatingElement);
     if (!this.#floatingElement) return;
     this.#floatingAttributes = setAttributes(
       this.#floatingElement,
       context.attributes.floating ?? {},
       this.#floatingAttributes,
     );
-    this.#floatingElement.hidden = !this.#host.open;
+    const nativeTopLayer = this.topLayer.sync(this.#host.open);
+    if (!nativeTopLayer) {
+      this.#floatingElement.hidden = !this.#host.open;
+    }
     this.#floatingElement.dataset.status = this.#host.open ? 'open' : 'closed';
     this.#floatingElement.dataset.placement = this.engine.position.placement;
-    applyFloatingStyles(this.#floatingElement, this.engine.floatingStyles);
+    if (topLayer !== 'dialog' || !nativeTopLayer) {
+      applyFloatingStyles(this.#floatingElement, this.engine.floatingStyles);
+    }
 
     const arrowElement =
       this.#floatingElement.querySelector<HTMLElement>('floating-arrow');

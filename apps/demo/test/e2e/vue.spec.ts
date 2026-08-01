@@ -52,12 +52,14 @@ test('opens Teleport-backed nested menus', async ({page}) => {
 
 test('traps modal focus and closes on Escape', async ({page}) => {
   await page.goto('/modal?framework=vue');
-  const trigger = page.getByRole('button', {name: /Enter focus room/});
+  const demo = page.locator('[data-framework-panel="vue"]');
+  const trigger = demo.getByRole('button', {name: /Enter focus room/});
   await trigger.click();
-  const dialog = page.getByRole('dialog', {
+  const dialog = demo.getByRole('dialog', {
     name: /You are inside the focus trap/,
   });
   await expect(dialog).toBeVisible();
+  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(true);
   const dialogBox = await dialog.boundingBox();
   const viewport = page.viewportSize();
   expect(dialogBox).not.toBeNull();
@@ -69,9 +71,9 @@ test('traps modal focus and closes on Escape', async ({page}) => {
     Math.abs(dialogBox!.y + dialogBox!.height / 2 - viewport!.height / 2),
   ).toBeLessThanOrEqual(1);
 
-  const hintTrigger = page.getByRole('button', {name: 'Show placement hint'});
+  const hintTrigger = demo.getByRole('button', {name: 'Show placement hint'});
   await hintTrigger.hover();
-  const tooltip = page.getByRole('tooltip');
+  const tooltip = demo.getByRole('tooltip');
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveCSS('z-index', '30');
   await expect(tooltip).toHaveCSS('background-color', 'rgb(23, 58, 50)');
@@ -80,30 +82,32 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await expect(tooltip).toBeHidden();
   await expect(dialog).toBeVisible();
 
-  await page.getByRole('button', {name: 'Open room details'}).click();
-  const popover = page.getByRole('dialog', {name: 'Room details'});
+  await demo.getByRole('button', {name: 'Open room details'}).click();
+  const popover = demo.getByRole('dialog', {name: 'Room details'});
   await expect(popover).toBeVisible();
-  await expect(popover).toHaveCSS('z-index', '20');
   expect(
     await popover.evaluate((element) => {
-      const portal = element.closest('[data-fup-portal]');
-      return portal?.parentElement?.matches('[data-fup-portal]');
+      return element.matches(':popover-open') &&
+        document.querySelector('.vue-modal-demo')?.contains(element);
     }),
   ).toBe(true);
-  await page.getByRole('button', {name: 'Close details'}).click();
+  await demo.getByRole('button', {name: 'Close details'}).click();
   await expect(popover).toBeHidden();
-  await page.getByRole('button', {name: 'Open room details'}).click();
+  await demo.getByRole('button', {name: 'Open room details'}).click();
   await expect(popover).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
 
-  const nestedDialogTrigger = page.getByRole('button', {
+  const nestedDialogTrigger = demo.getByRole('button', {
     name: 'Open nested dialog',
   });
   await nestedDialogTrigger.click();
-  const nestedDialog = page.getByRole('dialog', {name: 'Nested dialog'});
+  const nestedDialog = demo.getByRole('dialog', {name: 'Nested dialog'});
   await expect(nestedDialog).toBeVisible();
+  expect(await nestedDialog.evaluate((element) => element.matches(':modal'))).toBe(
+    true,
+  );
   const nestedDialogBox = await nestedDialog.boundingBox();
   expect(nestedDialogBox).not.toBeNull();
   expect(
@@ -116,16 +120,6 @@ test('traps modal focus and closes on Escape', async ({page}) => {
       nestedDialogBox!.y + nestedDialogBox!.height / 2 - viewport!.height / 2,
     ),
   ).toBeLessThanOrEqual(1);
-  const nestedOverlay = page.locator('.demo-overlay').filter({
-    has: nestedDialog,
-  });
-  await expect(nestedOverlay).toHaveCSS('z-index', '20');
-  expect(
-    await nestedOverlay.evaluate((element) => {
-      const portal = element.closest('[data-fup-portal]');
-      return portal?.parentElement?.matches('[data-fup-portal]');
-    }),
-  ).toBe(true);
   await page
     .getByRole('button', {name: 'Return to focus room'})
     .click();
@@ -139,7 +133,7 @@ test('traps modal focus and closes on Escape', async ({page}) => {
 
   await trigger.click();
   await expect(dialog).toBeVisible();
-  await page.getByRole('button', {name: 'Leave room'}).click();
+  await demo.getByRole('button', {name: 'Leave room'}).click();
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
 });

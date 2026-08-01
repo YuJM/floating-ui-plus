@@ -14,6 +14,7 @@ import type {
   FloatingOptions,
   FloatingPlugin,
   FloatingRole,
+  FloatingTopLayer,
   OpenChangeReason,
   ReferenceElement,
 } from '@floating-ui-plus/web';
@@ -36,6 +37,7 @@ export interface FloatingTemplateLifecycleDetail {
 export interface FloatingRootConfiguration {
   middleware?: FloatingOptions['middleware'];
   plugins?: FloatingPlugin[] | undefined;
+  topLayer?: FloatingTopLayer | undefined;
 }
 
 const contentsStyles = `
@@ -52,6 +54,7 @@ interface FloatingRootHost extends HTMLElement {
   transform: boolean;
   interactions: string;
   floatingRole: FloatingRole | '';
+  topLayer: FloatingTopLayer;
   middleware: FloatingOptions['middleware'];
   plugins: FloatingPlugin[];
 }
@@ -79,8 +82,9 @@ const FloatingRootBase = c(
         ...inheritedContext,
         root: host as FloatingRootElement,
         open: host.open,
+        topLayer: host.topLayer,
       }),
-      [host, host.open, inheritedContext],
+      [host, host.open, host.topLayer, inheritedContext],
     );
 
     useProvider(floatingComponentContext, contextValue);
@@ -96,6 +100,7 @@ const FloatingRootBase = c(
       host.transform,
       host.interactions,
       host.floatingRole,
+      host.topLayer,
       host.middleware,
       host.plugins,
       referenceChildren,
@@ -132,6 +137,11 @@ const FloatingRootBase = c(
       floatingRole: {
         type: atomicoType<FloatingRole | ''>(String),
         value: (): FloatingRole | '' => '',
+      },
+      topLayer: {
+        type: atomicoType<FloatingTopLayer>(String),
+        value: (): FloatingTopLayer => 'none',
+        attr: 'top-layer',
       },
     },
   },
@@ -192,6 +202,9 @@ export class FloatingRootElement extends FloatingRootBase {
     }
     if (configuration.plugins !== undefined) {
       this.plugins = configuration.plugins;
+    }
+    if (configuration.topLayer !== undefined) {
+      this.topLayer = configuration.topLayer;
     }
     return this;
   }

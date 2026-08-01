@@ -16,6 +16,7 @@ export {
   FloatingReference,
   FloatingRoot,
   useFloatingRoot,
+  useFloatingRootTopLayer,
 } from './root';
 export {
   autoPlacement,
@@ -25,6 +26,7 @@ export {
   createCombobox,
   createFloating,
   createFloatingContextScope,
+  createFloatingTopLayer,
   createFuzzyMatcher,
   createFuzzySearch,
   createFuzzySearchSource,
@@ -56,12 +58,14 @@ export {
   PortalBridge,
   PortalNodeController,
   SearchRenderer,
+  FloatingTopLayerController,
   provideFloatingContext,
   removePortalNode,
   resolvePortalRoot,
   requestFloatingContext,
   shift,
   size,
+  supportsFloatingTopLayer,
 } from '@floating-ui-plus/web';
 export type {
   ClickOptions,
@@ -89,6 +93,7 @@ export type {
   FloatingPosition,
   FloatingRole,
   FloatingStyles,
+  FloatingTopLayer,
   FocusManagerOptions,
   FocusOptions,
   FocusTarget,

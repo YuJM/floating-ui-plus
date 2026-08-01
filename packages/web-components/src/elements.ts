@@ -8,6 +8,7 @@ import {
 } from './RootParts';
 import {
   FloatingFocusManagerElement,
+  FloatingContentElement,
   FloatingOverlayElement,
   FloatingPortalElement,
   FloatingPortalTargetElement,
@@ -29,6 +30,7 @@ const floatingElements = [
   ['floating-reference', FloatingReferenceElement],
   ['floating-item', FloatingItemElement],
   ['floating-portal', FloatingPortalElement],
+  ['floating-content', FloatingContentElement],
   ['floating-portal-target', FloatingPortalTargetElement],
   ['floating-overlay', FloatingOverlayElement],
   ['floating-arrow', FloatingArrowElement],

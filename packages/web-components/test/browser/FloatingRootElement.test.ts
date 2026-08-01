@@ -5,6 +5,7 @@ import {
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FLOATING_UI_PLUS_CLOSE_ATTRIBUTE,
   FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
+  FLOATING_UI_PLUS_CONTENT_SLOT,
   FloatingArrowElement,
   FloatingComboboxElement,
   FloatingCompositeElement,
@@ -16,6 +17,7 @@ import {
   click,
   createAsyncSearchSource,
   offset,
+  supportsFloatingTopLayer,
 } from '../../src';
 
 const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
@@ -31,8 +33,8 @@ afterEach(() => {
 });
 
 describe('FloatingRootElement', () => {
-  test('does not register the removed floating-content element', () => {
-    expect(customElements.get('floating-content')).toBeUndefined();
+  test('registers a direct floating-content surface', () => {
+    expect(customElements.get('floating-content')).toBeDefined();
   });
 
   test('binds native slotted elements without a directive', async () => {
@@ -70,6 +72,47 @@ describe('FloatingRootElement', () => {
     expect(root.plugins).toBe(plugins);
   });
 
+  test('keeps a slotted native popover in its root context', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.floatingRole = 'dialog';
+    root.strategy = 'fixed';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-content slot="floating">Content</floating-content>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    await vi.waitFor(() => {
+      expect(root.floatingElement?.getAttribute('popover')).toBe('manual');
+    });
+
+    expect(root.floatingElement?.parentElement).toBe(root);
+    expect(root.floatingElement?.closest('floating-root')).toBe(root);
+    root.open = false;
+    await root.updateComplete;
+    expect(root.floatingElement?.hidden).toBe(true);
+  });
+
+  test('uses a slotted dialog as a native modal surface', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <dialog slot="floating">Content</dialog>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    const dialog = root.floatingElement as HTMLDialogElement;
+    await vi.waitFor(() => expect(dialog.hidden).toBe(false));
+
+    dialog.dispatchEvent(new Event('cancel', {cancelable: true}));
+    await vi.waitFor(() => expect(root.open).toBe(false));
+    expect(dialog.hidden).toBe(true);
+  });
+
   test('maps click interactions to reflected state and a DOM event', async () => {
     const root = document.createElement('floating-root');
     root.interactions = 'click dismiss';
@@ -97,7 +140,7 @@ describe('FloatingRootElement', () => {
     root.interactions = 'click dismiss';
     root.innerHTML = `
       <floating-reference><button>Open</button></floating-reference>
-      <template ${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}>
+      <template slot="${FLOATING_UI_PLUS_CONTENT_SLOT}">
         <section>
           Content
           <button ${FLOATING_UI_PLUS_CLOSE_ATTRIBUTE}>Close</button>
@@ -270,6 +313,55 @@ describe('FloatingRootElement', () => {
       expect(input.value).toBe('서울');
       expect(root.open).toBe(false);
       expect(selectListener).toHaveBeenCalledOnce();
+    });
+    search.destroy();
+  });
+
+  test('submits and resets a floating combobox as a native form control', async () => {
+    if (
+      typeof ElementInternals === 'undefined' ||
+      typeof ElementInternals.prototype.setFormValue !== 'function'
+    ) {
+      return;
+    }
+    const destinations = [
+      {id: 'seoul', label: '서울'},
+      {id: 'beijing', label: '北京'},
+    ];
+    const search = new SearchController<(typeof destinations)[number]>({
+      items: destinations,
+      getItemKey: (item) => item.id,
+    });
+    const form = document.createElement('form');
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-combobox name="destination" required>
+        <floating-reference><input aria-label="Destination" /></floating-reference>
+      </floating-combobox>
+    `;
+    const combobox = root.querySelector('floating-combobox')!;
+    combobox.configure({
+      search,
+      getItemLabel: (item) => item.label,
+      getItemValue: (item) => `airport:${item.id}`,
+      selectedItem: destinations[0],
+    });
+    form.append(root);
+    document.body.append(form);
+
+    await root.updateComplete;
+    await combobox.updateComplete;
+    await vi.waitFor(() => {
+      expect(new FormData(form).get('destination')).toBe('airport:seoul');
+    });
+
+    combobox.select(destinations[1]);
+    expect(new FormData(form).get('destination')).toBe('airport:beijing');
+
+    form.reset();
+    await vi.waitFor(() => {
+      expect(combobox.selectedItem).toBe(destinations[0]);
+      expect(new FormData(form).get('destination')).toBe('airport:seoul');
     });
     search.destroy();
   });
@@ -570,7 +662,7 @@ describe('FloatingRootElement', () => {
     const root = document.createElement('floating-root');
     root.innerHTML = `
       <floating-reference><button>Open</button></floating-reference>
-      <floating-portal>
+      <floating-portal top-layer="none">
         <template>
           <section data-template-portal>Portal content</section>
         </template>
@@ -582,9 +674,7 @@ describe('FloatingRootElement', () => {
 
     await vi.waitFor(() => {
       expect(document.querySelector('floating-portal-target')).not.toBeNull();
-      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
-        true,
-      );
+      expect(template?.slot).toBe(FLOATING_UI_PLUS_CONTENT_SLOT);
       expect(root.contentTemplate).toBe(template);
     });
     expect(document.querySelector('[data-template-portal]')).toBeNull();
@@ -607,11 +697,59 @@ describe('FloatingRootElement', () => {
     });
   });
 
+  test('prefers a native popover for a default portal template', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.floatingRole = 'dialog';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-portal>
+        <template><section data-native-portal>Content</section></template>
+      </floating-portal>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(root.floatingElement?.getAttribute('popover')).toBe('manual');
+      expect(root.floatingElement?.matches(':popover-open')).toBe(true);
+    });
+    expect(root.floatingElement?.parentElement?.localName).toBe(
+      'floating-portal',
+    );
+    expect(document.querySelector('floating-portal-target')).toBeNull();
+  });
+
+  test('prefers a native popover for a default portal template', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.floatingRole = 'dialog';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-portal>
+        <template><section data-native-portal>Content</section></template>
+      </floating-portal>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(root.floatingElement?.getAttribute('popover')).toBe('manual');
+      expect(root.floatingElement?.matches(':popover-open')).toBe(true);
+    });
+    expect(root.floatingElement?.parentElement?.localName).toBe(
+      'floating-portal',
+    );
+    expect(document.querySelector('floating-portal-target')).toBeNull();
+  });
+
   test('preserves a mounted clone while its portal is enabled or disabled', async () => {
     const root = document.createElement('floating-root');
     root.innerHTML = `
       <floating-reference><button>Reference</button></floating-reference>
-      <floating-portal>
+      <floating-portal top-layer="none">
         <template><section data-portable-clone>Portable</section></template>
       </floating-portal>
     `;
@@ -622,9 +760,7 @@ describe('FloatingRootElement', () => {
     document.body.append(root);
 
     await vi.waitFor(() => {
-      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
-        true,
-      );
+      expect(template?.slot).toBe(FLOATING_UI_PLUS_CONTENT_SLOT);
       expect(template?.closest('floating-portal-target')).not.toBeNull();
     });
     root.open = true;
@@ -741,9 +877,7 @@ describe('FloatingRootElement', () => {
     document.body.append(root);
 
     await vi.waitFor(() => {
-      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
-        true,
-      );
+      expect(template?.slot).toBe(FLOATING_UI_PLUS_CONTENT_SLOT);
       expect(root.contentTemplate).toBe(template);
     });
     expect(document.querySelector('[data-structured-template]')).toBeNull();
@@ -766,9 +900,7 @@ describe('FloatingRootElement', () => {
     document.body.append(root);
 
     await vi.waitFor(() => {
-      expect(
-        templates[0]?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
-      ).toBe(true);
+      expect(templates[0]?.slot).toBe(FLOATING_UI_PLUS_CONTENT_SLOT);
       expect(childRoot?.contentTemplate).toBe(templates[1]);
     });
     expect(root.contentTemplate).toBe(templates[0]);
@@ -790,16 +922,12 @@ describe('FloatingRootElement', () => {
     document.body.append(root);
 
     await vi.waitFor(() => {
-      expect(template?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE)).toBe(
-        true,
-      );
+      expect(template?.slot).toBe(FLOATING_UI_PLUS_CONTENT_SLOT);
       expect(root.contentTemplate).toBe(template);
     });
-    expect(
-      document.querySelectorAll(
-        `template[${FLOATING_UI_PLUS_CONTENT_ATTRIBUTE}]`,
-      ),
-    ).toHaveLength(1);
+    expect(document.querySelectorAll('template[slot="content"]')).toHaveLength(
+      1,
+    );
     expect(document.querySelector('[data-nested-portal-template]')).toBeNull();
   });
 
@@ -850,15 +978,11 @@ describe('FloatingRootElement', () => {
     document.body.append(root);
 
     await vi.waitFor(() => {
-      expect(
-        automatic?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
-      ).toBe(true);
+      expect(automatic?.slot).toBe(FLOATING_UI_PLUS_CONTENT_SLOT);
     });
     root.append(automatic!);
     await vi.waitFor(() => {
-      expect(
-        automatic?.hasAttribute(FLOATING_UI_PLUS_CONTENT_ATTRIBUTE),
-      ).toBe(false);
+      expect(automatic?.slot).toBe('');
     });
 
     const explicit = document.createElement('template');
@@ -944,6 +1068,7 @@ describe('FloatingRootElement', () => {
     root.innerHTML =
       '<floating-reference><button>Reference</button></floating-reference>';
     const portal = document.createElement('floating-portal');
+    portal.setAttribute('top-layer', 'none');
     portal.innerHTML =
       '<template><section>Ready while closed</section></template>';
     root.append(portal);
@@ -982,7 +1107,7 @@ describe('FloatingRootElement', () => {
     root.open = true;
     root.innerHTML = `
       <floating-reference><button>Reference</button></floating-reference>
-      <floating-portal>
+      <floating-portal top-layer="none">
         <template>
           <section data-parent-content>
             <floating-portal>

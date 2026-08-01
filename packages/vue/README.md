@@ -96,6 +96,31 @@ Use the component layer for ordinary popovers, menus, and dialogs:
 `FloatingRoot` provides the controller to its descendants. Pass a `floating`
 prop when an element belongs to a controller owned elsewhere.
 
+### Native top-layer mode
+
+`FloatingContent` automatically uses the browser Popover API for dialog, menu,
+and listbox roles without a Teleport.
+The surface stays in the Vue component tree, so provide/inject remains direct.
+
+```vue
+<FloatingRoot
+  v-model:open="open"
+  :options="{strategy: 'fixed', placement: 'bottom-start'}"
+  :plugins="[click(), dismiss(), role({role: 'dialog'})]"
+>
+  <FloatingReference>Open settings</FloatingReference>
+  <FloatingContent class="popover">
+    Settings
+    <FloatingClose>Close</FloatingClose>
+  </FloatingContent>
+</FloatingRoot>
+```
+
+For a modal, render `<FloatingContent as="dialog">`. The native dialog supplies modal focus and
+inertness. `FloatingPortal` automatically stays in place for either native
+top-layer mode; use the normal Teleport composition as the fallback for older
+browsers.
+
 For menus, `FloatingList` can own active-index state, item refs, roving
 `tabindex`, arrow navigation, and typeahead. `FloatingListItem` registers and
 binds each rendered item:
@@ -133,9 +158,9 @@ application still owns markup, classes, labels, and ARIA names.
 
 | Component | Props / model | Purpose |
 | --- | --- | --- |
-| `FloatingRoot` | `v-model:open`, `options`, `plugins` | Owns a controller and provides it to descendants; the default slot receives `{floating, open}` |
+| `FloatingRoot` | `v-model:open`, `options`, `plugins` | Owns a controller and provides it to descendants |
 | `FloatingReference` | `as`, optional `floating` | Binds its rendered element as the reference and forwards reference attributes |
-| `FloatingContent` | `as`, optional `floating` | Binds its rendered element as the floating surface and applies positioning/ARIA attributes |
+| `FloatingContent` | `as`, optional `floating` | Binds its rendered element as the floating surface; native `<dialog>` and popup roles use browser top layers automatically |
 | `FloatingItem` | `as`, `state`, optional `floating` | Applies the controller's item attributes for active/selected collection items |
 | `FloatingPortal` | `to`, `disabled`, optional `active` signal | Teleports to `body` or a target; under `FloatingRoot` it follows that root's `open` state automatically |
 | `FloatingClose` | `as`, optional `floating` | Closes the nearest root while preserving the source event and reason |
@@ -245,6 +270,7 @@ const {
   open,
   activeIndex,
   selectedItem,
+  selectedValue,
   inputProps,
   rolePlugin,
   getOptionProps,
@@ -265,6 +291,7 @@ const navigationOptions = getNavigationOptions({
 </script>
 
 <template>
+  <input type="hidden" name="destination" :value="selectedValue ?? ''" />
   <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
     <FloatingList
       v-model:active-index="activeIndex"
@@ -302,6 +329,9 @@ const navigationOptions = getNavigationOptions({
 Local fuzzy indexing supplies results, `useCombobox()` supplies editable-input
 and selection behavior, and `FloatingList` supplies virtual keyboard
 navigation. The template keeps ownership of loading/error/empty presentation.
+For native form submission, bind `selectedValue` (not the display input) to a
+hidden input with the desired `name`; it comes from `getItemValue()` and
+therefore defaults to the stable item key rather than the visible label.
 `createSearchRenderer()` is also re-exported for direct DOM islands, but Vue
 templates should prefer `search.phase` with `v-if` / `v-for` rather than a DOM
 renderer.

@@ -5,6 +5,7 @@ import type {
   DelayGroup,
   FloatingContextScope,
   FloatingList,
+  FloatingTopLayer,
   FloatingTree,
 } from '@floating-ui-plus/web';
 
@@ -27,6 +28,7 @@ export interface FloatingComponentContext {
   delayGroup?: DelayGroup | undefined;
   composite?: FloatingCompositeContext | undefined;
   combobox?: ComboboxController<unknown> | undefined;
+  topLayer?: FloatingTopLayer | undefined;
 }
 
 export const floatingComponentContext =
@@ -41,4 +43,5 @@ export const floatingComponentContext =
     delayGroup: undefined,
     composite: undefined,
     combobox: undefined,
+    topLayer: undefined,
   });

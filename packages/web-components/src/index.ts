@@ -26,6 +26,7 @@ export {
 export {
   FLOATING_UI_PLUS_CLOSE_ATTRIBUTE,
   FLOATING_UI_PLUS_CONTENT_ATTRIBUTE,
+  FLOATING_UI_PLUS_CONTENT_SLOT,
 } from './constants';
 export {
   FloatingRootElement,
@@ -35,6 +36,7 @@ export {
 } from './FloatingRootElement';
 export {
   FloatingFocusManagerElement,
+  FloatingContentElement,
   FloatingOverlayElement,
   FloatingPortalElement,
   FloatingTransitionElement,

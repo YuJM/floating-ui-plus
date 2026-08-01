@@ -23,7 +23,7 @@ import {
               Open actions <span aria-hidden="true">⌄</span>
             </button>
           </floating-reference>
-          <template data-fup-content data-nested-menu-content>
+          <template slot="content" data-nested-menu-content>
             <div class="menu-panel nested-menu-root">
               <div class="menu-heading">Tree coordinated actions</div>
               <floating-list
@@ -63,7 +63,7 @@ import {
                       nested
                       item-selector="[data-project-menu-item]"
                     >
-                      <template data-fup-content data-project-menu-content>
+                      <template slot="content" data-project-menu-content>
                         <div
                           class="menu-panel nested-menu-submenu"
                           aria-label="Move to project"

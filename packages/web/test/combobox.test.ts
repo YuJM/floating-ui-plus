@@ -45,6 +45,16 @@ describe('ComboboxController', () => {
     expect(combobox.getItemLabel(alpha)).toBe('Alpha');
   });
 
+  test('keeps the stable form value separate from the display label', () => {
+    const {combobox} = setup();
+    combobox.setOptions({getItemValue: (item) => `destination:${item.id}`});
+
+    combobox.select(beta);
+
+    expect(combobox.getItemValue(beta)).toBe('destination:beta');
+    expect(combobox.snapshot.selectedValue).toBe('destination:beta');
+  });
+
   test('binds focus, input, and IME composition to search state', () => {
     const {input, onOpenChange, search} = setup();
 

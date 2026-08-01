@@ -99,6 +99,34 @@ pattern-specific role plugin when the surface is a tooltip, menu, listbox, or
 select. Your renderer still owns the element type, label, class names, visual
 state, and whether a closed surface is mounted.
 
+## Native top-layer surfaces
+
+`createFloatingTopLayer()` is the browser-DOM adapter for native Popover and
+modal Dialog surfaces. It keeps open state in the same `onOpenChange()`
+contract as `createFloating()` while the browser owns top-layer stacking,
+Escape, and (for popovers) light dismissal.
+
+```ts
+import {createFloatingTopLayer} from '@floating-ui-plus/web';
+
+const topLayer = createFloatingTopLayer({
+  onOpenChange(nextOpen, event, reason) {
+    open = nextOpen;
+    render();
+  },
+});
+
+topLayer.setKind('popover'); // or 'dialog'
+topLayer.setElement(panel);
+topLayer.connect();
+topLayer.sync(open);
+```
+
+Use `popover` for a non-modal surface and a real `<dialog>` for `dialog`.
+`supportsFloatingTopLayer()` lets renderers retain a portal fallback for older
+browsers. This controller does not move DOM nodes, so a framework's existing
+context/provide relationship remains intact.
+
 ## Interaction plugins
 
 The root entry exports the interaction plugins used by most floating patterns:
@@ -213,6 +241,7 @@ const floating = createFloating(() => ({open, onOpenChange: setOpen}));
 const combobox = createCombobox({
   search,
   getItemLabel: (item) => item.label,
+  getItemValue: (item) => item.id,
   onOpenChange: (next, event, reason) =>
     floating.context.onOpenChange(next, event, reason),
 });
@@ -252,6 +281,10 @@ The controller's small lifecycle surface is deliberate:
 `bindOption()`, and `setListElements()`. Framework renderers should bind the
 prop-returning methods declaratively; direct DOM and Custom Element adapters
 can use the imperative binding helpers.
+
+`getItemValue(item)` returns the stable value for form submission and defaults
+to the item key, so a consumer can keep a human-readable label separate from
+the submitted identifier.
 
 For direct DOM or Custom Element renderers, `createSearchRenderer()` removes
 the repetitive subscription, phase switch, and `replaceChildren()` lifecycle.

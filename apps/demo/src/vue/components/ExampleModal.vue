@@ -2,10 +2,7 @@
 import {
   FloatingClose,
   FloatingContent,
-  FloatingFocusManager,
   FloatingNode,
-  FloatingOverlay,
-  FloatingPortal,
   FloatingReference,
   FloatingRoot,
   FloatingTree,
@@ -33,12 +30,6 @@ const roomPlugins = [
   dismiss({outsidePress: false}),
   role({role: 'dialog'}),
 ];
-const roomFocusOptions = {
-  modal: true,
-  initialFocus: 0,
-  returnFocus: true,
-  outsideElementsInert: true,
-};
 
 const tooltipOptions = {
   placement: 'top',
@@ -69,11 +60,6 @@ const nestedPlugins = [
   dismiss({outsidePress: false}),
   role({role: 'dialog'}),
 ];
-const nestedFocusOptions = {
-  modal: true,
-  initialFocus: 0,
-  returnFocus: true,
-};
 
 watch(open, (next) => {
   if (next) return;
@@ -103,16 +89,11 @@ watch(open, (next) => {
             Enter focus room <span>→</span>
           </FloatingReference>
 
-          <FloatingPortal>
-            <FloatingOverlay lock-scroll class="demo-overlay">
-              <FloatingFocusManager :options="roomFocusOptions">
-                <div class="modal-anchor">
-                  <FloatingContent
-                    as="section"
-                    class="modal-panel vue-modal"
-                    aria-labelledby="vue-modal-heading"
-                    aria-modal="true"
-                  >
+          <FloatingContent
+            as="dialog"
+            class="modal-panel vue-modal"
+            aria-labelledby="vue-modal-heading"
+          >
                     <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
                     <h3 id="vue-modal-heading">
                       You are inside<br />the focus trap.
@@ -132,11 +113,9 @@ watch(open, (next) => {
                           <FloatingReference class="text-button">
                             Show placement hint
                           </FloatingReference>
-                          <FloatingPortal>
-                            <FloatingContent class="tooltip">
-                              This tooltip stays inside the dialog.
-                            </FloatingContent>
-                          </FloatingPortal>
+                          <FloatingContent class="tooltip">
+                            This tooltip stays inside the dialog.
+                          </FloatingContent>
                         </FloatingNode>
                       </FloatingRoot>
 
@@ -149,25 +128,23 @@ watch(open, (next) => {
                           <FloatingReference class="text-button">
                             Open room details
                           </FloatingReference>
-                          <FloatingPortal>
-                            <FloatingContent
-                              as="section"
-                              class="popover-panel"
-                              aria-label="Room details"
-                            >
-                              <span class="panel-kicker">NESTED PORTAL</span>
-                              <strong>
-                                Details stay above the dialog.
-                              </strong>
-                              <p>
-                                Escape and outside press dismiss only this
-                                panel first.
-                              </p>
-                              <FloatingClose class="text-button">
-                                Close details
-                              </FloatingClose>
-                            </FloatingContent>
-                          </FloatingPortal>
+                          <FloatingContent
+                            as="section"
+                            class="popover-panel"
+                            aria-label="Room details"
+                          >
+                            <span class="panel-kicker">NATIVE POPOVER</span>
+                            <strong>
+                              Details stay above the dialog.
+                            </strong>
+                            <p>
+                              Escape and outside press dismiss only this
+                              panel first.
+                            </p>
+                            <FloatingClose class="text-button">
+                              Close details
+                            </FloatingClose>
+                          </FloatingContent>
                         </FloatingNode>
                       </FloatingRoot>
 
@@ -180,39 +157,24 @@ watch(open, (next) => {
                           <FloatingReference class="text-button">
                             Open nested dialog
                           </FloatingReference>
-                          <FloatingPortal>
-                            <FloatingOverlay
-                              lock-scroll
-                              class="demo-overlay"
-                            >
-                              <FloatingFocusManager
-                                :options="nestedFocusOptions"
-                              >
-                                <div class="modal-anchor">
-                                  <FloatingContent
-                                    as="section"
-                                    class="modal-panel nested-modal-panel vue-modal"
-                                    aria-label="Nested dialog"
-                                    aria-modal="true"
-                                  >
-                                    <span class="panel-kicker">
-                                      SECOND LAYER
-                                    </span>
-                                    <h3>
-                                      One more<br />focus boundary.
-                                    </h3>
-                                    <p>
-                                      Close this layer to resume the parent
-                                      dialog.
-                                    </p>
-                                    <FloatingClose class="vue-button">
-                                      Return to focus room
-                                    </FloatingClose>
-                                  </FloatingContent>
-                                </div>
-                              </FloatingFocusManager>
-                            </FloatingOverlay>
-                          </FloatingPortal>
+                          <FloatingContent
+                            as="dialog"
+                            class="modal-panel nested-modal-panel vue-modal"
+                            aria-label="Nested dialog"
+                          >
+                            <span class="panel-kicker">
+                              SECOND LAYER
+                            </span>
+                            <h3>
+                              One more<br />focus boundary.
+                            </h3>
+                            <p>
+                              Close this layer to resume the parent dialog.
+                            </p>
+                            <FloatingClose class="vue-button">
+                              Return to focus room
+                            </FloatingClose>
+                          </FloatingContent>
                         </FloatingNode>
                       </FloatingRoot>
                     </div>
@@ -225,11 +187,7 @@ watch(open, (next) => {
                         ESC closes the top layer
                       </span>
                     </div>
-                  </FloatingContent>
-                </div>
-              </FloatingFocusManager>
-            </FloatingOverlay>
-          </FloatingPortal>
+          </FloatingContent>
         </section>
       </FloatingNode>
     </FloatingRoot>

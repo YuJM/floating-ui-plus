@@ -24,7 +24,7 @@ import {MENU_LABELS} from '../../example-data';
         </button>
       </floating-reference>
       <floating-portal>
-        <template data-menu-content>
+        <template slot="content" data-menu-content>
           <div class="menu-panel">
             <div class="menu-heading">
               <span>Jump to a field</span>
@@ -79,7 +79,6 @@ import {MENU_LABELS} from '../../example-data';
     const floating = floatingRoot(scope, '[data-menu-root]');
     const template = floatingTemplate(scope, '[data-menu-content]');
     floating.middleware = [offset(8), flip(), shift({padding: 18})];
-
     onFloatingTemplateMount(template, (element) => {
       element.addEventListener('click', (event) => {
         if (!(event.target instanceof Element)) return;

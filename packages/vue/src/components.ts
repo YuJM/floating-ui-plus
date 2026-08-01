@@ -4,6 +4,7 @@ import {
   getContextArrowStyles,
   registerFloatingArrow,
   lockScroll,
+  supportsFloatingTopLayer,
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
@@ -12,6 +13,7 @@ import {
   type PortalBridge,
   type FloatingContext,
   type FocusManagerOptions,
+  type FloatingTopLayer,
 } from '@floating-ui-plus/web';
 import {
   Teleport,
@@ -32,10 +34,16 @@ import {
   type InjectionKey,
   type PropType,
   type ShallowRef,
+  type VNode,
 } from 'vue';
 
 import type {UseFloatingReturn} from './types';
-import {useFloatingRoot, useFloatingRootOpen} from './root';
+import {
+  useFloatingRoot,
+  useFloatingRootOpen,
+  useFloatingRootTopLayer,
+} from './root';
+import {FloatingPortalTopLayerKey} from './topLayerContext';
 
 function resolveContext(
   context: FloatingContext | undefined,
@@ -47,6 +55,14 @@ function resolveContext(
 const PortalRootKey: InjectionKey<ShallowRef<HTMLElement | null>> =
   Symbol('FloatingPortalRoot');
 
+function containsNativeDialog(children: VNode[] | undefined) {
+  return children?.some((child) => {
+    if (child.type === 'dialog') return true;
+    const component = child.type as {name?: string} | undefined;
+    return component?.name === 'FloatingContent' && child.props?.as === 'dialog';
+  }) ?? false;
+}
+
 export const FloatingPortal = defineComponent({
   name: 'FloatingPortal',
   inheritAttrs: false,
@@ -56,6 +72,7 @@ export const FloatingPortal = defineComponent({
       default: undefined,
     },
     disabled: Boolean,
+    topLayer: String as PropType<FloatingTopLayer | undefined>,
     active: {type: Boolean, default: undefined},
     contextScope: Object as PropType<FloatingContextScope | null>,
     floating: Object as PropType<UseFloatingReturn>,
@@ -63,6 +80,7 @@ export const FloatingPortal = defineComponent({
   setup(props, {attrs, slots}) {
     const injected = useFloatingRoot();
     const rootOpen = useFloatingRootOpen();
+    const rootTopLayer = useFloatingRootTopLayer();
     const instance = getCurrentInstance();
     const parentPortalRoot = inject(PortalRootKey, null);
     const isServerRendering = inject(ssrContextKey, null) !== null;
@@ -75,6 +93,10 @@ export const FloatingPortal = defineComponent({
     });
     provide(PortalRootKey, portalRoot);
     const isActive = computed(() => rootOpen?.value ?? true);
+    const topLayer = computed<FloatingTopLayer>(
+      () => props.topLayer ?? rootTopLayer?.value ?? 'none',
+    );
+    provide(FloatingPortalTopLayerKey, topLayer);
 
     function setPortalRoot(element: unknown) {
       portalRoot.value =
@@ -138,10 +160,14 @@ export const FloatingPortal = defineComponent({
         return instance?.vnode.el ? slots.default?.() : null;
       }
       const children = slots.default?.();
+      const nativeDialog = containsNativeDialog(children);
       const target = teleportTarget.value;
       const teleportProps = {
         to: target ?? document.body,
-        disabled: props.disabled || !target,
+        disabled:
+          props.disabled ||
+          !target ||
+          supportsFloatingTopLayer(topLayer.value) || nativeDialog,
         defer: true,
       };
       return h(

@@ -21,7 +21,9 @@ import {DEFAULT_PLACEMENT, PLACEMENT_OPTIONS} from '../../example-data';
     }
     <floating-root data-placement-root open placement={DEFAULT_PLACEMENT}>
       <div slot="reference" class="placement-reference">Reference</div>
-      <div slot="floating" class="placement-floating" role="status">{DEFAULT_PLACEMENT}</div>
+      <template slot="content">
+        <div class="placement-floating" role="status">{DEFAULT_PLACEMENT}</div>
+      </template>
     </floating-root>
 </div>
 

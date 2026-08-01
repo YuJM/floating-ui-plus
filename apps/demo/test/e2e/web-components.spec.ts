@@ -43,7 +43,7 @@ test('registers floating elements before the example module runs', async ({
   ).toBe(true);
 });
 
-test('keeps portal template content inert across refresh until it opens', async ({
+test('keeps native popover template content inert across refresh until it opens', async ({
   page,
 }) => {
   await page.goto('/popover');
@@ -53,30 +53,33 @@ test('keeps portal template content inert across refresh until it opens', async 
     'true',
   );
 
-  const trigger = page.getByRole('button', {name: /Open coordinates/});
-  const panel = page.locator('.popover-panel');
+  const demo = page.locator('[data-framework-panel="web-components"]');
+  const trigger = demo.getByRole('button', {name: /Open coordinates/});
+  const panel = demo.locator('.popover-panel');
   await expect(panel).toHaveCount(0);
-  await expect(page.locator('[data-popover-content]')).toHaveAttribute(
-    'data-fup-content',
-    '',
-  );
-  expect(
-    await page.locator('[data-popover-content]').evaluate((template) => {
-      return Boolean(
-        (template as HTMLTemplateElement).content.querySelector(
-          '.popover-panel',
-        ),
-      );
-    }),
-  ).toBe(true);
 
   await trigger.click();
   await expect(panel).toBeVisible();
+  expect(
+    await panel.evaluate((element) =>
+      element.matches(':popover-open') &&
+      element.parentElement?.localName === 'floating-root',
+    ),
+  ).toBe(true);
   await page.getByRole('button', {name: 'Close panel'}).click();
   await expect(panel).toHaveCount(0);
 
   await trigger.click();
   await expect(panel).toBeVisible();
+});
+
+test('only native dialog surfaces use the direct floating slot', async ({page}) => {
+  await page.goto('/modal');
+
+  const directSurfaces = await page
+    .locator('floating-root > [slot="floating"]')
+    .evaluateAll((elements) => elements.map((element) => element.localName));
+  expect(directSurfaces).toEqual(['dialog', 'dialog']);
 });
 
 test('menu starts roving focus at the first item after opening with a pointer', async ({
@@ -187,24 +190,25 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
     'data-initialized',
     'true',
   );
-  const trigger = page.getByRole('button', {name: /Enter focus room/});
+  const demo = page.locator('[data-framework-panel="web-components"]');
+  const trigger = demo.getByRole('button', {name: /Enter focus room/});
   await trigger.click();
 
-  const dialog = page
+  const dialog = demo
     .locator('.modal-panel')
     .filter({hasText: 'Nested surfaces keep their own dismissal step.'});
-  const hintTrigger = page.getByRole('button', {name: 'Show placement hint'});
-  const popoverTrigger = page.getByRole('button', {name: 'Open room details'});
-  const nestedDialogTrigger = page.getByRole('button', {
+  const hintTrigger = demo.getByRole('button', {name: 'Show placement hint'});
+  const popoverTrigger = demo.getByRole('button', {name: 'Open room details'});
+  const nestedDialogTrigger = demo.getByRole('button', {
     name: 'Open nested dialog',
   });
 
   await expect(dialog).toBeVisible();
-  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden');
+  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(true);
   await expect(hintTrigger).toBeFocused();
 
   await hintTrigger.hover();
-  const tooltip = page.locator('.tooltip').filter({
+  const tooltip = demo.locator('.tooltip').filter({
     hasText: 'This tooltip stays inside the dialog.',
   });
   await expect(tooltip).toBeVisible();
@@ -214,18 +218,14 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
   await expect(dialog).toBeVisible();
 
   await popoverTrigger.click();
-  const popover = page.locator('.popover-panel').filter({
+  const popover = demo.locator('.popover-panel').filter({
     hasText: 'Details stay above the dialog.',
   });
   await expect(popover).toBeVisible();
-  await expect(popover).toHaveCSS('z-index', '20');
-  expect(
-    await popover.evaluate((element) => {
-      const portal = element.closest('floating-portal-target');
-      return portal?.parentElement?.matches('floating-portal-target');
-    }),
-  ).toBe(true);
-  await page.getByRole('button', {name: 'Close details'}).click();
+  expect(await popover.evaluate((element) => element.parentElement?.localName)).toBe(
+    'floating-root',
+  );
+  await demo.getByRole('button', {name: 'Close details'}).click();
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
 
@@ -243,21 +243,12 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
   await expect(dialog).toBeVisible();
 
   await nestedDialogTrigger.click();
-  const nestedDialog = page.locator('.nested-modal-panel');
+  const nestedDialog = demo.locator('.nested-modal-panel');
   await expect(nestedDialog).toBeVisible();
-  const nestedOverlay = page
-    .locator('floating-overlay.demo-overlay')
-    .filter({has: nestedDialog});
-  await expect(nestedOverlay).toHaveCSS('z-index', '20');
   expect(
-    await nestedOverlay.evaluate((element) => {
-      const portal = element.closest('floating-portal-target');
-      const parentPortal = portal?.parentElement;
-      return (
-        parentPortal?.matches('floating-portal-target') &&
-        parentPortal.lastElementChild === portal
-      );
-    }),
+    await nestedDialog.evaluate((element) =>
+      element.matches(':modal') && element.parentElement?.localName === 'floating-root'
+    ),
   ).toBe(true);
   await page
     .getByRole('button', {name: 'Return to focus room'})
@@ -265,10 +256,9 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
   await expect(nestedDialog).toBeHidden();
   await expect(dialog).toBeVisible();
 
-  await page.getByRole('button', {name: 'Leave room'}).click();
+  await demo.getByRole('button', {name: 'Leave room'}).click();
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
-  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden');
 });
 
 test('tooltip component opens from hover or keyboard focus and dismisses cleanly', async ({
@@ -628,7 +618,7 @@ test('multilingual combobox keeps input focus and renders results', async ({
   await input.fill('bejing');
   const option = page.getByRole('option', {name: /北京/});
   await expect(option).toBeVisible();
-  const popup = page.locator('.combobox-popup');
+  const popup = page.locator('[data-combobox-popup]');
   await expect(popup).toHaveCSS('position', 'absolute');
 
   await input.press('ArrowDown');

@@ -20,7 +20,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-static">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-cyan">Floating</div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-cyan">Floating</div>
+            </template>
           </floating-root>
         </div>
         <div class="mw-static-stage">
@@ -29,7 +31,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-static">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-cyan">Floating</div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-cyan">Floating</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -50,9 +54,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-shift">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-lavender">
-              Still on top
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-lavender">Still on top</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -73,9 +77,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-flip">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-coral">
-              Final placement
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-coral">Final placement</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -96,18 +100,17 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-arrow">
               Reference
             </button>
-            <div
-              slot="floating"
-              class="mw-panel mw-panel-ink mw-panel-arrow"
-            >
-              Floating
-              <floating-arrow
-                class="mw-arrow"
-                width={MIDDLEWARE_ARROW.width}
-                height={MIDDLEWARE_ARROW.height}
-                static-offset={MIDDLEWARE_ARROW.staticOffset}
-              ></floating-arrow>
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-ink mw-panel-arrow">
+                Floating
+                <floating-arrow
+                  class="mw-arrow"
+                  width={MIDDLEWARE_ARROW.width}
+                  height={MIDDLEWARE_ARROW.height}
+                  static-offset={MIDDLEWARE_ARROW.staticOffset}
+                ></floating-arrow>
+              </div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -128,14 +131,13 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-size">
               Reference
             </button>
-            <div
-              slot="floating"
-              class="mw-panel mw-panel-paper mw-panel-size"
-            >
-              <strong>Floating content</strong>
-              <span>One</span><span>Two</span><span>Three</span>
-              <span>Four</span><span>Five</span>
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-paper mw-panel-size">
+                <strong>Floating content</strong>
+                <span>One</span><span>Two</span><span>Three</span>
+                <span>Four</span><span>Five</span>
+              </div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -159,9 +161,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-auto">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-mint mw-panel-auto">
-              Final placement
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-mint mw-panel-auto">Final placement</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -186,9 +188,9 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-hide">
               Reference
             </button>
-            <div slot="floating" class="mw-panel mw-panel-paper mw-panel-hide">
-              Floating
-            </div>
+            <template slot="content">
+              <div class="mw-panel mw-panel-paper mw-panel-hide">Floating</div>
+            </template>
           </floating-root>
         </div>
       </div>
@@ -212,7 +214,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
               </floating-reference>
               after.
             </p>
-            <template data-fup-content>
+            <template slot="content">
               <div class="mw-panel mw-panel-paper mw-panel-inline">
                 Bounding box
               </div>
@@ -231,7 +233,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
               </floating-reference>
               after.
             </p>
-            <template data-fup-content>
+            <template slot="content">
               <div class="mw-panel mw-panel-ink mw-panel-inline">
                 Client rect
               </div>

@@ -72,6 +72,29 @@ Pass interaction plugins to `.pipe()` according to the UI pattern.
 Keep the interactions that match the behavior you want. For example, a modal
 also needs `focusManager()` and usually an overlay supplied by your renderer.
 
+## Native Popover and Dialog
+
+Use `createFloatingTopLayer()` when the renderer can keep the surface in its
+logical DOM position. It maps native `toggle`, `cancel`, and `close` events
+back to the same callback that owns your controller state.
+
+```ts
+import {createFloatingTopLayer} from '@floating-ui-plus/web';
+
+const nativeSurface = createFloatingTopLayer({onOpenChange: setOpen});
+nativeSurface.setKind('popover');
+nativeSurface.setElement(panel);
+nativeSurface.connect();
+
+function render() {
+  nativeSurface.sync(open);
+}
+```
+
+Pass `dialog` as the kind only when `panel` is an `HTMLDialogElement`; then
+`sync(true)` calls `showModal()`. Keep the normal portal implementation as the
+fallback when `supportsFloatingTopLayer(kind)` is false.
+
 ## Modal focus
 
 Use `focusManager()` for focus trapping and `dismiss()` for Escape and outside
@@ -116,6 +139,7 @@ const search = createSearch({
 const combobox = createCombobox({
   search,
   getItemLabel: (product) => product.name,
+  getItemValue: (product) => product.id,
   onOpenChange: setOpen,
 });
 

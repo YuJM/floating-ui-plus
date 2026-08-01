@@ -19,6 +19,12 @@ export type * from '@floating-ui/dom';
 export {createFloating} from './createFloating';
 export type * from './types';
 export {
+  createFloatingTopLayer,
+  FloatingTopLayerController,
+  supportsFloatingTopLayer,
+} from './topLayer';
+export type {FloatingTopLayer, FloatingTopLayerOptions} from './topLayer';
+export {
   createAsyncSearchSource,
   createSearch,
   createSearchRenderer,
