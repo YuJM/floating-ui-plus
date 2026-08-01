@@ -7,7 +7,7 @@ import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
 import popoverSource from '../../../../../components/examples/PopoverExample.astro?raw';
 import popoverVueSource from '../../../../../vue/components/ExamplePopover.vue?raw';
 
-[Open the live popover demo](/popover?framework=web-components)
+[Open the live popover demo](/popover?framework=wc)
 
 <DemoPreview route="/preview/popover" title="Popover" webCode={popoverSource} vueCode={popoverVueSource} webTitle="PopoverExample.astro" vueTitle="ExamplePopover.vue" />
 
@@ -30,7 +30,11 @@ and becomes a native Popover when opened:
 </floating-root>
 ```
 
+This is the browser's standard Popover API in action. The demo keeps the
+surface in the root tree so the platform owns top-layer stacking and light
+dismissal; it does not emulate a popover with a portal.
+
 The demo uses `offset(12)`, `flip()`, and `shift({padding: 18})`. The Vue
-version uses `FloatingRoot`, `FloatingReference`, and `FloatingContent` without
-changing the interaction model. Use a portal only when the panel must escape a
+version uses `FloatingContent top-layer="popover"` to make the same native
+Popover contract explicit. Use a portal only when the panel must escape a
 clipping ancestor; it is not required for this composition.

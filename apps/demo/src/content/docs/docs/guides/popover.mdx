@@ -6,8 +6,12 @@ description: Choose native Popover, dialog, template, and portal composition.
 ## Non-modal anchored surfaces
 
 Keep the surface in the same render tree. Web Components use a root-owned
-`<template slot="content">`; Vue uses `FloatingContent`; direct Web uses
+`<template slot="content">`; Vue uses `FloatingContent top-layer="popover"`; direct Web uses
 `createFloatingTopLayer({onOpenChange})` and binds the existing element.
+
+These compositions opt into the browser's standard [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API),
+so stacking and light-dismiss behavior come from the platform rather than a
+framework-specific portal implementation.
 
 Native Popover owns top-layer stacking and light dismissal. Do not portal the
 same surface as well.
@@ -17,6 +21,9 @@ same surface as well.
 Use a real `<dialog>` when the browser should own modal focus, inertness,
 Escape handling, and the top layer. In Web Components this is
 `<dialog slot="floating">`; in Vue it is `<FloatingContent as="dialog">`.
+
+Both forms use the browser's standard [`<dialog>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog),
+including its modal focus and inertness behavior.
 
 Use a portal only when the surface must move to a body-level target, such as
 escaping a clipping ancestor. Add an overlay or focus manager for a custom

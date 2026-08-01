@@ -15,6 +15,11 @@ Both adapters provide a reference, a floating surface, an open model,
 interaction plugins, and an optional focus manager. The renderer still owns
 labels, classes, ARIA names, presence transitions, and result markup.
 
+When you opt into a native surface, Floating UI Plus uses the browser's Web
+Standards APIs: the [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API)
+for anchored non-modal surfaces and the native [`<dialog>` element](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog)
+for modal surfaces.
+
 <Tabs syncKey="framework-adapter">
 <TabItem label="Web Components">
 
@@ -81,7 +86,7 @@ const options = {placement: 'bottom-start', middleware: [offset(8)]};
 <template>
   <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
     <FloatingReference>Open settings</FloatingReference>
-    <FloatingContent>
+    <FloatingContent top-layer="popover">
       Settings
       <FloatingClose>Close</FloatingClose>
     </FloatingContent>
@@ -95,6 +100,12 @@ requiring the declarative child components.
 
 </TabItem>
 </Tabs>
+
+`floating-role` and `role()` set ARIA semantics; they do not choose a native
+top-layer surface. Web Components root-owned templates are the exception to
+this markup rule: `template[slot="content"]` is the explicit Popover
+composition. In Vue, use `top-layer="popover"` for the equivalent surface and
+`as="dialog"` for a native dialog.
 
 ## Native top-layer surfaces
 
@@ -228,7 +239,7 @@ for a command palette or `semantics="none"` when the renderer owns ARIA.
 <FloatingRoot v-model:open="open" :plugins="[dismiss(), rolePlugin]">
   <FloatingList v-model:active-index="activeIndex" navigation loop>
     <FloatingReference as="input" v-bind="inputProps" />
-    <FloatingContent>
+    <FloatingContent top-layer="popover">
       <FloatingSearch :search="search">
         <template #loading>Searching…</template>
         <template #empty>No matches</template>

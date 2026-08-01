@@ -3,7 +3,6 @@ import {
   FloatingContent,
   FloatingList,
   FloatingListItem,
-  FloatingPortal,
   FloatingReference,
   FloatingRoot,
   FloatingSearch,
@@ -134,9 +133,9 @@ const navigationOptions = getNavigationOptions({
           />
         </div>
 
-        <FloatingPortal>
-          <Transition name="vue-surface">
+        <Transition name="vue-surface">
             <FloatingContent
+              top-layer="popover"
               class="vue-combobox-popup"
               data-floating-query-popup
             >
@@ -178,8 +177,7 @@ const navigationOptions = getNavigationOptions({
                 </template>
               </FloatingSearch>
             </FloatingContent>
-          </Transition>
-        </FloatingPortal>
+        </Transition>
       </FloatingList>
     </FloatingRoot>
 

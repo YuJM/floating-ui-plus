@@ -19,7 +19,7 @@ test('owns Vue menu navigation, typeahead, and item dismissal', async ({
   await expect(page.getByRole('menu')).toBeHidden();
 });
 
-test('opens Teleport-backed nested menus', async ({page}) => {
+test('opens native nested menu popovers in place', async ({page}) => {
   await page.goto('/nested-menu?framework=vue');
   await expect(
     page.getByRole('heading', {
@@ -30,12 +30,14 @@ test('opens Teleport-backed nested menus', async ({page}) => {
   await page.getByRole('button', {name: 'Open actions'}).click();
   const rootMenu = page.getByTestId('actions-menu');
   await expect(rootMenu).toBeVisible();
-  await expect(rootMenu).toHaveCSS('position', 'absolute');
+  await expect(rootMenu).toHaveAttribute('popover', 'manual');
+  await expect(rootMenu).not.toHaveAttribute('data-fup-portal');
 
   await page.getByRole('menuitem', {name: /Move to project/}).press('ArrowRight');
   const projectMenu = page.getByTestId('project-menu');
   await expect(projectMenu).toBeVisible();
-  await expect(projectMenu).toHaveCSS('position', 'absolute');
+  await expect(projectMenu).toHaveAttribute('popover', 'manual');
+  await expect(projectMenu).not.toHaveAttribute('data-fup-portal');
   expect((await projectMenu.boundingBox())?.y).toBeGreaterThan(0);
   const projectTrigger = page.getByRole('menuitem', {
     name: /Move to project/,
@@ -152,7 +154,7 @@ test('routes to individual Vue examples and the middleware lab', async ({
     name: 'All patterns',
   });
   await expect(navigation).toHaveCSS('position', 'sticky');
-  await navigation.locator('summary').click();
+  await navigation.locator('.pattern-picker-trigger').click();
   await navigation.getByRole('link', {name: 'Popover'}).click();
   await expect(page).toHaveURL(/\/popover\?framework=vue$/);
   await expect(
@@ -299,7 +301,7 @@ test('placement constants drive all 12 Vue positions', async ({page}) => {
   expect(Math.abs(floatingBox!.x - referenceBox!.x)).toBeLessThanOrEqual(2);
 });
 
-test('multilingual Vue combobox keeps input focus and teleports results', async ({
+test('multilingual Vue combobox keeps input focus in a native popover', async ({
   page,
 }) => {
   await page.goto('/combobox?framework=vue');
@@ -348,13 +350,13 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
   await input.fill('bejing');
   const option = page.getByRole('option', {name: /北京/});
   await expect(option).toBeVisible();
-  const popup = page.locator('[data-floating-query-popup]');
-  await expect(popup).toHaveCSS('position', 'absolute');
+  const popup = page.locator('[data-floating-query-popup]:visible');
+  await expect(popup).toHaveAttribute('popover', 'manual');
   expect(
     await popup.evaluate((element) =>
       Boolean(element.closest('[data-fup-portal]')),
     ),
-  ).toBe(true);
+  ).toBe(false);
 
   await input.press('ArrowDown');
   await expect(input).toBeFocused();

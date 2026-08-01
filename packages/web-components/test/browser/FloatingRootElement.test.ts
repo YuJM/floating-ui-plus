@@ -163,7 +163,7 @@ describe('FloatingRootElement', () => {
     root.strategy = 'fixed';
     root.innerHTML = `
       <floating-reference><button>Open</button></floating-reference>
-      <floating-content slot="floating">Content</floating-content>
+      <floating-content slot="floating" top-layer="popover">Content</floating-content>
     `;
     document.body.append(root);
     await root.updateComplete;
@@ -176,6 +176,23 @@ describe('FloatingRootElement', () => {
     root.open = false;
     await root.updateComplete;
     expect(root.floatingElement?.hidden).toBe(true);
+  });
+
+  test('does not infer a native popover from an ARIA role alone', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.floatingRole = 'dialog';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-content slot="floating">Content</floating-content>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+
+    expect(root.floatingElement).not.toHaveAttribute('popover');
+    expect(root.floatingElement?.hidden).toBe(false);
   });
 
   test('uses a slotted dialog as a native modal surface', async () => {

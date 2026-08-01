@@ -2,6 +2,12 @@ export const FRAMEWORKS = ['web-components', 'vue'] as const;
 
 export type Framework = (typeof FRAMEWORKS)[number];
 
+export type FrameworkQuery = 'wc' | 'vue';
+
+export function frameworkQuery(framework: Framework): FrameworkQuery {
+  return framework === 'vue' ? 'vue' : 'wc';
+}
+
 export const EXAMPLES = [
   {
     id: 'tooltip',
@@ -79,5 +85,5 @@ export function resolveFramework(value: string | null): Framework {
 }
 
 export function exampleHref(example: ExampleId, framework: Framework) {
-  return `/${example}?framework=${framework}`;
+  return `/${example}?framework=${frameworkQuery(framework)}`;
 }

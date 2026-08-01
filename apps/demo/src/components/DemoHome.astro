@@ -7,12 +7,14 @@ import DemoLayout from '../layouts/DemoLayout.astro';
 import {EXAMPLE_IDS, getExample, type Locale} from '../i18n';
 import {EXAMPLE_ICONS} from '../example-icons';
 import {getNpmPackages} from '../npm-packages';
+import {frameworkQuery} from '../demo-registry';
 
 const {locale} = Astro.props as {locale: Locale};
 const options = {locale};
 // Render the selected implementation into the initial link so a quick click
 // cannot race the client-side query-preservation pass in DemoLayout.
 const framework = new URL(Astro.url).searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
+const frameworkParam = frameworkQuery(framework);
 const examples = EXAMPLE_IDS.map((example) => getExample(locale, example));
 const npmPackages = getNpmPackages();
 const appPackages = npmPackages.filter((pkg) => pkg.id !== 'web');
@@ -38,7 +40,7 @@ const packageCopy = {
     </div>
     <div class="demo-example-list" aria-label={m.patterns_title(undefined, options)}>
       {examples.map((example) => (
-        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=${framework}`} data-example-link={example.id} data-preserve-framework>
+        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=${frameworkParam}`} data-example-link={example.id} data-preserve-framework>
           {(() => {
             const Icon = EXAMPLE_ICONS[example.id];
             return <Icon class="demo-example-icon" aria-hidden="true" size={21} strokeWidth={1.7} />;

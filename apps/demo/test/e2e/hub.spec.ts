@@ -58,7 +58,7 @@ test('opens the default combobox route without a redirect', async ({page}) => {
 
   await page.locator('.demo-example-link[data-example-link="combobox"]').click();
 
-  await expect(page).toHaveURL(/\/combobox\?framework=web-components$/);
+  await expect(page).toHaveURL(/\/combobox\?framework=wc$/);
   await expect(page.locator('[data-demo="combobox"]')).toBeVisible();
 });
 
@@ -88,7 +88,7 @@ test('keeps the selected implementation through home, example, and pattern navig
   await page.locator('.demo-example-link[data-example-link="tooltip"]').click();
   await expect(page).toHaveURL(/\/ko\/tooltip\?framework=vue$/);
 
-  await page.locator('.pattern-picker > summary').click();
+  await page.locator('.pattern-picker-trigger').click();
   await page.locator('.pattern-picker-panel [data-example-link="popover"]').click();
   await expect(page).toHaveURL(/\/ko\/popover\?framework=vue$/);
   await expect(page.locator('[data-framework-panel="vue"]')).toBeVisible();
@@ -103,7 +103,7 @@ test('integrated demo selects an example and preserves it while switching implem
   ).toBeVisible();
 
   await page.getByRole('link', {name: 'Tooltip'}).first().click();
-  await expect(page).toHaveURL(/\/tooltip\?framework=web-components$/);
+  await expect(page).toHaveURL(/\/tooltip\?framework=wc$/);
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeVisible();
   await expect(page.locator('[data-framework-panel="vue"]')).toBeHidden();
   await expect(page.locator('[data-framework-package]')).toHaveText(
@@ -128,7 +128,7 @@ test('integrated demo selects an example and preserves it while switching implem
 });
 
 test('preserves the combobox source when switching implementations', async ({page}) => {
-  await page.goto('/combobox?framework=web-components&source=server');
+  await page.goto('/combobox?framework=wc&source=server');
 
   const switcher = page.getByRole('group', {name: 'Implementation'});
   await switcher.getByRole('link', {name: 'Vue'}).click();
@@ -138,7 +138,7 @@ test('preserves the combobox source when switching implementations', async ({pag
   ).toHaveAttribute('aria-selected', 'true');
 
   await switcher.getByRole('link', {name: /Web Components/}).click();
-  await expect(page).toHaveURL(/\/combobox\?framework=web-components&source=server$/);
+  await expect(page).toHaveURL(/\/combobox\?framework=wc&source=server$/);
   await expect(
     page.locator('[data-framework-panel="web-components"]').getByRole('tab', {name: 'Server search'}),
   ).toHaveAttribute('aria-selected', 'true');

@@ -3,7 +3,6 @@ import {
   FloatingContent,
   FloatingList,
   FloatingListItem,
-  FloatingPortal,
   FloatingReference,
   FloatingRoot,
   FloatingSearch,
@@ -133,9 +132,9 @@ const loadMore = () => void search.controller.loadMore();
           ></span>
         </div>
 
-        <FloatingPortal>
-          <Transition name="vue-surface">
+        <Transition name="vue-surface">
             <FloatingContent
+              top-layer="popover"
               class="vue-combobox-popup vue-async-combobox-popup"
               data-floating-query-popup
             >
@@ -197,8 +196,7 @@ const loadMore = () => void search.controller.loadMore();
                 </FloatingSearch>
               </div>
             </FloatingContent>
-          </Transition>
-        </FloatingPortal>
+        </Transition>
       </FloatingList>
     </FloatingRoot>
 

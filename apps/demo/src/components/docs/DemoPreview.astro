@@ -12,6 +12,7 @@ interface Props {
 
 import {Code} from '@astrojs/starlight/components';
 import {siVuedotjs, siWebcomponentsdotorg} from 'simple-icons';
+import {frameworkQuery} from '../../demo-registry';
 
 const {
   route,
@@ -25,7 +26,7 @@ const {
 } = Astro.props;
 const previewId = `demo-preview-${route.replace(/[^a-z0-9]+/gi, '-')}`;
 const initialUrl = new URL(route, Astro.url);
-initialUrl.searchParams.set('framework', 'web-components');
+initialUrl.searchParams.set('framework', frameworkQuery('web-components'));
 initialUrl.searchParams.set('embed', '1');
 const src = `${initialUrl.pathname}${initialUrl.search}`;
 const openUrl = new URL(initialUrl);
@@ -102,7 +103,7 @@ const openHref = `${openUrl.pathname}${openUrl.search}`;
         const framework = button.dataset.demoFramework;
         if (framework !== 'vue' && framework !== 'web-components') return;
         const url = new URL(frame.src, window.location.href);
-        url.searchParams.set('framework', framework);
+        url.searchParams.set('framework', framework === 'vue' ? 'vue' : 'wc');
         url.searchParams.set('embed', '1');
         frame.src = `${url.pathname}${url.search}`;
         preview.querySelectorAll<HTMLElement>('[data-demo-source]').forEach((source) => {

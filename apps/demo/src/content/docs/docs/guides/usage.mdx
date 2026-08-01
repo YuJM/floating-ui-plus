@@ -201,7 +201,7 @@ not needed for the normal template or native dialog composition.
 <!-- Anchored Popover: keep FloatingContent in the root tree. -->
 <FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
   <FloatingReference>Open settings</FloatingReference>
-  <FloatingContent>Settings <FloatingClose>Close</FloatingClose></FloatingContent>
+  <FloatingContent top-layer="popover">Settings <FloatingClose>Close</FloatingClose></FloatingContent>
 </FloatingRoot>
 
 <!-- Modal dialog: use the native element. -->
@@ -259,7 +259,7 @@ should dismiss its owner.
   <FloatingReference>Open</FloatingReference>
   <FloatingPortal>
     <FloatingOverlay :lock-scroll="true">
-      <FloatingFocusManager :options="{modal: true, returnFocus: true}">
+        <FloatingFocusManager :options="{modal: true, returnFocus: true}">
         <FloatingContent aria-label="Settings">
           Settings <FloatingClose>Close</FloatingClose>
         </FloatingContent>
@@ -355,7 +355,7 @@ selected-value form behavior is specifically required.
 <FloatingRoot v-model:open="open" :plugins="[dismiss(), rolePlugin]">
   <FloatingList v-model:active-index="activeIndex" navigation loop>
     <FloatingReference as="input" v-bind="inputProps" />
-    <FloatingContent>
+    <FloatingContent top-layer="popover">
       <FloatingSearch :search="search">
         <template #loading>Searching…</template>
         <template #error>Search failed</template>

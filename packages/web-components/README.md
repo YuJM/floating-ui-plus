@@ -43,6 +43,16 @@ not needed for the usual case.
 </floating-root>
 ```
 
+The root-owned `template[slot="content"]` is the explicit native Popover
+composition. A direct `<dialog slot="floating">` (or a top-level dialog in
+the template) uses native dialog behavior. For a direct non-dialog surface,
+set `top-layer="popover"` explicitly; `floating-role` only sets ARIA
+semantics and does not select a top layer.
+
+These are browser Web Standards APIs—the Popover API for anchored non-modal
+surfaces and the native `<dialog>` element for modal surfaces—not a portal
+emulation. The browser owns the corresponding top-layer behavior.
+
 Use a real `<dialog slot="floating">` for a modal. The browser then owns the
 top layer, focus, and inertness. Reserve `<floating-portal>` for a surface that
 explicitly must escape a clipping ancestor or render at a custom target.

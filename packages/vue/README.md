@@ -54,7 +54,7 @@ owns one controller and its descendants receive the corresponding bindings.
     :plugins="[click(), dismiss(), role({role: 'dialog'})]"
   >
     <FloatingReference>Open settings</FloatingReference>
-    <FloatingContent class="popover">
+    <FloatingContent top-layer="popover" class="popover">
       Settings
       <FloatingClose>Close</FloatingClose>
     </FloatingContent>
@@ -62,10 +62,16 @@ owns one controller and its descendants receive the corresponding bindings.
 </template>
 ```
 
-`FloatingContent` uses the native Popover API for supported popup roles. Use
-`as="dialog"` for a modal native dialog. Add `FloatingPortal` only when the
-surface needs to escape its DOM ancestor; native top-layer content stays in the
-same Vue tree and should not also be teleported.
+`role()` controls ARIA semantics only. Declare `top-layer="popover"` for a
+native Popover and use `as="dialog"` for a native dialog. Add
+`FloatingPortal` only when the surface needs to escape its DOM ancestor;
+native top-layer content stays in the same Vue tree and should not also be
+teleported.
+
+The two options map directly to browser Web Standards APIs: `top-layer="popover"`
+uses the Popover API, while `as="dialog"` renders the native `<dialog>`
+element. Floating UI Plus coordinates the reference, positioning, and
+interactions without replacing those platform behaviors.
 
 ## Search and `useQuery()`
 
@@ -102,7 +108,7 @@ const query = useQuery({
       :navigation-options="query.getNavigationOptions({allowEscape: true})"
     >
       <FloatingReference as="input" v-bind="query.inputProps" />
-      <FloatingContent>
+      <FloatingContent top-layer="popover">
         <!-- Render search.items.value with query.getOptionProps(city, index). -->
       </FloatingContent>
     </FloatingList>

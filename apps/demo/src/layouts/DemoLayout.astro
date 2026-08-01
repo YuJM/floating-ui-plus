@@ -2,7 +2,7 @@
 import SeoHead from '../components/SeoHead.astro';
 import {Box, ChevronDown, House} from 'lucide-astro';
 import {siVuedotjs} from 'simple-icons';
-import {type ExampleId} from '../demo-registry';
+import {frameworkQuery, type ExampleId} from '../demo-registry';
 import {getSeoMetadata} from '../seo';
 import {getRelativeLocaleUrl} from '../locale-url';
 import * as m from '../paraglide/messages';
@@ -27,7 +27,7 @@ const activeExample = examples.find((item) => item.id === example);
 const ActiveExampleIcon = activeExample ? EXAMPLE_ICONS[activeExample.id] : House;
 const framework = Astro.url.searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
 const isEmbed = Astro.url.searchParams.get('embed') === '1';
-const frameworkSearch = `?framework=${framework}`;
+const frameworkSearch = `?framework=${frameworkQuery(framework)}`;
 const localizedExamplePath = examplePath ?? example ?? '';
 const routeMetadata = getSeoMetadata(Astro.url.pathname, locale);
 const metadata = {
@@ -70,7 +70,7 @@ const metadata = {
       <div class="container mx-auto flex items-center justify-end gap-3 px-5 py-3 sm:px-8">
         <a class="docs-nav-link" href="/docs">Docs</a>
         <div class="framework-switch" role="group" aria-label={m.framework_label(undefined, options)} title={m.framework_switch_title(undefined, options)}>
-          <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=web-components`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
+          <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=wc`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
             <Box aria-hidden="true" size={15} strokeWidth={1.8} />
           </a>
           <a data-framework-switch="vue" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=vue`} aria-label="Vue" title={m.framework_vue_title(undefined, options)}>
@@ -133,7 +133,7 @@ const metadata = {
             {
               examples.map((item) => (
                 <a
-                  href={`${getRelativeLocaleUrl(locale, item.id)}?framework=web-components`}
+                  href={`${getRelativeLocaleUrl(locale, item.id)}?framework=wc`}
                   data-example-link={item.id}
                   data-preserve-framework
                   aria-current={example === item.id ? 'page' : undefined}
@@ -188,7 +188,7 @@ const metadata = {
 
         document.querySelectorAll<HTMLAnchorElement>('[data-preserve-framework]').forEach((link) => {
           const url = new URL(link.href);
-          url.searchParams.set('framework', framework);
+          url.searchParams.set('framework', framework === 'vue' ? 'vue' : 'wc');
           link.href = url.href;
         });
         document.querySelectorAll<HTMLAnchorElement>('[data-preserve-query]').forEach((link) => {

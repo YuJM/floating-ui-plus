@@ -212,18 +212,14 @@ export const FloatingContent = defineComponent({
     }
     const surfaceTopLayer = (): FloatingTopLayer => {
       if (props.topLayer) return props.topLayer;
+      // A native dialog is an explicit surface contract. ARIA roles describe
+      // semantics only and must not promote an ordinary positioned element.
+      if (props.as === 'dialog') return 'dialog';
       if (portalTopLayer?.value && portalTopLayer.value !== 'none') {
         return portalTopLayer.value;
       }
       if (topLayer?.value && topLayer.value !== 'none') return topLayer.value;
-      // Native dialogs are unambiguous. Popup roles get the native Popover
-      // API automatically, while ordinary positioned content keeps the
-      // existing non-top-layer behavior.
-      if (props.as === 'dialog') return 'dialog';
-      const role = floating.floatingAttrs.role;
-      return role === 'dialog' || role === 'menu' || role === 'listbox'
-        ? 'popover'
-        : 'none';
+      return 'none';
     };
     const usesNativeDialog = () =>
       surfaceTopLayer() === 'dialog' && supportsFloatingTopLayer('dialog');

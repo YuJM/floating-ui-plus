@@ -18,10 +18,10 @@ Open <http://127.0.0.1:5173>.
 
 - `/`: integrated example selector
 - `/:example`: one floating-interface example
-- `?framework=web-components` (default) or `?framework=vue`: implementation switch
+- `?framework=wc` (default) or `?framework=vue`: implementation switch
 
 For example, use `/tooltip`, `/tooltip?framework=vue`, or
-`/middleware?framework=web-components`.
+`/middleware?framework=wc`.
 
 Every gallery includes a working interaction, not just a static example.
 

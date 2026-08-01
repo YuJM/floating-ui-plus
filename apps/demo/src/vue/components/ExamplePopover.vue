@@ -40,6 +40,7 @@ const plugins = [click(), dismiss(), role({role: 'dialog'})];
         </FloatingReference>
         <FloatingContent
           as="section"
+          top-layer="popover"
           class="popover-panel"
         >
           <span class="panel-kicker">NATIVE TOP LAYER / 42.8°</span>

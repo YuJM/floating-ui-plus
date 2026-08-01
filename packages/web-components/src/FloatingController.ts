@@ -285,14 +285,6 @@ export class FloatingRootRuntime {
     if (explicitTopLayer === 'popover' || explicitTopLayer === 'dialog') {
       return explicitTopLayer;
     }
-    const role =
-      this.engine.context.attributes.floating?.role ?? this.#host.floatingRole;
-    if (
-      element?.localName === 'floating-content' &&
-      (role === 'dialog' || role === 'menu' || role === 'listbox')
-    ) {
-      return 'popover';
-    }
     return 'none';
   }
 

@@ -130,6 +130,7 @@ watch(open, (next) => {
                           </FloatingReference>
                           <FloatingContent
                             as="section"
+                            top-layer="popover"
                             class="popover-panel"
                             aria-label="Room details"
                           >
