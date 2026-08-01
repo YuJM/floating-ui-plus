@@ -124,17 +124,16 @@ h2 span { color: var(--lavender); }
 .orbit-core { position: absolute; inset: 43%; border: 1px solid var(--cyan); border-radius: 50%; box-shadow: 0 0 0 10px rgba(119,227,224,.08), 0 0 38px rgba(119,227,224,.34); }
 .stage-readout { position: absolute; right: 28px; bottom: 24px; display: grid; gap: 5px; max-width: 245px; color: #85869c; }
 .stage-readout strong { color: var(--paper); font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0; text-transform: none; }
-.integrated-nav { position: sticky; top: 56px; z-index: 20; width: fit-content; max-width: calc(100% - 40px); margin: -48px auto 22px; padding: 0; }
-.pattern-picker { position: relative; }
-.pattern-picker summary { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: 22px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px 8px 11px; color: var(--ink); background: color-mix(in srgb, var(--paper) 94%, transparent); box-shadow: 0 10px 24px rgba(23, 37, 84, .1); cursor: pointer; list-style: none; backdrop-filter: blur(14px); }
-.pattern-picker summary::-webkit-details-marker { display: none; }
-.pattern-picker summary:hover, .pattern-picker[open] summary { border-color: color-mix(in srgb, var(--lavender) 70%, var(--line)); }
-.pattern-picker summary:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+.integrated-nav { position: sticky; top: 56px; z-index: 20; width: min(calc(100% - 40px), 34rem); margin: -48px auto 22px; padding: 0; }
+.pattern-picker { display: contents; }
+.pattern-picker-trigger { display: flex; width: 100%; min-height: 42px; align-items: center; justify-content: space-between; gap: 22px; border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px 8px 11px; color: var(--ink); background: color-mix(in srgb, var(--paper) 94%, transparent); box-shadow: 0 10px 24px rgba(23, 37, 84, .1); cursor: pointer; text-align: left; backdrop-filter: blur(14px); }
+.pattern-picker-trigger:hover, .pattern-picker[open] .pattern-picker-trigger { border-color: color-mix(in srgb, var(--lavender) 70%, var(--line)); }
+.pattern-picker-trigger:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
 .pattern-picker-current { display: inline-flex; min-width: 0; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .pattern-picker-current svg { flex: none; color: var(--lavender); }
 .pattern-picker-chevron { flex: none; color: var(--muted); transition: transform 160ms ease; }
 .pattern-picker[open] .pattern-picker-chevron { transform: rotate(180deg); }
-.pattern-picker-panel { position: absolute; top: calc(100% + 8px); left: 50%; display: grid; grid-template-columns: repeat(2, minmax(156px, 1fr)); gap: 4px; width: min(500px, calc(100vw - 40px)); padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--paper) 97%, transparent); box-shadow: 0 18px 42px rgba(23, 37, 84, .15); transform: translateX(-50%); backdrop-filter: blur(18px); }
+.pattern-picker-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; max-width: calc(100vw - 32px); padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--paper) 97%, transparent); box-shadow: 0 18px 42px rgba(23, 37, 84, .15); backdrop-filter: blur(18px); }
 .pattern-picker-panel a { display: flex; min-width: 0; min-height: 40px; align-items: center; gap: 9px; border-radius: 9px; padding: 8px 10px; color: var(--muted); font-size: 13px; font-weight: 520; text-decoration: none; }
 .pattern-picker-panel a:hover { background: #dbe6ff; color: #172554; }
 .pattern-picker-panel a[aria-current="page"] { color: var(--paper); background: var(--ink); }

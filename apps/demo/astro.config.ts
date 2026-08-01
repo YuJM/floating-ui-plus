@@ -33,8 +33,18 @@ export default defineConfig({
       description:
         'Framework-neutral floating UI primitives for Web, Web Components, and Vue.',
       disable404Route: true,
+      customCss: ['./src/styles/docs.css'],
       sidebar: [
         {label: 'Introduction', items: [{slug: 'docs'}]},
+        {
+          label: 'Installation',
+          items: [
+            {slug: 'docs/guides/installation'},
+            {slug: 'docs/guides/installation/web-components'},
+            {slug: 'docs/guides/installation/vue'},
+            {slug: 'docs/guides/installation/web'},
+          ],
+        },
         {
           label: 'Guides',
           items: [
@@ -61,15 +71,6 @@ export default defineConfig({
             },
             {slug: 'docs/guides/dismiss'},
             {slug: 'docs/guides/getting-started'},
-            {
-              label: 'Installation',
-              items: [
-                {slug: 'docs/guides/installation'},
-                {slug: 'docs/guides/installation/web-components'},
-                {slug: 'docs/guides/installation/vue'},
-                {slug: 'docs/guides/installation/web'},
-              ],
-            },
             {slug: 'docs/guides/popover'},
             {slug: 'docs/guides/usage'},
           ],
