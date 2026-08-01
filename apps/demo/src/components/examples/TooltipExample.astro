@@ -21,18 +21,16 @@ import {TOOLTIP_ARROW} from '../../example-config';
           Inspect signal <span aria-hidden="true">↗</span>
         </button>
       </floating-reference>
-      <floating-portal>
-        <template slot="content" data-tooltip-content>
-          <div class="tooltip">
-            Positioned by <b>autoUpdate</b>
-            <floating-arrow
-              class="tooltip-arrow"
-              width={TOOLTIP_ARROW.width}
-              height={TOOLTIP_ARROW.height}
-            ></floating-arrow>
-          </div>
-        </template>
-      </floating-portal>
+      <template slot="content" data-tooltip-content>
+        <div class="tooltip">
+          Positioned by <b>autoUpdate</b>
+          <floating-arrow
+            class="tooltip-arrow"
+            width={TOOLTIP_ARROW.width}
+            height={TOOLTIP_ARROW.height}
+          ></floating-arrow>
+        </div>
+      </template>
     </floating-root>
   </div>
   <code>hover() → focus() → dismiss()</code>
@@ -40,6 +38,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
 
 <script>
   import {
+    FloatingRootElement,
     arrow,
     dismiss,
     flip,
@@ -51,19 +50,11 @@ import {TOOLTIP_ARROW} from '../../example-config';
     shift,
   } from '@floating-ui-plus/web-components';
   import {TOOLTIP_ARROW} from '../../example-config';
-  import {
-    configureFloating,
-    emitExampleAction,
-    floatingRoot,
-    floatingTemplate,
-    initializeExample,
-    onFloatingTemplateMount,
-    onFloatingOpenChange,
-  } from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('tooltip', (scope) => {
-    const floating = floatingRoot(scope, '[data-tooltip-root]');
-    configureFloating(floating, {
+    const floating = FloatingRootElement.query(scope, '[data-tooltip-root]');
+    floating.configure({
       middleware: [
         offset(TOOLTIP_ARROW.gap),
         flip(),
@@ -76,8 +67,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
         role({role: 'tooltip'}),
       ],
     });
-    const template = floatingTemplate(scope, '[data-tooltip-content]');
-    onFloatingTemplateMount(template, (element) => {
+    floating.on('floatingmount', ({element}) => {
       const arrowElement = element.querySelector<HTMLElement>('floating-arrow');
       floating.middleware = [
         offset(TOOLTIP_ARROW.gap),
@@ -85,12 +75,6 @@ import {TOOLTIP_ARROW} from '../../example-config';
         shift({padding: 12}),
         ...(arrowElement ? [arrow({element: arrowElement})] : []),
       ];
-    });
-    onFloatingOpenChange(floating, ({open}) => {
-      emitExampleAction(
-        scope,
-        open ? 'Tooltip opened from pointer or focus' : 'Tooltip closed',
-      );
     });
   });
 </script>

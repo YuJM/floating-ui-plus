@@ -16,6 +16,25 @@ import '@floating-ui-plus/web-components';
 Import the package once on the client. It is safe to import during SSR; DOM
 behavior starts when elements connect.
 
+For imperative setup, query and configure a root through its typed API:
+
+```ts
+import {
+  FloatingRootElement,
+  dismiss,
+  offset,
+} from '@floating-ui-plus/web-components';
+
+const root = FloatingRootElement.query(document, '[data-settings-root]');
+root.configure({middleware: [offset(8)], plugins: [dismiss()]});
+const unsubscribe = root.on('openchange', ({open, reason}) => {
+  console.log(open, reason);
+});
+
+// Later, when the application no longer needs the subscription:
+unsubscribe();
+```
+
 `<floating-root>` supplies the default dialog ARIA relationship for its
 reference and floating slots. Set `floating-role` for a tooltip, menu, listbox,
 or another supported pattern; name dialog content using `aria-label` or
@@ -118,6 +137,10 @@ events with `{root, template, element}`. Use them only for application-specific
 initialization of each fresh clone; close controls and declarative lists do not
 need mount listeners.
 
+`root.on('floatingmount', ({element}) => {})` subscribes only to clones owned by
+that root and returns its cleanup function. Nested roots do not leak their
+`openchange` or content lifecycle events into this convenience subscription.
+
 When a portal owns multiple templates, use `slot="content"` on exactly one.
 `data-fup-content` remains a compatibility alias. Each content template must
 contain exactly one top-level HTMLElement; whitespace and comments around it
@@ -169,6 +192,11 @@ exposes a neutral `phase` of `idle`, `loading`, `error`, `empty`, or `results`.
 editable-input ARIA, virtual focus, Enter selection, and status updates.
 `<floating-search>` renders application-owned native templates.
 
+External query presets can stay outside the option list. Set
+`query-trigger-selector` on `<floating-combobox>` and give each matching button
+a `value`; the component applies the query and restores input focus without
+requiring application event listeners.
+
 ```html
 <floating-root placement="bottom-start">
   <floating-list navigation loop allow-escape>
@@ -176,8 +204,7 @@ editable-input ARIA, virtual focus, Enter selection, and status updates.
       <floating-reference>
         <input aria-label="Destination" autocomplete="off" />
       </floating-reference>
-      <floating-portal>
-        <template slot="content">
+      <template slot="content">
           <div aria-label="Destination suggestions">
             <floating-search>
               <template data-search-loading><p>Searching…</p></template>
@@ -195,8 +222,7 @@ editable-input ARIA, virtual focus, Enter selection, and status updates.
               </template>
             </floating-search>
           </div>
-        </template>
-      </floating-portal>
+      </template>
       <p data-combobox-status aria-live="polite"></p>
     </floating-combobox>
   </floating-list>

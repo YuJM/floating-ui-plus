@@ -30,6 +30,11 @@ fuzzy and async server sources to use the same declarative composition. An
 existing application-owned `SearchController` remains supported.
 Document the same composition with local fuzzy and asynchronous server-search
 examples in both Web Components and Vue demos.
+Keep ordinary anchored examples in their local DOM and reserve
+`floating-portal` for surfaces that explicitly need a body-level layer.
+Add checked root lookup, own-root event subscriptions, and controller-backed
+closing to `FloatingRootElement` so direct DOM consumers do not need local
+lifecycle wrapper utilities.
 
 Add `FloatingRootElement.configure()` for setting middleware and plugin
 functions together without application-owned assignment helpers.
@@ -55,3 +60,7 @@ Add a framework-neutral combobox `getItemValue()` contract. Web Components
 `name`, participates in `required` validation, and restores its configured
 selection on native form reset. Vue exposes the same selected value ref for a
 hidden native form input.
+
+Add framework-neutral external query activation and a declarative Web
+Components `query-trigger-selector`, so query preset buttons no longer repeat
+query, open, and input-focus event wiring or masquerade as result list items.

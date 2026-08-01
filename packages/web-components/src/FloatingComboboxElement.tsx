@@ -44,6 +44,7 @@ interface FloatingComboboxHost extends HTMLElement {
   inputSelector: string;
   itemLabelKey: string;
   optionIdPrefix: string;
+  queryTriggerSelector: string;
   statusSelector: string;
   search: SearchController<unknown> | undefined;
   getItemKey: ((item: unknown) => string | number) | undefined;
@@ -84,6 +85,17 @@ function getSearchViews(scope: Element) {
       scope.querySelectorAll<FloatingSearchElement>('floating-search'),
     ),
   ];
+}
+
+function getQueryTriggerValue(element: Element) {
+  if (
+    element instanceof HTMLButtonElement ||
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLOptionElement
+  ) {
+    return element.value;
+  }
+  return element.getAttribute('data-query') ?? element.textContent?.trim() ?? '';
 }
 
 const FloatingComboboxBase = c(
@@ -274,6 +286,39 @@ const FloatingComboboxBase = c(
       host.disabled,
     ]);
 
+    useLayoutEffect(() => {
+      const selector = host.queryTriggerSelector;
+      if (!controller || !selector) return;
+      const scope = host.getRootNode();
+      if (!(scope instanceof Document || scope instanceof ShadowRoot)) return;
+      try {
+        scope.querySelector(selector);
+      } catch {
+        return;
+      }
+      const findTrigger = (event: Event) =>
+        event
+          .composedPath()
+          .find(
+            (target): target is Element =>
+              target instanceof Element && target.matches(selector),
+          );
+      const handleMouseDown = (event: Event) => {
+        if (findTrigger(event)) event.preventDefault();
+      };
+      const handleClick = (event: Event) => {
+        const trigger = findTrigger(event);
+        if (!trigger) return;
+        controller.activateQuery(getQueryTriggerValue(trigger), event);
+      };
+      scope.addEventListener('mousedown', handleMouseDown);
+      scope.addEventListener('click', handleClick);
+      return () => {
+        scope.removeEventListener('mousedown', handleMouseDown);
+        scope.removeEventListener('click', handleClick);
+      };
+    }, [host, controller, host.queryTriggerSelector]);
+
     useEffect(() => {
       if (!controller) return;
       return () => controller.destroy();
@@ -310,6 +355,11 @@ const FloatingComboboxBase = c(
         type: String,
         value: (): string => '',
         attr: 'option-id-prefix',
+      },
+      queryTriggerSelector: {
+        type: String,
+        value: (): string => '',
+        attr: 'query-trigger-selector',
       },
       statusSelector: {
         type: String,

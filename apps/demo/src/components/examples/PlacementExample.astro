@@ -28,14 +28,15 @@ import {DEFAULT_PLACEMENT, PLACEMENT_OPTIONS} from '../../example-data';
 </div>
 
 <script>
-  import {offset, type Placement} from '@floating-ui-plus/web-components';
   import {
-    floatingRoot,
-    initializeExample,
-  } from './example-client';
+    FloatingRootElement,
+    offset,
+    type Placement,
+  } from '@floating-ui-plus/web-components';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('placement', (scope) => {
-    const floating = floatingRoot(scope, '[data-placement-root]');
+    const floating = FloatingRootElement.query(scope, '[data-placement-root]');
     floating.middleware = [offset(18)];
     const panel = scope.querySelector<HTMLElement>('.placement-floating');
     const constant = scope.querySelector<HTMLElement>(

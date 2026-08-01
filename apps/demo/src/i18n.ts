@@ -27,7 +27,7 @@ const COMPONENT_NAMES: Record<ExampleId, string> = {
 
 const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
   tooltip: ['floating-root', 'hover()', 'focus()', 'dismiss()', 'role()', 'safePolygon()', 'arrow'],
-  popover: ['floating-root', 'floating-portal', 'click()', 'dismiss()', 'offset()', 'flip()', 'shift()'],
+  popover: ['floating-root', 'click()', 'dismiss()', 'offset()', 'flip()', 'shift()'],
   menu: ['floating-list', 'navigation', 'typeahead', 'loop'],
   'nested-menu': ['floating-tree', 'floating-node', 'floating-list', 'dismiss()'],
   'client-point': ['clientPoint()', 'hover({move: true})', 'flip()', 'shift()'],
@@ -36,11 +36,11 @@ const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
     'floating-list',
     'floating-list-item',
     'createFuzzySearchSource()',
-    'floating-portal',
+    'createAsyncSearchSource()',
   ],
   placement: ['Placement', 'offset()'],
   middleware: ['floating-root', 'offset', 'shift', 'flip', 'arrow', 'size', 'autoPlacement', 'hide', 'inline'],
-  modal: ['floating-tree', 'floating-node', 'floating-portal', 'floating-overlay', 'floating-focus-manager'],
+  modal: ['dialog', 'floating-node', 'click()', 'dismiss()', 'role()'],
 };
 
 export function getExamples(locale: Locale) {

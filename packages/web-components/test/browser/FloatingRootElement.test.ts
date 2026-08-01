@@ -72,6 +72,62 @@ describe('FloatingRootElement', () => {
     expect(root.plugins).toBe(plugins);
   });
 
+  test('queries roots and subscribes only to their own open changes', () => {
+    const parent = document.createElement('floating-root');
+    const child = document.createElement('floating-root');
+    parent.append(child);
+    document.body.append(parent);
+    const listener = vi.fn();
+    const unsubscribe = parent.on('openchange', listener);
+
+    expect(FloatingRootElement.query(document, 'floating-root')).toBe(parent);
+    expect(() =>
+      FloatingRootElement.query(document, '[data-missing-root]'),
+    ).toThrow('Missing FloatingRootElement for [data-missing-root]');
+
+    child.commitOpenChange(true, undefined, 'click');
+    expect(listener).not.toHaveBeenCalled();
+    parent.commitOpenChange(true, undefined, 'click');
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({open: true, reason: 'click'}),
+    );
+
+    unsubscribe();
+    parent.commitOpenChange(false, undefined, 'click');
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
+  test('subscribes to owned content mounts and closes through the controller', async () => {
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <template data-fup-content><section>Content</section></template>
+    `;
+    const mounted = vi.fn();
+    const changed = vi.fn();
+    root.on('floatingmount', mounted);
+    root.on('openchange', changed);
+    document.body.append(root);
+    await root.updateComplete;
+
+    root.commitOpenChange(true, undefined, 'click');
+    await vi.waitFor(() => {
+      expect(mounted).toHaveBeenCalledWith(
+        expect.objectContaining({root, element: root.floatingElement}),
+      );
+    });
+
+    const sourceEvent = new MouseEvent('click');
+    root.close(sourceEvent, 'click');
+    expect(root.open).toBe(false);
+    expect(changed).toHaveBeenLastCalledWith({
+      open: false,
+      reason: 'click',
+      sourceEvent,
+    });
+  });
+
   test('keeps a slotted native popover in its root context', async () => {
     if (!supportsFloatingTopLayer('popover')) return;
     const root = document.createElement('floating-root');
@@ -313,6 +369,48 @@ describe('FloatingRootElement', () => {
       expect(input.value).toBe('서울');
       expect(root.open).toBe(false);
       expect(selectListener).toHaveBeenCalledOnce();
+    });
+    search.destroy();
+  });
+
+  test('binds external query presets through a declarative selector', async () => {
+    const destinations = [{id: 'alpha', label: 'Alpha'}];
+    const search = new SearchController<(typeof destinations)[number]>({
+      items: destinations,
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-combobox query-trigger-selector="#alpha-preset">
+        <floating-reference><input aria-label="Destination" /></floating-reference>
+      </floating-combobox>
+    `;
+    const combobox = root.querySelector('floating-combobox')!;
+    combobox.configure({
+      search,
+      getItemLabel: (item) => item.label,
+    });
+    const preset = document.createElement('button');
+    preset.id = 'alpha-preset';
+    preset.value = 'alpah';
+    document.body.append(root, preset);
+
+    await root.updateComplete;
+    await combobox.updateComplete;
+    await vi.waitFor(() => expect(combobox.controller).toBeDefined());
+    const mouseDown = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    });
+    preset.dispatchEvent(mouseDown);
+    preset.click();
+
+    await vi.waitFor(() => {
+      expect(mouseDown.defaultPrevented).toBe(true);
+      expect(search.query).toBe('alpah');
+      expect(root.open).toBe(true);
+      expect(root.querySelector('input')).toBe(document.activeElement);
     });
     search.destroy();
   });

@@ -86,22 +86,25 @@ markup and classes while binding the nearest `floating-root` controller.
 
 | Element | Main attributes / properties | Role |
 | --- | --- | --- |
-| `floating-root` | `open`, `placement`, `strategy`, `transform`, `interactions`, `floating-role`; properties `middleware`, `plugins`, `configure()` | Owns one reference/surface controller |
+| `floating-root` | `open`, `placement`, `strategy`, `transform`, `interactions`, `floating-role`; properties `middleware`, `plugins`; methods `configure()`, `on()`, `close()`, static `query()` | Owns one reference/surface controller |
 | `floating-reference` | First light-DOM child | Binds the child to the root reference and interaction attributes |
 | `floating-item` | `active`, `selected`, `index` | Applies interaction attributes to its first child |
 | `floating-portal` | `to`, `disabled`; property `target` | Moves non-native children to `body`, a selector target, or a nested portal target while preserving context |
-| `floating-content` | optional `top-layer` escape hatch | Advanced always-mounted floating surface; use a portal template for the default conditional surface |
+| `floating-content` | optional `top-layer` escape hatch | Advanced always-mounted floating surface; use a root-owned content template for the default conditional surface |
 | `floating-overlay` | `lock-scroll` | Provides a fixed overlay and optional document scroll lock |
 | `floating-focus-manager` | `enabled`, `modal`, `initial-focus`, `return-focus`, `outside-elements-inert` | Connects focus trapping, focus restoration, and inert outside elements |
 | `floating-arrow` | `width`, `height`, `static-offset`, `rotation` | Registers arrow geometry and renders the default or slotted SVG |
 | `floating-transition` | No required attributes | Reflects the nearest root's open/close state as `data-status` for CSS |
-| `floating-combobox` | `name`, `required`, `disabled`, `input-selector`, `item-label-key`, `option-id-prefix`, `status-selector`; properties `search`, `getItemKey`, `getItemValue`, `getItemLabel`, `selectedItem`, `configure()` | Form-associated editable combobox with search, virtual focus, selection, status, and combobox ARIA |
+| `floating-combobox` | `name`, `required`, `disabled`, `input-selector`, `item-label-key`, `option-id-prefix`, `query-trigger-selector`, `status-selector`; properties `search`, `getItemKey`, `getItemValue`, `getItemLabel`, `selectedItem`, `configure()` | Form-associated editable combobox with search, virtual focus, selection, status, query presets, and combobox ARIA |
 | `floating-search` | Native phase templates and `data-search-text` bindings | Repeats result templates and automatically supplies list-item labels and values |
 
 `floating-root` also exposes `controller`, `referenceElement`,
 `floatingElement`, and `contentTemplate` properties for imperative integration.
 Use `root.configure({middleware, plugins})` to set application-owned function
 values together, or `root.use(...plugins)` to append long-lived plugins.
+Use `FloatingRootElement.query(scope, selector)` for a checked, typed lookup,
+`root.on(type, listener)` for an own-root subscription with cleanup, and
+`root.close(event, reason)` to dismiss through the controller contract.
 `openchange` has the shape `{open, reason, sourceEvent}` and is composed across
 shadow boundaries.
 
@@ -291,6 +294,12 @@ disconnected. The editable input intentionally stays outside
 keeps keyboard focus on the input while `aria-activedescendant` identifies the
 active option. `<floating-root>` still owns placement and the application still
 decides how every result looks.
+
+For declarative query presets outside the result list, set
+`query-trigger-selector` to a selector in the same document or shadow root and
+put the query in each matching button's `value`. Clicking a preset updates the
+query, opens the results, and returns focus to the input. Do not wrap presets
+in `<floating-list-item>`: list items are selectable result options.
 
 `data-search-text="label"` reads an item field. `$query`, `$index`, `$count`,
 and `$error` expose search metadata. For lower-level direct DOM integrations,

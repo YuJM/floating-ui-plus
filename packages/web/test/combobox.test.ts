@@ -144,6 +144,18 @@ describe('ComboboxController', () => {
     expect(onSelect).toHaveBeenCalledWith(beta, expect.any(MouseEvent));
   });
 
+  test('activates an external query preset and restores input focus', () => {
+    const {combobox, input, onOpenChange, search} = setup();
+    const event = new MouseEvent('click');
+
+    combobox.activateQuery('alpah', event);
+
+    expect(input.value).toBe('alpah');
+    expect(search.query).toBe('alpah');
+    expect(document.activeElement).toBe(input);
+    expect(onOpenChange).toHaveBeenCalledWith(true, event, undefined);
+  });
+
   test('keeps non-Latin item keys distinct in option ids', () => {
     const search = createSearch({
       items: [

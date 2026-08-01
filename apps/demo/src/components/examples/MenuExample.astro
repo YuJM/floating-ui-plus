@@ -23,8 +23,7 @@ import {MENU_LABELS} from '../../example-data';
           Open navigator <span aria-hidden="true">⌄</span>
         </button>
       </floating-reference>
-      <floating-portal>
-        <template slot="content" data-menu-content>
+      <template slot="content" data-menu-content>
           <div class="menu-panel">
             <div class="menu-heading">
               <span>Jump to a field</span>
@@ -53,8 +52,7 @@ import {MENU_LABELS} from '../../example-data';
               }
             </floating-list>
           </div>
-        </template>
-      </floating-portal>
+      </template>
     </floating-root>
   </div>
   <code>&lt;floating-list navigation typeahead item-selector="…" /&gt;</code>
@@ -62,38 +60,17 @@ import {MENU_LABELS} from '../../example-data';
 
 <script>
   import {
+    FloatingRootElement,
     flip,
     offset,
     shift,
   } from '@floating-ui-plus/web-components';
-  import {
-    emitExampleAction,
-    floatingRoot,
-    floatingTemplate,
-    initializeExample,
-    onFloatingTemplateMount,
-    onFloatingOpenChange,
-  } from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('menu', (scope) => {
-    const floating = floatingRoot(scope, '[data-menu-root]');
-    const template = floatingTemplate(scope, '[data-menu-content]');
-    floating.middleware = [offset(8), flip(), shift({padding: 18})];
-    onFloatingTemplateMount(template, (element) => {
-      element.addEventListener('click', (event) => {
-        if (!(event.target instanceof Element)) return;
-        const item = event.target.closest<HTMLElement>('[data-menu-item]');
-        if (!item || !element.contains(item)) return;
-        emitExampleAction(scope, `${item.dataset.label} selected`);
-      });
-    });
-    onFloatingOpenChange(floating, ({open}) => {
-      emitExampleAction(
-        scope,
-        open
-          ? 'Menu opened · arrows and typeahead are active'
-          : 'Menu closed',
-      );
+    const floating = FloatingRootElement.query(scope, '[data-menu-root]');
+    floating.configure({
+      middleware: [offset(8), flip(), shift({padding: 18})],
     });
   });
 </script>

@@ -162,6 +162,12 @@ export class ComboboxController<T> {
     this.search.setQuery(query);
   }
 
+  /** Applies an external query preset and restores focus to the bound input. */
+  activateQuery(query: string, event?: Event) {
+    this.setQuery(query, event);
+    this.#input?.focus({preventScroll: true});
+  }
+
   select(item: T, event?: Event) {
     this.setSelectedItem(item);
     const label = this.#options.getItemLabel(item);

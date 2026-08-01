@@ -96,6 +96,7 @@
 
 <script>
   import {
+    FloatingRootElement,
     click,
     dismiss,
     flip,
@@ -103,17 +104,11 @@
     role,
     shift,
   } from '@floating-ui-plus/web-components';
-  import {
-    configureFloating,
-    emitExampleAction,
-    floatingRoot,
-    initializeExample,
-    onFloatingOpenChange,
-  } from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('modal', (scope) => {
-    const floating = floatingRoot(scope, '[data-modal-root]');
-    configureFloating(floating, {
+    const floating = FloatingRootElement.query(scope, '[data-modal-root]');
+    floating.configure({
       middleware: [offset(20), shift({padding: 24})],
       plugins: [
         click(),
@@ -122,12 +117,21 @@
         role({role: 'dialog'}),
       ],
     });
-    const tooltip = floatingRoot(scope, '[data-modal-tooltip-root]');
-    const popover = floatingRoot(scope, '[data-modal-popover-root]');
-    const nestedModal = floatingRoot(scope, '[data-nested-modal-root]');
+    const tooltip = FloatingRootElement.query(
+      scope,
+      '[data-modal-tooltip-root]',
+    );
+    const popover = FloatingRootElement.query(
+      scope,
+      '[data-modal-popover-root]',
+    );
+    const nestedModal = FloatingRootElement.query(
+      scope,
+      '[data-nested-modal-root]',
+    );
     tooltip.middleware = [offset(12), flip(), shift({padding: 12})];
     popover.middleware = [offset(12), flip(), shift({padding: 18})];
-    configureFloating(nestedModal, {
+    nestedModal.configure({
       middleware: [offset(20), shift({padding: 24})],
       plugins: [
         click(),
@@ -136,11 +140,5 @@
       ],
     });
 
-    onFloatingOpenChange(floating, ({open}) => {
-      emitExampleAction(
-        scope,
-        open ? 'Modal trap activated' : 'Modal closed and focus restored',
-      );
-    });
   });
 </script>

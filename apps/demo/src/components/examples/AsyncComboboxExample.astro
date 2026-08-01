@@ -33,8 +33,7 @@
               placeholder="Try seoul, japan, china…"
             />
           </floating-reference>
-          <floating-portal>
-            <template slot="content">
+          <template slot="content">
               <div
                 class="combobox-popup async-combobox-popup"
                 aria-label="Remote destination suggestions"
@@ -82,8 +81,7 @@
                   </template>
                 </floating-search>
               </div>
-            </template>
-          </floating-portal>
+          </template>
           <p
             id="remote-combobox-status"
             class="sr-only"
@@ -109,24 +107,27 @@
 
 <script>
   import {
+    FloatingRootElement,
     createAsyncSearchSource,
     dismiss,
     flip,
     offset,
     shift,
     type FloatingComboboxElement,
-    type FloatingComboboxSelectDetail,
   } from '@floating-ui-plus/web-components';
   import type {MultilingualDestination} from '../../multilingual-destinations';
   import {searchDestinationsOnServer} from '../../server-destination-search';
-  import {emitExampleAction, initializeExample} from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('async-combobox', (scope) => {
-    const floating = scope.querySelector('floating-root');
+    const floating = FloatingRootElement.query(
+      scope,
+      '[data-async-combobox-root]',
+    );
     const combobox = scope.querySelector<FloatingComboboxElement>(
       '[data-async-combobox]',
     );
-    if (!floating || !combobox) return;
+    if (!combobox) return;
 
     combobox.configure<MultilingualDestination>({
       search: {
@@ -152,14 +153,6 @@
     floating.configure({
       middleware: [offset(8), flip(), shift({padding: 18})],
       plugins: [dismiss()],
-    });
-    combobox.addEventListener('comboboxselect', (event) => {
-      const {item} = (event as CustomEvent<FloatingComboboxSelectDetail>)
-        .detail;
-      emitExampleAction(
-        scope,
-        `${(item as MultilingualDestination).label} selected from server search`,
-      );
     });
   });
 </script>

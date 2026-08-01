@@ -276,11 +276,13 @@ The controller's small lifecycle surface is deliberate:
 | `setControlledState(state)` | Feed results owned by another data-fetching library |
 | `connect()` / `disconnect()` / `destroy()` | Pause requests or release the controller lifecycle |
 
-`ComboboxController` exposes `setQuery()`, `select()`, `setActiveIndex()`,
+`ComboboxController` exposes `setQuery()`, `activateQuery()`, `select()`, `setActiveIndex()`,
 `getInputProps()`, `getOptionProps()`, `getNavigationOptions()`, `bindInput()`,
 `bindOption()`, and `setListElements()`. Framework renderers should bind the
 prop-returning methods declaratively; direct DOM and Custom Element adapters
-can use the imperative binding helpers.
+can use the imperative binding helpers. `activateQuery()` is intended for
+external query presets: it updates the query, opens the surface, and restores
+focus to the bound input without treating the preset as a result option.
 
 `getItemValue(item)` returns the stable value for form submission and defaults
 to the item key, so a consumer can keep a human-readable label separate from

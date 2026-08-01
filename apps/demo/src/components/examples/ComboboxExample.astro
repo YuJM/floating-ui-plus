@@ -21,6 +21,7 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
         <floating-combobox
           data-combobox
           option-id-prefix="destination-option"
+          query-trigger-selector="#combobox-hints [data-search-sample]"
         >
           <floating-reference>
             <input
@@ -33,8 +34,7 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
               placeholder="Search city or country…"
             />
           </floating-reference>
-          <floating-portal>
-            <template slot="content" data-combobox-content>
+          <template slot="content" data-combobox-content>
               <div
                 class="combobox-popup"
                 data-combobox-popup
@@ -86,8 +86,7 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
                   </template>
                 </floating-search>
               </div>
-            </template>
-          </floating-portal>
+          </template>
           <p
             id="combobox-status"
             class="sr-only"
@@ -105,7 +104,7 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
   <div id="combobox-hints" class="combobox-hints">
     {
       multilingualSearchPrompts.map(([sample, destination]) => (
-        <button type="button" data-search-sample={sample}>
+        <button type="button" value={sample} data-search-sample={sample}>
           <code>{sample}</code><span>→ {destination}</span>
         </button>
       ))
@@ -123,30 +122,30 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
 
 <script>
   import {
+    FloatingRootElement,
     createFuzzySearchSource,
     dismiss,
     flip,
     offset,
     shift,
     type FloatingComboboxElement,
-    type FloatingComboboxSelectDetail,
   } from '@floating-ui-plus/web-components';
   import {
     multilingualDestinations,
     multilingualSearchKeys,
     type MultilingualDestination,
   } from '../../multilingual-destinations';
-  import {
-    emitExampleAction,
-    initializeExample,
-  } from './example-client';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('combobox', (scope) => {
-    const floating = scope.querySelector('floating-root');
+    const floating = FloatingRootElement.query(
+      scope,
+      '[data-combobox-root]',
+    );
     const combobox = scope.querySelector<FloatingComboboxElement>(
       '[data-combobox]',
     );
-    if (!floating || !combobox) return;
+    if (!combobox) return;
 
     combobox.configure<MultilingualDestination>({
       search: {
@@ -176,23 +175,5 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
       plugins: [dismiss()],
     });
 
-    combobox.addEventListener('comboboxselect', (event) => {
-      const {item} = (event as CustomEvent<FloatingComboboxSelectDetail>)
-        .detail;
-      emitExampleAction(
-        scope,
-        `${(item as MultilingualDestination).label} selected`,
-      );
-    });
-    const input = scope.querySelector<HTMLInputElement>('#destination-search');
-    scope
-      .querySelectorAll<HTMLButtonElement>('[data-search-sample]')
-      .forEach((button) => {
-        button.addEventListener('mousedown', (event) => event.preventDefault());
-        button.addEventListener('click', (event) => {
-          combobox.setQuery(button.dataset.searchSample ?? '', event);
-          input?.focus({preventScroll: true});
-        });
-      });
   });
 </script>

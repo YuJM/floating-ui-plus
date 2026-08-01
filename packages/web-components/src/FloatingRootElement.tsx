@@ -34,6 +34,14 @@ export interface FloatingTemplateLifecycleDetail {
   element: HTMLElement;
 }
 
+export interface FloatingRootEventDetailMap {
+  openchange: FloatingOpenChangeDetail;
+  floatingmount: FloatingTemplateLifecycleDetail;
+  floatingunmount: FloatingTemplateLifecycleDetail;
+}
+
+export type FloatingRootEventType = keyof FloatingRootEventDetailMap;
+
 export interface FloatingRootConfiguration {
   middleware?: FloatingOptions['middleware'];
   plugins?: FloatingPlugin[] | undefined;
@@ -155,6 +163,14 @@ export class FloatingRootElement extends FloatingRootBase {
     return this.updated;
   }
 
+  static query(scope: ParentNode, selector: string) {
+    const element = scope.querySelector(selector);
+    if (!(element instanceof FloatingRootElement)) {
+      throw new Error(`Missing FloatingRootElement for ${selector}`);
+    }
+    return element;
+  }
+
   get middleware() {
     return this.#middleware;
   }
@@ -207,6 +223,30 @@ export class FloatingRootElement extends FloatingRootBase {
       this.topLayer = configuration.topLayer;
     }
     return this;
+  }
+
+  on<Type extends FloatingRootEventType>(
+    type: Type,
+    listener: (detail: FloatingRootEventDetailMap[Type]) => void,
+  ) {
+    const handleEvent = (event: Event) => {
+      const customEvent = event as CustomEvent<
+        FloatingRootEventDetailMap[Type]
+      >;
+      if (type === 'openchange') {
+        if (event.target !== this) return;
+      } else {
+        const detail = customEvent.detail as FloatingTemplateLifecycleDetail;
+        if (detail.root !== this) return;
+      }
+      listener(customEvent.detail);
+    };
+    this.addEventListener(type, handleEvent);
+    return () => this.removeEventListener(type, handleEvent);
+  }
+
+  close(event?: Event, reason?: OpenChangeReason) {
+    this.controller.context.onOpenChange(false, event, reason);
   }
 
   setPositionReference(reference: ReferenceElement | null) {

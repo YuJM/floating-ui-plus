@@ -30,24 +30,18 @@
 </article>
 
 <script>
-  import {flip, offset, shift} from '@floating-ui-plus/web-components';
   import {
-    emitExampleAction,
-    floatingRoot,
-    initializeExample,
-    onFloatingOpenChange,
-  } from './example-client';
+    FloatingRootElement,
+    flip,
+    offset,
+    shift,
+  } from '@floating-ui-plus/web-components';
+  import {initializeExample} from './initialize-example';
 
   initializeExample('popover', (scope) => {
-    const floating = floatingRoot(scope, '[data-popover-root]');
-    floating.middleware = [offset(12), flip(), shift({padding: 18})];
-    onFloatingOpenChange(floating, ({open}) => {
-      emitExampleAction(
-        scope,
-        open
-          ? 'Popover opened from its custom element'
-          : 'Popover dismissed',
-      );
+    const floating = FloatingRootElement.query(scope, '[data-popover-root]');
+    floating.configure({
+      middleware: [offset(12), flip(), shift({padding: 18})],
     });
   });
 </script>

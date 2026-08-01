@@ -96,6 +96,11 @@ test('menu starts roving focus at the first item after opening with a pointer', 
   await trigger.press('ArrowDown');
 
   await expect(firstItem).toBeFocused();
+  expect(
+    await firstItem.evaluate((element) =>
+      Boolean(element.closest('floating-portal-target')),
+    ),
+  ).toBe(false);
   await expect(secondItem).not.toBeFocused();
   await firstItem.press('s');
   await expect(signalItem).toBeFocused();
@@ -270,6 +275,9 @@ test('tooltip component opens from hover or keyboard focus and dismisses cleanly
 
   await trigger.focus();
   await expect(tooltip).toBeVisible();
+  await expect
+    .poll(() => tooltip.evaluate((element) => getComputedStyle(element).overflow))
+    .toBe('visible');
   await trigger.press('Escape');
   await expect(tooltip).toBeHidden();
 
@@ -299,6 +307,11 @@ test('cursor signal follows the pointer virtual reference', async ({page}) => {
   await page.mouse.move(pointer.x, pointer.y);
   const tooltip = page.getByRole('tooltip');
   await expect(tooltip).toBeVisible();
+  expect(
+    await tooltip.evaluate((element) =>
+      Boolean(element.closest('floating-portal-target')),
+    ),
+  ).toBe(false);
   const label = (await field.textContent())!.match(/(\d+) × (\d+)/);
   expect(label).not.toBeNull();
   expect(
@@ -620,6 +633,11 @@ test('multilingual combobox keeps input focus and renders results', async ({
   await expect(option).toBeVisible();
   const popup = page.locator('[data-combobox-popup]');
   await expect(popup).toHaveCSS('position', 'absolute');
+  expect(
+    await popup.evaluate((element) =>
+      Boolean(element.closest('floating-portal-target')),
+    ),
+  ).toBe(false);
 
   await input.press('ArrowDown');
   await expect(input).toBeFocused();
@@ -663,6 +681,11 @@ test('async server combobox renders loading and ignores stale requests', async (
   await expect(popup.getByText('Querying remote endpoint…')).toBeVisible();
   await input.fill('bei');
   await expect(popup.getByRole('option', {name: /^北京/})).toBeVisible();
+  expect(
+    await popup.evaluate((element) =>
+      Boolean(element.closest('floating-portal-target')),
+    ),
+  ).toBe(false);
   await expect(popup.getByRole('option', {name: /^서울/})).toHaveCount(0);
 
   await input.fill('no-remote-match');

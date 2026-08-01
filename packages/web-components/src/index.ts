@@ -31,6 +31,8 @@ export {
 export {
   FloatingRootElement,
   type FloatingRootConfiguration,
+  type FloatingRootEventDetailMap,
+  type FloatingRootEventType,
   type FloatingOpenChangeDetail,
   type FloatingTemplateLifecycleDetail,
 } from './FloatingRootElement';
