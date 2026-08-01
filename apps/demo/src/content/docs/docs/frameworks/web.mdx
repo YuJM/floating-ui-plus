@@ -7,11 +7,13 @@ description: Use framework-neutral Floating UI Plus controllers with your own re
 your renderer owns elements, markup, ARIA names, styles, and presence.
 
 ```ts
+import { createFloating, click, dismiss, role } from "@floating-ui-plus/web";
+
 const floating = createFloating(() => ({
   open,
   onBeforeClose: (_event, reason) => canClose(reason),
   onOpenChange: setOpen,
-})).pipe(click(), dismiss(), role({role: 'dialog'}));
+})).pipe(click(), dismiss(), role({ role: "dialog" }));
 ```
 
 Use `createFloatingTopLayer()` for a native Popover or `<dialog>` without

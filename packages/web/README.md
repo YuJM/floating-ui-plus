@@ -34,7 +34,7 @@ import {
   hover,
   offset,
   role,
-} from '@floating-ui-plus/web';
+} from "@floating-ui-plus/web";
 
 let open = false;
 
@@ -46,7 +46,7 @@ const tooltip = createFloating(() => ({
   },
   middleware: [offset(6)],
   whileElementsMounted: autoUpdate,
-})).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
+})).pipe(hover(), focus(), dismiss(), role({ role: "tooltip" }));
 
 tooltip.setReference(button);
 tooltip.setFloating(panel);
@@ -68,7 +68,12 @@ styles and attributes in your renderer.
 roles, active descendant, virtual list navigation, and Enter activation.
 
 ```ts
-import {createFloating, createQuery, createSearch, dismiss} from '@floating-ui-plus/web';
+import {
+  createFloating,
+  createQuery,
+  createSearch,
+  dismiss,
+} from "@floating-ui-plus/web";
 
 let open = false;
 
@@ -93,12 +98,12 @@ const query = createQuery({
   onActivate: (item) => navigateTo(item),
 });
 
-floating.pipe(dismiss(), ...query.interactions({loop: true}));
+floating.pipe(dismiss(), ...query.interactions({ loop: true }));
 
 query.bindInput(input);
 query.setListElements(optionElements);
 optionElements.forEach((element, index) => {
-  query.bindOption(element, search.items[index], index);
+  query.bindOption(element, search.items[index]!, index);
 });
 
 // Dispose both owners when the rendered surface is removed.
@@ -130,9 +135,9 @@ autocomplete, filters, and command palettes decide what activation means.
 Import focused modules when useful:
 
 ```ts
-import {createQuery} from '@floating-ui-plus/web/query';
-import {createSearch} from '@floating-ui-plus/web/search';
-import {createFuzzySearchSource} from '@floating-ui-plus/web/fuzzy';
+import { createQuery } from "@floating-ui-plus/web/query";
+import { createSearch } from "@floating-ui-plus/web/search";
+import { createFuzzySearchSource } from "@floating-ui-plus/web/fuzzy";
 ```
 
 ## Compatibility

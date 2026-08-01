@@ -3,7 +3,7 @@ title: Web Components and Vue
 description: Use the same Floating UI Plus contract from Custom Elements or Vue.
 ---
 
-import {Tabs, TabItem} from '@astrojs/starlight/components';
+import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 The Web Components and Vue packages expose the same interaction model. Choose
 the tab that matches your renderer; the close contract, native top-layer rules,
@@ -44,13 +44,13 @@ Register the elements once, then compose a root-owned template:
 ```
 
 ```ts
-import '@floating-ui-plus/web-components';
-import {flip, offset, shift} from '@floating-ui-plus/web';
-import type {FloatingRootElement} from '@floating-ui-plus/web-components';
+import "@floating-ui-plus/web-components";
+import { flip, offset, shift } from "@floating-ui-plus/web";
+import type { FloatingRootElement } from "@floating-ui-plus/web-components";
 
-const root = document.querySelector<FloatingRootElement>('floating-root')!;
-root.middleware = [offset(8), flip(), shift({padding: 12})];
-root.addEventListener('openchange', ({detail}) => {
+const root = document.querySelector<FloatingRootElement>("floating-root")!;
+root.middleware = [offset(8), flip(), shift({ padding: 12 })];
+root.addEventListener("openchange", ({ detail }) => {
   console.log(detail.open, detail.reason, detail.sourceEvent);
 });
 ```
@@ -66,7 +66,7 @@ Use the component layer when descendants should receive the controller:
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue';
+import { ref } from "vue";
 import {
   FloatingClose,
   FloatingContent,
@@ -76,11 +76,11 @@ import {
   dismiss,
   offset,
   role,
-} from '@floating-ui-plus/vue';
+} from "@floating-ui-plus/vue";
 
 const open = ref(false);
-const plugins = [click(), dismiss(), role({role: 'dialog'})];
-const options = {placement: 'bottom-start', middleware: [offset(8)]};
+const plugins = [click(), dismiss(), role({ role: "dialog" })];
+const options = { placement: "bottom-start", middleware: [offset(8)] };
 </script>
 
 <template>
@@ -129,7 +129,10 @@ the browser use Popover. For a modal, use a real dialog element:
 <TabItem label="Vue">
 
 ```vue
-<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+<FloatingRoot
+  v-model:open="open"
+  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+>
   <FloatingReference>Open account</FloatingReference>
   <FloatingContent as="dialog" aria-labelledby="account-title">
     <h2 id="account-title">Account settings</h2>
@@ -156,7 +159,7 @@ commands, and every close path runs the same synchronous before-close guard.
 <TabItem label="Web Components">
 
 ```ts
-root.addEventListener('floatingbeforeclose', (event) => {
+root.addEventListener("floatingbeforeclose", (event) => {
   if (hasUnsavedChanges()) {
     event.preventDefault();
     return;
@@ -165,7 +168,7 @@ root.addEventListener('floatingbeforeclose', (event) => {
 });
 
 // Imperative close; keep the source event when one exists.
-root.close(clickEvent, 'click');
+root.close(clickEvent, "click");
 ```
 
 `preventDefault()` keeps `open` unchanged and suppresses `openchange`.
@@ -210,21 +213,25 @@ cursor pagination; each renderer owns the phase markup.
 <TabItem label="Web Components">
 
 ```html
-<floating-root interactions="click dismiss" floating-role="listbox">
-  <floating-query>
-    <floating-reference>
-      <input aria-label="Destination" />
-    </floating-reference>
-    <template slot="content">
-      <floating-search>
-        <template data-search-state="loading">Searching…</template>
-        <template data-search-state="empty">No matches</template>
-        <template data-search-state="results">
-          <floating-list-item data-search-text="label"></floating-list-item>
-        </template>
-      </floating-search>
-    </template>
-  </floating-query>
+<floating-root placement="bottom-start">
+  <floating-list navigation loop allow-escape>
+    <floating-query>
+      <floating-reference>
+        <input aria-label="Destination" />
+      </floating-reference>
+      <template slot="content">
+        <floating-search>
+          <template data-search-loading>Searching…</template>
+          <template data-search-empty>No matches</template>
+          <template data-search-result>
+            <floating-list-item>
+              <button type="button" data-search-text="label"></button>
+            </floating-list-item>
+          </template>
+        </floating-search>
+      </template>
+    </floating-query>
+  </floating-list>
 </floating-root>
 ```
 
@@ -236,21 +243,29 @@ for a command palette or `semantics="none"` when the renderer owns ARIA.
 <TabItem label="Vue">
 
 ```vue
-<FloatingRoot v-model:open="open" :plugins="[dismiss(), rolePlugin]">
-  <FloatingList v-model:active-index="activeIndex" navigation loop>
-    <FloatingReference as="input" v-bind="inputProps" />
+<FloatingRoot
+  v-model:open="query.open"
+  :plugins="[dismiss(), query.rolePlugin]"
+>
+  <FloatingList
+    v-model:active-index="query.activeIndex"
+    navigation
+    loop
+    :navigation-options="query.getNavigationOptions({allowEscape: true})"
+  >
+    <FloatingReference as="input" v-bind="query.inputProps" />
     <FloatingContent>
       <FloatingSearch :search="search">
         <template #loading>Searching…</template>
         <template #empty>No matches</template>
         <template #results>
           <FloatingListItem
-            v-for="(item, index) in search.items"
+            v-for="(item, index) in search.items.value"
             :key="item.id"
             tag="button"
             :label="item.label"
             :value="item"
-            v-bind="getOptionProps(item, index)"
+            v-bind="query.getOptionProps(item, index)"
           >{{ item.label }}</FloatingListItem>
         </template>
       </FloatingSearch>

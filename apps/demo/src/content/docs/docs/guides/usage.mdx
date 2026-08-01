@@ -3,8 +3,8 @@ title: Usage recipes
 description: Complete usage recipes for the Web, Web Components, and Vue adapters.
 ---
 
-import {PackageManagers} from 'starlight-package-managers';
-import {Tabs, TabItem} from '@astrojs/starlight/components';
+import { PackageManagers } from "starlight-package-managers";
+import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 This page contains the longer recipes that do not fit well in a package
 README. It focuses on composition and renderer decisions.
@@ -31,7 +31,7 @@ bun add @floating-ui-plus/web-components
 ```
 
 ```ts
-import '@floating-ui-plus/web-components';
+import "@floating-ui-plus/web-components";
 ```
 
 Register the elements once on the client. Importing during SSR is safe; DOM
@@ -67,7 +67,7 @@ import {
   hover,
   offset,
   role,
-} from '@floating-ui-plus/web';
+} from "@floating-ui-plus/web";
 
 let open = false;
 const tooltip = createFloating(() => ({
@@ -78,7 +78,7 @@ const tooltip = createFloating(() => ({
   },
   middleware: [offset(6)],
   whileElementsMounted: autoUpdate,
-})).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
+})).pipe(hover(), focus(), dismiss(), role({ role: "tooltip" }));
 
 tooltip.setReference(button);
 tooltip.setFloating(panel);
@@ -111,25 +111,39 @@ Use `useFloating()` when your component owns the refs directly:
 
 ```vue
 <script setup lang="ts">
-import {ref} from 'vue';
+import { ref } from "vue";
 import {
-  autoUpdate, dismiss, focus, hover, offset, role, useFloating, vFloating,
-} from '@floating-ui-plus/vue';
+  autoUpdate,
+  dismiss,
+  focus,
+  hover,
+  offset,
+  role,
+  useFloating,
+  vFloating,
+} from "@floating-ui-plus/vue";
 
 const open = ref(false);
 const reference = ref<HTMLElement | null>(null);
 const panel = ref<HTMLElement | null>(null);
 const tooltip = useFloating(reference, panel, {
   open,
-  onOpenChange: (next) => { open.value = next; },
+  onOpenChange: (next) => {
+    open.value = next;
+  },
   middleware: [offset(6)],
   whileElementsMounted: autoUpdate,
-}).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
+}).pipe(hover(), focus(), dismiss(), role({ role: "tooltip" }));
 </script>
 
 <template>
   <button ref="reference" v-bind="tooltip.referenceAttrs">Help</button>
-  <div v-if="open" ref="panel" v-floating="tooltip" v-bind="tooltip.floatingAttrs">
+  <div
+    v-if="open"
+    ref="panel"
+    v-floating="tooltip"
+    v-bind="tooltip.floatingAttrs"
+  >
     Describes the control.
   </div>
 </template>
@@ -150,15 +164,18 @@ tree. Use a portal only when the element must move to a body-level target.
 <TabItem label="Web">
 
 ```ts
-import {createFloatingTopLayer, supportsFloatingTopLayer} from '@floating-ui-plus/web';
+import {
+  createFloatingTopLayer,
+  supportsFloatingTopLayer,
+} from "@floating-ui-plus/web";
 
-const topLayer = createFloatingTopLayer({onOpenChange: setOpen});
-topLayer.setKind('popover'); // Use 'dialog' for an HTMLDialogElement.
+const topLayer = createFloatingTopLayer({ onOpenChange: setOpen });
+topLayer.setKind("popover"); // Use 'dialog' for an HTMLDialogElement.
 topLayer.setElement(panel);
 topLayer.connect();
 
 function render() {
-  if (supportsFloatingTopLayer('popover')) topLayer.sync(open);
+  if (supportsFloatingTopLayer("popover")) topLayer.sync(open);
   else renderPositionedFallback();
 }
 ```
@@ -199,13 +216,19 @@ not needed for the normal template or native dialog composition.
 
 ```vue
 <!-- Anchored Popover: keep FloatingContent in the root tree. -->
-<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+<FloatingRoot
+  v-model:open="open"
+  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+>
   <FloatingReference>Open settings</FloatingReference>
   <FloatingContent>Settings <FloatingClose>Close</FloatingClose></FloatingContent>
 </FloatingRoot>
 
 <!-- Modal dialog: use the native element. -->
-<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+<FloatingRoot
+  v-model:open="open"
+  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+>
   <FloatingReference>Open account</FloatingReference>
   <FloatingContent as="dialog" aria-label="Account settings">
     Account settings <FloatingClose>Close</FloatingClose>
@@ -255,7 +278,10 @@ should dismiss its owner.
 <TabItem label="Vue">
 
 ```vue
-<FloatingRoot v-model:open="open" :plugins="[click(), dismiss(), role({role: 'dialog'})]">
+<FloatingRoot
+  v-model:open="open"
+  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+>
   <FloatingReference>Open</FloatingReference>
   <FloatingPortal>
     <FloatingOverlay :lock-scroll="true">
@@ -290,13 +316,16 @@ renderer should provide `idle`, `loading`,
 <TabItem label="Web">
 
 ```ts
-import {createQuery} from '@floating-ui-plus/web/query';
-import {createSearch} from '@floating-ui-plus/web/search';
+import { createQuery } from "@floating-ui-plus/web/query";
+import { createSearch } from "@floating-ui-plus/web/search";
 
 const search = createSearch({
-  source: async ({query, signal, cursor}) => {
-    const response = await fetch(`/api/products?q=${encodeURIComponent(query)}&cursor=${cursor ?? ''}`, {signal});
-    if (!response.ok) throw new Error('Search failed');
+  source: async ({ query, signal, cursor }) => {
+    const response = await fetch(
+      `/api/products?q=${encodeURIComponent(query)}&cursor=${cursor ?? ""}`,
+      { signal },
+    );
+    if (!response.ok) throw new Error("Search failed");
     return response.json(); // {items, total?, nextCursor?}
   },
   getItemKey: (item) => item.id,
@@ -308,9 +337,14 @@ const query = createQuery({
   onActivate: (item) => openProduct(item),
 });
 
-input.replaceWith(Object.assign(input, query.getInputProps()));
-query.bindOption(option, search.items[0]!, 0);
+const unbindInput = query.bindInput(input);
+query.setListElements([option]);
+const unbindOption = query.bindOption(option, search.items[0]!, 0);
 await search.loadMore();
+
+// Dispose the bindings with the rendered view.
+unbindOption();
+unbindInput();
 ```
 
 Use `createFuzzySearchSource()` for local collections. For data owned by a
@@ -323,14 +357,18 @@ query library, omit `source` and push state through `setControlledState()`.
 <floating-root placement="bottom-start">
   <floating-list navigation loop allow-escape>
     <floating-query data-destination-query>
-      <floating-reference><input aria-label="Destination" /></floating-reference>
+      <floating-reference
+        ><input aria-label="Destination"
+      /></floating-reference>
       <template slot="content">
         <floating-search>
           <template data-search-loading>Searching…</template>
           <template data-search-error>Search failed</template>
           <template data-search-empty>No matches</template>
           <template data-search-result>
-            <floating-list-item><span data-search-text="label"></span></floating-list-item>
+            <floating-list-item
+              ><span data-search-text="label"></span
+            ></floating-list-item>
           </template>
           <template data-search-more>
             <button data-search-load-more>Load more</button>
@@ -352,9 +390,17 @@ selected-value form behavior is specifically required.
 <TabItem label="Vue">
 
 ```vue
-<FloatingRoot v-model:open="open" :plugins="[dismiss(), rolePlugin]">
-  <FloatingList v-model:active-index="activeIndex" navigation loop>
-    <FloatingReference as="input" v-bind="inputProps" />
+<FloatingRoot
+  v-model:open="query.open"
+  :plugins="[dismiss(), query.rolePlugin]"
+>
+  <FloatingList
+    v-model:active-index="query.activeIndex"
+    navigation
+    loop
+    :navigation-options="query.getNavigationOptions({allowEscape: true})"
+  >
+    <FloatingReference as="input" v-bind="query.inputProps" />
     <FloatingContent>
       <FloatingSearch :search="search">
         <template #loading>Searching…</template>
@@ -362,12 +408,12 @@ selected-value form behavior is specifically required.
         <template #empty>No matches</template>
         <template #results>
           <FloatingListItem
-            v-for="(item, index) in search.items"
+            v-for="(item, index) in search.items.value"
             :key="item.id"
             tag="button"
             :label="item.label"
             :value="item"
-            v-bind="getOptionProps(item, index)"
+            v-bind="query.getOptionProps(item, index)"
           >{{ item.label }}</FloatingListItem>
         </template>
       </FloatingSearch>
@@ -402,7 +448,7 @@ const floating = createFloating(() => ({
   onOpenChange: setOpen,
 }));
 
-floating.context.onOpenChange(false, sourceEvent, 'escape');
+floating.context.onOpenChange(false, sourceEvent, "escape-key");
 ```
 
 Return `false` to keep the surface open. Opening is never blocked.
@@ -411,11 +457,11 @@ Return `false` to keep the surface open. Opening is never blocked.
 <TabItem label="Web Components">
 
 ```ts
-root.addEventListener('floatingbeforeclose', (event) => {
+root.addEventListener("floatingbeforeclose", (event) => {
   if (hasUnsavedChanges()) event.preventDefault();
 });
 
-root.close(clickEvent, 'click');
+root.close(clickEvent, "click");
 ```
 
 `preventDefault()` suppresses `openchange` and preserves the current `open`
