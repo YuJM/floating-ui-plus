@@ -159,9 +159,10 @@ selection, or grid options. For fully custom behavior, compose
 query library, pass controlled `items`, `loading`, and `error` values to
 `useSearch()`.
 
-`createSearchRenderer()` is re-exported for a direct-DOM island in a Vue
-application, but normal Vue components should render the same `phase` with
-their native template branches.
+`<FloatingSearch :search="search">` is the Vue-native phase router. It renders
+the matching named `idle`, `loading`, `error`, `empty`, or `results` slot while
+leaving each slot's markup, ARIA, and copy in the component. Use
+`createSearchRenderer()` only for a direct-DOM island, not a normal Vue tree.
 
 `useCombobox()` also returns `selectedValue`, which follows the shared
 `getItemValue()` contract. Bind it to a hidden native input when the selection
@@ -170,6 +171,11 @@ belongs to a standard form:
 ```vue
 <input type="hidden" name="destination" :value="selectedValue ?? ''" />
 ```
+
+Pass a phase-keyed `status` map to `useCombobox()` and bind `statusText` to a
+live region to share the same status resolution as Web Components. Bind a
+preset button with `getQueryTriggerProps(query)` to apply the query and return
+focus to the input without hand-written mouse handlers.
 
 ## Nested menus and keyboard collections
 

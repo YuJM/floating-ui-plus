@@ -115,7 +115,10 @@ IME wiring, active-option ARIA, Enter selection, and virtual list navigation.
 Your UI still owns markup and result rendering.
 
 ```ts
-import {createCombobox} from '@floating-ui-plus/web/combobox';
+import {
+  createCombobox,
+  createComboboxStatusFormatter,
+} from '@floating-ui-plus/web/combobox';
 import {createAsyncSearchSource, createSearch} from '@floating-ui-plus/web/search';
 
 const source = createAsyncSearchSource<Product>({
@@ -143,15 +146,31 @@ const combobox = createCombobox({
   onOpenChange: setOpen,
 });
 
+const formatStatus = createComboboxStatusFormatter({
+  closed: 'Suggestions closed',
+  selected: (item) => `${item.name} selected`,
+  idle: 'Start typing to search',
+  loading: 'Searching products',
+  error: 'Product search failed',
+  empty: ({search}) => `No product found for ${search.query}`,
+  results: ({search}) => `${search.items.length} products available`,
+});
+
 // Framework adapters bind these objects to their input, options, and list.
 const inputProps = combobox.getInputProps();
 const optionProps = combobox.getOptionProps(search.items[0]!, 0);
 const navigationOptions = combobox.getNavigationOptions({loop: true});
+const queryTriggerProps = combobox.getQueryTriggerProps('laptop');
 
 // Direct DOM consumers can use the equivalent imperative helpers.
 combobox.bindInput(input);
 floating.pipe(...combobox.interactions({loop: true}));
 ```
+
+Render a live region with `formatStatus({...combobox.snapshot, open})`, where
+`open` is the floating surface state owned by the consuming renderer. Bind an
+external preset button with `queryTriggerProps`, or use
+`combobox.bindQueryTrigger(button, 'laptop')` in direct DOM code.
 
 For data fetched by your application or a query library, use controlled state:
 

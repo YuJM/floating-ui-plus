@@ -42,6 +42,13 @@ export default defineConfig({
     define: {
       __DEV__: 'true',
     },
+    optimizeDeps: {
+      exclude: [
+        '@floating-ui-plus/web',
+        '@floating-ui-plus/web-components',
+        '@floating-ui-plus/vue',
+      ],
+    },
     plugins: [
       paraglideVitePlugin({
         project: './project.inlang',

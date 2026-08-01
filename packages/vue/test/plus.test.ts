@@ -22,6 +22,7 @@ import {
   FloatingListItem,
   FloatingReference,
   FloatingRoot,
+  FloatingSearch,
   click,
   createFuzzySearchSource,
   createFloatingContextScope,
@@ -151,6 +152,61 @@ describe('Floating UI Plus Vue adapter', () => {
     expect(input).toHaveValue('Beta');
     expect(getByText('false:Beta')).toBeVisible();
     expect(option).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('renders Vue search phase slots and shares combobox status/query bindings', async () => {
+    const App = defineComponent({
+      components: {FloatingSearch},
+      setup() {
+        const search = useSearch({
+          items: [
+            {id: 'alpha', label: 'Alpha'},
+            {id: 'beta', label: 'Beta'},
+          ],
+          getItemKey: (item) => item.id,
+        });
+        const combobox = useCombobox({
+          search,
+          getItemLabel: (item) => item.label,
+          status: {
+            closed: 'Suggestions closed',
+            selected: (item) => `${item.label} selected`,
+            idle: 'Start searching',
+            loading: 'Searching',
+            error: 'Search failed',
+            empty: 'No results',
+            results: ({search: state}) => `${state.items.length} results`,
+          },
+        });
+        return {combobox, search};
+      },
+      template: `
+        <div>
+          <input data-testid="input" v-bind="combobox.inputProps.value" />
+          <button data-testid="preset" v-bind="combobox.getQueryTriggerProps('beta')">
+            Try beta
+          </button>
+          <FloatingSearch :search="search">
+            <template #results>
+              <output data-testid="phase">{{ search.items.value.length }} result slots</output>
+            </template>
+          </FloatingSearch>
+          <output data-testid="status">{{ combobox.statusText.value }}</output>
+        </div>
+      `,
+    });
+
+    const {getByTestId} = render(App);
+    const input = getByTestId('input');
+    expect(getByTestId('phase')).toHaveTextContent('2 result slots');
+    expect(getByTestId('status')).toHaveTextContent('Suggestions closed');
+
+    await fireEvent.focus(input);
+    expect(getByTestId('status')).toHaveTextContent('2 results');
+
+    await fireEvent.click(getByTestId('preset'));
+    expect(input).toHaveValue('beta');
+    expect(input).toHaveFocus();
   });
 
   test('offers a declarative root, reference, and content API alongside useFloating', async () => {

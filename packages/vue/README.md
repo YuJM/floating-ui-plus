@@ -228,9 +228,9 @@ When the default component is used with `arrow({element})`, listen for
 debounce, minimum query length, IME composition, `AbortSignal` cancellation,
 stale-response protection, TTL caching, de-duplication, and cursor pagination;
 `useCombobox()` adds Vue refs and input bindings for open state, active option,
-IME, ARIA, Enter selection, and the combobox role. `search.phase` provides
-`idle`, `loading`, `error`, `empty`, and `results` for a concise template;
-your component still owns the result markup and copy.
+IME, ARIA, Enter selection, and the combobox role. `<FloatingSearch>` selects
+the matching `idle`, `loading`, `error`, `empty`, or `results` slot from
+`search.phase`; your component still owns the result markup and copy.
 
 ```vue
 <script setup lang="ts">
@@ -241,6 +241,7 @@ import {
   FloatingPortal,
   FloatingReference,
   FloatingRoot,
+  FloatingSearch,
   autoUpdate,
   createFuzzySearchSource,
   dismiss,
@@ -271,13 +272,24 @@ const {
   activeIndex,
   selectedItem,
   selectedValue,
+  statusText,
   inputProps,
   rolePlugin,
   getOptionProps,
+  getQueryTriggerProps,
   getNavigationOptions,
 } = useCombobox({
   search,
   getItemLabel: (item) => item.label,
+  status: {
+    closed: 'Destination suggestions closed',
+    selected: (item) => `${item.label} selected`,
+    idle: 'Start typing to search',
+    loading: 'Searching destinations',
+    error: 'Destination search failed',
+    empty: ({search}) => `No destinations found for ${search.query}`,
+    results: ({search}) => `${search.items.length} destinations available`,
+  },
 });
 const options = {
   placement: 'bottom-start',
@@ -305,20 +317,23 @@ const navigationOptions = getNavigationOptions({
       />
       <FloatingPortal>
         <FloatingContent>
-          <p v-if="search.loading">Searching…</p>
-          <p v-else-if="search.error">Search failed.</p>
-          <template v-else>
-            <FloatingListItem
-              v-for="(item, index) in search.items"
-              :key="item.id"
-              tag="button"
-              :label="item.label"
-              :value="item"
-              v-bind="getOptionProps(item, index)"
-            >
-              {{ item.label }}
-            </FloatingListItem>
-          </template>
+          <FloatingSearch :search="search">
+            <template #loading><p>Searching…</p></template>
+            <template #error><p>Search failed.</p></template>
+            <template #empty><p>No destination found.</p></template>
+            <template #results>
+              <FloatingListItem
+                v-for="(item, index) in search.items"
+                :key="item.id"
+                tag="button"
+                :label="item.label"
+                :value="item"
+                v-bind="getOptionProps(item, index)"
+              >
+                {{ item.label }}
+              </FloatingListItem>
+            </template>
+          </FloatingSearch>
         </FloatingContent>
       </FloatingPortal>
     </FloatingList>
@@ -328,7 +343,10 @@ const navigationOptions = getNavigationOptions({
 
 Local fuzzy indexing supplies results, `useCombobox()` supplies editable-input
 and selection behavior, and `FloatingList` supplies virtual keyboard
-navigation. The template keeps ownership of loading/error/empty presentation.
+navigation. `FloatingSearch` keeps the phase branch declarative without
+switching to a DOM renderer. Bind `statusText` to a live region when the
+combobox needs status announcements. `getQueryTriggerProps(query)` binds a
+focus-preserving preset button without application event handlers.
 For native form submission, bind `selectedValue` (not the display input) to a
 hidden input with the desired `name`; it comes from `getItemValue()` and
 therefore defaults to the stable item key rather than the visible label.
@@ -364,6 +382,8 @@ their state is owned elsewhere.
 | `open`, `activeIndex`, `selectedItem` | Writable refs for root, list, and selected-result state |
 | `inputProps` | Reactive value plus focus, input, IME, and Enter handlers from the Web binding contract |
 | `getOptionProps(item, index)` | Option ID, active/selected ARIA, blur prevention, and selection handlers from the same Web contract |
+| `getQueryTriggerProps(query)` | Blur prevention, query activation, and input focus restoration for a preset button |
+| `statusText` | Reactive live-region text from a shared phase-keyed `status` map or formatter |
 | `getNavigationOptions(options)` | Virtual-focus combobox defaults merged with list navigation overrides |
 | `rolePlugin` | Combobox ARIA plugin for `FloatingRoot` |
 | `setQuery()` / `select()` | Programmatic query and selection operations |

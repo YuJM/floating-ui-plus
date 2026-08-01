@@ -6,6 +6,7 @@ import {
   FloatingPortal,
   FloatingReference,
   FloatingRoot,
+  FloatingSearch,
   autoUpdate,
   createFuzzySearchSource,
   dismiss,
@@ -37,16 +38,27 @@ const search = useSearch<MultilingualDestination>({
 const {
   open,
   activeIndex,
-  selectedItem,
+  statusText,
   inputProps,
   rolePlugin,
-  setQuery,
   getOptionProps,
+  getQueryTriggerProps,
   getNavigationOptions,
 } = useCombobox({
   search,
   getItemLabel: (item) => item.label,
   optionIdPrefix: 'vue-destination-option',
+  status: {
+    closed: 'Destination suggestions closed',
+    selected: (item) => `${item.label} selected`,
+    idle: 'Start typing to search',
+    loading: 'Searching destinations',
+    error: 'Destination search failed',
+    empty: ({search: state}) =>
+      `No destinations found for ${state.query}`,
+    results: ({search: state}) =>
+      `${state.items.length} destinations available`,
+  },
 });
 
 const options = {
@@ -59,15 +71,6 @@ const navigationOptions = getNavigationOptions({
   allowEscape: true,
 });
 
-function applySearchSample(query: string, event: MouseEvent) {
-  setQuery(query, event);
-  const card = (event.currentTarget as HTMLElement | null)?.closest(
-    '.vue-combobox-card',
-  );
-  card
-    ?.querySelector<HTMLInputElement>('[data-floating-combobox-input]')
-    ?.focus({preventScroll: true});
-}
 </script>
 
 <template>
@@ -111,50 +114,43 @@ function applySearchSample(query: string, event: MouseEvent) {
               class="vue-combobox-popup"
               data-floating-combobox-popup
             >
-              <div
-                v-if="search.phase.value === 'loading'"
-                class="vue-combobox-empty"
-                role="option"
-                aria-disabled="true"
-              >
-                Searching…
-              </div>
-              <div
-                v-else-if="search.phase.value === 'error'"
-                class="vue-combobox-empty"
-                role="option"
-                aria-disabled="true"
-              >
-                Search failed.
-              </div>
-              <template v-else-if="search.phase.value === 'results'">
-                <FloatingListItem
-                  v-for="(item, index) in search.items.value"
-                  :key="item.id"
-                  tag="div"
-                  :label="item.label"
-                  :value="item"
-                  v-bind="getOptionProps(item, index)"
-                  class="vue-combobox-option"
-                  data-floating-combobox-option
-                >
-                  <span>
-                    <strong>{{ item.label }}</strong>
-                    <small>{{ item.region }}</small>
-                  </span>
-                  <span class="vue-language-badge">
-                    {{ item.language }}
-                  </span>
-                </FloatingListItem>
-              </template>
-              <div
-                v-else-if="search.phase.value === 'empty'"
-                class="vue-combobox-empty"
-                role="option"
-                aria-disabled="true"
-              >
-                No destination found for “{{ search.query.value }}”
-              </div>
+              <FloatingSearch :search="search">
+                <template #loading>
+                  <div class="vue-combobox-empty" role="option" aria-disabled="true">
+                    Searching…
+                  </div>
+                </template>
+                <template #error>
+                  <div class="vue-combobox-empty" role="option" aria-disabled="true">
+                    Search failed.
+                  </div>
+                </template>
+                <template #results>
+                  <FloatingListItem
+                    v-for="(item, index) in search.items.value"
+                    :key="item.id"
+                    tag="div"
+                    :label="item.label"
+                    :value="item"
+                    v-bind="getOptionProps(item, index)"
+                    class="vue-combobox-option"
+                    data-floating-combobox-option
+                  >
+                    <span>
+                      <strong>{{ item.label }}</strong>
+                      <small>{{ item.region }}</small>
+                    </span>
+                    <span class="vue-language-badge">
+                      {{ item.language }}
+                    </span>
+                  </FloatingListItem>
+                </template>
+                <template #empty>
+                  <div class="vue-combobox-empty" role="option" aria-disabled="true">
+                    No destination found for “{{ search.query.value }}”
+                  </div>
+                </template>
+              </FloatingSearch>
             </FloatingContent>
           </Transition>
         </FloatingPortal>
@@ -167,29 +163,14 @@ function applySearchSample(query: string, event: MouseEvent) {
         :key="sample"
         type="button"
         :data-search-sample="sample"
-        @mousedown.prevent
-        @click="applySearchSample(sample, $event)"
+        v-bind="getQueryTriggerProps(sample)"
       >
         <code>{{ sample }}</code><span>→ {{ destination }}</span>
       </button>
     </div>
 
     <p id="vue-combobox-status" class="sr-only" aria-live="polite">
-      {{
-        open
-          ? search.phase.value === 'idle'
-            ? 'Start typing to search'
-            : search.phase.value === 'results'
-              ? `${search.items.value.length} destinations available`
-              : search.phase.value === 'empty'
-                ? `No destinations found for ${search.query.value}`
-                : search.phase.value === 'loading'
-                  ? 'Searching destinations'
-                  : 'Destination search failed'
-          : selectedItem
-            ? `${selectedItem.label} selected`
-            : 'Destination suggestions closed'
-      }}
+      {{ statusText }}
     </p>
 
     <code>useSearch() + useCombobox() + &lt;FloatingList navigation&gt;</code>

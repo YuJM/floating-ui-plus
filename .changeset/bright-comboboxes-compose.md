@@ -28,6 +28,10 @@ do not require an application-owned subscription or nested status conditionals.
 It can receive `SearchOptions` and own the resulting controller, allowing local
 fuzzy and async server sources to use the same declarative composition. An
 existing application-owned `SearchController` remains supported.
+Vue now provides the equivalent renderless `FloatingSearch` named-slot
+component, while `useCombobox()` exposes `statusText` and
+`getQueryTriggerProps()` from the same framework-neutral status and query
+binding contracts.
 Document the same composition with local fuzzy and asynchronous server-search
 examples in both Web Components and Vue demos.
 Keep ordinary anchored examples in their local DOM and reserve

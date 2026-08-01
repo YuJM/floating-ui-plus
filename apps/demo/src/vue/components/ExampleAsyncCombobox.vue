@@ -6,6 +6,7 @@ import {
   FloatingPortal,
   FloatingReference,
   FloatingRoot,
+  FloatingSearch,
   autoUpdate,
   createAsyncSearchSource,
   dismiss,
@@ -27,7 +28,7 @@ const search = useSearch<MultilingualDestination>({
 const {
   open,
   activeIndex,
-  selectedItem,
+  statusText,
   inputProps,
   rolePlugin,
   getOptionProps,
@@ -36,6 +37,16 @@ const {
   search,
   getItemLabel: (item) => item.label,
   optionIdPrefix: 'vue-remote-destination-option',
+  status: {
+    closed: 'Remote destination suggestions closed',
+    selected: (item) => `${item.label} selected from the server`,
+    idle: 'Remote destination search is idle',
+    loading: 'Querying remote destinations',
+    error: 'Remote destination search failed',
+    empty: ({search: state}) => `No remote matches for ${state.query}`,
+    results: ({search: state}) =>
+      `${state.items.length} remote destinations available`,
+  },
 });
 const options = {
   placement: 'bottom-start',
@@ -85,47 +96,40 @@ const navigationOptions = getNavigationOptions({allowEscape: true});
         <FloatingPortal>
           <Transition name="vue-surface">
             <FloatingContent class="vue-combobox-popup vue-async-combobox-popup">
-              <div
-                v-if="search.phase.value === 'loading'"
-                class="vue-combobox-empty"
-                role="option"
-                aria-disabled="true"
-              >
-                Querying remote endpoint…
-              </div>
-              <div
-                v-else-if="search.phase.value === 'error'"
-                class="vue-combobox-empty"
-                role="option"
-                aria-disabled="true"
-              >
-                Remote search failed.
-              </div>
-              <template v-else-if="search.phase.value === 'results'">
-                <FloatingListItem
-                  v-for="(item, index) in search.items.value"
-                  :key="item.id"
-                  tag="div"
-                  :label="item.label"
-                  :value="item"
-                  v-bind="getOptionProps(item, index)"
-                  class="vue-combobox-option"
-                >
-                  <span>
-                    <strong>{{ item.label }}</strong>
-                    <small>{{ item.region }}</small>
-                  </span>
-                  <span class="vue-language-badge">API</span>
-                </FloatingListItem>
-              </template>
-              <div
-                v-else-if="search.phase.value === 'empty'"
-                class="vue-combobox-empty"
-                role="option"
-                aria-disabled="true"
-              >
-                The server found no match for “{{ search.query.value }}”
-              </div>
+              <FloatingSearch :search="search">
+                <template #loading>
+                  <div class="vue-combobox-empty" role="option" aria-disabled="true">
+                    Querying remote endpoint…
+                  </div>
+                </template>
+                <template #error>
+                  <div class="vue-combobox-empty" role="option" aria-disabled="true">
+                    Remote search failed.
+                  </div>
+                </template>
+                <template #results>
+                  <FloatingListItem
+                    v-for="(item, index) in search.items.value"
+                    :key="item.id"
+                    tag="div"
+                    :label="item.label"
+                    :value="item"
+                    v-bind="getOptionProps(item, index)"
+                    class="vue-combobox-option"
+                  >
+                    <span>
+                      <strong>{{ item.label }}</strong>
+                      <small>{{ item.region }}</small>
+                    </span>
+                    <span class="vue-language-badge">API</span>
+                  </FloatingListItem>
+                </template>
+                <template #empty>
+                  <div class="vue-combobox-empty" role="option" aria-disabled="true">
+                    The server found no match for “{{ search.query.value }}”
+                  </div>
+                </template>
+              </FloatingSearch>
             </FloatingContent>
           </Transition>
         </FloatingPortal>
@@ -139,21 +143,7 @@ const navigationOptions = getNavigationOptions({allowEscape: true});
     </div>
 
     <p id="vue-remote-combobox-status" class="sr-only" aria-live="polite">
-      {{
-        open
-          ? search.phase.value === 'results'
-            ? `${search.items.value.length} remote destinations available`
-            : search.phase.value === 'empty'
-              ? `No remote matches for ${search.query.value}`
-              : search.phase.value === 'loading'
-                ? 'Querying remote destinations'
-                : search.phase.value === 'error'
-                  ? 'Remote destination search failed'
-                  : 'Remote destination search is idle'
-          : selectedItem
-            ? `${selectedItem.label} selected from the server`
-            : 'Remote destination suggestions closed'
-      }}
+      {{ statusText }}
     </p>
 
     <code>createAsyncSearchSource() + useCombobox()</code>

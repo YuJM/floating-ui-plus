@@ -1,6 +1,11 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
 
-import {createAsyncSearchSource, createCombobox, createSearch} from '../src';
+import {
+  createAsyncSearchSource,
+  createCombobox,
+  createComboboxStatusFormatter,
+  createSearch,
+} from '../src';
 
 interface Item {
   id: string;
@@ -154,6 +159,36 @@ describe('ComboboxController', () => {
     expect(search.query).toBe('alpah');
     expect(document.activeElement).toBe(input);
     expect(onOpenChange).toHaveBeenCalledWith(true, event, undefined);
+  });
+
+  test('shares status copy and query-trigger props without owning markup', () => {
+    const {combobox, input} = setup();
+    const status = createComboboxStatusFormatter<Item>({
+      closed: 'Suggestions closed',
+      selected: (item) => `${item.label} selected`,
+      idle: 'Start searching',
+      loading: 'Searching',
+      error: 'Search failed',
+      empty: 'No results',
+      results: ({search}) => `${search.items.length} results`,
+    });
+    const props = combobox.getQueryTriggerProps('beta');
+    const mouseDown = new MouseEvent('mousedown', {cancelable: true});
+
+    expect(status({...combobox.snapshot, open: false})).toBe(
+      'Suggestions closed',
+    );
+    combobox.handleFocus(new FocusEvent('focus'));
+    expect(status({...combobox.snapshot, open: true})).toBe('2 results');
+
+    props.onMousedown(mouseDown);
+    props.onClick(new MouseEvent('click'));
+    expect(mouseDown.defaultPrevented).toBe(true);
+    expect(input.value).toBe('beta');
+    expect(document.activeElement).toBe(input);
+
+    combobox.select(beta);
+    expect(status({...combobox.snapshot, open: false})).toBe('Beta selected');
   });
 
   test('keeps non-Latin item keys distinct in option ids', () => {

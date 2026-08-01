@@ -4,8 +4,10 @@ export type * from './types';
 export {useFloating} from './useFloating';
 export {useSearch} from './search';
 export type {UseSearchReturn} from './search';
+export {FloatingSearch} from './search-content';
 export {useCombobox} from './combobox';
 export type {
+  ComboboxInputLifecycleProps,
   UseComboboxOptions,
   UseComboboxReturn,
 } from './combobox';
@@ -24,6 +26,7 @@ export {
   computePosition,
   createAsyncSearchSource,
   createCombobox,
+  createComboboxStatusFormatter,
   createFloating,
   createFloatingContextScope,
   createFloatingTopLayer,
@@ -136,7 +139,12 @@ export type {
   SearchSourceItem,
   ComboboxOptions,
   ComboboxNavigationOptions,
+  ComboboxQueryTriggerProps,
   ComboboxSnapshot,
+  ComboboxStatusContext,
+  ComboboxStatusFormatter,
+  ComboboxStatusMessages,
+  ComboboxStatusText,
   SafePolygonOptions,
   TransitionStatus,
   TransitionStyles,

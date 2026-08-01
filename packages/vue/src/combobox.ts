@@ -1,9 +1,13 @@
 import {
   ComboboxController as WebComboboxController,
+  createComboboxStatusFormatter,
   type ComboboxInputProps,
   type ComboboxNavigationOptions,
   type ComboboxOptionProps,
   type ComboboxOptions as WebComboboxOptions,
+  type ComboboxQueryTriggerProps,
+  type ComboboxStatusFormatter,
+  type ComboboxStatusMessages,
   type FloatingPlugin,
   type SearchController as WebSearchController,
 } from '@floating-ui-plus/web';
@@ -16,6 +20,7 @@ import {
   type ComputedRef,
   type Ref,
   type ShallowRef,
+  type VNode,
 } from 'vue';
 
 import type {UseSearchReturn} from './search';
@@ -39,6 +44,11 @@ export interface UseComboboxOptions<T>
   onOpenChange?: WebComboboxOptions<T>['onOpenChange'];
   onActiveIndexChange?: WebComboboxOptions<T>['onActiveIndexChange'];
   onSelect?: WebComboboxOptions<T>['onSelect'];
+  /** Shared phase-keyed status copy for a consumer-owned live region. */
+  status?:
+    | ComboboxStatusFormatter<T>
+    | ComboboxStatusMessages<T>
+    | undefined;
 }
 
 export interface UseComboboxReturn<T> {
@@ -48,15 +58,27 @@ export interface UseComboboxReturn<T> {
   selectedItem: ShallowRef<T | null> | Ref<T | null>;
   /** Native-form friendly selected value. Bind it to a hidden input in Vue. */
   selectedValue: ComputedRef<string | null>;
-  inputProps: ComputedRef<ComboboxInputProps>;
+  /** Reactive text resolved from the shared combobox status contract. */
+  statusText: ComputedRef<string | undefined>;
+  inputProps: ComputedRef<ComboboxInputProps & ComboboxInputLifecycleProps>;
   rolePlugin: FloatingPlugin;
   setQuery(query: string, event?: Event): void;
   select(item: T, event?: Event): void;
   getItemId(index: number): string;
   getOptionProps(item: T, index: number): ComboboxOptionProps;
+  getQueryTriggerProps(query: string): ComboboxQueryTriggerProps;
   getNavigationOptions(
     options?: Partial<ComboboxNavigationOptions>,
   ): ComboboxNavigationOptions;
+}
+
+/**
+ * Vue keeps input event handlers declarative, so this lifecycle bridge lets
+ * the framework-neutral controller restore focus for query-trigger actions.
+ */
+export interface ComboboxInputLifecycleProps {
+  onVnodeMounted: (vnode: VNode) => void;
+  onVnodeUnmounted: () => void;
 }
 
 function getSearchController<T>(search: ComboboxSearch<T>) {
@@ -92,6 +114,11 @@ export function useCombobox<T>(
       options.onSelect?.(item, event);
     },
   });
+  const statusFormatter = options.status
+    ? typeof options.status === 'function'
+      ? options.status
+      : createComboboxStatusFormatter(options.status)
+    : undefined;
   controller.setActiveIndex(activeIndex.value);
 
   const unsubscribe = controller.subscribe((snapshot) => {
@@ -113,13 +140,28 @@ export function useCombobox<T>(
   const rolePlugin = controller.rolePlugin();
   const inputProps = computed(() => {
     void revision.value;
-    return controller.getInputProps();
+    return {
+      ...controller.getInputProps(),
+      onVnodeMounted(vnode: VNode) {
+        controller.setInputElement(
+          vnode.el instanceof HTMLInputElement ? vnode.el : null,
+        );
+      },
+      onVnodeUnmounted() {
+        controller.setInputElement(null);
+      },
+    };
   });
   const selectedValue = computed(() => {
     void revision.value;
     return controller.selectedItem == null
       ? null
       : controller.getItemValue(controller.selectedItem);
+  });
+  const statusText = computed(() => {
+    void revision.value;
+    if (!statusFormatter) return undefined;
+    return statusFormatter({...controller.snapshot, open: open.value});
   });
 
   onScopeDispose(() => {
@@ -135,6 +177,7 @@ export function useCombobox<T>(
     activeIndex,
     selectedItem,
     selectedValue,
+    statusText,
     inputProps,
     rolePlugin,
     setQuery: (query, event) => controller.setQuery(query, event),
@@ -144,6 +187,7 @@ export function useCombobox<T>(
       void revision.value;
       return controller.getOptionProps(item, index);
     },
+    getQueryTriggerProps: (query) => controller.getQueryTriggerProps(query),
     getNavigationOptions: (navigationOptions) =>
       controller.getNavigationOptions(navigationOptions),
   };

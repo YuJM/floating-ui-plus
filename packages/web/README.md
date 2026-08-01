@@ -193,6 +193,7 @@ slot, upstream `offset()` semantics remain unchanged.
 | Direct DOM search-phase rendering | `createSearchRenderer()` from `/search` |
 | Local typo-tolerant search | `createFuzzySearchSource()` from `/fuzzy` |
 | Editable combobox input and selection | `createCombobox()` from `/combobox` |
+| Phase-aware combobox status text | `createComboboxStatusFormatter()` from `/combobox` |
 | Nested menus and ordered items | tree, list, and composite controllers |
 | Modal focus | `focusManager()` with `dismiss()` |
 | A DOM target outside the current renderer | `createPortalBridge()` |
@@ -212,9 +213,10 @@ combobox behavior: focus/input opening, IME events, active option state,
 provides the neutral `idle`, `loading`, `error`, `empty`, and `results` states;
 the application still owns their copy and markup.
 
-Framework adapters consume the same `getInputProps()`, `getOptionProps()`, and
-`getNavigationOptions()` contract. The imperative `bindInput()`,
-`bindOption()`, and `navigationPlugin()` helpers
+Framework adapters consume the same `getInputProps()`,
+`getQueryTriggerProps()`, `getOptionProps()`, and `getNavigationOptions()`
+contract. The imperative `bindInput()`, `bindQueryTrigger()`, `bindOption()`,
+and `navigationPlugin()` helpers
 are built from those props, so Web Components, Vue, and direct DOM integrations
 share one behavior source.
 
@@ -277,12 +279,18 @@ The controller's small lifecycle surface is deliberate:
 | `connect()` / `disconnect()` / `destroy()` | Pause requests or release the controller lifecycle |
 
 `ComboboxController` exposes `setQuery()`, `activateQuery()`, `select()`, `setActiveIndex()`,
-`getInputProps()`, `getOptionProps()`, `getNavigationOptions()`, `bindInput()`,
-`bindOption()`, and `setListElements()`. Framework renderers should bind the
-prop-returning methods declaratively; direct DOM and Custom Element adapters
-can use the imperative binding helpers. `activateQuery()` is intended for
+`getInputProps()`, `getQueryTriggerProps()`, `getOptionProps()`,
+`getNavigationOptions()`, `bindInput()`, `bindQueryTrigger()`, `bindOption()`,
+and `setListElements()`. Framework renderers should bind the prop-returning
+methods declaratively; direct DOM and Custom Element adapters can use the
+imperative binding helpers. `activateQuery()` is intended for
 external query presets: it updates the query, opens the surface, and restores
 focus to the bound input without treating the preset as a result option.
+
+Use `createComboboxStatusFormatter()` when a framework renders an owned live
+region. It resolves `closed`, optional `selected`, and each search phase from
+one shared status map, while the consumer continues to own the live-region
+element and its accessible announcement policy.
 
 `getItemValue(item)` returns the stable value for form submission and defaults
 to the item key, so a consumer can keep a human-readable label separate from

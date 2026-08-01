@@ -48,13 +48,22 @@ export type {
   SearchSource,
   SearchSourceItem,
 } from './search';
-export {ComboboxController, createCombobox} from './combobox';
+export {
+  ComboboxController,
+  createCombobox,
+  createComboboxStatusFormatter,
+} from './combobox';
 export type {
   ComboboxInputProps,
   ComboboxNavigationOptions,
   ComboboxOptionProps,
   ComboboxOptions,
+  ComboboxQueryTriggerProps,
   ComboboxSnapshot,
+  ComboboxStatusContext,
+  ComboboxStatusFormatter,
+  ComboboxStatusMessages,
+  ComboboxStatusText,
 } from './combobox';
 export {
   createFuzzyMatcher,

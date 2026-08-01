@@ -59,6 +59,58 @@ export interface ComboboxOptionProps {
   onClick: (event: MouseEvent) => void;
 }
 
+export interface ComboboxQueryTriggerProps {
+  onMousedown: (event: MouseEvent) => void;
+  onClick: (event: MouseEvent) => void;
+}
+
+export interface ComboboxStatusContext<T> extends ComboboxSnapshot<T> {
+  open: boolean;
+}
+
+export type ComboboxStatusFormatter<T> = (
+  context: ComboboxStatusContext<T>,
+) => string;
+
+export type ComboboxStatusText<T> = string | ComboboxStatusFormatter<T>;
+
+export interface ComboboxStatusMessages<T> {
+  closed: ComboboxStatusText<T>;
+  selected?:
+    | string
+    | ((item: T, context: ComboboxStatusContext<T>) => string)
+    | undefined;
+  idle: ComboboxStatusText<T>;
+  loading: ComboboxStatusText<T>;
+  error: ComboboxStatusText<T>;
+  empty: ComboboxStatusText<T>;
+  results: ComboboxStatusText<T>;
+}
+
+function resolveStatusText<T>(
+  value: ComboboxStatusText<T>,
+  context: ComboboxStatusContext<T>,
+) {
+  return typeof value === 'function' ? value(context) : value;
+}
+
+/** Creates a phase-aware live-region formatter without owning any markup. */
+export function createComboboxStatusFormatter<T>(
+  messages: ComboboxStatusMessages<T>,
+): ComboboxStatusFormatter<T> {
+  return (context) => {
+    if (!context.open) {
+      if (context.selectedItem != null && messages.selected) {
+        return typeof messages.selected === 'function'
+          ? messages.selected(context.selectedItem, context)
+          : messages.selected;
+      }
+      return resolveStatusText(messages.closed, context);
+    }
+    return resolveStatusText(messages[context.search.phase], context);
+  };
+}
+
 /**
  * Framework-neutral input and selection behavior for an editable combobox.
  *
@@ -236,6 +288,13 @@ export class ComboboxController<T> {
     };
   }
 
+  getQueryTriggerProps(query: string): ComboboxQueryTriggerProps {
+    return {
+      onMousedown: (event) => event.preventDefault(),
+      onClick: (event) => this.activateQuery(query, event),
+    };
+  }
+
   getOptionProps(item: T, index: number): ComboboxOptionProps {
     const itemKey = this.#getItemKey(item);
     return {
@@ -289,6 +348,25 @@ export class ComboboxController<T> {
     };
     this.#inputCleanup = cleanup;
     return cleanup;
+  }
+
+  /**
+   * Tracks an input whose framework adapter binds the public input props
+   * itself. Unlike `bindInput()`, this does not add listeners.
+   */
+  setInputElement(input: HTMLInputElement | null) {
+    this.#input = input;
+    this.#syncActiveState();
+  }
+
+  bindQueryTrigger(element: HTMLElement, query: string) {
+    const props = this.getQueryTriggerProps(query);
+    element.addEventListener('mousedown', props.onMousedown);
+    element.addEventListener('click', props.onClick);
+    return () => {
+      element.removeEventListener('mousedown', props.onMousedown);
+      element.removeEventListener('click', props.onClick);
+    };
   }
 
   bindOption(element: HTMLElement, item: T, index: number) {
