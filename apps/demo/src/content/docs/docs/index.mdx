@@ -3,21 +3,27 @@ title: Floating UI Plus
 description: Accessible floating interfaces for the Web, Web Components, and Vue.
 ---
 
-import {PackageManagers} from 'starlight-package-managers';
-
 Floating UI Plus adds interaction, focus, collection, search, and native
 top-layer behavior to Floating UI positioning primitives. Choose the adapter
 that matches your renderer and keep the same behavior contract across them.
 
-<PackageManagers type="add" pkg="@floating-ui-plus/web" />
+## Install one adapter
+
+Install the package that matches the renderer you use. The Web Components and
+Vue adapters install `@floating-ui-plus/web` as a transitive dependency, so you
+do not need to install the Web package separately when using either adapter.
+
+- [Install Web Components](/docs/guides/installation/web-components): Custom Elements with no framework runtime.
+- [Install Vue](/docs/guides/installation/vue): Vue 3 components and composables.
+- [Install the Web core](/docs/guides/installation/web): framework-neutral controllers and render contracts.
 
 ## Start here
 
-- [Getting started](/docs/guides/getting-started): choose a package and wire your first surface.
+- [Getting started](/docs/guides/getting-started): choose an adapter and wire your first surface.
 - [Usage recipes](/docs/guides/usage): complete adapter examples for surfaces, portals, collections, and search.
 - [Demo walkthrough](/docs/guides/demo): every interactive example, route, and middleware comparison.
 - [Popover and dialog](/docs/guides/popover): use native Popover, `<dialog>`, templates, and portals deliberately.
-- [Combobox](/docs/guides/combobox): connect fuzzy or server search to editable input behavior.
+- [Combobox demos](/docs/guides/demo/combobox/fuzzy): compare fuzzy and server search with editable input behavior.
 - [Dismiss and closing](/docs/guides/dismiss): distinguish `close()` from `dismiss()` and guard close requests.
 
 ## Choose an adapter
@@ -25,7 +31,5 @@ that matches your renderer and keep the same behavior contract across them.
 - [Web](/docs/frameworks/web): framework-neutral controllers and render contracts.
 - [Web Components and Vue](/docs/frameworks): adapter-specific markup with a shared API contract.
 
-The [API Reference](/docs/api/readme) is generated from the published TypeScript
-entry points. The [live demo](/) shows the same patterns running in the
-browser, including the [combobox](/combobox?source=fuzzy) and [modal](/modal)
-examples.
+The [live demo](/) shows the same patterns running in the browser, including
+the [combobox](/combobox?source=fuzzy) and [modal](/modal) examples.

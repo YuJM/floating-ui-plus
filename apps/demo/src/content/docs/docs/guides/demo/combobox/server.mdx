@@ -1,0 +1,51 @@
+---
+title: 'Demo: Combobox — server search'
+description: Explore cancellable cursor-based server search with the Combobox demo.
+---
+
+import DemoPreview from '../../../../../../components/docs/DemoPreview.astro';
+import asyncComboboxSource from '../../../../../../components/examples/AsyncComboboxExample.astro?raw';
+import asyncComboboxVueSource from '../../../../../../vue/components/ExampleAsyncCombobox.vue?raw';
+
+The server-search Combobox demo passes an application-owned async source to the
+shared search controller. The demo's MSW endpoint simulates debounce,
+`AbortSignal` cancellation, stale-response protection, loading/error/empty
+phases, and cursor pagination.
+
+- [Open the Web Components demo](/combobox?framework=web-components&source=server)
+- [Open the Vue demo](/combobox?framework=vue&source=server)
+- [View the fuzzy-search demo](/docs/guides/demo/combobox/fuzzy)
+
+<DemoPreview route="/preview/combobox/server" title="Combobox · server search" height={640} webCode={asyncComboboxSource} vueCode={asyncComboboxVueSource} webTitle="AsyncComboboxExample.astro" vueTitle="ExampleAsyncCombobox.vue" />
+
+## What this demo shows
+
+- An application-owned request source with query and cursor inputs.
+- Debounced requests with cancellation when the query changes.
+- Stale-response protection and explicit `idle`, `loading`, `error`, `empty`,
+  and `results` phases.
+- Cursor-based loading of the next page.
+- A `size()` middleware constraint that keeps the popup inside the available
+  viewport and the result list scrollable.
+
+The package does not choose a transport or cache library. The same composition
+works with `fetch`, TanStack Query, or another request layer.
+
+## Search configuration
+
+```ts
+combobox.configure({
+  search: {
+    source: ({query, signal, cursor}) =>
+      fetchDestinationPage({query, signal, cursor}),
+    getItemKey: (item) => item.id,
+    debounceMs: 200,
+  },
+  getItemLabel: (item) => item.label,
+  getItemValue: (item) => item.id,
+});
+```
+
+The Web Components and Vue previews show only the selected server component, so
+the source tab below each preview maps directly to the running card. See the
+[fuzzy-search demo](/docs/guides/demo/combobox/fuzzy) for local matching.

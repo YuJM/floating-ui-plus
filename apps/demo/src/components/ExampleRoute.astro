@@ -8,7 +8,7 @@ interface Props {
   variant?: 'default' | 'wide' | 'full';
 }
 
-import {getRelativeLocaleUrl} from 'astro:i18n';
+import {getRelativeLocaleUrl} from '../locale-url';
 import * as m from '../paraglide/messages';
 const {heading, description, build, features, locale, variant = 'default'} = Astro.props;
 const badgeTones = ['cyan', 'lavender', 'coral', 'mint', 'gold'] as const;

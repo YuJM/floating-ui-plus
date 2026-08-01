@@ -1,7 +1,7 @@
 ---
 import {ArrowRight, Check, ExternalLink, Layers, Search, Workflow} from 'lucide-astro';
 import {siNpm, siVuedotjs, siWebcomponentsdotorg} from 'simple-icons';
-import {getRelativeLocaleUrl} from 'astro:i18n';
+import {getRelativeLocaleUrl} from '../locale-url';
 import * as m from '../paraglide/messages';
 import DemoLayout from '../layouts/DemoLayout.astro';
 import {EXAMPLE_IDS, getExample, type Locale} from '../i18n';
@@ -10,6 +10,9 @@ import {getNpmPackages} from '../npm-packages';
 
 const {locale} = Astro.props as {locale: Locale};
 const options = {locale};
+// Render the selected implementation into the initial link so a quick click
+// cannot race the client-side query-preservation pass in DemoLayout.
+const framework = new URL(Astro.url).searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
 const examples = EXAMPLE_IDS.map((example) => getExample(locale, example));
 const npmPackages = getNpmPackages();
 const appPackages = npmPackages.filter((pkg) => pkg.id !== 'web');
@@ -35,7 +38,7 @@ const packageCopy = {
     </div>
     <div class="demo-example-list" aria-label={m.patterns_title(undefined, options)}>
       {examples.map((example) => (
-        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=web-components`} data-example-link={example.id} data-preserve-framework>
+        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=${framework}`} data-example-link={example.id} data-preserve-framework>
           {(() => {
             const Icon = EXAMPLE_ICONS[example.id];
             return <Icon class="demo-example-icon" aria-hidden="true" size={21} strokeWidth={1.7} />;

@@ -1,195 +1,27 @@
 ---
 title: Demo walkthrough
-description: A guide to every interactive Floating UI Plus demo and the API it demonstrates.
+description: Browse every interactive Floating UI Plus demo and its detailed guide.
 ---
 
-The [live demo home](/) is an executable companion to this documentation.
-Every card is a real Web Components composition and can be switched to the
-Vue renderer with `?framework=vue`. The URL keeps the framework selection while
-you move between examples, locales, and combobox sources.
+The demo is an executable companion to the documentation. Each example has a
+dedicated guide with the behavior it demonstrates, the important API choices,
+and a direct link to the live route.
 
-## Read a demo URL
+All routes accept `framework=web-components` (default) or `framework=vue`.
+The combobox route also accepts `source=fuzzy` or `source=server`.
 
-```text
-/combobox?framework=vue&source=server
-```
+## Interaction demos
 
-- `framework=web-components` (default) or `framework=vue` selects the adapter.
-- `source=fuzzy` or `source=server` selects the combobox data source.
-- `/ko/...` and `/ja/...` select the localized demo while preserving the query.
+- [Tooltip](/docs/guides/demo/tooltip): hover, focus, safe polygon, and arrow.
+- [Popover](/docs/guides/demo/popover): root-owned template and native Popover.
+- [Menu](/docs/guides/demo/menu): list navigation, typeahead, and looping.
+- [Nested menu](/docs/guides/demo/nested-menu): coordinated roots and focus restoration.
+- [Client point](/docs/guides/demo/client-point): cursor-following virtual reference.
+- [Combobox: fuzzy search](/docs/guides/demo/combobox/fuzzy): local typo-tolerant matching.
+- [Combobox: server search](/docs/guides/demo/combobox/server): cancellable cursor-based requests.
+- [Placement](/docs/guides/demo/placement): all typed placement values.
+- [Middleware](/docs/guides/demo/middleware): eight positioning middleware comparisons.
+- [Modal](/docs/guides/demo/modal): native dialog, nested surfaces, and focus traps.
 
-Use the links below to open each scenario directly. The `Web Components`
-links are explicit so they can be copied as a baseline; append
-`framework=vue` to compare the Vue implementation.
-
-## Interaction patterns
-
-### Tooltip — hover, focus, and safe dismissal
-
-[Open the tooltip demo](/tooltip?framework=web-components)
-
-The tooltip composes `hover()`, `focus()`, `dismiss()`, and
-`role({role: 'tooltip'})`. Pointer intent uses `safePolygon()` so the pointer
-can travel toward the surface without closing it. The `floating-arrow` element
-registers its geometry and the `offset()` gap is measured from the visible
-arrow edge. `autoUpdate` keeps the surface aligned while its reference moves.
-
-```ts
-floating.configure({
-  middleware: [offset(3), flip(), shift({padding: 12})],
-  plugins: [
-    hover({handleClose: safePolygon({buffer: 4})}),
-    focus(),
-    dismiss(),
-    role({role: 'tooltip'}),
-  ],
-});
-```
-
-### Popover — root-owned template and native Popover
-
-[Open the popover demo](/popover?framework=web-components)
-
-The trigger and panel stay in one `floating-root`. A
-`<template slot="content">` is inert while closed and becomes a native
-Popover when opened. `click()` toggles it, `dismiss()` handles outside press
-and Escape, and `data-fup-close` sends an explicit close request.
-
-The Vue version uses `FloatingRoot`, `FloatingReference`, and
-`FloatingContent`; it keeps the same open state and interaction contract.
-
-### Menu — list navigation and typeahead
-
-[Open the menu demo](/menu?framework=web-components)
-
-`floating-list navigation typeahead loop` owns the ordered item registry,
-roving focus, wrapping, and keyboard label matching. Type “signal” after
-opening the menu to exercise typeahead. Each item uses `role="menuitem"` and
-`data-fup-close`, so Enter selection closes the owner through the normal close
-path.
-
-Vue uses `FloatingList navigation typeahead loop` and
-`FloatingListItem`, with the same active-index and typeahead behavior.
-
-### Nested menu — coordinated roots and focus restoration
-
-[Open the nested-menu demo](/nested-menu?framework=web-components)
-
-The parent and submenu roots are wrapped in `floating-tree` and connected with
-`floating-node`. The submenu opens from the parent reference with click or
-ArrowRight. Escape/ArrowLeft dismisses only the child first and restores focus
-to its parent item. `nested` list navigation and parent IDs keep the tree
-relationships explicit.
-
-### Client point — virtual reference that follows the cursor
-
-[Open the client-point demo](/client-point?framework=web-components)
-
-`clientPoint()` turns pointer coordinates into a virtual reference while
-`hover({move: true})` updates the surface as the pointer moves. The demo
-combines `offset(16)`, `flip()`, `shift()`, and tooltip role semantics. The
-visible coordinate readout is application code; the controller only owns the
-reference geometry and interaction state.
-
-## Combobox sources
-
-### Fuzzy search — local multilingual matching
-
-[Open fuzzy search](/combobox?framework=web-components&source=fuzzy)
-
-The local source searches city, country, aliases, local scripts, and forgiving
-typos with `createFuzzySearchSource()`. The demo includes query presets, an
-ARIA live status region, virtual focus, option selection, and form value
-separation (`getItemLabel()` versus `getItemValue()`). Try a city in English,
-Korean, Japanese, or a misspelled alias.
-
-### Server search — cancellation and cursor pagination
-
-[Open server search](/combobox?framework=web-components&source=server)
-
-The server panel uses an application-owned async source. MSW simulates a
-cursor endpoint with debounce, `AbortSignal` cancellation, stale-response
-protection, `loading`/`error`/`empty` states, and a “load next” control. The
-controller accepts the same `{items, total, nextCursor}` shape as a real API;
-replace the demo source with `fetch`, TanStack Query, or another request
-library without changing the combobox markup contract.
-
-```ts
-combobox.configure({
-  search: {
-    source: ({query, signal, cursor}) =>
-      fetchDestinationPage({query, signal, cursor}),
-    getItemKey: (item) => item.id,
-    debounceMs: 200,
-  },
-  getItemLabel: (item) => item.label,
-  getItemValue: (item) => item.id,
-});
-```
-
-Use the Vue tab on either URL to compare `useSearch()`/`useCombobox()`,
-`FloatingSearch`, and `getOptionProps()` against the Custom Elements version.
-
-## Positioning and middleware
-
-### Placement selector
-
-[Open placement](/placement?framework=web-components)
-
-The placement card exposes all 12 typed placements. Clicking a control updates
-the root's `placement`, keeps the `PLACEMENT` constant/value readout in sync,
-and calls `updatePosition()`. `offset(18)` makes the visual gap obvious.
-
-### Middleware gallery
-
-[Open middleware](/middleware?framework=web-components)
-
-The middleware page is eight focused comparisons:
-
-| Card | What to try | Composition |
-| --- | --- | --- |
-| Offset | Compare 0px and 10px gutters | `offset(0)` / `offset(10)` |
-| Shift | Scroll horizontally | `shift({padding: 8})` |
-| Flip | Scroll until the preferred side is unavailable | `flip()` then `shift()` |
-| Arrow | Compare arrow gap and geometry | `offset()` → `shift()` → `arrow()` |
-| Size | Scroll vertically through constrained content | `size({apply})` |
-| Auto placement | Give each side a different amount of room | `autoPlacement()` → `shift()` |
-| Hide | Move the reference out of view | `hide()` and `hide({strategy: 'escaped'})` |
-| Inline | Compare a wrapped inline reference | `inline()` → `offset(8)` |
-
-The card copy explains the visual result; the generated API pages document each
-middleware option and returned data.
-
-## Modal and native top layer
-
-### Modal focus room
-
-[Open the modal demo](/modal?framework=web-components)
-
-The focus room uses a native `<dialog>` and a `floating-node` tree. Inside it,
-there is a tooltip, an anchored popover, and a nested dialog. Try these paths:
-
-1. Open the focus room and tab through the trapped controls.
-2. Open room details; outside press or Escape closes only that panel first.
-3. Open the nested dialog; its focus boundary becomes the top layer.
-4. Press Escape repeatedly to close the topmost surface and restore focus to
-   its parent.
-
-This is the reference scenario for native dialog focus, inert neighbors,
-nested dismissal ordering, and focus restoration. Use the
-[dismiss and before-close guide](/docs/guides/dismiss) to add synchronous
-validation to the same close paths.
-
-## Compare implementations
-
-Every demo supports the framework query:
-
-- [Tooltip in Vue](/tooltip?framework=vue)
-- [Nested menu in Vue](/nested-menu?framework=vue)
-- [Fuzzy combobox in Vue](/combobox?framework=vue&source=fuzzy)
-- [Server combobox in Vue](/combobox?framework=vue&source=server)
-- [Modal in Vue](/modal?framework=vue)
-
-The HTML-first and Vue versions intentionally share behavior, not markup. Use
-the [framework usage guide](/docs/frameworks) for the side-by-side recipes and
-the [API Reference](/docs/api/readme) for exact exports and option types.
+The [Usage recipes](/docs/guides/usage) page covers reusable compositions;
+these pages explain what each demo is doing differently.

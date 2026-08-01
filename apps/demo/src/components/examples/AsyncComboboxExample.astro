@@ -1,17 +1,10 @@
 ---
 import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
 
-const {hidden = false} = Astro.props as {hidden?: boolean};
 ---
 
-<section
-  class="combobox-panel combobox-server-panel"
-  data-demo="async-combobox"
-  id="combobox-panel-server"
-  role="tabpanel"
-  aria-labelledby="combobox-tab-server"
-  hidden={hidden}
->
+<article class="demo-card combobox-card">
+  <section class="combobox-panel combobox-server-panel" data-demo="async-combobox">
   <h3>Server-side search</h3>
   <p>
     MSW simulates a cursor API over {FAKE_SERVER_DESTINATION_TOTAL} distinct countries with debounce,
@@ -129,6 +122,7 @@ const {hidden = false} = Astro.props as {hidden?: boolean};
 
     <code>application source + &lt;floating-combobox&gt;</code>
 </section>
+</article>
 
 <script>
   import {
@@ -136,6 +130,7 @@ const {hidden = false} = Astro.props as {hidden?: boolean};
     dismiss,
     flip,
     offset,
+    size,
     shift,
     type FloatingComboboxElement,
   } from '@floating-ui-plus/web-components';
@@ -175,7 +170,23 @@ const {hidden = false} = Astro.props as {hidden?: boolean};
       },
     });
     floating.configure({
-      middleware: [offset(8), flip(), shift({padding: 18})],
+      middleware: [
+        offset(8),
+        flip({padding: 18}),
+        shift({padding: 18}),
+        size({
+          padding: 18,
+          rootBoundary: 'viewport',
+          apply({availableHeight, elements}) {
+            const maxHeight = `${Math.max(0, availableHeight)}px`;
+            elements.floating.style.setProperty(
+              '--async-combobox-popup-max-height',
+              maxHeight,
+            );
+            elements.floating.style.maxHeight = maxHeight;
+          },
+        }),
+      ],
       plugins: [dismiss()],
     });
   });

@@ -1,0 +1,27 @@
+---
+title: 'Demo: Placement'
+description: Explore all typed placement values and update position interactively.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import placementSource from '../../../../../components/examples/PlacementExample.astro?raw';
+import placementVueSource from '../../../../../vue/views/PlacementView.vue?raw';
+
+[Open the live placement demo](/placement?framework=web-components)
+
+<DemoPreview route="/preview/placement" title="Placement" webCode={placementSource} vueCode={placementVueSource} webTitle="PlacementExample.astro" vueTitle="PlacementView.vue" />
+
+The placement card exposes all 12 values (`top`, `top-start`, `top-end`, and
+the corresponding bottom/right/left variants). Clicking a control updates the
+root and calls `updatePosition()`:
+
+```ts
+const placement = button.dataset.placementControl as Placement;
+floating.placement = placement;
+await floating.updatePosition();
+```
+
+`offset(18)` makes the gap visible. Use the generated `PLACEMENT` and
+`PLACEMENTS` exports for typed constants, or pass ordinary placement strings.
+The Vue version binds `placement` through `FloatingRoot` options or the
+composable state.

@@ -4,7 +4,7 @@ import {Box, ChevronDown, House} from 'lucide-astro';
 import {siVuedotjs} from 'simple-icons';
 import {type ExampleId} from '../demo-registry';
 import {getSeoMetadata} from '../seo';
-import {getRelativeLocaleUrl} from 'astro:i18n';
+import {getRelativeLocaleUrl} from '../locale-url';
 import * as m from '../paraglide/messages';
 import {getExamples, type Locale} from '../i18n';
 import {EXAMPLE_ICONS} from '../example-icons';
@@ -26,6 +26,7 @@ const examples = getExamples(locale);
 const activeExample = examples.find((item) => item.id === example);
 const ActiveExampleIcon = activeExample ? EXAMPLE_ICONS[activeExample.id] : House;
 const framework = Astro.url.searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
+const isEmbed = Astro.url.searchParams.get('embed') === '1';
 const frameworkSearch = `?framework=${framework}`;
 const localizedExamplePath = examplePath ?? example ?? '';
 const routeMetadata = getSeoMetadata(Astro.url.pathname, locale);
@@ -48,6 +49,10 @@ const metadata = {
         new URL(window.location.href).searchParams.get('framework') === 'vue'
           ? 'vue'
           : 'web-components';
+      document.documentElement.dataset.embed =
+        new URL(window.location.href).searchParams.get('embed') === '1'
+          ? 'true'
+          : 'false';
     </script>
     <script>
       import {enableDemoMockServer} from '../mocks/browser';
@@ -60,9 +65,10 @@ const metadata = {
     </script>
   </head>
   <body>
-    <floating-ui-demo class:list={['demo-shell', example ? 'is-example' : 'is-home']}>
+    <floating-ui-demo class:list={['demo-shell', example ? 'is-example' : 'is-home', isEmbed && 'is-embedded']}>
     <div class="global-utilities border-b border-border/70 bg-surface/60">
       <div class="container mx-auto flex items-center justify-end gap-3 px-5 py-3 sm:px-8">
+        <a class="docs-nav-link" href="/docs">Docs</a>
         <div class="framework-switch" role="group" aria-label={m.framework_label(undefined, options)} title={m.framework_switch_title(undefined, options)}>
           <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=web-components`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
             <Box aria-hidden="true" size={15} strokeWidth={1.8} />

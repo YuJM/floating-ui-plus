@@ -1,0 +1,33 @@
+---
+title: 'Demo: Client point'
+description: Position a surface against pointer coordinates with a virtual reference.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import clientPointSource from '../../../../../components/examples/ClientPointExample.astro?raw';
+import clientPointVueSource from '../../../../../vue/components/ExampleClientPoint.vue?raw';
+
+[Open the live client-point demo](/client-point?framework=web-components)
+
+<DemoPreview route="/preview/client-point" title="Client point" webCode={clientPointSource} vueCode={clientPointVueSource} webTitle="ClientPointExample.astro" vueTitle="ExampleClientPoint.vue" />
+
+`clientPoint()` turns the pointer into a virtual reference. Combine it with
+`hover({move: true})` to follow the cursor:
+
+```ts
+floating.configure({
+  middleware: [offset(16), flip(), shift({padding: 18})],
+  plugins: [
+    hover({move: true}),
+    clientPoint(),
+    dismiss(),
+    role({role: 'tooltip'}),
+  ],
+});
+```
+
+The demo's coordinate readout is application code updated with
+`requestAnimationFrame`; Floating UI Plus only owns the virtual reference,
+position, and interaction lifecycle. Use this pattern for cursor annotations,
+context hints, and canvas overlays. The Vue adapter accepts the same
+`clientPoint()` plugin through `useFloating()` or `FloatingRoot`.

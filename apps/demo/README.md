@@ -39,7 +39,15 @@ and `starlight-package-managers`. TypeDoc output is generated during
 `typecheck`/`build` and is ignored by Git; edit the guides under
 `src/content/docs/docs` instead. Versioned archives will be introduced when a
 stable major release needs them; until then the site intentionally exposes only
-the latest documentation.
+the latest English documentation. The demo routes keep their English, Korean,
+and Japanese playground pages separately.
+
+Each demo guide under `src/content/docs/docs/guides/demo` imports its executable
+Astro example with Vite's `?raw` suffix and renders it with Starlight's built-in
+`Code` component. Update the file in `src/components/examples` once; the guide
+source block is updated automatically on the next typecheck or build. The same
+guides embed the live demo route with a Web Components/Vue switch, so readers
+can try the behavior without leaving the documentation.
 
 ## Mock server for the async combobox
 

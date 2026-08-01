@@ -6,7 +6,7 @@ import {
   normalizePathname,
   type SeoMetadata,
 } from '../seo';
-import {getAbsoluteLocaleUrl} from 'astro:i18n';
+import {getAbsoluteLocaleUrl} from '../locale-url';
 import {ogLocale, type Locale} from '../i18n';
 
 interface Props {
@@ -24,7 +24,7 @@ const breadcrumbs = getBreadcrumbs(pathname);
 const route = locale === 'en'
   ? pathname.replace(/^\//, '')
   : pathname.split('/').slice(2).join('/');
-const alternateUrls = ['en', 'ko', 'ja'].map((target) => getAbsoluteLocaleUrl(target, route));
+const alternateUrls = ['en', 'ko', 'ja'].map((target) => getAbsoluteLocaleUrl(site, target as Locale, route));
 const robots = metadata.noindex
   ? 'noindex, nofollow'
   : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
@@ -105,7 +105,7 @@ const structuredData = graph
 <meta name="theme-color" content="#101a17" />
 <link rel="canonical" href={canonical} />
 {alternateUrls.map((href, index) => <link rel="alternate" hreflang={['en', 'ko', 'ja'][index]} href={href} />)}
-<link rel="alternate" hreflang="x-default" href={getAbsoluteLocaleUrl('en', route)} />
+<link rel="alternate" hreflang="x-default" href={getAbsoluteLocaleUrl(site, 'en', route)} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <link rel="manifest" href="/site.webmanifest" />

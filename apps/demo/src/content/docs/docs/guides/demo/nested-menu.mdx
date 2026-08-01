@@ -1,0 +1,44 @@
+---
+title: 'Demo: Nested menu'
+description: Coordinate parent and submenu roots with tree nodes and focus restoration.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import nestedMenuSource from '../../../../../components/examples/NestedMenuExample.astro?raw';
+import nestedMenuVueSource from '../../../../../vue/components/ExampleNestedMenu.vue?raw';
+
+[Open the live nested menu demo](/nested-menu?framework=web-components)
+
+<DemoPreview route="/preview/nested-menu" title="Nested menu" webCode={nestedMenuSource} vueCode={nestedMenuVueSource} webTitle="NestedMenuExample.astro" vueTitle="ExampleNestedMenu.vue" />
+
+The parent and submenu are separate roots connected through a tree:
+
+```html
+<floating-tree>
+  <floating-root>
+    <floating-node node-id="actions">
+      <floating-reference><button>Open actions</button></floating-reference>
+      <template slot="content">
+        <floating-list navigation typeahead loop>
+          <floating-root placement="right-start">
+            <floating-node node-id="projects">
+              <floating-reference>
+                <button role="menuitem" aria-haspopup="menu">Move to project</button>
+              </floating-reference>
+              <floating-list navigation typeahead loop nested>
+                <!-- project actions -->
+              </floating-list>
+            </floating-node>
+          </floating-root>
+        </floating-list>
+      </template>
+    </floating-node>
+  </floating-root>
+</floating-tree>
+```
+
+Click or ArrowRight opens the child. ArrowLeft or Escape closes only the child
+and restores focus to the parent item. `floating-tree`/`floating-node` carries
+the relationship; `nested` changes the list navigation behavior. The Vue
+equivalent uses `FloatingTree`, `FloatingNode`, `FloatingList`, and
+`FloatingListItem`.

@@ -11,6 +11,7 @@ import {
   dismiss,
   flip,
   offset,
+  size,
   shift,
   useCombobox,
   useSearch,
@@ -55,7 +56,23 @@ const {
 });
 const options = {
   placement: 'bottom-start',
-  middleware: [offset(8), flip(), shift({padding: 18})],
+  middleware: [
+    offset(8),
+    flip({padding: 18}),
+    shift({padding: 18}),
+    size({
+      padding: 18,
+      rootBoundary: 'viewport',
+      apply({availableHeight, elements}) {
+        const maxHeight = `${Math.max(0, availableHeight)}px`;
+        elements.floating.style.setProperty(
+          '--vue-async-combobox-popup-max-height',
+          maxHeight,
+        );
+        elements.floating.style.maxHeight = maxHeight;
+      },
+    }),
+  ],
   whileElementsMounted: autoUpdate,
 } as const;
 const plugins = [dismiss(), rolePlugin];
@@ -64,9 +81,14 @@ const loadMore = () => void search.controller.loadMore();
 </script>
 
 <template>
-  <section class="vue-combobox-panel vue-server-combobox-panel" role="tabpanel">
-  <h3>Server-side search</h3>
-  <p>
+  <article class="vue-demo-card vue-combobox-card">
+    <div class="vue-card-top">
+      <span class="vue-number">F</span>
+      <span>search sources</span>
+    </div>
+    <section class="vue-combobox-panel vue-server-combobox-panel">
+    <h3>Server-side search</h3>
+    <p>
       MSW simulates a cursor API over {{ FAKE_SERVER_DESTINATION_TOTAL }} distinct countries with debounce,
       cancellation, and page loading.
   </p>
@@ -179,5 +201,6 @@ const loadMore = () => void search.controller.loadMore();
     </p>
 
     <code>application source + useCombobox()</code>
-  </section>
+    </section>
+  </article>
 </template>

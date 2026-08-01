@@ -3,14 +3,17 @@ title: Getting started
 description: Install Floating UI Plus and choose the right package.
 ---
 
-import {PackageManagers} from 'starlight-package-managers';
-
 ## Install the package for your renderer
 
-<PackageManagers type="add" pkg="@floating-ui-plus/web" />
+Install exactly one renderer adapter:
 
-Use `@floating-ui-plus/web-components` for HTML-first Custom Elements or
-`@floating-ui-plus/vue` for Vue components and composables.
+- [Web Components](/docs/guides/installation/web-components) for HTML-first
+  Custom Elements.
+- [Vue](/docs/guides/installation/vue) for Vue components and composables.
+
+Both adapters install `@floating-ui-plus/web` transitively. Use the [Web core
+installation guide](/docs/guides/installation/web) only when you are building
+your own renderer.
 
 ## Pick the smallest layer
 
