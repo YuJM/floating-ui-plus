@@ -25,6 +25,21 @@ For example, use `/tooltip`, `/tooltip?framework=vue`, or
 
 Every gallery includes a working interaction, not just a static example.
 
+## Documentation
+
+The demo also hosts the Starlight documentation site at `/docs`. It combines
+human-written guides with generated API reference pages for the Web,
+Web Components, and Vue packages.
+
+- `/docs`: current documentation (0.6.1)
+- `/0.6.0/docs`: archived 0.6.0 documentation
+- `/docs/api/readme`: TypeDoc-generated API reference
+
+The Astro integration uses `starlight-typedoc`, `starlight-links-validator`,
+`starlight-package-managers`, and `starlight-versions`. TypeDoc output and
+version snapshots are generated during `typecheck`/`build` and are ignored by
+Git; edit the guides under `src/content/docs/docs` instead.
+
 ## Mock server for the async combobox
 
 The async combobox calls `/api/demo/destinations` with `q`, `limit`, and

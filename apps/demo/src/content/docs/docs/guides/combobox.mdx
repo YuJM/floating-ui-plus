@@ -1,0 +1,24 @@
+---
+title: Combobox and search
+description: Build fuzzy, server, and controlled combobox search with one contract.
+---
+
+`createSearch()`/`useSearch()` own query, loading, error, empty, results, IME,
+cancellation, stale-response protection, and pagination. `createCombobox()`/
+`useCombobox()` add editable input behavior, virtual focus, selection, and
+ARIA bindings.
+
+## Local fuzzy search
+
+Use `createFuzzySearchSource()` for local typo-tolerant matching. Keep
+`getItemLabel()` for visible copy and `getItemValue()` for the stable submitted
+identifier.
+
+## Server search
+
+Pass an application-owned async source for server search. The package does not
+choose a transport or cache library, so the same composition works with
+`fetch`, TanStack Query, or another request layer.
+
+The [combobox demo](/combobox?source=fuzzy) switches between fuzzy and server
+sources through the URL while preserving the selected framework.

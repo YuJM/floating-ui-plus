@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.3",
+    "@astrojs/starlight": "^0.41.6",
     "@astrojs/vue": "7.0.1",
     "@floating-ui-plus/vue": "workspace:^",
     "@floating-ui-plus/web-components": "workspace:^",
@@ -25,6 +26,12 @@
     "lucide-astro": "^0.556.0",
     "pretendard": "^1.3.9",
     "simple-icons": "^16.27.1",
+    "starlight-links-validator": "^0.25.2",
+    "starlight-package-managers": "^0.12.0",
+    "starlight-typedoc": "^0.23.0",
+    "starlight-versions": "^0.9.1",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.12.0",
     "vue": "^3.5.22"
   },
   "devDependencies": {

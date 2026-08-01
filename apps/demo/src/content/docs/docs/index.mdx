@@ -1,0 +1,30 @@
+---
+title: Floating UI Plus
+description: Accessible floating interfaces for the Web, Web Components, and Vue.
+---
+
+import {PackageManagers} from 'starlight-package-managers';
+
+Floating UI Plus adds interaction, focus, collection, search, and native
+top-layer behavior to Floating UI positioning primitives. Choose the adapter
+that matches your renderer and keep the same behavior contract across them.
+
+<PackageManagers type="add" pkg="@floating-ui-plus/web" />
+
+## Start here
+
+- [Getting started](/docs/guides/getting-started): choose a package and wire your first surface.
+- [Popover and dialog](/docs/guides/popover): use native Popover, `<dialog>`, templates, and portals deliberately.
+- [Combobox](/docs/guides/combobox): connect fuzzy or server search to editable input behavior.
+- [Dismiss and closing](/docs/guides/dismiss): distinguish `close()` from `dismiss()` and guard close requests.
+
+## Choose an adapter
+
+- [Web](/docs/frameworks/web): framework-neutral controllers and render contracts.
+- [Web Components](/docs/frameworks/web-components): native Custom Elements with root-owned templates.
+- [Vue](/docs/frameworks/vue): composables and declarative components with provide/inject context.
+
+The [API Reference](/docs/api/readme) is generated from the published TypeScript
+entry points. The [live demo](/) shows the same patterns running in the
+browser, including the [combobox](/combobox?source=fuzzy) and [modal](/modal)
+examples.

@@ -1,0 +1,24 @@
+---
+title: Dismiss and before-close
+description: Control outside press, Escape, and close requests consistently.
+---
+
+`dismiss()` is an interaction plugin. It listens for outside press, Escape,
+reference press, and ancestor scroll, then requests a close with a reason.
+`close()` is the explicit imperative command. Keep those meanings separate.
+
+## Guard a close request
+
+The Web package accepts `onBeforeClose(event, reason)` and can cancel a close by
+returning `false`. Web Components emit a cancelable `floatingbeforeclose`
+event; call `event.preventDefault()` to keep the surface open. Vue uses the
+same `onBeforeClose` callback in `FloatingRoot` options.
+
+These hooks are synchronous. Perform asynchronous work first, then issue the
+close command after it succeeds.
+
+## Observe the result
+
+Only an accepted request produces `openchange`. Its `reason` and source event
+let analytics and application state distinguish Escape, outside press, and an
+explicit close control.

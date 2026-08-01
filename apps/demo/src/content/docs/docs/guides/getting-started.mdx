@@ -1,0 +1,30 @@
+---
+title: Getting started
+description: Install Floating UI Plus and choose the right package.
+---
+
+import {PackageManagers} from 'starlight-package-managers';
+
+## Install the package for your renderer
+
+<PackageManagers type="add" pkg="@floating-ui-plus/web" />
+
+Use `@floating-ui-plus/web-components` for HTML-first Custom Elements or
+`@floating-ui-plus/vue` for Vue components and composables.
+
+## Pick the smallest layer
+
+1. Use `@floating-ui-plus/web` when your application owns markup, ARIA, and
+   lifecycle wiring.
+2. Use `@floating-ui-plus/web-components` when you want declarative elements
+   without a framework runtime.
+3. Use `@floating-ui-plus/vue` when Vue should own rendering while the shared
+   controller owns interaction state.
+
+All three packages use the same concepts: a reference, a floating surface,
+an open-state callback, interaction plugins, and an optional focus manager.
+
+## Verify the live behavior
+
+Open the [popover demo](/popover), then compare the [Vue combobox](/combobox?framework=vue&source=fuzzy)
+with the [Web Components server-search example](/combobox?framework=web-components&source=server).
