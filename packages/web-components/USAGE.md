@@ -192,6 +192,11 @@ exposes a neutral `phase` of `idle`, `loading`, `error`, `empty`, or `results`.
 editable-input ARIA, virtual focus, Enter selection, and status updates.
 `<floating-search>` renders application-owned native templates.
 
+If a request begins after results have rendered, `floating-search` retains the
+result template and reflects `data-loading="true"`; the standalone loading
+template is reserved for an empty result set. Style that attribute or the
+combobox input's `data-loading` state for a non-blocking indicator.
+
 External query presets can stay outside the option list. Set
 `query-trigger-selector` on `<floating-combobox>` and give each matching button
 a `value`; the component applies the query and restores input focus without
@@ -219,6 +224,13 @@ requiring application event listeners.
                     <small data-search-text="region"></small>
                   </div>
                 </floating-list-item>
+              </template>
+              <template data-search-more>
+                <button type="button" data-search-load-more>
+                  Load next <span data-search-text="$count"></span>/<span
+                    data-search-text="$total"
+                  ></span>
+                </button>
               </template>
             </floating-search>
           </div>
@@ -262,18 +274,13 @@ on the element itself, not the text input: the selected item's
 `getItemValue()` is submitted with `new FormData(form)`, constraint validation
 uses the selection, and `form.reset()` restores `selectedItem`.
 
-For server-side search, replace only the source with the async adapter:
+For server-side search, pass your application-owned request function directly:
 
 ```ts
-import {createAsyncSearchSource} from '@floating-ui-plus/web-components';
-
 combobox.configure({
   search: {
-    source: createAsyncSearchSource({
-      async search({query, signal, limit, cursor}) {
-        return fetchDestinationPage({query, signal, limit, cursor});
-      },
-    }),
+    source: ({query, signal, limit, cursor}) =>
+      fetchDestinationPage({query, signal, limit, cursor}),
     getItemKey: (destination) => destination.id,
     debounceMs: 200,
   },
@@ -281,9 +288,10 @@ combobox.configure({
 });
 ```
 
-Both source factories implement `SearchSource<T>`. Pass an existing
-`SearchController` to `configure()` only when its state or lifecycle must be
-shared outside the element.
+`source` can be a direct async function or an object with a `search()` method.
+It may use any client or protocol as long as it returns `{items, total?,
+nextCursor?}`. Pass an existing `SearchController` to `configure()` only when
+its state or lifecycle must be shared outside the element.
 
 The result template is repeated once per search item. Every generated
 `floating-list-item` receives its `label` and `value` automatically.

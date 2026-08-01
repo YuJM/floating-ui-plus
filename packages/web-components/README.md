@@ -167,9 +167,9 @@ to no active item at the list boundary.
 ## Search and combobox behavior with Custom Elements
 
 `@floating-ui-plus/web-components` re-exports the framework-neutral search
-sources. `createFuzzySearchSource()` and `createAsyncSearchSource()` implement
-the same `SearchSource<T>` contract, so local and server-side search use the
-same combobox composition.
+types and fuzzy source. Local fuzzy search uses `createFuzzySearchSource()`;
+server search receives an application-owned async request function directly,
+so the package does not choose the network client or protocol.
 `<floating-combobox>` binds the input, IME composition, active option, Enter
 selection, and ARIA through the shared Web binding contract. It automatically
 puts the nearest `<floating-list>` into virtual-focus mode, so arrow navigation
@@ -178,6 +178,11 @@ first child as an option. `<floating-search>` renders native templates for the
 five search phases, repeats the result template, binds text fields, and assigns
 each generated list item's label and value. The application only supplies
 search data, status copy, and markup.
+
+When a request starts with existing items, `floating-search` keeps rendering
+its result template, sets `data-phase="results"` and `data-loading="true"`,
+and lets the associated combobox/input expose the same busy state. The
+standalone loading template is only used while the result set is empty.
 
 ```html
 <floating-root data-root placement="bottom-start">
@@ -255,20 +260,16 @@ When `configure()` receives search options, the element creates and owns the
 `SearchController`. To use server-side search, only replace the source:
 
 ```ts
-import {createAsyncSearchSource} from '@floating-ui-plus/web-components';
-
 combobox.configure<MultilingualDestination>({
   search: {
-    source: createAsyncSearchSource({
-      async search({query, signal, limit, cursor}) {
-        const url = new URL('/api/destinations', location.origin);
-        url.searchParams.set('q', query);
-        url.searchParams.set('limit', String(limit));
-        if (cursor) url.searchParams.set('cursor', cursor);
-        const response = await fetch(url, {signal});
-        return response.json();
-      },
-    }),
+    source: async ({query, signal, limit, cursor}) => {
+      const url = new URL('/api/destinations', location.origin);
+      url.searchParams.set('q', query);
+      url.searchParams.set('limit', String(limit));
+      if (cursor) url.searchParams.set('cursor', cursor);
+      const response = await fetch(url, {signal});
+      return response.json();
+    },
     getItemKey: (item) => item.id,
     debounceMs: 200,
   },
@@ -287,9 +288,14 @@ need fuzzy scores or match ranges for highlighting. For a server-owned query
 library, omit `source` and push results through `setControlledState()`.
 
 Use `combobox.setQuery()` for programmatic query changes and
-`combobox.search?.loadMore()` for cursor pagination. The element attempts the initial
+`combobox.search?.loadMore()` for cursor pagination. To render this declaratively,
+add `template[data-search-more]` beside the result template and mark its page
+button with `data-search-load-more`; it appears only while `hasMore` is true.
+`$count` and `$total` bind the loaded and total record counts. The element attempts the initial
 refresh (respecting `minQueryLength`) and releases its internal bindings when
-disconnected. The editable input intentionally stays outside
+disconnected. `<floating-combobox>` reflects the same lifecycle with
+`data-loading` and `aria-busy`, and synchronizes those attributes on its bound
+input. The editable input intentionally stays outside
 `<floating-focus-manager>`: virtual focus
 keeps keyboard focus on the input while `aria-activedescendant` identifies the
 active option. `<floating-root>` still owns placement and the application still
@@ -302,7 +308,7 @@ query, opens the results, and returns focus to the input. Do not wrap presets
 in `<floating-list-item>`: list items are selectable result options.
 
 `data-search-text="label"` reads an item field. `$query`, `$index`, `$count`,
-and `$error` expose search metadata. For lower-level direct DOM integrations,
+`$total`, and `$error` expose search metadata. For lower-level direct DOM integrations,
 the re-exported `createSearchRenderer()` remains available.
 
 ## Arrow defaults and customization

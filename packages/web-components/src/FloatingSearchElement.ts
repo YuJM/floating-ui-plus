@@ -32,6 +32,14 @@ function findTemplate(host: Element, phase: SearchPhase) {
   );
 }
 
+function findLoadMoreTemplate(host: Element) {
+  return Array.from(host.children).find(
+    (element): element is HTMLTemplateElement =>
+      element instanceof HTMLTemplateElement &&
+      element.hasAttribute('data-search-more'),
+  );
+}
+
 function readPath(value: unknown, path: string): unknown {
   let current = value;
   for (const segment of path.split('.')) {
@@ -50,6 +58,7 @@ function getTextValue<T>(
   if (binding === '$query') return snapshot.query;
   if (binding === '$index') return index;
   if (binding === '$count') return snapshot.items.length;
+  if (binding === '$total') return snapshot.total;
   if (binding === '$error') {
     return snapshot.error instanceof Error
       ? snapshot.error.message
@@ -79,8 +88,11 @@ function bindTemplate<T>(
  *
  * Provide `template[data-search-idle|loading|error|empty]` and one
  * `template[data-search-result]`. The result template is repeated for every
- * item. `data-search-text="field.path"` binds item text; `$query`, `$index`,
- * `$count`, and `$error` bind search metadata.
+ * item. An optional `template[data-search-more]` is appended after result
+ * items when the source exposes a next cursor; a descendant marked
+ * `data-search-load-more` requests that next page. `data-search-text="field.path"`
+ * binds item text; `$query`, `$index`, `$count`, `$total`, and `$error` bind
+ * search metadata.
  */
 export class FloatingSearchElement<T = unknown> extends HTMLElement {
   #search: SearchController<T> | undefined;
@@ -149,11 +161,13 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
     const search = this.#search;
     if (!search) {
       this.removeAttribute('data-phase');
+      this.removeAttribute('data-loading');
       return;
     }
 
     const snapshot = search.snapshot;
     this.dataset.phase = snapshot.phase;
+    this.dataset.loading = String(snapshot.loading);
     const template = findTemplate(this, snapshot.phase);
     if (!template) return;
 
@@ -180,6 +194,32 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
         }
         fragment.append(itemFragment);
       });
+      const loadMoreTemplate = findLoadMoreTemplate(this);
+      if (snapshot.hasMore && loadMoreTemplate) {
+        const loadMoreFragment = loadMoreTemplate.content.cloneNode(
+          true,
+        ) as DocumentFragment;
+        bindTemplate(loadMoreFragment, snapshot);
+        for (const control of Array.from(
+          loadMoreFragment.querySelectorAll<HTMLElement>(
+            '[data-search-load-more]',
+          ),
+        )) {
+          control.dataset.loading = String(snapshot.loading);
+          control.setAttribute('aria-busy', String(snapshot.loading));
+          if (control instanceof HTMLButtonElement) {
+            control.disabled = snapshot.loading;
+          }
+          control.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+          });
+          control.addEventListener('click', (event) => {
+            event.preventDefault();
+            void search.loadMore();
+          });
+        }
+        fragment.append(loadMoreFragment);
+      }
     } else {
       const phaseFragment = template.content.cloneNode(
         true,

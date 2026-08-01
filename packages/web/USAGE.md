@@ -119,10 +119,10 @@ import {
   createCombobox,
   createComboboxStatusFormatter,
 } from '@floating-ui-plus/web/combobox';
-import {createAsyncSearchSource, createSearch} from '@floating-ui-plus/web/search';
+import {createSearch} from '@floating-ui-plus/web/search';
 
-const source = createAsyncSearchSource<Product>({
-  async search({query, signal, limit, cursor}) {
+const search = createSearch({
+  source: async ({query, signal, limit, cursor}) => {
     const url = new URL('/api/products/search', location.origin);
     url.searchParams.set('q', query);
     url.searchParams.set('limit', String(limit));
@@ -132,10 +132,6 @@ const source = createAsyncSearchSource<Product>({
     if (!response.ok) throw new Error('Search failed');
     return response.json();
   },
-});
-
-const search = createSearch({
-  source,
   getItemKey: (product) => product.id,
 });
 
@@ -195,6 +191,9 @@ Use `createSearchRenderer()` when the consumer is native DOM or Custom
 Elements. It subscribes to `SearchController`, chooses the renderer for
 `idle`, `loading`, `error`, `empty`, or `results`, and replaces only the bound
 container's children. Your application still supplies nodes, markup, and copy.
+When items already exist, a new request keeps the `results` renderer active and
+passes `loading: true`; use that flag to keep the rows visible with a pending
+indicator. The standalone `loading` renderer is for an empty result set.
 
 ```ts
 import {createSearchRenderer} from '@floating-ui-plus/web/search';

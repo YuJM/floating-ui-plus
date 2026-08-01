@@ -10,6 +10,7 @@ import ExampleTooltip from '../components/ExampleTooltip.vue';
 import MiddlewareView from './MiddlewareView.vue';
 import PlacementView from './PlacementView.vue';
 import type {Locale} from '../../i18n';
+import type {ComboboxSource} from '../../i18n';
 
 const examples = {
   tooltip: ExampleTooltip,
@@ -23,10 +24,18 @@ const examples = {
   modal: ExampleModal,
 } as const;
 
-const props = defineProps<{exampleName: keyof typeof examples; locale: Locale}>();
+const props = defineProps<{
+  exampleName: keyof typeof examples;
+  locale: Locale;
+  source?: ComboboxSource;
+}>();
 const example = computed(() => examples[props.exampleName] ?? examples.tooltip);
 </script>
 
 <template>
-  <component :is="example" />
+  <ExampleCombobox
+    v-if="props.exampleName === 'combobox'"
+    :source="props.source"
+  />
+  <component v-else :is="example" />
 </template>

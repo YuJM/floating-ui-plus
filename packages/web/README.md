@@ -213,9 +213,16 @@ combobox behavior: focus/input opening, IME events, active option state,
 provides the neutral `idle`, `loading`, `error`, `empty`, and `results` states;
 the application still owns their copy and markup.
 
+When a replacement search or cursor page starts with results already present,
+`phase` stays `results` and `loading` becomes `true`. Result renderers can keep
+the current list mounted and decorate it with a non-blocking pending indicator;
+only an empty result set uses the standalone `loading` phase.
+
 Framework adapters consume the same `getInputProps()`,
 `getQueryTriggerProps()`, `getOptionProps()`, and `getNavigationOptions()`
-contract. The imperative `bindInput()`, `bindQueryTrigger()`, `bindOption()`,
+contract. Input props expose `aria-busy` and `data-loading` from the search
+lifecycle, so an input-level pending indicator can stay in sync without
+duplicating subscription code. The imperative `bindInput()`, `bindQueryTrigger()`, `bindOption()`,
 and `navigationPlugin()` helpers
 are built from those props, so Web Components, Vue, and direct DOM integrations
 share one behavior source.
@@ -300,7 +307,9 @@ For direct DOM or Custom Element renderers, `createSearchRenderer()` removes
 the repetitive subscription, phase switch, and `replaceChildren()` lifecycle.
 All five phase renderers are required, so an empty query, pending request,
 failure, no-result outcome, and result list cannot accidentally leave stale
-content behind. The callbacks retain complete control of nodes and copy:
+content behind. A refreshing result list continues through the `results`
+renderer with `loading: true`, so the callback can retain its rows and add a
+pending affordance. The callbacks retain complete control of nodes and copy:
 
 ```ts
 import {createSearchRenderer} from '@floating-ui-plus/web/search';
@@ -327,8 +336,10 @@ not a replacement for framework rendering.
 
 `createFuzzySearchSource()` normalizes compatibility forms and diacritics,
 ranks exact/prefix/fuzzy matches, and exposes match ranges for highlighting.
-For application-owned fetching, replace it with `createAsyncSearchSource()` or
-omit `source` and call `setControlledState()` as the query library updates.
+For application-owned fetching, pass its async request function directly as
+`source`, or omit `source` and call `setControlledState()` as the query library
+updates. The request function may use any transport and only normalizes its
+result to `{items, total?, nextCursor?}`.
 `typeahead()` is for non-editable menus and selects; it supports multilingual
 fuzzy matching by default and accepts `findMatch` for custom matching.
 

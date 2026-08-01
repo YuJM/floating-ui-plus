@@ -32,6 +32,9 @@ Vue now provides the equivalent renderless `FloatingSearch` named-slot
 component, while `useCombobox()` exposes `statusText` and
 `getQueryTriggerProps()` from the same framework-neutral status and query
 binding contracts.
+When an existing result set refreshes or loads another page, its render phase
+remains `results` while `loading` is true, so Web, Web Components, and Vue can
+retain visible list items and present a non-blocking loading indicator.
 Document the same composition with local fuzzy and asynchronous server-search
 examples in both Web Components and Vue demos.
 Keep ordinary anchored examples in their local DOM and reserve
@@ -68,3 +71,18 @@ hidden native form input.
 Add framework-neutral external query activation and a declarative Web
 Components `query-trigger-selector`, so query preset buttons no longer repeat
 query, open, and input-focus event wiring or masquerade as result list items.
+
+Add declarative cursor-page controls to Web Components `floating-search`:
+`template[data-search-more]` renders only while another page is available, and
+its `data-search-load-more` control delegates to the shared
+`SearchController.loadMore()` lifecycle.
+
+Expose the shared search pending state on combobox input props as `aria-busy`
+and `data-loading`. Web Components mirrors it on the combobox host and bound
+input, while Vue adds a reactive `combobox.loading` projection for input-level
+pending UI.
+
+`SearchOptions.source` now also accepts an application-owned async request
+function directly. The package does not prescribe a network client, endpoint,
+response protocol, or pagination transport; the function adapts any chosen
+communication layer to the small search-page result shape.

@@ -136,6 +136,8 @@ export type {
   SearchRenderOutput,
   SearchSnapshot,
   SearchSource,
+  SearchSourceHandler,
+  SearchSourceInput,
   SearchSourceItem,
   ComboboxOptions,
   ComboboxNavigationOptions,

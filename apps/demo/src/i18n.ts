@@ -13,6 +13,13 @@ export const EXAMPLE_IDS = [
 ] as const;
 export type ExampleId = (typeof EXAMPLE_IDS)[number];
 
+export const COMBOBOX_SOURCES = ['fuzzy', 'server'] as const;
+export type ComboboxSource = (typeof COMBOBOX_SOURCES)[number];
+
+export function isComboboxSource(value: string | undefined): value is ComboboxSource {
+  return (COMBOBOX_SOURCES as readonly string[]).includes(value ?? '');
+}
+
 const COMPONENT_NAMES: Record<ExampleId, string> = {
   tooltip: 'Tooltip',
   popover: 'Popover',
@@ -36,7 +43,7 @@ const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
     'floating-list',
     'floating-list-item',
     'createFuzzySearchSource()',
-    'createAsyncSearchSource()',
+    'application search source',
   ],
   placement: ['Placement', 'offset()'],
   middleware: ['floating-root', 'offset', 'shift', 'flip', 'arrow', 'size', 'autoPlacement', 'hide', 'inline'],

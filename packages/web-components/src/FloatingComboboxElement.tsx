@@ -241,6 +241,9 @@ const FloatingComboboxBase = c(
         });
       };
       const unsubscribeController = controller.subscribe((snapshot) => {
+        const loading = String(snapshot.search.loading);
+        host.dataset.loading = loading;
+        host.setAttribute('aria-busy', loading);
         host.syncFormState();
         host.dispatchEvent(
           new CustomEvent<FloatingComboboxStateChangeDetail>(

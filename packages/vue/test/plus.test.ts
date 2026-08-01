@@ -154,11 +154,42 @@ describe('Floating UI Plus Vue adapter', () => {
     expect(option).toHaveAttribute('aria-selected', 'true');
   });
 
+  test('exposes search loading through combobox input props', async () => {
+    let search: ReturnType<typeof useSearch<{id: string; label: string}>>;
+    const App = defineComponent({
+      setup() {
+        search = useSearch({
+          items: [{id: 'alpha', label: 'Alpha'}],
+          getItemKey: (item) => item.id,
+        });
+        const combobox = useCombobox({
+          search,
+          getItemLabel: (item) => item.label,
+        });
+        return {combobox};
+      },
+      template: `<input data-testid="input" v-bind="combobox.inputProps.value" />`,
+    });
+
+    const {getByTestId} = render(App);
+    const input = getByTestId('input');
+    expect(input).toHaveAttribute('aria-busy', 'false');
+
+    search!.controller.setControlledState({
+      items: [{id: 'alpha', label: 'Alpha'}],
+      loading: true,
+    });
+    await nextTick();
+    expect(input).toHaveAttribute('aria-busy', 'true');
+    expect(input).toHaveAttribute('data-loading', 'true');
+  });
+
   test('renders Vue search phase slots and shares combobox status/query bindings', async () => {
+    let search: ReturnType<typeof useSearch<{id: string; label: string}>>;
     const App = defineComponent({
       components: {FloatingSearch},
       setup() {
-        const search = useSearch({
+        search = useSearch({
           items: [
             {id: 'alpha', label: 'Alpha'},
             {id: 'beta', label: 'Beta'},
@@ -201,7 +232,26 @@ describe('Floating UI Plus Vue adapter', () => {
     expect(getByTestId('phase')).toHaveTextContent('2 result slots');
     expect(getByTestId('status')).toHaveTextContent('Suggestions closed');
 
+    search!.controller.setControlledState({
+      items: [
+        {id: 'alpha', label: 'Alpha'},
+        {id: 'beta', label: 'Beta'},
+      ],
+      loading: true,
+    });
+    await nextTick();
+    expect(getByTestId('phase')).toHaveTextContent('2 result slots');
+
     await fireEvent.focus(input);
+    expect(getByTestId('status')).toHaveTextContent('Searching');
+
+    search!.controller.setControlledState({
+      items: [
+        {id: 'alpha', label: 'Alpha'},
+        {id: 'beta', label: 'Beta'},
+      ],
+    });
+    await nextTick();
     expect(getByTestId('status')).toHaveTextContent('2 results');
 
     await fireEvent.click(getByTestId('preset'));

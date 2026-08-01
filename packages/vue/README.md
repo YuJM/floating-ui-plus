@@ -231,6 +231,9 @@ stale-response protection, TTL caching, de-duplication, and cursor pagination;
 IME, ARIA, Enter selection, and the combobox role. `<FloatingSearch>` selects
 the matching `idle`, `loading`, `error`, `empty`, or `results` slot from
 `search.phase`; your component still owns the result markup and copy.
+When a new request starts with existing items, `FloatingSearch` continues to
+render the `results` slot and `search.loading` becomes `true`, so the list
+remains visible while the input-level indicator reports progress.
 
 ```vue
 <script setup lang="ts">
@@ -273,6 +276,7 @@ const {
   selectedItem,
   selectedValue,
   statusText,
+  loading,
   inputProps,
   rolePlugin,
   getOptionProps,
@@ -315,6 +319,7 @@ const navigationOptions = getNavigationOptions({
         as="input"
         v-bind="inputProps"
       />
+      <span v-if="loading" aria-hidden="true">Searching…</span>
       <FloatingPortal>
         <FloatingContent>
           <FloatingSearch :search="search">
@@ -356,8 +361,8 @@ renderer.
 
 `createFuzzySearchSource()` normalizes compatibility forms and diacritics,
 then returns exact/prefix/fuzzy scores and match ranges through `hits`. For a
-remote API, replace it with `createAsyncSearchSource()` while keeping the same
-`useSearch()` and template composition. Call
+remote API, pass the application's async request function directly as `source`
+while keeping the same `useSearch()` and template composition. Call
 `search.controller.loadMore()` when `search.state.hasMore` is true. For data
 owned by TanStack Query or another request library, omit `source` and call
 `search.controller.setControlledState({items, loading, error, ...})`.
@@ -380,7 +385,8 @@ their state is owned elsewhere.
 | `useCombobox()` value | Purpose |
 | --- | --- |
 | `open`, `activeIndex`, `selectedItem` | Writable refs for root, list, and selected-result state |
-| `inputProps` | Reactive value plus focus, input, IME, and Enter handlers from the Web binding contract |
+| `inputProps` | Reactive value, loading ARIA/state attributes, plus focus, input, IME, and Enter handlers from the Web binding contract |
+| `loading` | Reactive input-level pending state from the associated search |
 | `getOptionProps(item, index)` | Option ID, active/selected ARIA, blur prevention, and selection handlers from the same Web contract |
 | `getQueryTriggerProps(query)` | Blur prevention, query activation, and input focus restoration for a preset button |
 | `statusText` | Reactive live-region text from a shared phase-keyed `status` map or formatter |

@@ -133,20 +133,16 @@ it does not render a Combobox. The application owns the input, menu, selection,
 and ARIA.
 
 ```ts
-import {createAsyncSearchSource, useSearch} from '@floating-ui-plus/vue';
+import {useSearch} from '@floating-ui-plus/vue';
 
-const source = createAsyncSearchSource<Product>({
-  async search({query, signal}) {
+const search = useSearch({
+  source: async ({query, signal}) => {
     const response = await fetch(`/api/products?q=${encodeURIComponent(query)}`, {
       signal,
     });
     if (!response.ok) throw new Error('Search failed');
     return response.json();
   },
-});
-
-const search = useSearch({
-  source,
   getItemKey: (product) => product.id,
 });
 ```
@@ -163,6 +159,9 @@ query library, pass controlled `items`, `loading`, and `error` values to
 the matching named `idle`, `loading`, `error`, `empty`, or `results` slot while
 leaving each slot's markup, ARIA, and copy in the component. Use
 `createSearchRenderer()` only for a direct-DOM island, not a normal Vue tree.
+If items are already present, a new request keeps the `results` slot mounted
+and updates `search.loading`; pair it with the `loading` value from
+`useCombobox()` for a non-blocking input indicator.
 
 `useCombobox()` also returns `selectedValue`, which follows the shared
 `getItemValue()` contract. Bind it to a hidden native input when the selection
@@ -175,7 +174,9 @@ belongs to a standard form:
 Pass a phase-keyed `status` map to `useCombobox()` and bind `statusText` to a
 live region to share the same status resolution as Web Components. Bind a
 preset button with `getQueryTriggerProps(query)` to apply the query and return
-focus to the input without hand-written mouse handlers.
+focus to the input without hand-written mouse handlers. `inputProps` include
+`aria-busy` and `data-loading`; use `combobox.loading` when the template needs
+a visible input-level pending indicator.
 
 ## Nested menus and keyboard collections
 

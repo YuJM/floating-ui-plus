@@ -129,6 +129,8 @@ describe('ComboboxController', () => {
     const {combobox, input, onSelect} = setup();
     const inputProps = combobox.getInputProps();
     expect(inputProps.value).toBe('');
+    expect(inputProps['aria-busy']).toBe('false');
+    expect(inputProps['data-loading']).toBe('false');
     expect(inputProps.onInput).toBe(combobox.handleInput);
     expect(inputProps.onKeydown).toBe(combobox.handleKeyDown);
 
@@ -147,6 +149,19 @@ describe('ComboboxController', () => {
     optionProps.onClick(new MouseEvent('click'));
     expect(input.value).toBe('Beta');
     expect(onSelect).toHaveBeenCalledWith(beta, expect.any(MouseEvent));
+  });
+
+  test('keeps loading semantics on the bound input in sync with search state', () => {
+    const {combobox, input, search} = setup();
+
+    search.setControlledState({items: [alpha], loading: true});
+    expect(combobox.getInputProps()['aria-busy']).toBe('true');
+    expect(input.getAttribute('aria-busy')).toBe('true');
+    expect(input.dataset.loading).toBe('true');
+
+    search.setControlledState({items: [alpha], loading: false});
+    expect(input.getAttribute('aria-busy')).toBe('false');
+    expect(input.dataset.loading).toBe('false');
   });
 
   test('activates an external query preset and restores input focus', () => {
@@ -180,6 +195,11 @@ describe('ComboboxController', () => {
     );
     combobox.handleFocus(new FocusEvent('focus'));
     expect(status({...combobox.snapshot, open: true})).toBe('2 results');
+
+    combobox.search.setControlledState({items: [alpha, beta], loading: true});
+    expect(combobox.search.phase).toBe('results');
+    expect(status({...combobox.snapshot, open: true})).toBe('Searching');
+    combobox.search.setControlledState({items: [alpha, beta]});
 
     props.onMousedown(mouseDown);
     props.onClick(new MouseEvent('click'));

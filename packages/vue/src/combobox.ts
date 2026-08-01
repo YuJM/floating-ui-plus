@@ -60,6 +60,8 @@ export interface UseComboboxReturn<T> {
   selectedValue: ComputedRef<string | null>;
   /** Reactive text resolved from the shared combobox status contract. */
   statusText: ComputedRef<string | undefined>;
+  /** Mirrors the associated search lifecycle for combobox input UI. */
+  loading: ComputedRef<boolean>;
   inputProps: ComputedRef<ComboboxInputProps & ComboboxInputLifecycleProps>;
   rolePlugin: FloatingPlugin;
   setQuery(query: string, event?: Event): void;
@@ -163,6 +165,10 @@ export function useCombobox<T>(
     if (!statusFormatter) return undefined;
     return statusFormatter({...controller.snapshot, open: open.value});
   });
+  const loading = computed(() => {
+    void revision.value;
+    return controller.search.loading;
+  });
 
   onScopeDispose(() => {
     stopActiveIndexWatch();
@@ -178,6 +184,7 @@ export function useCombobox<T>(
     selectedItem,
     selectedValue,
     statusText,
+    loading,
     inputProps,
     rolePlugin,
     setQuery: (query, event) => controller.setQuery(query, event),

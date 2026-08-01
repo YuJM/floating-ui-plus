@@ -24,14 +24,28 @@ export interface SearchPage<T> {
   nextCursor?: string | undefined;
 }
 
+/**
+ * Application-owned request adapter. It can call any transport (HTTP, RPC,
+ * an SDK, a query client, or an in-memory service) and normalize its response
+ * to the small page shape used by the search lifecycle.
+ */
+export type SearchSourceHandler<T> = (
+  request: SearchRequest,
+) => Promise<SearchPage<T>>;
+
 export interface SearchSource<T> {
-  search(request: SearchRequest): Promise<SearchPage<T>>;
+  search: SearchSourceHandler<T>;
 }
 
+/** A source object or direct application-owned request handler. */
+export type SearchSourceInput<T> = SearchSource<T> | SearchSourceHandler<T>;
+
+/** @deprecated Pass the request handler directly as `source` instead. */
 export interface AsyncSearchSourceOptions<T> {
-  search(request: SearchRequest): Promise<SearchPage<T>>;
+  search: SearchSourceHandler<T>;
 }
 
+/** @deprecated Pass the request handler directly as `source` instead. */
 export function createAsyncSearchSource<T>(
   options: AsyncSearchSourceOptions<T>,
 ): SearchSource<T> {
@@ -47,7 +61,7 @@ export interface ControlledSearchState<T> {
 }
 
 export interface SearchOptions<T> {
-  source?: SearchSource<T> | undefined;
+  source?: SearchSourceInput<T> | undefined;
   items?: readonly SearchSourceItem<T>[] | undefined;
   loading?: boolean | undefined;
   error?: unknown;
@@ -63,8 +77,10 @@ export interface SearchOptions<T> {
 }
 
 /**
- * Rendering-oriented phase derived from a search request and its current
- * query. `idle` means that both the query and current result set are empty.
+ * Rendering-oriented primary content phase. A retained result set stays in
+ * `results` while a replacement or next page is loading; inspect `loading`
+ * for the non-blocking request state. `idle` means both the query and current
+ * result set are empty.
  */
 export type SearchPhase = 'idle' | 'loading' | 'error' | 'empty' | 'results';
 
@@ -161,12 +177,13 @@ export class SearchController<T> {
   /**
    * The current rendering phase. This does not prescribe UI copy or markup;
    * renderers can use `idle` for query prompts and `empty` for a no-results
-   * state without duplicating loading/error precedence rules.
+   * state without duplicating error precedence rules. Existing results take
+   * priority over `loading` so an in-flight request cannot blank the list.
    */
   get phase(): SearchPhase {
-    if (this.loading) return 'loading';
     if (this.error != null) return 'error';
     if (this.items.length) return 'results';
+    if (this.loading) return 'loading';
     if (!this.query.trim()) return 'idle';
     return 'empty';
   }
@@ -328,7 +345,8 @@ export class SearchController<T> {
     this.error = null;
     this.#emit();
     try {
-      const page = await source.search({
+      const request = typeof source === 'function' ? source : source.search;
+      const page = await request({
         query,
         signal: abortController.signal,
         limit,

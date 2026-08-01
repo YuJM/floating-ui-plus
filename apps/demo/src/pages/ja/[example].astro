@@ -1,7 +1,11 @@
 ---
 import LocalizedExamplePage from '../../components/LocalizedExamplePage.astro';
 import {EXAMPLE_IDS} from '../../i18n';
-export function getStaticPaths() { return EXAMPLE_IDS.map((example) => ({params: {example}})); }
+export function getStaticPaths() {
+  return EXAMPLE_IDS
+    .filter((example) => example !== 'combobox')
+    .map((example) => ({params: {example}}));
+}
 const {example} = Astro.params;
 ---
 <LocalizedExamplePage locale="ja" example={example as typeof EXAMPLE_IDS[number]} />

@@ -1,14 +1,50 @@
 ---
 import {multilingualSearchPrompts} from '../../multilingual-destinations';
+import type {ComboboxSource} from '../../i18n';
 import AsyncComboboxExample from './AsyncComboboxExample.astro';
+
+const {source = 'fuzzy'} = Astro.props as {source?: ComboboxSource};
+const comboboxPath = Astro.url.pathname.replace(/\/(?:fuzzy|server)$/, '');
+const sourceHref = (nextSource: ComboboxSource) =>
+  `${comboboxPath}/${nextSource}${Astro.url.search}`;
 ---
 
 <div class="combobox-examples">
-  <article class="demo-card combobox-card" data-demo="combobox">
+  <article class="demo-card combobox-card">
   <div class="card-top">
     <span class="number">F</span>
-    <span class="chip">framework-neutral search</span>
+    <span class="chip">search sources</span>
   </div>
+  <div class="combobox-tabs" role="tablist" aria-label="Combobox search source" data-combobox-tabs>
+    <a
+      id="combobox-tab-local"
+      href={sourceHref('fuzzy')}
+      role="tab"
+      aria-selected={source === 'fuzzy' ? 'true' : 'false'}
+      aria-controls="combobox-panel-local"
+      tabindex={source === 'fuzzy' ? undefined : '-1'}
+    >
+      Fuzzy search
+    </a>
+    <a
+      id="combobox-tab-server"
+      href={sourceHref('server')}
+      role="tab"
+      aria-selected={source === 'server' ? 'true' : 'false'}
+      aria-controls="combobox-panel-server"
+      tabindex={source === 'server' ? undefined : '-1'}
+    >
+      Server search
+    </a>
+  </div>
+  {source === 'fuzzy' && (
+  <section
+    class="combobox-panel"
+    data-demo="combobox"
+    id="combobox-panel-local"
+    role="tabpanel"
+    aria-labelledby="combobox-tab-local"
+  >
   <h3>Multilingual combobox</h3>
   <p>Search by city, country, local script, alias, or forgiving typo.</p>
 
@@ -115,9 +151,11 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
     &lt;floating-combobox&gt; + &lt;floating-search&gt; +
     &lt;floating-list-item&gt;
   </code>
-  </article>
+  </section>
+  )}
 
-  <AsyncComboboxExample />
+  {source === 'server' && <AsyncComboboxExample />}
+  </article>
 </div>
 
 <script>
@@ -176,4 +214,22 @@ import AsyncComboboxExample from './AsyncComboboxExample.astro';
     });
 
   });
+
+  document.querySelectorAll<HTMLElement>('[data-combobox-tabs]').forEach(
+    (tablist) => {
+      const tabs = Array.from(
+        tablist.querySelectorAll<HTMLAnchorElement>('[role="tab"]'),
+      );
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('keydown', (event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          event.preventDefault();
+          const direction = event.key === 'ArrowRight' ? 1 : -1;
+          const next = tabs[(index + direction + tabs.length) % tabs.length];
+          if (next) window.location.assign(next.href);
+        });
+      });
+    },
+  );
+
 </script>

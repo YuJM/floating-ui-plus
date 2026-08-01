@@ -245,15 +245,28 @@ floating-arrow.tooltip-arrow::part(path) { fill: currentColor; }
 .mw-panel-inline { min-width: 96px; padding: 6px 8px; text-align: center; }
 
 .combobox-card { background: #dfe8ff; }
-.combobox-examples { display: grid; gap: 14px; }
-.combobox-card > p, .combobox-card > code { color: #56627b; }
+.combobox-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 18px; padding: 4px; border: 1px solid rgba(52,81,209,.16); border-radius: 10px; background: rgba(255,255,255,.38); }
+.combobox-tabs a { display: grid; min-height: 32px; place-items: center; border-radius: 7px; padding: 6px 9px; color: #56627b; background: transparent; font: 10px ui-monospace,monospace; letter-spacing: .02em; text-decoration: none; transition: background .16s ease, color .16s ease; }
+.combobox-tabs a[aria-selected="true"] { color: #1b2f74; background: var(--paper); box-shadow: 0 2px 8px rgba(35,55,125,.12); }
+.combobox-tabs a:focus-visible { outline: 2px solid #3451d1; outline-offset: 2px; }
+.combobox-panel > h3 { margin-top: 26px; }
+.combobox-panel > p, .combobox-panel > code { color: #56627b; }
+.combobox-server-panel { min-height: 310px; }
 .combobox-shell { position: relative; margin-top: 24px; }
 .combobox-label { display: block; margin-bottom: 7px; color: #596985; font: 13px ui-monospace,monospace; letter-spacing: .03em; }
 .combobox-input { width: 100%; padding: 13px 42px 13px 14px; border: 1px solid rgba(23,37,84,.22); border-radius: 10px; outline: 0; color: var(--ink); background: var(--paper); font-size: 14px; transition: border-color .16s ease,box-shadow .16s ease; }
 .combobox-input::placeholder { color: #8994ad; }
 .combobox-input:focus { border-color: #3451d1; box-shadow: 0 0 0 4px rgba(121,149,255,.18); }
 .combobox-icon { position: absolute; right: 14px; bottom: 12px; color: #3451d1; font-size: 19px; pointer-events: none; }
+.combobox-loading-indicator { display: none; position: absolute; right: 16px; bottom: 15px; width: 13px; height: 13px; border: 2px solid rgba(52,81,209,.25); border-top-color: #3451d1; border-radius: 50%; animation: combobox-loading-spin .7s linear infinite; pointer-events: none; }
+floating-combobox[data-loading="true"] .combobox-loading-indicator { display: block; }
+@keyframes combobox-loading-spin { to { transform: rotate(360deg); } }
 .combobox-popup { z-index: 60; width: min(400px,calc(100vw - 36px)); overflow: hidden; padding: 6px; border: 1px solid rgba(23,37,84,.18); border-radius: 12px; background: var(--paper); box-shadow: 0 22px 55px rgba(23,37,84,.22); }
+.async-combobox-popup { --async-combobox-popup-max-height: min(26rem, calc(100dvh - 32px)); max-height: var(--async-combobox-popup-max-height); overflow: hidden; }
+.async-combobox-popup > floating-search { display: block; max-height: calc(var(--async-combobox-popup-max-height) - 12px); overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgba(91,90,181,.52) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
+.async-combobox-popup > floating-search::-webkit-scrollbar { width: 10px; }
+.async-combobox-popup > floating-search::-webkit-scrollbar-track { background: transparent; }
+.async-combobox-popup > floating-search::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: rgba(91,90,181,.52); background-clip: content-box; }
 .combobox-option { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 58px; padding: 9px 11px; border-radius: 8px; color: var(--ink); cursor: default; }
 .combobox-option[data-active="true"] { background: #e4e9ff; box-shadow: inset 3px 0 #7995ff; }
 .combobox-option > span:first-child { display: grid; gap: 3px; }
@@ -265,10 +278,20 @@ floating-arrow.tooltip-arrow::part(path) { fill: currentColor; }
 .combobox-hints button { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 7px 8px; border: 0; border-radius: 7px; color: #56627b; background: rgba(255,255,255,.64); cursor: pointer; font-size: 9px; }
 .combobox-hints button:hover { color: var(--ink); background: var(--paper); }
 .combobox-hints code { margin: 0; color: #3451d1; font-size: 9px; }
-.combobox-server-card { background: #e7e0ff; }
-.combobox-server-card .combobox-label { color: #435171; }
+.combobox-server-panel .combobox-label { color: #435171; }
 .combobox-server-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
 .combobox-server-meta > * { margin: 0; border: 1px solid rgba(91,90,181,.2); border-radius: 999px; padding: 5px 8px; color: #514f93; background: rgba(255,255,255,.58); font: 10px ui-monospace,monospace; }
+.combobox-pagination { position: sticky; bottom: -6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 8px -6px -6px; border-top: 1px solid rgba(91,90,181,.16); padding: 10px 12px; background: #f8f8ff; box-shadow: 0 -8px 16px rgba(248,248,255,.94); }
+.combobox-pagination-progress { color: #62658f; font: 10px ui-monospace,monospace; white-space: nowrap; }
+.combobox-pagination-progress strong { color: #353870; }
+.combobox-load-more { flex: none; min-height: 30px; border: 1px solid rgba(91,90,181,.3); border-radius: 7px; padding: 6px 9px; background: #eeefff; color: #454486; cursor: pointer; font: 10px ui-monospace,monospace; transition: background .16s ease, transform .16s ease; }
+.combobox-load-more:hover:not(:disabled) { background: #e1e3ff; }
+.combobox-load-more:active:not(:disabled) { transform: translateY(1px); }
+.combobox-load-more:disabled { cursor: progress; opacity: .72; }
+.combobox-load-more-pending { display: none; }
+floating-search[data-loading="true"] .combobox-load-more-label { display: none; }
+floating-search[data-loading="true"] .combobox-load-more-pending { display: inline; }
+.combobox-load-more:focus-visible { outline: 2px solid #7776d6; outline-offset: 2px; }
 
 .placement-view { display: grid; min-height: 680px; grid-template-columns: minmax(250px,.7fr) minmax(540px,1.3fr); align-items: center; gap: 64px; padding: 28px 0 100px; }
 .placement-copy { align-self: start; padding-top: 42px; }

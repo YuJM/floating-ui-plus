@@ -46,6 +46,8 @@ export type {
   SearchRenderOutput,
   SearchSnapshot,
   SearchSource,
+  SearchSourceHandler,
+  SearchSourceInput,
   SearchSourceItem,
 } from './search';
 export {

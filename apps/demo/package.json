@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "generate:messages": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy url baseLocale --emit-ts-declarations --silent",
+    "generate:fake-server-destinations": "bun scripts/generate-fake-server-destinations.ts",
     "dev": "bun run generate:messages && astro dev --host 127.0.0.1 --port 5173",
     "preview": "astro preview --host 127.0.0.1",
     "build": "bun run generate:messages && astro check && astro build",
@@ -28,10 +29,17 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@faker-js/faker": "^10.5.0",
     "@inlang/plugin-message-format": "^4.3.0",
     "@tailwindcss/vite": "^4.3.3",
+    "msw": "^2.15.0",
     "playwright": "^1.50.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3"
+  },
+  "msw": {
+    "workerDirectory": [
+      "./public"
+    ]
   }
 }

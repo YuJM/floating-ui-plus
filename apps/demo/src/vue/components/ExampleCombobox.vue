@@ -24,6 +24,23 @@ import {
   multilingualSearchPrompts,
   type MultilingualDestination,
 } from '../../multilingual-destinations';
+import type {ComboboxSource} from '../../i18n';
+
+const props = withDefaults(defineProps<{source?: ComboboxSource}>(), {
+  source: 'fuzzy',
+});
+
+function sourceHref(source: ComboboxSource) {
+  const url = new URL(window.location.href);
+  url.pathname = `${url.pathname.replace(/\/(?:fuzzy|server)$/, '')}/${source}`;
+  return `${url.pathname}${url.search}`;
+}
+
+function navigateSource(event: KeyboardEvent, source: ComboboxSource) {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+  event.preventDefault();
+  window.location.assign(sourceHref(source === 'fuzzy' ? 'server' : 'fuzzy'));
+}
 
 const source = createFuzzySearchSource(multilingualDestinations, {
   keys: multilingualSearchKeys,
@@ -70,16 +87,45 @@ const plugins = [dismiss(), rolePlugin];
 const navigationOptions = getNavigationOptions({
   allowEscape: true,
 });
-
 </script>
 
 <template>
-  <div class="vue-combobox-examples">
-    <article class="vue-demo-card vue-combobox-card">
+  <article class="vue-demo-card vue-combobox-card">
     <div class="vue-card-top">
       <span class="vue-number">F</span>
-      <span>composed in Vue</span>
+      <span>search sources</span>
     </div>
+    <div class="vue-combobox-tabs" role="tablist" aria-label="Combobox search source">
+      <a
+        id="vue-combobox-tab-fuzzy"
+        :href="sourceHref('fuzzy')"
+        role="tab"
+        :aria-selected="props.source === 'fuzzy'"
+        aria-controls="vue-combobox-panel-fuzzy"
+        :tabindex="props.source === 'fuzzy' ? 0 : -1"
+        @keydown="navigateSource($event, 'fuzzy')"
+      >
+        Fuzzy search
+      </a>
+      <a
+        id="vue-combobox-tab-server"
+        :href="sourceHref('server')"
+        role="tab"
+        :aria-selected="props.source === 'server'"
+        aria-controls="vue-combobox-panel-server"
+        :tabindex="props.source === 'server' ? 0 : -1"
+        @keydown="navigateSource($event, 'server')"
+      >
+        Server search
+      </a>
+    </div>
+    <section
+      v-if="props.source === 'fuzzy'"
+      id="vue-combobox-panel-fuzzy"
+      class="vue-combobox-panel"
+      role="tabpanel"
+      aria-labelledby="vue-combobox-tab-fuzzy"
+    >
     <h3>Multilingual combobox</h3>
     <p>Search by city, country, local script, alias, or forgiving typo.</p>
 
@@ -174,7 +220,11 @@ const navigationOptions = getNavigationOptions({
     </p>
 
     <code>useSearch() + useCombobox() + &lt;FloatingList navigation&gt;</code>
-    </article>
-    <ExampleAsyncCombobox />
-  </div>
+    </section>
+    <ExampleAsyncCombobox
+      v-else
+      id="vue-combobox-panel-server"
+      aria-labelledby="vue-combobox-tab-server"
+    />
+  </article>
 </template>

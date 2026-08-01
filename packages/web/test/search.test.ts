@@ -1,7 +1,6 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
 
 import {
-  createAsyncSearchSource,
   createSearch,
   createSearchRenderer,
   type SearchPage,
@@ -20,7 +19,7 @@ function createOptions(
   search: (request: SearchRequest) => Promise<SearchPage<Item>>,
 ) {
   return {
-    source: createAsyncSearchSource({search}),
+    source: search,
     getItemKey: (item: Item) => item.id,
   };
 }
@@ -30,6 +29,28 @@ afterEach(() => {
 });
 
 describe('SearchController', () => {
+  test('accepts an application-owned request handler without a transport adapter', async () => {
+    const request = vi.fn(async ({query}: SearchRequest) => ({
+      items: [{id: query, label: query}],
+    }));
+    const searchController = createSearch({
+      source: request,
+      getItemKey: (item: Item) => item.id,
+      debounceMs: 0,
+    });
+
+    searchController.setQuery('custom-sdk');
+    await Promise.resolve();
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({query: 'custom-sdk'}),
+    );
+    expect(searchController.items).toEqual([
+      {id: 'custom-sdk', label: 'custom-sdk'},
+    ]);
+    searchController.destroy();
+  });
+
   test('debounces input and exposes loading and results', async () => {
     vi.useFakeTimers();
     const search = vi.fn(async () => ({items: [alpha], total: 1}));
@@ -164,7 +185,7 @@ describe('SearchController', () => {
     });
     expect(searchController.items).toEqual([alpha, beta]);
     expect(searchController.loading).toBe(true);
-    expect(searchController.phase).toBe('loading');
+    expect(searchController.phase).toBe('results');
     expect(searchController.snapshot).not.toHaveProperty('activeIndex');
     expect(searchController.snapshot).not.toHaveProperty('selectedItem');
     expect(searchController.snapshot).not.toHaveProperty('open');
@@ -190,6 +211,9 @@ describe('SearchController', () => {
     searchController.setControlledState({items: [alpha]});
     expect(searchController.phase).toBe('results');
     searchController.setControlledState({items: [alpha], loading: true});
+    expect(searchController.phase).toBe('results');
+    expect(searchController.loading).toBe(true);
+    searchController.setControlledState({items: [], loading: true});
     expect(searchController.phase).toBe('loading');
     searchController.setControlledState({items: [], error: new Error('offline')});
     expect(searchController.phase).toBe('error');
@@ -229,7 +253,8 @@ describe('SearchController', () => {
         loading: () => renderPhase('loading', phases),
         error: () => renderPhase('error', phases),
         empty: ({query}) => renderPhase(`empty:${query}`, phases),
-        results: ({items}) => renderPhase(`results:${items.length}`, phases),
+        results: ({items, loading}) =>
+          renderPhase(`results:${items.length}:${loading}`, phases),
       },
     });
 
@@ -240,18 +265,18 @@ describe('SearchController', () => {
     expect(container.textContent).toBe('empty:seoul');
 
     searchController.setControlledState({items: [alpha]});
-    expect(container.textContent).toBe('results:1');
+    expect(container.textContent).toBe('results:1:false');
 
     searchController.setControlledState({items: [alpha], loading: true});
-    expect(container.textContent).toBe('loading');
+    expect(container.textContent).toBe('results:1:true');
 
     searchController.setControlledState({items: [], error: new Error('offline')});
     expect(container.textContent).toBe('error');
     expect(phases).toEqual([
       'idle',
       'empty:seoul',
-      'results:1',
-      'loading',
+      'results:1:false',
+      'results:1:true',
       'error',
     ]);
 

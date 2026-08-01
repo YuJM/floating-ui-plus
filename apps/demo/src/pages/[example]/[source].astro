@@ -1,0 +1,14 @@
+---
+import LocalizedExamplePage from '../../components/LocalizedExamplePage.astro';
+import {COMBOBOX_SOURCES} from '../../i18n';
+
+export function getStaticPaths() {
+  return COMBOBOX_SOURCES.map((source) => ({
+    params: {example: 'combobox', source},
+  }));
+}
+
+const {source} = Astro.params;
+---
+
+<LocalizedExamplePage locale="en" example="combobox" source={source as typeof COMBOBOX_SOURCES[number]} />

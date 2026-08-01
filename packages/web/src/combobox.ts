@@ -43,6 +43,10 @@ export interface ComboboxSnapshot<T> {
 
 export interface ComboboxInputProps {
   value: string;
+  /** Exposes an in-flight search to framework-native input bindings. */
+  'aria-busy': 'true' | 'false';
+  /** Styling hook matching the current search lifecycle. */
+  'data-loading': 'true' | 'false';
   onFocus: (event: FocusEvent) => void;
   onInput: (event: Event) => void;
   onCompositionstart: () => void;
@@ -94,7 +98,12 @@ function resolveStatusText<T>(
   return typeof value === 'function' ? value(context) : value;
 }
 
-/** Creates a phase-aware live-region formatter without owning any markup. */
+/**
+ * Creates a phase-aware live-region formatter without owning any markup.
+ *
+ * A retained list remains in the `results` render phase while it refreshes,
+ * but its live region still announces the in-flight `loading` state.
+ */
 export function createComboboxStatusFormatter<T>(
   messages: ComboboxStatusMessages<T>,
 ): ComboboxStatusFormatter<T> {
@@ -107,7 +116,13 @@ export function createComboboxStatusFormatter<T>(
       }
       return resolveStatusText(messages.closed, context);
     }
-    return resolveStatusText(messages[context.search.phase], context);
+    const phase =
+      context.search.error != null
+        ? 'error'
+        : context.search.loading
+          ? 'loading'
+          : context.search.phase;
+    return resolveStatusText(messages[phase], context);
   };
 }
 
@@ -142,6 +157,7 @@ export class ComboboxController<T> {
     this.#optionIdPrefix =
       options.optionIdPrefix ?? createId('floating-ui-combobox-option');
     this.#unsubscribeSearch = this.search.subscribe(() => {
+      this.#syncInputState();
       if (
         this.activeIndex != null &&
         this.activeIndex >= this.search.items.length
@@ -280,6 +296,8 @@ export class ComboboxController<T> {
   getInputProps(): ComboboxInputProps {
     return {
       value: this.search.query,
+      'aria-busy': String(this.search.loading) as 'true' | 'false',
+      'data-loading': String(this.search.loading) as 'true' | 'false',
       onFocus: this.handleFocus,
       onInput: this.handleInput,
       onCompositionstart: this.handleCompositionStart,
@@ -326,6 +344,8 @@ export class ComboboxController<T> {
     this.#input = input;
     const props = this.getInputProps();
     input.value = props.value;
+    input.setAttribute('aria-busy', props['aria-busy']);
+    input.dataset.loading = props['data-loading'];
     input.addEventListener('focus', props.onFocus);
     input.addEventListener('input', props.onInput);
     input.addEventListener('compositionstart', props.onCompositionstart);
@@ -356,6 +376,7 @@ export class ComboboxController<T> {
    */
   setInputElement(input: HTMLInputElement | null) {
     this.#input = input;
+    this.#syncInputState();
     this.#syncActiveState();
   }
 
@@ -445,6 +466,13 @@ export class ComboboxController<T> {
     this.listRef.current.forEach((item, index) => {
       if (item) item.dataset.active = String(index === this.activeIndex);
     });
+  }
+
+  #syncInputState() {
+    if (!this.#input) return;
+    const loading = String(this.search.loading);
+    this.#input.setAttribute('aria-busy', loading);
+    this.#input.dataset.loading = loading;
   }
 
   #syncSelectedState() {

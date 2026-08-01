@@ -373,6 +373,42 @@ describe('FloatingRootElement', () => {
     search.destroy();
   });
 
+  test('reflects search loading on the combobox host and input', async () => {
+    const search = new SearchController({
+      items: [{id: 'seoul', label: '서울'}],
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-combobox>
+        <floating-reference><input aria-label="Destination" /></floating-reference>
+      </floating-combobox>
+    `;
+    const combobox = root.querySelector('floating-combobox')!;
+    combobox.configure({search, getItemLabel: (item) => item.label});
+    document.body.append(root);
+
+    await root.updateComplete;
+    await combobox.updateComplete;
+    await vi.waitFor(() => expect(combobox.controller).toBeDefined());
+
+    search.setControlledState({
+      items: [{id: 'seoul', label: '서울'}],
+      loading: true,
+    });
+    await vi.waitFor(() => {
+      expect(combobox.dataset.loading).toBe('true');
+      expect(combobox.getAttribute('aria-busy')).toBe('true');
+      expect(root.querySelector('input')?.getAttribute('aria-busy')).toBe(
+        'true',
+      );
+      expect(root.querySelector('input')?.getAttribute('data-loading')).toBe(
+        'true',
+      );
+    });
+    search.destroy();
+  });
+
   test('binds external query presets through a declarative selector', async () => {
     const destinations = [{id: 'alpha', label: 'Alpha'}];
     const search = new SearchController<(typeof destinations)[number]>({
@@ -489,6 +525,11 @@ describe('FloatingRootElement', () => {
                       <div><strong data-search-text="label"></strong><small data-search-text="region"></small></div>
                     </floating-list-item>
                   </template>
+                  <template data-search-more>
+                    <button type="button" data-search-load-more>
+                      Load next <span data-search-text="$count"></span>/<span data-search-text="$total"></span>
+                    </button>
+                  </template>
                 </floating-search>
               </section>
             </template>
@@ -533,7 +574,12 @@ describe('FloatingRootElement', () => {
       );
     });
 
-    search.setControlledState({items: [destination]});
+    const loadMore = vi.spyOn(search, 'loadMore');
+    search.setControlledState({
+      items: [destination],
+      total: 2,
+      nextCursor: 'page-2',
+    });
     await vi.waitFor(() => {
       const item = document.querySelector('floating-list-item');
       expect(item?.label).toBe('北京');
@@ -542,7 +588,44 @@ describe('FloatingRootElement', () => {
       expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
         'results',
       );
+      expect(document.querySelector('[data-search-load-more]')?.textContent).toContain(
+        'Load next 1/2',
+      );
     });
+    search.setControlledState({
+      items: [destination],
+      total: 2,
+      nextCursor: 'page-2',
+      loading: true,
+    });
+    await vi.waitFor(() => {
+      const searchElement = document.querySelector('floating-search');
+      expect(searchElement?.dataset.phase).toBe('results');
+      expect(searchElement?.dataset.loading).toBe('true');
+      expect(searchElement?.textContent).toContain('北京China');
+      expect(
+        document.querySelector<HTMLButtonElement>('[data-search-load-more]')
+          ?.disabled,
+      ).toBe(true);
+      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+        'loading',
+      );
+    });
+    search.setControlledState({
+      items: [destination],
+      total: 2,
+      nextCursor: 'page-2',
+    });
+    await vi.waitFor(() => {
+      expect(
+        document.querySelector<HTMLButtonElement>('[data-search-load-more]')
+          ?.disabled,
+      ).toBe(false);
+    });
+    document
+      .querySelector<HTMLButtonElement>('[data-search-load-more]')
+      ?.click();
+    expect(loadMore).toHaveBeenCalledOnce();
     search.destroy();
   });
 
