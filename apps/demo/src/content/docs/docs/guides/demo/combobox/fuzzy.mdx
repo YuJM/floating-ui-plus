@@ -1,0 +1,46 @@
+---
+title: 'Demo: Query — fuzzy search'
+description: Explore local typo-tolerant search with the Query demo.
+---
+
+import DemoPreview from '../../../../../../components/docs/DemoPreview.astro';
+import fuzzyComboboxSource from '../../../../../../components/examples/FuzzyComboboxExample.astro?raw';
+import fuzzyComboboxVueSource from '../../../../../../vue/components/ExampleFuzzyCombobox.vue?raw';
+
+The fuzzy Query demo keeps its data local and searches it with
+`createFuzzySearchSource()`. Use the implementation switch in the preview to
+compare the Web Components and Vue adapters with the same search contract.
+
+- [Open the Web Components demo](/combobox?framework=wc&source=fuzzy)
+- [Open the Vue demo](/combobox?framework=vue&source=fuzzy)
+- [View the server-search demo](/docs/guides/demo/combobox/server)
+
+<DemoPreview route="/preview/combobox/fuzzy" title="Query · fuzzy search" height={640} webCode={fuzzyComboboxSource} vueCode={fuzzyComboboxVueSource} webTitle="FuzzyComboboxExample.astro" vueTitle="ExampleFuzzyCombobox.vue" />
+
+## What this demo shows
+
+- Local typo-tolerant matching across city, country, aliases, and local scripts.
+- Query presets, virtual focus, keyboard navigation, and an ARIA live region.
+- Activation callbacks, virtual focus, and default ARIA combobox semantics.
+- The same `createSearch()`/`useSearch()` and `createQuery()`/`useQuery()` phases in both renderers.
+
+The search controller owns query, loading, error, empty, results, IME,
+cancellation, stale-response protection, and pagination state. The renderer
+owns the result markup and accessible names.
+
+## Search configuration
+
+```ts
+query.configure({
+  search: {
+    source: createFuzzySearchSource(destinations, {keys: searchKeys}),
+    getItemKey: (item) => item.id,
+  },
+  getItemLabel: (item) => item.label,
+});
+```
+
+Use `getItemLabel()` for visible copy. The [usage recipes](/docs/guides/usage)
+cover controlled search state, activation handlers, and renderer-specific
+composition. Use the deprecated Combobox API only for native selected-value
+form submission.

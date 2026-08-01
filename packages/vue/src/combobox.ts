@@ -27,6 +27,7 @@ import type {UseSearchReturn} from './search';
 
 type ComboboxSearch<T> = UseSearchReturn<T> | WebSearchController<T>;
 
+/** @deprecated Use `UseQueryOptions` for a generic query input. */
 export interface UseComboboxOptions<T>
   extends Omit<
     WebComboboxOptions<T>,
@@ -51,6 +52,7 @@ export interface UseComboboxOptions<T>
     | undefined;
 }
 
+/** @deprecated Use `UseQueryReturn` for a generic query input. */
 export interface UseComboboxReturn<T> {
   controller: WebComboboxController<T>;
   open: Ref<boolean>;
@@ -77,6 +79,8 @@ export interface UseComboboxReturn<T> {
 /**
  * Vue keeps input event handlers declarative, so this lifecycle bridge lets
  * the framework-neutral controller restore focus for query-trigger actions.
+ *
+ * @deprecated Use `QueryInputLifecycleProps` with `useQuery()`.
  */
 export interface ComboboxInputLifecycleProps {
   onVnodeMounted: (vnode: VNode) => void;
@@ -87,7 +91,10 @@ function getSearchController<T>(search: ComboboxSearch<T>) {
   return 'controller' in search ? search.controller : search;
 }
 
-/** Vue lifecycle and reactive-state adapter for `ComboboxController`. */
+/**
+ * @deprecated Use `useQuery()` for a query interaction. Keep this API when
+ * consumers rely on selected-item and form-value behavior.
+ */
 export function useCombobox<T>(
   options: UseComboboxOptions<T>,
 ): UseComboboxReturn<T> {

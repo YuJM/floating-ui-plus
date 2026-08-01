@@ -1,0 +1,39 @@
+---
+title: 'Demo: Modal focus room'
+description: Exercise native dialog focus, nested surfaces, inert neighbors, and Escape ordering.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import modalSource from '../../../../../components/examples/ModalExample.astro?raw';
+import modalVueSource from '../../../../../vue/components/ExampleModal.vue?raw';
+
+[Open the live modal demo](/modal?framework=wc)
+
+<DemoPreview route="/preview/modal" title="Modal focus room" height={640} webCode={modalSource} vueCode={modalVueSource} webTitle="ModalExample.astro" vueTitle="ExampleModal.vue" />
+
+The focus room is a native `<dialog>` connected to a `floating-node` tree. It
+contains a tooltip, an anchored popover, and a nested dialog:
+
+1. Open the focus room and tab through the trapped controls.
+2. Open room details; outside press or Escape closes only that panel first.
+3. Open the nested dialog; its focus boundary becomes the top layer.
+4. Press Escape repeatedly to close the topmost surface and restore focus to
+   its parent.
+
+```html
+<floating-root placement="bottom" strategy="fixed">
+  <floating-node node-id="focus-room">
+    <floating-reference><button>Enter focus room</button></floating-reference>
+  </floating-node>
+  <dialog slot="floating" aria-label="Focus room">
+    <button data-fup-close>Leave room</button>
+  </dialog>
+</floating-root>
+```
+
+Use a native dialog when browser-owned modal focus and inertness are desired.
+For a custom modal, use `FloatingFocusManager`/`floating-focus-manager`, an
+overlay, and an explicit portal. The Vue equivalent is
+`<FloatingContent as="dialog">` with `FloatingFocusManager` for custom focus
+policy. Close requests still pass through `onBeforeClose` or
+`floatingbeforeclose`.

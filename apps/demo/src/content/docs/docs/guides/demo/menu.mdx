@@ -1,0 +1,37 @@
+---
+title: 'Demo: Menu'
+description: Use list navigation, typeahead, looping, and close-on-select menu items.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import menuSource from '../../../../../components/examples/MenuExample.astro?raw';
+import menuVueSource from '../../../../../vue/components/ExampleMenu.vue?raw';
+
+[Open the live menu demo](/menu?framework=wc)
+
+<DemoPreview route="/preview/menu" title="Menu" webCode={menuSource} vueCode={menuVueSource} webTitle="MenuExample.astro" vueTitle="ExampleMenu.vue" />
+
+The menu's registry owns active index, roving focus, typeahead labels, and
+wrapping:
+
+```html
+<floating-list
+  navigation
+  typeahead
+  loop
+  item-selector="[data-menu-item]"
+>
+  <button role="menuitem" data-menu-item data-fup-close data-label="Signal">
+    Signal
+  </button>
+</floating-list>
+```
+
+Open the demo and type “signal” to exercise typeahead. Arrow keys move the
+active item, Enter selects it, and Escape dismisses the surface. In Vue, use
+`FloatingList navigation typeahead loop` with `FloatingListItem` and bind the
+same active-index model when the application needs it.
+
+The menu root uses `click()`, `dismiss()`, `role({role: 'menu'})`, and
+`offset(8) → flip() → shift({padding: 18})`. `data-fup-close` sends a normal
+close request, so before-close guards still apply.

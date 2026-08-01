@@ -1,5 +1,122 @@
 # @floating-ui-plus/web
 
+## 0.7.2
+
+## 0.7.1
+
+## 0.7.0
+
+### Minor Changes
+
+- Add the generic Query primitive with ARIA combobox semantics by default. Use `createQuery()`, `useQuery()`, or `<floating-query>` for query-driven result lists; set `semantics` to `dialog` or `none` when appropriate. The existing Combobox APIs remain as deprecated compatibility layers for selected-value and form-associated workflows.
+
+### Patch Changes
+
+- d8acfb4: 문서의 native Popover, `<dialog>`, root-owned template, portal 사용 가이드를 실제 데모 동작에 맞게 보완합니다.
+- 97018f4: 패키지별 `USAGE.md`를 Starlight의 통합 사용 가이드로 옮기고 배포 패키지에서는 제거합니다.
+- d8acfb4: 닫기 전 동기 취소 계약을 추가하고 Web Components의 `floatingbeforeclose` 이벤트와 Vue/Web의 `onBeforeClose` 콜백을 제공합니다.
+
+## 0.6.1
+
+### Patch Changes
+
+- Clarify the 0.6 native Popover and Dialog composition, Custom Element combobox
+  form behavior, and Vue `selectedValue` form binding in the package READMEs.
+
+## 0.6.0
+
+### Minor Changes
+
+- 66bcfba: Add a framework-neutral `ComboboxController` that composes search with input,
+  IME, active-option ARIA, selection, and navigation behavior, including shared
+  input, option, and navigation binding props for renderer adapters.
+  Expose framework-neutral search phases for idle, loading, error, empty, and
+  result rendering. A blank query reports `results` when its source returns
+  items, reserving `idle` for a blank query without results. Re-export
+  it from Web Components, add a renderless `<floating-combobox>` element with
+  automatic virtual `<floating-list>` and `<floating-list-item>` option binding,
+  and add a Vue `useCombobox()` adapter that consumes the same props so editable
+  fuzzy-search examples no longer repeat event or ARIA wiring.
+
+  Add `createSearchRenderer()` for direct DOM and Custom Element integrations.
+  It owns the search subscription, phase dispatch, and bound-container updates
+  while applications retain their own result nodes and state-specific copy.
+
+  Add declarative `<floating-search>` phase templates for Web Components. It
+  repeats result templates, binds item/search text, and supplies generated
+  `<floating-list-item>` labels and values so consumers no longer write DOM
+  factories or portal-mount rendering code.
+  `configure()` also accepts phase-keyed status messages so live-region updates
+  do not require an application-owned subscription or nested status conditionals.
+  It can receive `SearchOptions` and own the resulting controller, allowing local
+  fuzzy and async server sources to use the same declarative composition. An
+  existing application-owned `SearchController` remains supported.
+  Vue now provides the equivalent renderless `FloatingSearch` named-slot
+  component, while `useCombobox()` exposes `statusText` and
+  `getQueryTriggerProps()` from the same framework-neutral status and query
+  binding contracts.
+  When an existing result set refreshes or loads another page, its render phase
+  remains `results` while `loading` is true, so Web, Web Components, and Vue can
+  retain visible list items and present a non-blocking loading indicator.
+  Document the same composition with local fuzzy and asynchronous server-search
+  examples in both Web Components and Vue demos.
+  Keep ordinary anchored examples in their local DOM and reserve
+  `floating-portal` for surfaces that explicitly need a body-level layer.
+  Add checked root lookup, own-root event subscriptions, and controller-backed
+  closing to `FloatingRootElement` so direct DOM consumers do not need local
+  lifecycle wrapper utilities.
+
+  Add `FloatingRootElement.configure()` for setting middleware and plugin
+  functions together without application-owned assignment helpers.
+
+  Add a framework-neutral `FloatingTopLayerController` for native modal Dialog
+  lifecycle. Native top layers are inferred from real `<dialog>` surfaces, so
+  modal Web Components and Vue composition does not need a root-level
+  `top-layer` setting; explicit values remain an escape hatch. Web Components
+  use a root-owned `<template slot="content">` for normal conditional surfaces,
+  keeping them inert before Custom Element registration and promoting them to a
+  native Popover where supported. A direct native dialog remains the exception
+  because the browser already hides it while closed. `data-fup-content` remains
+  as a compatibility alias for the public content slot.
+
+  Allow `floating-content` to register as the nearest Web Components root's
+  surface even when it is composed inside another behavior element such as
+  `floating-combobox`. It remains available for advanced always-mounted
+  composition, while ordinary overlays and combobox result surfaces use the
+  portal/template pattern and retain native search phase templates.
+
+  Add a framework-neutral combobox `getItemValue()` contract. Web Components
+  `floating-combobox` is form-associated and submits its selected value through
+  `name`, participates in `required` validation, and restores its configured
+  selection on native form reset. Vue exposes the same selected value ref for a
+  hidden native form input.
+
+  Add framework-neutral external query activation and a declarative Web
+  Components `query-trigger-selector`, so query preset buttons no longer repeat
+  query, open, and input-focus event wiring or masquerade as result list items.
+
+  Add declarative cursor-page controls to Web Components `floating-search`:
+  `template[data-search-more]` renders only while another page is available, and
+  its `data-search-load-more` control delegates to the shared
+  `SearchController.loadMore()` lifecycle.
+
+  Expose the shared search pending state on combobox input props as `aria-busy`
+  and `data-loading`. Web Components mirrors it on the combobox host and bound
+  input, while Vue adds a reactive `combobox.loading` projection for input-level
+  pending UI.
+
+  `SearchOptions.source` now also accepts an application-owned async request
+  function directly. The package does not prescribe a network client, endpoint,
+  response protocol, or pagination transport; the function adapts any chosen
+  communication layer to the small search-page result shape.
+
+### Patch Changes
+
+- 66bcfba: Document the current controller, component, and `SearchController` APIs,
+  explain how Plus extends Floating UI, and make `FloatingPortal` follow the
+  nearest `FloatingRoot` open state automatically so Vue consumers no longer
+  need to repeat `v-if` or `:active` for floating surfaces.
+
 ## 0.5.0
 
 ### Patch Changes

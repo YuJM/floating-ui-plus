@@ -1,15 +1,20 @@
 ---
 import {ArrowRight, Check, ExternalLink, Layers, Search, Workflow} from 'lucide-astro';
 import {siNpm, siVuedotjs, siWebcomponentsdotorg} from 'simple-icons';
-import {getRelativeLocaleUrl} from 'astro:i18n';
+import {getRelativeLocaleUrl} from '../locale-url';
 import * as m from '../paraglide/messages';
 import DemoLayout from '../layouts/DemoLayout.astro';
 import {EXAMPLE_IDS, getExample, type Locale} from '../i18n';
 import {EXAMPLE_ICONS} from '../example-icons';
 import {getNpmPackages} from '../npm-packages';
+import {frameworkQuery} from '../demo-registry';
 
 const {locale} = Astro.props as {locale: Locale};
 const options = {locale};
+// Render the selected implementation into the initial link so a quick click
+// cannot race the client-side query-preservation pass in DemoLayout.
+const framework = new URL(Astro.url).searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
+const frameworkParam = frameworkQuery(framework);
 const examples = EXAMPLE_IDS.map((example) => getExample(locale, example));
 const npmPackages = getNpmPackages();
 const appPackages = npmPackages.filter((pkg) => pkg.id !== 'web');
@@ -35,7 +40,7 @@ const packageCopy = {
     </div>
     <div class="demo-example-list" aria-label={m.patterns_title(undefined, options)}>
       {examples.map((example) => (
-        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=web-components`} data-example-link={example.id} data-preserve-framework>
+        <a class="demo-example-link" href={`${getRelativeLocaleUrl(locale, example.id)}?framework=${frameworkParam}`} data-example-link={example.id} data-preserve-framework>
           {(() => {
             const Icon = EXAMPLE_ICONS[example.id];
             return <Icon class="demo-example-icon" aria-hidden="true" size={21} strokeWidth={1.7} />;
@@ -67,11 +72,11 @@ const packageCopy = {
           return <a class="npm-package-link npm-package-link--recommended" href={pkg.href} target="_blank" rel="noreferrer" data-npm-package={pkg.name}>
             <span class:list={['npm-package-icon', `npm-package-icon--${pkg.id}`]}><svg aria-hidden="true" viewBox="0 0 24 24"><path d={copy.icon.path} /></svg></span>
             <span class="npm-package-copy"><strong>{pkg.label}</strong><small>{copy.description}</small><code>{pkg.name}</code></span>
-            <span class="npm-package-meta"><span class="npm-package-version" data-npm-package-version>{pkg.version ? `v${pkg.version}` : 'npm'}</span><ExternalLink aria-hidden="true" size={15} strokeWidth={1.8} /></span>
+            <span class="npm-package-meta"><ExternalLink aria-hidden="true" size={15} strokeWidth={1.8} /></span>
           </a>;
         })}
       </div>
-      {corePackage && <div class="npm-core-package"><div><span>{m.packages_core_label(undefined, options)}</span><p>{m.packages_core_copy(undefined, options)}</p></div><a class="npm-package-link npm-package-link--core" href={corePackage.href} target="_blank" rel="noreferrer" data-npm-package={corePackage.name}><svg aria-hidden="true" viewBox="0 0 24 24"><path d={siNpm.path} /></svg><span class="npm-package-copy"><strong>{corePackage.name}</strong></span><span class="npm-package-version" data-npm-package-version>{corePackage.version ? `v${corePackage.version}` : 'npm'}</span></a></div>}
+      {corePackage && <div class="npm-core-package"><div><span>{m.packages_core_label(undefined, options)}</span><p>{m.packages_core_copy(undefined, options)}</p></div><a class="npm-package-link npm-package-link--core" href={corePackage.href} target="_blank" rel="noreferrer" data-npm-package={corePackage.name}><svg aria-hidden="true" viewBox="0 0 24 24"><path d={siNpm.path} /></svg><span class="npm-package-copy"><strong>{corePackage.name}</strong></span></a></div>}
     </div>
   </section>
 </DemoLayout>

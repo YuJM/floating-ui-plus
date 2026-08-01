@@ -15,7 +15,7 @@ const examples = [
 const localizedRoutes = locales.flatMap((locale) => [
   `/${locale}`,
   ...examples.flatMap((example) => [
-    `/${locale}/${example}?framework=web-components`,
+    `/${locale}/${example}?framework=wc`,
     `/${locale}/${example}?framework=vue`,
   ]),
 ]);
@@ -33,8 +33,8 @@ test('pattern picker remains keyboard-operable and contained at every viewport',
   await page.goto('/ko?framework=vue');
 
   const picker = page.locator('.pattern-picker');
-  const summary = picker.locator('summary');
-  await summary.focus();
+  const trigger = picker.locator('.pattern-picker-trigger');
+  await trigger.focus();
   await page.keyboard.press('Enter');
   await expect(picker).toHaveAttribute('open', '');
 

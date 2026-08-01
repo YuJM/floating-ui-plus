@@ -1,0 +1,28 @@
+---
+import PreviewFrame from '../../../components/PreviewFrame.astro';
+import AsyncComboboxExample from '../../../components/examples/AsyncComboboxExample.astro';
+import FuzzyComboboxExample from '../../../components/examples/FuzzyComboboxExample.astro';
+import ExampleAsyncCombobox from '../../../vue/components/ExampleAsyncCombobox.vue';
+import ExampleFuzzyCombobox from '../../../vue/components/ExampleFuzzyCombobox.vue';
+import {COMBOBOX_SOURCES, type ComboboxSource} from '../../../i18n';
+
+export function getStaticPaths() {
+  return COMBOBOX_SOURCES.map((source) => ({
+    params: {example: 'combobox', source},
+  }));
+}
+
+const source = Astro.params.source as ComboboxSource;
+const title = `Combobox · ${source} search`;
+---
+
+<PreviewFrame title={title}>
+  <section data-framework-panel="web-components" class="framework-panel">
+    {source === 'fuzzy' ? <FuzzyComboboxExample /> : <AsyncComboboxExample />}
+  </section>
+  <section data-framework-panel="vue" class="framework-panel">
+    {source === 'fuzzy'
+      ? <ExampleFuzzyCombobox client:only="vue" />
+      : <ExampleAsyncCombobox client:only="vue" />}
+  </section>
+</PreviewFrame>

@@ -26,7 +26,7 @@ const COMPONENT_NAMES: Record<ExampleId, string> = {
   menu: 'Menu',
   'nested-menu': 'Nested menu',
   'client-point': 'Client point',
-  combobox: 'Combobox',
+  combobox: 'Query',
   placement: 'Placement',
   middleware: 'Middleware',
   modal: 'Modal',
@@ -39,7 +39,7 @@ const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
   'nested-menu': ['floating-tree', 'floating-node', 'floating-list', 'dismiss()'],
   'client-point': ['clientPoint()', 'hover({move: true})', 'flip()', 'shift()'],
   combobox: [
-    'floating-combobox',
+    'floating-query',
     'floating-list',
     'floating-list-item',
     'createFuzzySearchSource()',

@@ -1,0 +1,142 @@
+---
+interface Props {
+  route: string;
+  title: string;
+  height?: number;
+  webCode?: string;
+  vueCode?: string;
+  webTitle?: string;
+  vueTitle?: string;
+  codeLang?: string;
+}
+
+import {Code} from '@astrojs/starlight/components';
+import {siVuedotjs, siWebcomponentsdotorg} from 'simple-icons';
+import {frameworkQuery} from '../../demo-registry';
+
+const {
+  route,
+  title,
+  height = 560,
+  webCode,
+  vueCode,
+  webTitle = 'Web Components example',
+  vueTitle = 'Vue example',
+  codeLang = 'astro',
+} = Astro.props;
+const previewId = `demo-preview-${route.replace(/[^a-z0-9]+/gi, '-')}`;
+const initialUrl = new URL(route, Astro.url);
+initialUrl.searchParams.set('framework', frameworkQuery('web-components'));
+initialUrl.searchParams.set('embed', '1');
+const src = `${initialUrl.pathname}${initialUrl.search}`;
+const openUrl = new URL(initialUrl);
+openUrl.pathname = openUrl.pathname.replace(/^\/preview(?=\/)/, '');
+openUrl.searchParams.delete('embed');
+const openHref = `${openUrl.pathname}${openUrl.search}`;
+---
+
+<section class="demo-preview" id={previewId} data-demo-preview>
+  <div class="demo-preview-toolbar">
+    <div>
+      <p class="demo-preview-kicker">Live demo</p>
+      <h3>{title}</h3>
+    </div>
+    <div class="demo-preview-switch" role="group" aria-label="Choose implementation">
+      <button
+        type="button"
+        data-demo-framework="web-components"
+        aria-label="Web Components"
+        title="Web Components"
+        aria-pressed="true"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <path d={siWebcomponentsdotorg.path} />
+        </svg>
+        <span class="demo-preview-visually-hidden">Web Components</span>
+      </button>
+      <button
+        type="button"
+        data-demo-framework="vue"
+        aria-label="Vue"
+        title="Vue"
+        aria-pressed="false"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <path d={siVuedotjs.path} />
+        </svg>
+        <span class="demo-preview-visually-hidden">Vue</span>
+      </button>
+    </div>
+  </div>
+  <iframe
+    src={src}
+    title={title}
+    loading="lazy"
+    style={`height: ${height}px`}
+  ></iframe>
+  {(webCode || vueCode) && (
+    <div class="demo-preview-source">
+      <p class="demo-preview-source-label">Source for this preview</p>
+      <div data-demo-source="web-components" class="demo-preview-source-panel">
+        {webCode && <Code code={webCode} lang={codeLang} title={webTitle} />}
+      </div>
+      <div data-demo-source="vue" class="demo-preview-source-panel" hidden>
+        {vueCode && <Code code={vueCode} lang="vue" title={vueTitle} />}
+      </div>
+    </div>
+  )}
+  <p class="demo-preview-open">
+    <a href={openHref} target="_blank" rel="noreferrer">
+      Open the full demo ↗
+    </a>
+  </p>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-demo-preview]').forEach((preview) => {
+    const frame = preview.querySelector<HTMLIFrameElement>('iframe');
+    const openLink = preview.querySelector<HTMLAnchorElement>('.demo-preview-open a');
+    if (!frame || !openLink) return;
+
+    preview.querySelectorAll<HTMLButtonElement>('[data-demo-framework]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const framework = button.dataset.demoFramework;
+        if (framework !== 'vue' && framework !== 'web-components') return;
+        const url = new URL(frame.src, window.location.href);
+        url.searchParams.set('framework', framework === 'vue' ? 'vue' : 'wc');
+        url.searchParams.set('embed', '1');
+        frame.src = `${url.pathname}${url.search}`;
+        preview.querySelectorAll<HTMLElement>('[data-demo-source]').forEach((source) => {
+          source.hidden = source.dataset.demoSource !== framework;
+        });
+        const fullUrl = new URL(url);
+        fullUrl.pathname = fullUrl.pathname.replace(/^\/preview(?=\/)/, '');
+        fullUrl.searchParams.delete('embed');
+        openLink.href = `${fullUrl.pathname}${fullUrl.search}`;
+        preview.querySelectorAll<HTMLButtonElement>('[data-demo-framework]').forEach((item) => {
+          item.setAttribute('aria-pressed', String(item === button));
+        });
+      });
+    });
+  });
+</script>
+
+<style>
+  .demo-preview { margin: 2rem 0; overflow: hidden; border: 1px solid var(--sl-color-gray-5); border-radius: 0.75rem; background: var(--sl-color-gray-7); }
+  .demo-preview-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border-bottom: 1px solid var(--sl-color-gray-5); }
+  .demo-preview-kicker { margin: 0; color: var(--sl-color-gray-3); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .demo-preview h3 { margin: 0.15rem 0 0; font-size: 0.95rem; }
+  .demo-preview-switch { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 0.15rem; padding: 0.2rem; border: 1px solid var(--sl-color-gray-5); border-radius: 999px; background: var(--sl-color-gray-6); }
+  .demo-preview-switch button { display: grid; width: 2rem; height: 2rem; margin: 0; place-items: center; border: 0; border-radius: 999px; color: var(--sl-color-gray-2); background: transparent; cursor: pointer; }
+  .demo-preview-switch button svg { width: 1rem; height: 1rem; fill: currentColor; }
+  .demo-preview-switch button:hover { color: var(--sl-color-white); }
+  .demo-preview-switch button:focus-visible { outline: 2px solid var(--sl-color-accent); outline-offset: 2px; }
+  .demo-preview-switch button[aria-pressed='true'] { color: var(--sl-color-white); background: var(--sl-color-accent); }
+  .demo-preview-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .demo-preview iframe { display: block; width: 100%; border: 0; background: #f6f6fc; }
+  .demo-preview-source { border-top: 1px solid var(--sl-color-gray-5); }
+  .demo-preview-source-label { margin: 0; padding: 0.75rem 1rem 0; color: var(--sl-color-gray-3); font-size: 0.75rem; font-weight: 650; }
+  .demo-preview-source-panel :global(.expressive-code) { margin: 0.75rem 1rem 1rem; }
+  .demo-preview-open { margin: 0; padding: 0.6rem 1rem; border-top: 1px solid var(--sl-color-gray-5); font-size: 0.8rem; }
+  @media (max-width: 640px) { .demo-preview-toolbar { align-items: flex-start; flex-direction: column; } }
+</style>

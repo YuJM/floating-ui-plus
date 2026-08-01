@@ -48,7 +48,7 @@
   "pattern_client_point_label": "Client point",
   "pattern_client_point_heading": "A surface can follow intent, not just an element.",
   "pattern_client_point_description": "Position context from pointer coordinates with a virtual reference.",
-  "pattern_combobox_label": "Combobox",
+  "pattern_combobox_label": "Query",
   "pattern_combobox_heading": "Discovery across writing systems.",
   "pattern_combobox_description": "Search multilingual destinations with fuzzy matching and accessible list navigation.",
   "pattern_placement_label": "Placement",

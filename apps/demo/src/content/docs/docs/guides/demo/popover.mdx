@@ -1,0 +1,40 @@
+---
+title: 'Demo: Popover'
+description: Build an anchored non-modal surface with a root-owned native template.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import popoverSource from '../../../../../components/examples/PopoverExample.astro?raw';
+import popoverVueSource from '../../../../../vue/components/ExamplePopover.vue?raw';
+
+[Open the live popover demo](/popover?framework=wc)
+
+<DemoPreview route="/preview/popover" title="Popover" webCode={popoverSource} vueCode={popoverVueSource} webTitle="PopoverExample.astro" vueTitle="ExamplePopover.vue" />
+
+The trigger and panel remain in one root. The template is inert while closed
+and becomes a native Popover when opened:
+
+```html
+<floating-root
+  interactions="click dismiss"
+  floating-role="dialog"
+  placement="bottom-start"
+>
+  <floating-reference><button>Open coordinates</button></floating-reference>
+  <template slot="content">
+    <section aria-label="Coordinates">
+      Popover, still connected.
+      <button data-fup-close>Close panel</button>
+    </section>
+  </template>
+</floating-root>
+```
+
+This is the browser's standard Popover API in action. The demo keeps the
+surface in the root tree so the platform owns top-layer stacking and light
+dismissal; it does not emulate a popover with a portal.
+
+The demo uses `offset(12)`, `flip()`, and `shift({padding: 18})`. The Vue
+version receives the same native Popover behavior by default. Use a portal
+only when the panel must escape a clipping ancestor; it is not required for
+this composition.

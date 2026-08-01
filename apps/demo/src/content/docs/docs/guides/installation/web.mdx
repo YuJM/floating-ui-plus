@@ -1,0 +1,49 @@
+---
+title: Install the Web core
+description: Add framework-neutral Floating UI Plus controllers to a custom renderer.
+---
+
+import {PackageManagers} from 'starlight-package-managers';
+
+Use the Web core directly when your application owns DOM elements, markup, ARIA,
+presence, and rendering. Renderer adapters already depend on this package, so
+Web Components and Vue users should follow their dedicated installation pages
+instead.
+
+<PackageManagers type="add" pkg="@floating-ui-plus/web" />
+
+## First controller
+
+```ts
+import {
+  autoUpdate,
+  createFloating,
+  dismiss,
+  focus,
+  hover,
+  offset,
+  role,
+} from '@floating-ui-plus/web';
+
+let open = false;
+const tooltip = createFloating(() => ({
+  open,
+  onOpenChange(nextOpen) {
+    open = nextOpen;
+    render();
+  },
+  middleware: [offset(6)],
+  whileElementsMounted: autoUpdate,
+})).pipe(hover(), focus(), dismiss(), role({role: 'tooltip'}));
+
+tooltip.setReference(button);
+tooltip.setFloating(panel);
+tooltip.connect();
+```
+
+The controller does not render elements. Apply its attributes and positioning
+output from your renderer, then call `disconnect()` when the surface is
+temporarily detached and `destroy()` when its owner is disposed.
+
+See the [Web framework guide](/docs/frameworks/web) for controller ownership,
+middleware, and native top-layer integration.

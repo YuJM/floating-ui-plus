@@ -99,6 +99,7 @@ export const FloatingRoot = defineComponent({
       transform: () => toValue(props.options.transform),
       open: localOpen,
       whileElementsMounted: props.options.whileElementsMounted,
+      onBeforeClose: props.options.onBeforeClose,
       onOpenChange(open, event, reason) {
         localOpen.value = open;
         emit('update:open', open);
@@ -109,9 +110,16 @@ export const FloatingRoot = defineComponent({
     const topLayer = computed<FloatingTopLayer>(() => props.topLayer);
     const nativeTopLayer = createFloatingTopLayer({
       onOpenChange(open, event, reason) {
+        if (
+          !open &&
+          props.options.onBeforeClose?.(event, reason) === false
+        ) {
+          return false;
+        }
         localOpen.value = open;
         emit('update:open', open);
         emit('open-change', open, event, reason);
+        return true;
       },
     });
     nativeTopLayer.connect();
@@ -204,18 +212,16 @@ export const FloatingContent = defineComponent({
     }
     const surfaceTopLayer = (): FloatingTopLayer => {
       if (props.topLayer) return props.topLayer;
-      if (portalTopLayer?.value && portalTopLayer.value !== 'none') {
-        return portalTopLayer.value;
-      }
-      if (topLayer?.value && topLayer.value !== 'none') return topLayer.value;
-      // Native dialogs are unambiguous. Popup roles get the native Popover
-      // API automatically, while ordinary positioned content keeps the
-      // existing non-top-layer behavior.
+      // A native dialog is an explicit surface contract. ARIA roles describe
+      // semantics only and must not promote an ordinary positioned element.
       if (props.as === 'dialog') return 'dialog';
-      const role = floating.floatingAttrs.role;
-      return role === 'dialog' || role === 'menu' || role === 'listbox'
-        ? 'popover'
-        : 'none';
+      // A portal explicitly owns the surface policy. Its default `none`
+      // keeps custom portal/overlay compositions out of the native top layer.
+      if (portalTopLayer) return portalTopLayer.value;
+      if (topLayer?.value && topLayer.value !== 'none') return topLayer.value;
+      // Vue declarative content mirrors Web Components template content:
+      // ordinary surfaces use the browser Popover API by default.
+      return 'popover';
     };
     const usesNativeDialog = () =>
       surfaceTopLayer() === 'dialog' && supportsFloatingTopLayer('dialog');

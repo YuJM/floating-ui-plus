@@ -1,0 +1,40 @@
+---
+title: 'Demo: Middleware'
+description: Compare offset, shift, flip, arrow, size, autoPlacement, hide, and inline.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import middlewareSource from '../../../../../components/examples/MiddlewareExamples.astro?raw';
+import middlewareVueSource from '../../../../../vue/views/MiddlewareView.vue?raw';
+
+[Open the live middleware demo](/middleware?framework=wc)
+
+<DemoPreview route="/preview/middleware" title="Middleware" height={640} webCode={middlewareSource} vueCode={middlewareVueSource} webTitle="MiddlewareExamples.astro" vueTitle="MiddlewareView.vue" />
+
+The gallery isolates one positioning concern per card:
+
+| Card | Behavior | Composition |
+| --- | --- | --- |
+| Offset | Change the main-axis gutter | `offset(0)` vs `offset(10)` |
+| Shift | Keep the panel inside the boundary | `shift({padding: 8})` |
+| Flip | Choose another side when space runs out | `flip()` → `shift()` |
+| Arrow | Add an arrow without changing the requested gap | `offset()` → `arrow()` |
+| Size | Constrain available dimensions | `size({apply})` |
+| Auto placement | Choose the roomiest side | `autoPlacement()` → `shift()` |
+| Hide | Report clipping and escaped references | `hide()` strategies |
+| Inline | Use the relevant rect of wrapped inline content | `inline()` → `offset(8)` |
+
+For example, the arrow card uses the requested visual gap and registers the
+arrow element separately:
+
+```ts
+root.middleware = [
+  offset(3),
+  shift({padding: 8}),
+  arrow({element: arrowElement}),
+];
+```
+
+Scroll each card in the live demo to see the middleware react to clipping,
+available space, and wrapped inline references. See the [Web framework
+guide](/docs/frameworks/web) for the framework-neutral middleware contract.

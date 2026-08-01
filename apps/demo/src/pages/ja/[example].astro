@@ -1,11 +1,13 @@
 ---
 import LocalizedExamplePage from '../../components/LocalizedExamplePage.astro';
-import {EXAMPLE_IDS} from '../../i18n';
+import {EXAMPLE_IDS, isComboboxSource} from '../../i18n';
 export function getStaticPaths() {
-  return EXAMPLE_IDS
-    .filter((example) => example !== 'combobox')
-    .map((example) => ({params: {example}}));
+  return EXAMPLE_IDS.map((example) => ({params: {example}}));
 }
 const {example} = Astro.params;
+const requestedSource = Astro.url.searchParams.get('source') ?? undefined;
+const source = isComboboxSource(requestedSource)
+  ? requestedSource
+  : undefined;
 ---
-<LocalizedExamplePage locale="ja" example={example as typeof EXAMPLE_IDS[number]} />
+<LocalizedExamplePage locale="ja" example={example as typeof EXAMPLE_IDS[number]} source={source} />

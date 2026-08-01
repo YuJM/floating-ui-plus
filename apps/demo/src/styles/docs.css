@@ -1,0 +1,211 @@
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+
+/*
+ * Starlight is intentionally styled independently of the demo application.
+ * Keep the tokens here so documentation pages can share the product character
+ * without inheriting the demo's Tailwind reset or component rules.
+ */
+:root,
+::backdrop {
+  --sl-font: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", sans-serif;
+  --sl-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sl-content-width: 52rem;
+  --sl-sidebar-width: 17rem;
+  --sl-nav-height: 4rem;
+  --sl-nav-pad-x: 1.5rem;
+  --sl-text-h1: 2.75rem;
+  --sl-text-h2: 2rem;
+  --sl-text-h3: 1.5rem;
+  --sl-line-height: 1.7;
+
+  /* Dark theme: the navy demo stage translated for readable documentation. */
+  --sl-color-white: #f8fbff;
+  --sl-color-gray-1: #dce7f7;
+  --sl-color-gray-2: #b9c8df;
+  --sl-color-gray-3: #91a2be;
+  --sl-color-gray-4: #647897;
+  --sl-color-gray-5: #304364;
+  --sl-color-gray-6: #1d2e4d;
+  --sl-color-gray-7: #172554;
+  --sl-color-black: #0e1b35;
+
+  --sl-color-blue-low: #103b60;
+  --sl-color-blue: #00b8ff;
+  --sl-color-blue-high: #a7eaff;
+  --sl-color-accent-low: #103b60;
+  --sl-color-accent: #00b8ff;
+  --sl-color-accent-high: #a7eaff;
+  --sl-color-text: var(--sl-color-gray-2);
+  --sl-color-text-accent: var(--sl-color-accent-high);
+  --sl-color-text-invert: #082946;
+  --sl-color-bg: var(--sl-color-black);
+  --sl-color-bg-nav: #172554;
+  --sl-color-bg-sidebar: #13223f;
+  --sl-color-bg-inline-code: #1d2e4d;
+  --sl-color-bg-accent: var(--sl-color-accent-high);
+  --sl-color-hairline-light: #304364;
+  --sl-color-hairline: #263b5a;
+  --sl-color-hairline-shade: #0e1b35;
+  --sl-color-backdrop-overlay: rgb(8 25 54 / 72%);
+
+  --sl-shadow-sm: 0 1px 2px rgb(6 20 46 / 16%);
+  --sl-shadow-md: 0 12px 30px rgb(6 20 46 / 24%);
+}
+
+:root[data-theme='light'],
+[data-theme='light'] ::backdrop {
+  /* Light theme: retain the demo's cool off-white canvas and navy ink. */
+  --sl-color-white: #172554;
+  --sl-color-gray-1: #172554;
+  --sl-color-gray-2: #32466a;
+  --sl-color-gray-3: #536887;
+  --sl-color-gray-4: #71809a;
+  --sl-color-gray-5: #b8c8df;
+  --sl-color-gray-6: #dce7f7;
+  --sl-color-gray-7: #f8fbff;
+  --sl-color-black: #ffffff;
+
+  /* Darker cyan keeps text and active navigation above contrast thresholds. */
+  --sl-color-blue-high: #005f94;
+  --sl-color-blue: #007ab8;
+  --sl-color-blue-low: #cceefc;
+  --sl-color-accent-high: #005f94;
+  --sl-color-accent: #007ab8;
+  --sl-color-accent-low: #cceefc;
+  --sl-color-text: #32466a;
+  --sl-color-text-accent: #006fae;
+  --sl-color-text-invert: #f8fbff;
+  --sl-color-bg: #edf3ff;
+  --sl-color-bg-nav: #f8fbff;
+  --sl-color-bg-sidebar: #f8fbff;
+  --sl-color-bg-inline-code: #dce7f7;
+  --sl-color-bg-accent: #007ab8;
+  --sl-color-hairline-light: #dce7f7;
+  --sl-color-hairline: #c6d5ea;
+  --sl-color-hairline-shade: #b8c8df;
+  --sl-color-backdrop-overlay: rgb(23 37 84 / 38%);
+
+  --sl-shadow-sm: 0 1px 2px rgb(23 37 84 / 8%);
+  --sl-shadow-md: 0 14px 34px rgb(23 37 84 / 12%);
+}
+
+html {
+  background: var(--sl-color-bg);
+}
+
+body {
+  font-family: var(--__sl-font);
+  letter-spacing: -0.012em;
+}
+
+code,
+pre,
+kbd,
+.expressive-code {
+  font-family: var(--__sl-font-mono);
+}
+
+.header {
+  box-shadow: 0 1px 0 rgb(23 37 84 / 8%), 0 8px 24px rgb(23 37 84 / 5%);
+}
+
+.site-title {
+  letter-spacing: -0.035em;
+}
+
+.sidebar-content {
+  padding-top: 1.35rem;
+}
+
+.sidebar-content a[aria-current='page'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sl-color-accent) 45%, transparent);
+}
+
+.sidebar-content details > summary {
+  font-weight: 650;
+}
+
+.sl-markdown-content {
+  font-size: 1rem;
+}
+
+.sl-markdown-content :is(h1, h2, h3, h4) {
+  color: var(--sl-color-white);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+}
+
+.sl-markdown-content h1 {
+  line-height: 1.06;
+}
+
+.sl-markdown-content :is(h2, h3) {
+  scroll-margin-top: calc(var(--sl-nav-height) + 1.25rem);
+}
+
+.sl-markdown-content :is(a:not(.sl-link-button)) {
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.16em;
+}
+
+.sl-markdown-content :not(pre) > code {
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0.3rem;
+  padding: 0.12em 0.32em;
+  font-size: 0.88em;
+}
+
+.sl-markdown-content :is(table, .card, .sl-link-card, .starlight-aside) {
+  border-color: var(--sl-color-hairline);
+}
+
+.sl-markdown-content table {
+  overflow: hidden;
+  border-radius: 0.65rem;
+  background: color-mix(in srgb, var(--sl-color-bg-nav) 76%, transparent);
+}
+
+.sl-markdown-content th {
+  color: var(--sl-color-white);
+  background: color-mix(in srgb, var(--sl-color-bg-inline-code) 72%, transparent);
+}
+
+.sl-markdown-content :is(th, td) {
+  border-color: var(--sl-color-hairline);
+}
+
+.sl-markdown-content :is(.card, .sl-link-card) {
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--sl-color-bg-nav) 78%, transparent);
+  box-shadow: 0 1px 0 rgb(23 37 84 / 5%);
+}
+
+.expressive-code .frame {
+  border: 1px solid var(--sl-color-hairline);
+  border-radius: 0.7rem;
+  box-shadow: none;
+}
+
+.expressive-code .frame pre {
+  border-radius: 0 0 0.65rem 0.65rem;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sl-color-accent);
+  outline-offset: 3px;
+}
+
+@media (min-width: 72rem) {
+  .right-sidebar {
+    background: color-mix(in srgb, var(--sl-color-bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+  }
+}
+
+@media (max-width: 49.999rem) {
+  :root {
+    --sl-nav-pad-x: 1rem;
+    --sl-content-pad-x: 1.125rem;
+    --sl-text-h1: 2.35rem;
+  }
+}

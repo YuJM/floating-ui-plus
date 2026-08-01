@@ -514,7 +514,7 @@ const FloatingListItemBase = c(
     const host = useHost<FloatingListItemHost>().current;
     const componentContext = useContext(floatingComponentContext);
     const inheritedList = componentContext.list;
-    const combobox = componentContext.combobox;
+    const query = componentContext.query ?? componentContext.combobox;
     const slot = useRef<HTMLSlotElement>();
     const children = useSlot<HTMLElement>(
       slot,
@@ -532,20 +532,20 @@ const FloatingListItemBase = c(
         value: host.value ?? element,
       });
       let unbindOption: (() => void) | undefined;
-      const syncComboboxOption = () => {
+      const syncQueryOption = () => {
         unbindOption?.();
         unbindOption = undefined;
-        if (!combobox) return;
+        if (!query) return;
         const item = list.items.find((current) => current.element === element);
         if (!item) return;
-        unbindOption = combobox.bindOption(
+        unbindOption = query.bindOption(
           element,
           item.value,
           item.index,
         );
       };
-      const unsubscribe = list.subscribe(syncComboboxOption);
-      syncComboboxOption();
+      const unsubscribe = list.subscribe(syncQueryOption);
+      syncQueryOption();
       return () => {
         unsubscribe();
         unbindOption?.();
@@ -557,7 +557,7 @@ const FloatingListItemBase = c(
       host.itemId,
       host.label,
       host.value,
-      combobox,
+      query,
     ]);
 
     return (

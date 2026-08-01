@@ -114,30 +114,34 @@
   .vue-mw-panel-inline { min-width: 96px; padding: 6px 8px; text-align: center; }
   .vue-combobox-card { background: #dff5e9; }
   .vue-combobox-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 18px; padding: 4px; border: 1px solid rgb(38 142 97 / .18); border-radius: 10px; background: rgb(255 255 255 / .36); }
-  .vue-combobox-tabs a { display: grid; min-height: 32px; place-items: center; border-radius: 7px; padding: 6px 9px; background: transparent; color: #4e675e; font: 10px ui-monospace, monospace; letter-spacing: .02em; text-decoration: none; transition: background .16s ease, color .16s ease; }
-  .vue-combobox-tabs a[aria-selected="true"] { background: #fafffd; color: #173a32; box-shadow: 0 2px 8px rgb(23 58 50 / .1); }
+  .vue-combobox-tabs--outside { margin-top: 0; margin-bottom: 18px; }
+  .vue-combobox-source-panels > [style*="display: none"] { display: none !important; }
+  .vue-combobox-tabs a { display: grid; min-height: 32px; place-items: center; border-radius: 7px; padding: 6px 9px; background: transparent; color: #4e675e; font: 10px ui-monospace, monospace; letter-spacing: .02em; text-decoration: none; transition: background .16s ease, color .16s ease, box-shadow .16s ease; }
+  .vue-combobox-tabs a[aria-selected="false"]:hover { color: #173a32; background: rgb(255 255 255 / .52); }
+  .vue-combobox-tabs a[aria-selected="true"] { background: #268e61; color: #fff; font-weight: 700; box-shadow: 0 3px 10px rgb(38 142 97 / .3), inset 0 0 0 1px rgb(255 255 255 / .24); }
   .vue-combobox-tabs a:focus-visible { outline: 2px solid #268e61; outline-offset: 2px; }
   .vue-combobox-panel > h3 { margin-top: 26px; }
   .vue-combobox-panel > p, .vue-combobox-panel > code { color: #4e675e; }
+  .vue-combobox-popup:not(.vue-async-combobox-popup) { --vue-combobox-popup-max-height: min(26rem, calc(100dvh - 32px)); max-height: var(--vue-combobox-popup-max-height); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgb(38 142 97 / .52) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
   .vue-combobox-shell { position: relative; margin-top: 24px; }
   .vue-combobox-label { display: block; margin-bottom: 7px; color: #426057; font: 9px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
-  .vue-combobox-shell [data-floating-combobox-input] { width: 100%; border: 1px solid rgb(23 58 50 / .24); border-radius: 10px; padding: 13px 42px 13px 14px; outline: 0; background: #fafffd; color: #173a32; font-size: 14px; transition: border-color .16s ease, box-shadow .16s ease; }
-  .vue-combobox-shell [data-floating-combobox-input]::placeholder { color: #83978f; }
-  .vue-combobox-shell [data-floating-combobox-input]:focus { border-color: #268e61; box-shadow: 0 0 0 4px rgb(66 184 131 / .16); }
+  .vue-combobox-shell [data-floating-query-input] { width: 100%; border: 1px solid rgb(23 58 50 / .24); border-radius: 10px; padding: 13px 42px 13px 14px; outline: 0; background: #fafffd; color: #173a32; font-size: 14px; transition: border-color .16s ease, box-shadow .16s ease; }
+  .vue-combobox-shell [data-floating-query-input]::placeholder { color: #83978f; }
+  .vue-combobox-shell [data-floating-query-input]:focus { border-color: #268e61; box-shadow: 0 0 0 4px rgb(66 184 131 / .16); }
   .vue-combobox-icon { position: absolute; right: 14px; bottom: 12px; color: #268e61; font-size: 19px; pointer-events: none; }
   .vue-combobox-loading-indicator { position: absolute; right: 16px; bottom: 15px; width: 13px; height: 13px; border: 2px solid rgb(38 142 97 / .25); border-top-color: #268e61; border-radius: 50%; animation: vue-combobox-loading-spin .7s linear infinite; pointer-events: none; }
   @keyframes vue-combobox-loading-spin { to { transform: rotate(360deg); } }
-  [data-floating-combobox-popup] { z-index: 60; width: min(400px, calc(100vw - 36px)); overflow: hidden; border: 1px solid rgb(23 58 50 / .18); border-radius: 12px; padding: 6px; background: #fafffd; box-shadow: 0 22px 55px rgb(23 58 50 / .22); }
+  [data-floating-query-popup] { z-index: 60; width: min(400px, calc(100vw - 36px)); overflow: hidden; border: 1px solid rgb(23 58 50 / .18); border-radius: 12px; padding: 6px; background: #fafffd; box-shadow: 0 22px 55px rgb(23 58 50 / .22); }
   .vue-combobox-popup.vue-async-combobox-popup { --vue-async-combobox-popup-max-height: min(26rem, calc(100dvh - 32px)); max-height: var(--vue-async-combobox-popup-max-height); overflow: hidden; }
-  .vue-async-combobox-scroll { max-height: calc(var(--vue-async-combobox-popup-max-height) - 12px); overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgb(38 142 97 / .52) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
+  .vue-async-combobox-scroll { max-height: calc(var(--vue-async-combobox-popup-max-height) - 12px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgb(38 142 97 / .52) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
   .vue-async-combobox-scroll::-webkit-scrollbar { width: 10px; }
   .vue-async-combobox-scroll::-webkit-scrollbar-track { background: transparent; }
   .vue-async-combobox-scroll::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: rgb(38 142 97 / .52); background-clip: content-box; }
-  [data-floating-combobox-option] { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 58px; border-radius: 8px; padding: 9px 11px; color: #173a32; cursor: default; }
-  [data-floating-combobox-option][data-active="true"] { background: #caefdf; box-shadow: inset 3px 0 #42b883; }
-  [data-floating-combobox-option] > span:first-child { display: grid; gap: 3px; }
-  [data-floating-combobox-option] strong { font-size: 16px; letter-spacing: -.025em; }
-  [data-floating-combobox-option] small { color: #60766e; font-size: 10px; }
+  [data-floating-query-option] { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 58px; border-radius: 8px; padding: 9px 11px; color: #173a32; cursor: default; }
+  [data-floating-query-option][data-active="true"] { background: #caefdf; box-shadow: inset 3px 0 #42b883; }
+  [data-floating-query-option] > span:first-child { display: grid; gap: 3px; }
+  [data-floating-query-option] strong { font-size: 16px; letter-spacing: -.025em; }
+  [data-floating-query-option] small { color: #60766e; font-size: 10px; }
   .vue-language-badge { flex: none; border: 1px solid rgb(38 142 97 / .2); border-radius: 999px; padding: 4px 7px; background: #effaf5; color: #268e61; font: 9px ui-monospace, monospace; }
   .vue-combobox-empty { padding: 23px 14px; color: #60766e; font-size: 12px; text-align: center; }
   .vue-combobox-hints { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
@@ -226,7 +230,7 @@ html[data-framework="vue"] .pulse, html[data-framework="vue"] .footer-status i {
 html[data-framework="vue"] .integrated-nav a:hover { background: #d7f0e3; color: #176b49; }
 html[data-framework="vue"] .demo-example-link:hover { border-color: #42b883; }
 
-:where(.vue-cursor-field, .vue-mw-reference, .vue-mw-panel, .vue-mw-state-readout, .vue-mw-demo-label, .vue-combobox-label, [data-floating-combobox-option] small, .vue-language-badge, .vue-combobox-hints button, .vue-placement-readout span, .vue-placement-readout code) { font-size: 12px; }
+:where(.vue-cursor-field, .vue-mw-reference, .vue-mw-panel, .vue-mw-state-readout, .vue-mw-demo-label, .vue-combobox-label, [data-floating-query-option] small, .vue-language-badge, .vue-combobox-hints button, .vue-placement-readout span, .vue-placement-readout code) { font-size: 12px; }
 
 @media (prefers-reduced-transparency: reduce) {
   .integrated-nav, .framework-switch { background: var(--paper); backdrop-filter: none; }

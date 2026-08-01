@@ -1,0 +1,196 @@
+---
+import {multilingualSearchPrompts} from '../../multilingual-destinations';
+---
+
+<article class="demo-card combobox-card">
+  <div class="card-top">
+    <span class="number">F</span>
+    <span class="chip">search sources</span>
+  </div>
+  <section
+    class="combobox-panel"
+    data-demo="combobox"
+  >
+  <h3>Multilingual query</h3>
+  <p>Search by city, country, local script, alias, or forgiving typo.</p>
+
+  <div class="combobox-shell">
+    <label class="combobox-label" for="destination-search">
+      Destination
+    </label>
+    <floating-root data-combobox-root placement="bottom-start">
+      <floating-list navigation loop allow-escape>
+        <floating-query
+          data-combobox
+          option-id-prefix="destination-option"
+          query-trigger-selector="#combobox-hints [data-search-sample]"
+        >
+          <floating-reference>
+            <input
+              id="destination-search"
+              class="combobox-input"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              aria-describedby="combobox-hints combobox-status"
+              placeholder="Search city or country…"
+            />
+          </floating-reference>
+          <template slot="content" data-combobox-content>
+              <div
+                class="combobox-popup"
+                data-combobox-popup
+                aria-label="Destination suggestions"
+              >
+                <floating-search>
+                  <template data-search-loading>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Searching…
+                    </div>
+                  </template>
+                  <template data-search-error>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      Search failed.
+                    </div>
+                  </template>
+                  <template data-search-empty>
+                    <div
+                      class="combobox-empty"
+                      role="option"
+                      aria-disabled="true"
+                    >
+                      No destination found for “<span
+                        data-search-text="$query"
+                      ></span>”
+                    </div>
+                  </template>
+                  <template data-search-result>
+                    <floating-list-item>
+                      <div class="combobox-option">
+                        <span>
+                          <strong data-search-text="label"></strong>
+                          <small data-search-text="region"></small>
+                        </span>
+                        <span
+                          class="language-badge"
+                          data-search-text="language"
+                        ></span>
+                      </div>
+                    </floating-list-item>
+                  </template>
+                </floating-search>
+              </div>
+          </template>
+          <p
+            id="combobox-status"
+            class="sr-only"
+            aria-live="polite"
+            data-query-status
+          >
+            Destination suggestions closed
+          </p>
+        </floating-query>
+      </floating-list>
+    </floating-root>
+    <span class="combobox-icon" aria-hidden="true">⌕</span>
+  </div>
+
+  <div id="combobox-hints" class="combobox-hints">
+    {
+      multilingualSearchPrompts.map(([sample, destination]) => (
+        <button type="button" value={sample} data-search-sample={sample}>
+          <code>{sample}</code><span>→ {destination}</span>
+        </button>
+      ))
+    }
+  </div>
+
+  <code>
+    &lt;floating-query&gt; + &lt;floating-search&gt; +
+    &lt;floating-list-item&gt;
+  </code>
+  </section>
+</article>
+
+<script>
+  import {
+    FloatingRootElement,
+    createFuzzySearchSource,
+    dismiss,
+    flip,
+    offset,
+    size,
+    shift,
+    type FloatingQueryElement,
+  } from '@floating-ui-plus/web-components';
+  import {
+    multilingualDestinations,
+    multilingualSearchKeys,
+    type MultilingualDestination,
+  } from '../../multilingual-destinations';
+  import {initializeExample} from './initialize-example';
+
+  initializeExample('combobox', (scope) => {
+    const floating = FloatingRootElement.query(
+      scope,
+      '[data-combobox-root]',
+    );
+    const query = scope.querySelector<FloatingQueryElement>(
+      '[data-combobox]',
+    );
+    if (!query) return;
+
+    query.configure<MultilingualDestination>({
+      search: {
+        source: createFuzzySearchSource(multilingualDestinations, {
+          keys: multilingualSearchKeys,
+          threshold: 0.35,
+        }),
+        getItemKey: (item) => item.id,
+        debounceMs: 0,
+      },
+      getItemLabel: (item) => item.label,
+      status: {
+        closed: 'Destination suggestions closed',
+        idle: 'Start typing to search',
+        loading: 'Searching destinations',
+        error: 'Destination search failed',
+        empty: ({search: state}) =>
+          `No destinations found for ${state.query}`,
+        results: ({search: state}) =>
+          `${state.items.length} destinations available`,
+      },
+    });
+
+    floating.configure({
+      middleware: [
+        offset(8),
+        flip({padding: 18}),
+        shift({padding: 18}),
+        size({
+          padding: 18,
+          rootBoundary: 'viewport',
+          apply({availableHeight, elements}) {
+            const maxHeight = `${Math.max(0, availableHeight)}px`;
+            elements.floating.style.setProperty(
+              '--combobox-popup-max-height',
+              maxHeight,
+            );
+            elements.floating.style.maxHeight = maxHeight;
+          },
+        }),
+      ],
+      plugins: [dismiss()],
+    });
+
+  });
+
+</script>

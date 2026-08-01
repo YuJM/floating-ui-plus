@@ -588,7 +588,7 @@ test('placement controls drive all 12 component positions', async ({page}) => {
 test('multilingual combobox keeps input focus and renders results', async ({
   page,
 }) => {
-  await page.goto('/combobox');
+  await page.goto('/combobox?framework=wc');
   await expect(page.locator('[data-demo="combobox"]')).toHaveAttribute(
     'data-initialized',
     'true',
@@ -598,6 +598,12 @@ test('multilingual combobox keeps input focus and renders results', async ({
     exact: true,
   });
   const webPanel = page.locator('[data-framework-panel="web-components"]');
+
+  await webPanel.getByRole('tab', {name: 'Server search'}).click();
+  await expect(page).toHaveURL(/\/combobox\?framework=wc&source=server$/);
+  await expect(webPanel.locator('[data-demo="async-combobox"]')).toBeVisible();
+  await webPanel.getByRole('tab', {name: 'Fuzzy search'}).click();
+  await expect(page).toHaveURL(/\/combobox\?framework=wc&source=fuzzy$/);
 
   await input.focus();
   await expect(page.getByRole('option')).toHaveCount(4);
@@ -668,7 +674,7 @@ test('multilingual combobox keeps input focus and renders results', async ({
 test('async server combobox renders loading and ignores stale requests', async ({
   page,
 }) => {
-  await page.goto('/combobox');
+  await page.goto('/combobox?source=server');
   await expect(page.locator('[data-demo="async-combobox"]')).toHaveAttribute(
     'data-initialized',
     'true',

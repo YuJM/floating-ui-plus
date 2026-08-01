@@ -376,7 +376,12 @@ const FloatingComboboxBase = c(
   },
 );
 
-/** Connects search, editable input, list, selection, and combobox ARIA. */
+/**
+ * Connects search, editable input, list, selection, and combobox ARIA.
+ *
+ * @deprecated Use `<floating-query>` for generic query experiences. Keep this
+ * element for form-associated selected values and strict combobox presets.
+ */
 export class FloatingComboboxElement extends FloatingComboboxBase {
   static readonly formAssociated = true;
 

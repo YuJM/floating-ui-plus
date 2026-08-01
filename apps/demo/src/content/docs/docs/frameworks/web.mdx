@@ -1,0 +1,22 @@
+---
+title: Web
+description: Use framework-neutral Floating UI Plus controllers with your own renderer.
+---
+
+`@floating-ui-plus/web` owns controller state and interaction plugins while
+your renderer owns elements, markup, ARIA names, styles, and presence.
+
+```ts
+const floating = createFloating(() => ({
+  open,
+  onBeforeClose: (_event, reason) => canClose(reason),
+  onOpenChange: setOpen,
+})).pipe(click(), dismiss(), role({role: 'dialog'}));
+```
+
+Use `createFloatingTopLayer()` for a native Popover or `<dialog>` without
+moving the element. Use `createPortalBridge()` only when a different DOM target
+is required.
+
+See the [usage recipes](/docs/guides/usage) for controller and interaction
+composition examples.

@@ -3,7 +3,6 @@ import {
   FloatingContent,
   FloatingList,
   FloatingListItem,
-  FloatingPortal,
   FloatingReference,
   FloatingRoot,
   FloatingSearch,
@@ -11,10 +10,12 @@ import {
   dismiss,
   flip,
   offset,
+  size,
   shift,
-  useCombobox,
+  useQuery,
   useSearch,
 } from '@floating-ui-plus/vue';
+import {shallowRef} from 'vue';
 import type {MultilingualDestination} from '../../multilingual-destinations';
 import {
   FAKE_SERVER_DESTINATION_PAGE_SIZE,
@@ -29,6 +30,7 @@ const search = useSearch<MultilingualDestination>({
   cacheTtlMs: 5_000,
   limit: FAKE_SERVER_DESTINATION_PAGE_SIZE,
 });
+const selectedDestination = shallowRef<MultilingualDestination | null>(null);
 const {
   open,
   activeIndex,
@@ -38,13 +40,21 @@ const {
   rolePlugin,
   getOptionProps,
   getNavigationOptions,
-} = useCombobox({
+} = useQuery({
   search,
   getItemLabel: (item) => item.label,
   optionIdPrefix: 'vue-remote-destination-option',
+  onActivate(item) {
+    selectedDestination.value = item;
+    // QueryController leaves result presentation to the application. Preserve
+    // the selected label in this destination field without reopening it.
+    search.controller.setQuery(item.label);
+  },
   status: {
-    closed: 'Remote destination suggestions closed',
-    selected: (item) => `${item.label} selected from the server`,
+    closed: () =>
+      selectedDestination.value
+        ? `${selectedDestination.value.label} selected from the server`
+        : 'Remote destination suggestions closed',
     idle: 'Remote destination search is idle',
     loading: 'Querying remote destinations',
     error: 'Remote destination search failed',
@@ -55,7 +65,23 @@ const {
 });
 const options = {
   placement: 'bottom-start',
-  middleware: [offset(8), flip(), shift({padding: 18})],
+  middleware: [
+    offset(8),
+    flip({padding: 18}),
+    shift({padding: 18}),
+    size({
+      padding: 18,
+      rootBoundary: 'viewport',
+      apply({availableHeight, elements}) {
+        const maxHeight = `${Math.max(0, availableHeight)}px`;
+        elements.floating.style.setProperty(
+          '--vue-async-combobox-popup-max-height',
+          maxHeight,
+        );
+        elements.floating.style.maxHeight = maxHeight;
+      },
+    }),
+  ],
   whileElementsMounted: autoUpdate,
 } as const;
 const plugins = [dismiss(), rolePlugin];
@@ -64,9 +90,14 @@ const loadMore = () => void search.controller.loadMore();
 </script>
 
 <template>
-  <section class="vue-combobox-panel vue-server-combobox-panel" role="tabpanel">
-  <h3>Server-side search</h3>
-  <p>
+  <article class="vue-demo-card vue-combobox-card">
+    <div class="vue-card-top">
+      <span class="vue-number">F</span>
+      <span>search sources</span>
+    </div>
+    <section class="vue-combobox-panel vue-server-combobox-panel">
+    <h3>Server-side search</h3>
+    <p>
       MSW simulates a cursor API over {{ FAKE_SERVER_DESTINATION_TOTAL }} distinct countries with debounce,
       cancellation, and page loading.
   </p>
@@ -90,8 +121,8 @@ const loadMore = () => void search.controller.loadMore();
             autocomplete="off"
             spellcheck="false"
             placeholder="Try korea, japan, china…"
-            aria-describedby="vue-remote-combobox-status"
-            data-floating-combobox-input
+            aria-describedby="vue-remote-query-status"
+            data-floating-query-input
             v-bind="inputProps"
           />
           <span
@@ -101,9 +132,11 @@ const loadMore = () => void search.controller.loadMore();
           ></span>
         </div>
 
-        <FloatingPortal>
-          <Transition name="vue-surface">
-            <FloatingContent class="vue-combobox-popup vue-async-combobox-popup">
+        <Transition name="vue-surface">
+            <FloatingContent
+              class="vue-combobox-popup vue-async-combobox-popup"
+              data-floating-query-popup
+            >
               <div class="vue-async-combobox-scroll">
                 <FloatingSearch :search="search">
                   <template #loading>
@@ -125,6 +158,7 @@ const loadMore = () => void search.controller.loadMore();
                       :value="item"
                       v-bind="getOptionProps(item, index)"
                       class="vue-combobox-option"
+                      data-floating-query-option
                     >
                       <span>
                         <strong>{{ item.label }}</strong>
@@ -161,8 +195,7 @@ const loadMore = () => void search.controller.loadMore();
                 </FloatingSearch>
               </div>
             </FloatingContent>
-          </Transition>
-        </FloatingPortal>
+        </Transition>
       </FloatingList>
     </FloatingRoot>
 
@@ -174,10 +207,11 @@ const loadMore = () => void search.controller.loadMore();
       <span>cursor API</span>
     </div>
 
-    <p id="vue-remote-combobox-status" class="sr-only" aria-live="polite">
+    <p id="vue-remote-query-status" class="sr-only" aria-live="polite">
       {{ statusText }}
     </p>
 
-    <code>application source + useCombobox()</code>
-  </section>
+    <code>application source + useQuery()</code>
+    </section>
+  </article>
 </template>

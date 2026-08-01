@@ -1,0 +1,43 @@
+---
+import '../styles.css';
+import '../vue/styles.css';
+
+interface Props {
+  title: string;
+}
+
+const {title} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    <script is:inline>
+      const params = new URL(window.location.href).searchParams;
+      document.documentElement.dataset.framework = params.get('framework') === 'vue'
+        ? 'vue'
+        : 'web-components';
+    </script>
+    <script>
+      import {enableDemoMockServer} from '../mocks/browser';
+      await enableDemoMockServer();
+      import '@floating-ui-plus/web-components';
+    </script>
+  </head>
+  <body>
+    <main class="preview-canvas" aria-label={title}>
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .preview-canvas { min-height: 100vh; padding: 1rem; }
+  .preview-canvas > .framework-panel { width: 100%; }
+  .preview-canvas > .framework-panel { display: none; }
+  html[data-framework='web-components'] .preview-canvas > [data-framework-panel='web-components'],
+  html[data-framework='vue'] .preview-canvas > [data-framework-panel='vue'] { display: block; }
+</style>

@@ -98,6 +98,13 @@ export type UseFloatingOptions<T extends ReferenceElement = ReferenceElement> =
      */
     transform?: MaybeReadonlyRefOrGetter<boolean | undefined> | undefined;
     /**
+     * Called before an interaction closes the floating surface. Return false
+     * to keep it open.
+     */
+    onBeforeClose?:
+      | ((event?: Event, reason?: OpenChangeReason) => boolean | void)
+      | undefined;
+    /**
      * Callback to handle mounting/unmounting of the elements.
      * @default undefined
      */

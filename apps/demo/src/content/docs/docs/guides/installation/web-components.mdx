@@ -1,0 +1,58 @@
+---
+title: Install Web Components
+description: Add Floating UI Plus Custom Elements to an HTML-first application.
+---
+
+import {PackageManagers} from 'starlight-package-managers';
+
+Install the Web Components adapter. It brings the shared
+`@floating-ui-plus/web` runtime with it, so do not install the Web package as a
+second direct dependency.
+
+<PackageManagers type="add" pkg="@floating-ui-plus/web-components" />
+
+## Register the elements
+
+Import the adapter once in the browser entry point or module that owns your
+application bootstrap:
+
+```ts
+import '@floating-ui-plus/web-components';
+```
+
+The import defines the `floating-*` Custom Elements. The package is SSR-safe;
+element behavior starts when the elements connect in the browser.
+
+## First surface
+
+```html
+<floating-root
+  placement="bottom-start"
+  interactions="click dismiss"
+  floating-role="dialog"
+>
+  <floating-reference>
+    <button type="button">Open settings</button>
+  </floating-reference>
+
+  <template slot="content">
+    <section aria-label="Settings">
+      Settings
+      <button type="button" data-fup-close>Close</button>
+    </section>
+  </template>
+</floating-root>
+```
+
+Use a root-owned `<template slot="content">` for ordinary floating surfaces.
+Use a real `<dialog slot="floating">` when the browser should own modal focus,
+inertness, and the native top layer.
+
+## What gets installed
+
+Your package manager resolves `@floating-ui-plus/web` through the adapter's
+dependency graph. You only need a direct `@floating-ui-plus/web` dependency if
+you also import framework-neutral controllers in your own application code.
+
+For complete templates, native Popover and dialog guidance, and close guards,
+see the [usage recipes](/docs/guides/usage).

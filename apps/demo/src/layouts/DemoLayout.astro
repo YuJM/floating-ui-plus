@@ -2,9 +2,9 @@
 import SeoHead from '../components/SeoHead.astro';
 import {Box, ChevronDown, House} from 'lucide-astro';
 import {siVuedotjs} from 'simple-icons';
-import {type ExampleId} from '../demo-registry';
+import {frameworkQuery, type ExampleId} from '../demo-registry';
 import {getSeoMetadata} from '../seo';
-import {getRelativeLocaleUrl} from 'astro:i18n';
+import {getRelativeLocaleUrl} from '../locale-url';
 import * as m from '../paraglide/messages';
 import {getExamples, type Locale} from '../i18n';
 import {EXAMPLE_ICONS} from '../example-icons';
@@ -26,7 +26,8 @@ const examples = getExamples(locale);
 const activeExample = examples.find((item) => item.id === example);
 const ActiveExampleIcon = activeExample ? EXAMPLE_ICONS[activeExample.id] : House;
 const framework = Astro.url.searchParams.get('framework') === 'vue' ? 'vue' : 'web-components';
-const frameworkSearch = `?framework=${framework}`;
+const isEmbed = Astro.url.searchParams.get('embed') === '1';
+const frameworkSearch = `?framework=${frameworkQuery(framework)}`;
 const localizedExamplePath = examplePath ?? example ?? '';
 const routeMetadata = getSeoMetadata(Astro.url.pathname, locale);
 const metadata = {
@@ -48,6 +49,10 @@ const metadata = {
         new URL(window.location.href).searchParams.get('framework') === 'vue'
           ? 'vue'
           : 'web-components';
+      document.documentElement.dataset.embed =
+        new URL(window.location.href).searchParams.get('embed') === '1'
+          ? 'true'
+          : 'false';
     </script>
     <script>
       import {enableDemoMockServer} from '../mocks/browser';
@@ -60,11 +65,12 @@ const metadata = {
     </script>
   </head>
   <body>
-    <floating-ui-demo class:list={['demo-shell', example ? 'is-example' : 'is-home']}>
+    <floating-ui-demo class:list={['demo-shell', example ? 'is-example' : 'is-home', isEmbed && 'is-embedded']}>
     <div class="global-utilities border-b border-border/70 bg-surface/60">
       <div class="container mx-auto flex items-center justify-end gap-3 px-5 py-3 sm:px-8">
+        <a class="docs-nav-link" href="/docs">Docs</a>
         <div class="framework-switch" role="group" aria-label={m.framework_label(undefined, options)} title={m.framework_switch_title(undefined, options)}>
-          <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=web-components`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
+          <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=wc`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
             <Box aria-hidden="true" size={15} strokeWidth={1.8} />
           </a>
           <a data-framework-switch="vue" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=vue`} aria-label="Vue" title={m.framework_vue_title(undefined, options)}>
@@ -75,7 +81,7 @@ const metadata = {
         </div>
         <nav class="language-switch" aria-label={m.language_label(undefined, options)}>
           {(['en', 'ko', 'ja'] as const).map((target) => (
-            <a data-language-switch data-preserve-framework href={`${getRelativeLocaleUrl(target, localizedExamplePath)}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
+            <a data-language-switch data-preserve-query href={`${getRelativeLocaleUrl(target, localizedExamplePath)}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
               {{en: 'English', ko: '한국어', ja: '日本語'}[target]}
             </a>
           ))}
@@ -101,43 +107,60 @@ const metadata = {
         </div>
       </div>
     </header>
-    <nav class="integrated-nav container mx-auto px-5 sm:px-8" aria-label={m.nav_examples(undefined, options)}>
-      <details class="pattern-picker">
-        <summary aria-label={m.nav_examples(undefined, options)}>
-          <span class="pattern-picker-current">
-            <ActiveExampleIcon aria-hidden="true" size={16} strokeWidth={1.8} />
-            <span>{activeExample?.label ?? m.site_name(undefined, options)}</span>
-          </span>
-          <ChevronDown class="pattern-picker-chevron" aria-hidden="true" size={16} strokeWidth={1.8} />
-        </summary>
-        <div class="pattern-picker-panel">
-          <a href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`} data-example-link="home" data-preserve-framework aria-current={example ? undefined : 'page'}>
-            <House aria-hidden="true" size={16} strokeWidth={1.8} />
-            <span>{m.site_name(undefined, options)}</span>
-          </a>
-          {
-            examples.map((item) => (
-              <a
-                href={`${getRelativeLocaleUrl(locale, item.id)}?framework=web-components`}
-                data-example-link={item.id}
-                data-preserve-framework
-                aria-current={example === item.id ? 'page' : undefined}
-              >
-                {(() => {
-                  const Icon = EXAMPLE_ICONS[item.id];
-                  return <Icon aria-hidden="true" size={16} strokeWidth={1.8} />;
-                })()}
-                {item.label}
-              </a>
-            ))
-          }
-        </div>
-      </details>
+    <nav class="integrated-nav" aria-label={m.nav_examples(undefined, options)}>
+      <floating-root
+        class="pattern-picker"
+        data-pattern-picker-root
+        interactions="click dismiss"
+        floating-role="dialog"
+        placement="bottom"
+      >
+        <floating-reference>
+          <button class="pattern-picker-trigger" type="button" aria-label={m.nav_examples(undefined, options)}>
+            <span class="pattern-picker-current">
+              <ActiveExampleIcon aria-hidden="true" size={16} strokeWidth={1.8} />
+              <span>{activeExample?.label ?? m.site_name(undefined, options)}</span>
+            </span>
+            <ChevronDown class="pattern-picker-chevron" aria-hidden="true" size={16} strokeWidth={1.8} />
+          </button>
+        </floating-reference>
+        <template slot="content">
+          <div class="pattern-picker-panel">
+            <a href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`} data-example-link="home" data-preserve-framework aria-current={example ? undefined : 'page'}>
+              <House aria-hidden="true" size={16} strokeWidth={1.8} />
+              <span>{m.site_name(undefined, options)}</span>
+            </a>
+            {
+              examples.map((item) => (
+                <a
+                  href={`${getRelativeLocaleUrl(locale, item.id)}?framework=wc`}
+                  data-example-link={item.id}
+                  data-preserve-framework
+                  aria-current={example === item.id ? 'page' : undefined}
+                >
+                  {(() => {
+                    const Icon = EXAMPLE_ICONS[item.id];
+                    return <Icon aria-hidden="true" size={16} strokeWidth={1.8} />;
+                  })()}
+                  {item.label}
+                </a>
+              ))
+            }
+          </div>
+        </template>
+      </floating-root>
     </nav>
     <main class="container mx-auto px-5 sm:px-8">
       <slot />
     </main>
     <script>
+      import {
+        FloatingRootElement,
+        flip,
+        offset,
+        shift,
+        size,
+      } from '@floating-ui-plus/web-components';
       import {resolveFramework} from '../demo-registry';
 
       function initializeIntegratedDemo() {
@@ -165,11 +188,23 @@ const metadata = {
 
         document.querySelectorAll<HTMLAnchorElement>('[data-preserve-framework]').forEach((link) => {
           const url = new URL(link.href);
-          url.searchParams.set('framework', framework);
+          url.searchParams.set('framework', framework === 'vue' ? 'vue' : 'wc');
+          link.href = url.href;
+        });
+        document.querySelectorAll<HTMLAnchorElement>('[data-preserve-query]').forEach((link) => {
+          const url = new URL(link.href);
+          url.search = window.location.search;
           link.href = url.href;
         });
         document.querySelectorAll<HTMLAnchorElement>('[data-framework-switch]').forEach((link) => {
           const target = link.dataset.frameworkSwitch;
+          const currentUrl = new URL(window.location.href);
+          const source = currentUrl.searchParams.get('source');
+          const url = new URL(link.href);
+          if (source === 'fuzzy' || source === 'server') {
+            url.searchParams.set('source', source);
+          }
+          link.href = url.href;
           link.setAttribute('aria-current', target === framework ? 'page' : 'false');
         });
       }
@@ -180,6 +215,30 @@ const metadata = {
       } else {
         runIntegratedDemo();
       }
+
+      customElements.whenDefined('floating-root').then(() => {
+        const patternPicker = FloatingRootElement.query(
+          document,
+          '[data-pattern-picker-root]',
+        );
+
+        patternPicker.configure({
+          middleware: [
+            offset(8),
+            flip({padding: 16}),
+            shift({padding: 16}),
+            size({
+              padding: 16,
+              apply({availableWidth, elements, rects}) {
+                elements.floating.style.width = `${Math.min(
+                  rects.reference.width,
+                  availableWidth,
+                )}px`;
+              },
+            }),
+          ],
+        });
+      });
     </script>
     </floating-ui-demo>
   </body>

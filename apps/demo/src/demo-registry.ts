@@ -2,6 +2,12 @@ export const FRAMEWORKS = ['web-components', 'vue'] as const;
 
 export type Framework = (typeof FRAMEWORKS)[number];
 
+export type FrameworkQuery = 'wc' | 'vue';
+
+export function frameworkQuery(framework: Framework): FrameworkQuery {
+  return framework === 'vue' ? 'vue' : 'wc';
+}
+
 export const EXAMPLES = [
   {
     id: 'tooltip',
@@ -40,10 +46,10 @@ export const EXAMPLES = [
   },
   {
     id: 'combobox',
-    label: 'Combobox',
+    label: 'Query',
     heading: 'Search across<br /><span>writing systems.</span>',
     description:
-      'Search multilingual destinations with fuzzy matching, list navigation, and accessible combobox behavior.',
+      'Search multilingual destinations with fuzzy matching, list navigation, and default accessible query behavior.',
   },
   {
     id: 'placement',
@@ -79,5 +85,5 @@ export function resolveFramework(value: string | null): Framework {
 }
 
 export function exampleHref(example: ExampleId, framework: Framework) {
-  return `/${example}?framework=${framework}`;
+  return `/${example}?framework=${frameworkQuery(framework)}`;
 }

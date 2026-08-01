@@ -40,6 +40,9 @@ export type WhileElementsMounted = (
 export interface FloatingOptions
   extends Omit<Partial<ComputePositionConfig>, 'middleware'> {
   open?: boolean | undefined;
+  onBeforeClose?:
+    | ((event?: Event, reason?: OpenChangeReason) => boolean | void)
+    | undefined;
   onOpenChange?:
     | ((open: boolean, event?: Event, reason?: OpenChangeReason) => void)
     | undefined;

@@ -1,0 +1,23 @@
+---
+title: Installation
+description: Install the renderer adapter that matches your application.
+---
+
+Floating UI Plus is published as a framework-neutral Web core and two renderer
+adapters. Start with the adapter your application renders with:
+
+- [Web Components](/docs/guides/installation/web-components) for HTML-first
+  Custom Elements.
+- [Vue](/docs/guides/installation/vue) for Vue 3 components and composables.
+- [Web core](/docs/guides/installation/web) when your application owns the
+  markup, ARIA, lifecycle, and rendering contract.
+
+## One package for each adapter
+
+`@floating-ui-plus/web-components` and `@floating-ui-plus/vue` declare
+`@floating-ui-plus/web` as a dependency. Installing either adapter therefore
+installs the shared Web runtime automatically; add the Web package directly
+only when you use its controller API without an adapter.
+
+Each installation page includes Bun, npm, pnpm, and Yarn commands, followed by
+the smallest working import for that renderer.

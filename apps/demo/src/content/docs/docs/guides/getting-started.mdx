@@ -1,0 +1,33 @@
+---
+title: Getting started
+description: Install Floating UI Plus and choose the right package.
+---
+
+## Install the package for your renderer
+
+Install exactly one renderer adapter:
+
+- [Web Components](/docs/guides/installation/web-components) for HTML-first
+  Custom Elements.
+- [Vue](/docs/guides/installation/vue) for Vue components and composables.
+
+Both adapters install `@floating-ui-plus/web` transitively. Use the [Web core
+installation guide](/docs/guides/installation/web) only when you are building
+your own renderer.
+
+## Pick the smallest layer
+
+1. Use `@floating-ui-plus/web` when your application owns markup, ARIA, and
+   lifecycle wiring.
+2. Use `@floating-ui-plus/web-components` when you want declarative elements
+   without a framework runtime.
+3. Use `@floating-ui-plus/vue` when Vue should own rendering while the shared
+   controller owns interaction state.
+
+All three packages use the same concepts: a reference, a floating surface,
+an open-state callback, interaction plugins, and an optional focus manager.
+
+## Verify the live behavior
+
+Open the [popover demo](/popover), then compare the [Vue combobox](/combobox?framework=vue&source=fuzzy)
+with the [Web Components server-search example](/combobox?framework=wc&source=server).

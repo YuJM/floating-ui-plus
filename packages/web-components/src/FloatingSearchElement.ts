@@ -1,5 +1,5 @@
 import type {
-  ComboboxController,
+  QueryController,
   SearchController,
   SearchPhase,
   SearchSnapshot,
@@ -11,8 +11,8 @@ interface FloatingContextProviderElement extends Element {
   contextValue?: FloatingComponentContext | undefined;
 }
 
-interface FloatingComboboxControllerElement extends Element {
-  controller?: ComboboxController<unknown> | undefined;
+interface FloatingQueryControllerElement extends Element {
+  controller?: QueryController<unknown> | undefined;
 }
 
 export const FLOATING_SEARCH_PHASES: readonly SearchPhase[] = [
@@ -108,12 +108,12 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
   }
 
   connectedCallback() {
-    this.#adoptComboboxContext();
+    this.#adoptQueryContext();
     this.#subscribe();
     this.render();
     queueMicrotask(() => {
       if (!this.isConnected || this.#search) return;
-      this.#adoptComboboxContext();
+      this.#adoptQueryContext();
       this.#subscribe();
       this.render();
     });
@@ -246,20 +246,22 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
     this.#unsubscribe = this.#search.subscribe(() => this.render());
   }
 
-  #adoptComboboxContext() {
+  #adoptQueryContext() {
     if (this.#search) return;
     const portalTarget = this.closest(
       'floating-portal-target',
     ) as FloatingContextProviderElement | null;
-    const localCombobox = this.closest(
-      'floating-combobox',
-    ) as FloatingComboboxControllerElement | null;
-    const combobox =
-      portalTarget?.contextValue?.combobox ?? localCombobox?.controller;
-    if (!combobox) return;
-    this.#search = combobox.search as SearchController<T>;
+    const localQuery = this.closest(
+      'floating-query, floating-combobox',
+    ) as FloatingQueryControllerElement | null;
+    const query =
+      portalTarget?.contextValue?.query ??
+      portalTarget?.contextValue?.combobox ??
+      localQuery?.controller;
+    if (!query) return;
+    this.#search = query.search as SearchController<T>;
     this.#getItemLabel = (item) =>
-      combobox.getItemLabel(item as unknown) as string;
+      query.getItemLabel(item as unknown) as string;
     this.#onRender ??= () => {
       const root =
         portalTarget?.contextValue?.root ?? this.closest('floating-root');

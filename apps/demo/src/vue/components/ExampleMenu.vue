@@ -3,7 +3,6 @@ import {
   FloatingContent,
   FloatingList,
   FloatingListItem,
-  FloatingPortal,
   FloatingReference,
   FloatingRoot,
   autoUpdate,
@@ -42,8 +41,7 @@ const plugins = [
           Open navigator <span>⌄</span>
         </FloatingReference>
         <FloatingList navigation typeahead loop>
-          <FloatingPortal>
-            <Transition name="vue-surface">
+          <Transition name="vue-surface">
               <FloatingContent class="menu-panel">
                 <div class="menu-heading">
                   <span>Jump to a field</span>
@@ -63,8 +61,7 @@ const plugins = [
                   <span>{{ label }}</span><kbd>{{ label.slice(0, 1).toUpperCase() }}</kbd>
                 </FloatingListItem>
               </FloatingContent>
-            </Transition>
-          </FloatingPortal>
+          </Transition>
         </FloatingList>
       </FloatingRoot>
     </div>

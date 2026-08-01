@@ -1,6 +1,6 @@
 {
   "name": "@floating-ui-plus/vue",
-  "version": "0.5.0",
+  "version": "0.7.2",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/",
   "description": "Vue Floating UI composables and components for interactions, focus management, portals, collections, and search",
@@ -20,8 +20,7 @@
   },
   "sideEffects": false,
   "files": [
-    "dist",
-    "USAGE.md"
+    "dist"
   ],
   "scripts": {
     "test": "vitest run",

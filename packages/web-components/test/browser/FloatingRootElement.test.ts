@@ -11,6 +11,7 @@ import {
   FloatingCompositeElement,
   FloatingListElement,
   FloatingPortalElement,
+  FloatingQueryElement,
   FloatingReferenceElement,
   FloatingRootElement,
   SearchController,
@@ -128,6 +129,32 @@ describe('FloatingRootElement', () => {
     });
   });
 
+  test('dispatches a cancelable before-close event for imperative closes', () => {
+    const root = document.createElement('floating-root');
+    root.open = true;
+    document.body.append(root);
+    const beforeClose = vi.fn((event: Event) => event.preventDefault());
+    const changed = vi.fn();
+    root.addEventListener('floatingbeforeclose', beforeClose);
+    root.addEventListener('openchange', changed);
+
+    const sourceEvent = new MouseEvent('click');
+    expect(root.close(sourceEvent, 'click')).toBe(false);
+    expect(beforeClose).toHaveBeenCalledOnce();
+    expect(beforeClose.mock.calls[0]?.[0]).toMatchObject({
+      type: 'floatingbeforeclose',
+      cancelable: true,
+      detail: {reason: 'click', sourceEvent},
+    });
+    expect(root.open).toBe(true);
+    expect(changed).not.toHaveBeenCalled();
+
+    root.removeEventListener('floatingbeforeclose', beforeClose);
+    expect(root.close(sourceEvent, 'click')).toBe(true);
+    expect(root.open).toBe(false);
+    expect(changed).toHaveBeenCalledOnce();
+  });
+
   test('keeps a slotted native popover in its root context', async () => {
     if (!supportsFloatingTopLayer('popover')) return;
     const root = document.createElement('floating-root');
@@ -136,7 +163,7 @@ describe('FloatingRootElement', () => {
     root.strategy = 'fixed';
     root.innerHTML = `
       <floating-reference><button>Open</button></floating-reference>
-      <floating-content slot="floating">Content</floating-content>
+      <floating-content slot="floating" top-layer="popover">Content</floating-content>
     `;
     document.body.append(root);
     await root.updateComplete;
@@ -149,6 +176,23 @@ describe('FloatingRootElement', () => {
     root.open = false;
     await root.updateComplete;
     expect(root.floatingElement?.hidden).toBe(true);
+  });
+
+  test('uses a native popover for a direct slotted surface by default', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.floatingRole = 'dialog';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <floating-content slot="floating">Content</floating-content>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+
+    expect(root.floatingElement).toHaveAttribute('popover', 'manual');
+    expect(root.floatingElement?.hidden).toBe(false);
   });
 
   test('uses a slotted dialog as a native modal surface', async () => {
@@ -167,6 +211,30 @@ describe('FloatingRootElement', () => {
     dialog.dispatchEvent(new Event('cancel', {cancelable: true}));
     await vi.waitFor(() => expect(root.open).toBe(false));
     expect(dialog.hidden).toBe(true);
+  });
+
+  test('reopens a native modal when floatingbeforeclose is canceled', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <dialog slot="floating">Content</dialog>
+    `;
+    const beforeClose = (event: Event) => event.preventDefault();
+    root.addEventListener('floatingbeforeclose', beforeClose);
+    document.body.append(root);
+    await root.updateComplete;
+    const dialog = root.floatingElement as HTMLDialogElement;
+    await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+    dialog.dispatchEvent(new Event('cancel', {cancelable: true}));
+
+    await vi.waitFor(() => {
+      expect(root.open).toBe(true);
+      expect(dialog.open).toBe(true);
+    });
+    root.removeEventListener('floatingbeforeclose', beforeClose);
   });
 
   test('maps click interactions to reflected state and a DOM event', async () => {
@@ -369,6 +437,71 @@ describe('FloatingRootElement', () => {
       expect(input.value).toBe('서울');
       expect(root.open).toBe(false);
       expect(selectListener).toHaveBeenCalledOnce();
+    });
+    search.destroy();
+  });
+
+  test('composes a non-form-associated query with default combobox semantics', async () => {
+    const destinations = [
+      {id: 'seoul', label: 'Seoul'},
+      {id: 'beijing', label: 'Beijing'},
+    ];
+    const search = new SearchController<(typeof destinations)[number]>({
+      items: destinations,
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-list navigation loop allow-escape>
+        <floating-query option-id-prefix="destination-query-option">
+          <floating-reference><input aria-label="Destination query" /></floating-reference>
+          <floating-list-item label="Seoul"><div>Seoul</div></floating-list-item>
+          <floating-list-item label="Beijing"><div>Beijing</div></floating-list-item>
+        </floating-query>
+      </floating-list>
+    `;
+    const query = root.querySelector('floating-query')!;
+    const list = root.querySelector('floating-list')!;
+    const listItems = Array.from(root.querySelectorAll('floating-list-item'));
+    listItems.forEach((item, index) => {
+      item.value = destinations[index];
+    });
+    query.configure({search, getItemLabel: (item) => item.label});
+    const activateListener = vi.fn();
+    query.addEventListener('queryactivate', activateListener);
+    document.body.append(root);
+
+    await root.updateComplete;
+    await list.updateComplete;
+    await query.updateComplete;
+    await Promise.all(listItems.map((item) => item.updateComplete));
+    const input = root.querySelector('input')!;
+    const options = Array.from(root.querySelectorAll<HTMLElement>('div'));
+
+    await vi.waitFor(() => {
+      expect(query).toBeInstanceOf(FloatingQueryElement);
+      expect((query as {selectedItem?: unknown}).selectedItem).toBeUndefined();
+      expect(input.getAttribute('role')).toBe('combobox');
+      expect(
+        options.every((option) => option.getAttribute('role') === 'option'),
+      ).toBe(true);
+    });
+
+    input.focus();
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+    await vi.waitFor(() => expect(list.activeIndex).toBe(0));
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'Enter'}),
+    );
+    await vi.waitFor(() => {
+      expect(activateListener).toHaveBeenCalledOnce();
+      expect(activateListener.mock.calls[0]?.[0].detail.item).toBe(
+        destinations[0],
+      );
+      expect(input.value).toBe('');
     });
     search.destroy();
   });

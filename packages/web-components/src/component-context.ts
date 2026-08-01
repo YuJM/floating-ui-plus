@@ -7,6 +7,7 @@ import type {
   FloatingList,
   FloatingTopLayer,
   FloatingTree,
+  QueryController,
 } from '@floating-ui-plus/web';
 
 import type {FloatingRootElement} from './FloatingRootElement';
@@ -27,6 +28,7 @@ export interface FloatingComponentContext {
   list?: FloatingList<unknown> | undefined;
   delayGroup?: DelayGroup | undefined;
   composite?: FloatingCompositeContext | undefined;
+  query?: QueryController<unknown> | undefined;
   combobox?: ComboboxController<unknown> | undefined;
   topLayer?: FloatingTopLayer | undefined;
 }
@@ -42,6 +44,7 @@ export const floatingComponentContext =
     list: undefined,
     delayGroup: undefined,
     composite: undefined,
+    query: undefined,
     combobox: undefined,
     topLayer: undefined,
   });

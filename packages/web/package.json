@@ -1,6 +1,6 @@
 {
   "name": "@floating-ui-plus/web",
-  "version": "0.5.0",
+  "version": "0.7.2",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/",
   "description": "Framework-neutral Floating UI controllers for positioning, interactions, focus management, portals, and search",
@@ -23,8 +23,7 @@
   "license": "MIT",
   "sideEffects": false,
   "files": [
-    "dist",
-    "USAGE.md"
+    "dist"
   ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -55,6 +54,11 @@
       "types": "./dist/combobox.d.ts",
       "import": "./dist/combobox.js",
       "require": "./dist/combobox.cjs"
+    },
+    "./query": {
+      "types": "./dist/query.d.ts",
+      "import": "./dist/query.js",
+      "require": "./dist/query.cjs"
     }
   },
   "publishConfig": {

@@ -1,0 +1,43 @@
+---
+title: 'Demo: Tooltip'
+description: Combine hover, focus, safe polygon dismissal, and arrow positioning.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import tooltipSource from '../../../../../components/examples/TooltipExample.astro?raw';
+import tooltipVueSource from '../../../../../vue/components/ExampleTooltip.vue?raw';
+
+[Open the live tooltip demo](/tooltip?framework=wc)
+
+<DemoPreview route="/preview/tooltip" title="Tooltip" webCode={tooltipSource} vueCode={tooltipVueSource} webTitle="TooltipExample.astro" vueTitle="ExampleTooltip.vue" />
+
+The tooltip combines pointer and keyboard entry without duplicating open state:
+
+```ts
+floating.configure({
+  middleware: [offset(3), flip(), shift({padding: 12})],
+  plugins: [
+    hover({handleClose: safePolygon({buffer: 4})}),
+    focus(),
+    dismiss(),
+    role({role: 'tooltip'}),
+  ],
+});
+```
+
+`safePolygon()` keeps the tooltip open while the pointer travels toward the
+surface. `focus()` covers keyboard focus, while `dismiss()` handles Escape and
+focus-out. The demo registers `floating-arrow` after the template mounts so
+the arrow height participates in the visual offset.
+
+```html
+<floating-root placement="top" interactions="hover focus dismiss">
+  <floating-reference><button>Inspect signal</button></floating-reference>
+  <template slot="content">
+    <div role="tooltip">Positioned by autoUpdate</div>
+  </template>
+</floating-root>
+```
+
+Use `hover()`, `focus()`, `dismiss()`, and `role({role: 'tooltip'})` in the
+[Vue adapter](/docs/frameworks) with the same behavior contract.

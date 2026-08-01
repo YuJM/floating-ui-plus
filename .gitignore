@@ -16,3 +16,4 @@ __screenshots__
 .cloudflare
 .wrangler
 .dev.vars*
+apps/demo/src/content/docs/docs/api/

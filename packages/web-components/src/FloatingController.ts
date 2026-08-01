@@ -80,7 +80,7 @@ export class FloatingRootRuntime {
     this.#host = host;
     this.topLayer = createFloatingTopLayer({
       onOpenChange: (open, event, reason) => {
-        host.commitOpenChange(open, event, reason);
+        return host.commitOpenChange(open, event, reason);
       },
     });
     this.#contentScopes.set(host, null);
@@ -92,7 +92,7 @@ export class FloatingRootRuntime {
       middleware: host.middleware,
       whileElementsMounted: autoUpdate,
       onOpenChange: (open, event, reason) => {
-        host.commitOpenChange(open, event, reason);
+        return host.commitOpenChange(open, event, reason);
       },
     }));
   }
@@ -285,15 +285,9 @@ export class FloatingRootRuntime {
     if (explicitTopLayer === 'popover' || explicitTopLayer === 'dialog') {
       return explicitTopLayer;
     }
-    const role =
-      this.engine.context.attributes.floating?.role ?? this.#host.floatingRole;
-    if (
-      element?.localName === 'floating-content' &&
-      (role === 'dialog' || role === 'menu' || role === 'listbox')
-    ) {
-      return 'popover';
-    }
-    return 'none';
+    // A direct slotted surface mirrors template content and uses the native
+    // Popover API by default. `top-layer="none"` remains the opt-out.
+    return 'popover';
   }
 
   #resolveSlottedSurface(

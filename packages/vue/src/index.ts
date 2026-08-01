@@ -5,6 +5,12 @@ export {useFloating} from './useFloating';
 export {useSearch} from './search';
 export type {UseSearchReturn} from './search';
 export {FloatingSearch} from './search-content';
+export {useQuery} from './query';
+export type {
+  QueryInputLifecycleProps,
+  UseQueryOptions,
+  UseQueryReturn,
+} from './query';
 export {useCombobox} from './combobox';
 export type {
   ComboboxInputLifecycleProps,
@@ -27,6 +33,8 @@ export {
   createAsyncSearchSource,
   createCombobox,
   createComboboxStatusFormatter,
+  createQuery,
+  createQueryStatusFormatter,
   createFloating,
   createFloatingContextScope,
   createFloatingTopLayer,

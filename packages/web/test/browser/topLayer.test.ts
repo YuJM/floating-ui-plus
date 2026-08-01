@@ -7,6 +7,8 @@ import {
 
 afterEach(() => {
   document.body.replaceChildren();
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
 });
 
 describe('FloatingTopLayerController', () => {
@@ -55,6 +57,77 @@ describe('FloatingTopLayerController', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false, cancel, 'escape-key');
     topLayer.sync(false);
     expect(element.open).toBe(false);
+    topLayer.destroy();
+  });
+
+  test('locks document scroll only while native dialogs are open', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    document.body.style.overflow = 'scroll';
+
+    const firstElement = document.createElement('dialog');
+    const secondElement = document.createElement('dialog');
+    const first = createFloatingTopLayer({onOpenChange: vi.fn()});
+    const second = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(firstElement, secondElement);
+
+    for (const [controller, element] of [
+      [first, firstElement],
+      [second, secondElement],
+    ] as const) {
+      controller.setKind('dialog');
+      controller.setElement(element);
+      controller.connect();
+      expect(controller.sync(true)).toBe(true);
+    }
+
+    expect(document.body.style.overflow).toBe('hidden');
+    first.sync(false);
+    expect(document.body.style.overflow).toBe('hidden');
+
+    secondElement.close();
+    await vi.waitFor(() =>
+      expect(document.body.style.overflow).toBe('scroll'),
+    );
+
+    second.destroy();
+    first.destroy();
+  });
+
+  test('releases a dialog scroll lock when its surface changes', () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    document.body.style.overflow = '';
+    const element = document.createElement('dialog');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('dialog');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    expect(document.body.style.overflow).toBe('hidden');
+    topLayer.setKind('none');
+    expect(document.body.style.overflow).toBe('');
+    topLayer.destroy();
+  });
+
+  test('reopens a native surface when a close request is rejected', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    const onOpenChange = vi.fn(() => false);
+    const topLayer = createFloatingTopLayer({onOpenChange});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    element.hidePopover();
+    await vi.waitFor(() => expect(element.matches(':popover-open')).toBe(true));
+    expect(onOpenChange).toHaveBeenCalledWith(
+      false,
+      expect.any(Event),
+      'outside-press',
+    );
     topLayer.destroy();
   });
 });

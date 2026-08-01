@@ -77,6 +77,33 @@ describe('createFloating pipeline', () => {
     floating.destroy();
   });
 
+  test('runs onBeforeClose before every close request and can cancel it', () => {
+    let open = true;
+    const beforeClose = vi.fn(() => false);
+    const onOpenChange = vi.fn((next: boolean) => {
+      open = next;
+    });
+    const floating = createFloating(() => ({
+      open,
+      onBeforeClose: beforeClose,
+      onOpenChange,
+    }));
+
+    floating.context.onOpenChange(false, undefined, 'escape-key');
+
+    expect(beforeClose).toHaveBeenCalledWith(undefined, 'escape-key');
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(open).toBe(true);
+
+    beforeClose.mockReturnValue(true);
+    floating.context.onOpenChange(false, undefined, 'click');
+
+    expect(beforeClose).toHaveBeenLastCalledWith(undefined, 'click');
+    expect(onOpenChange).toHaveBeenCalledWith(false, undefined, 'click');
+    expect(open).toBe(false);
+    floating.destroy();
+  });
+
   test('enabled false installs inert plugins', () => {
     const reference = document.createElement('button');
     const onOpenChange = vi.fn();
