@@ -309,6 +309,13 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
   });
   const vuePanel = page.locator('[data-framework-panel="vue"]');
 
+  await vuePanel.getByRole('tab', {name: 'Server search'}).click();
+  await expect(page).toHaveURL(/\/combobox\?framework=vue&source=server$/);
+  await expect(vuePanel.getByRole('combobox', {name: 'Remote destination'})).toBeVisible();
+  await vuePanel.getByRole('tab', {name: 'Fuzzy search'}).click();
+  await expect(page).toHaveURL(/\/combobox\?framework=vue&source=fuzzy$/);
+  await expect(input).toBeVisible();
+
   await input.focus();
   await expect(page.getByRole('option')).toHaveCount(4);
   await vuePanel.locator('[data-search-sample="bejing"]').click();
@@ -381,7 +388,7 @@ test('multilingual Vue combobox keeps input focus and teleports results', async 
 test('async Vue server combobox renders loading and ignores stale requests', async ({
   page,
 }) => {
-  await page.goto('/combobox?framework=vue');
+  await page.goto('/combobox?framework=vue&source=server');
   const input = page.getByRole('combobox', {name: 'Remote destination'});
   const popup = page.locator('.vue-async-combobox-popup');
 

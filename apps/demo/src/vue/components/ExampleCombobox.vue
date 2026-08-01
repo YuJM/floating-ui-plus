@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {ref} from 'vue';
 import {
   FloatingContent,
   FloatingList,
@@ -30,9 +31,15 @@ const props = withDefaults(defineProps<{source?: ComboboxSource}>(), {
   source: 'fuzzy',
 });
 
+const activeSource = ref<ComboboxSource>(
+  new URLSearchParams(window.location.search).get('source') === 'server'
+    ? 'server'
+    : props.source,
+);
+
 function sourceHref(source: ComboboxSource) {
   const url = new URL(window.location.href);
-  url.pathname = `${url.pathname.replace(/\/(?:fuzzy|server)$/, '')}/${source}`;
+  url.searchParams.set('source', source);
   return `${url.pathname}${url.search}`;
 }
 
@@ -100,9 +107,9 @@ const navigationOptions = getNavigationOptions({
         id="vue-combobox-tab-fuzzy"
         :href="sourceHref('fuzzy')"
         role="tab"
-        :aria-selected="props.source === 'fuzzy'"
+        :aria-selected="activeSource === 'fuzzy'"
         aria-controls="vue-combobox-panel-fuzzy"
-        :tabindex="props.source === 'fuzzy' ? 0 : -1"
+        :tabindex="activeSource === 'fuzzy' ? 0 : -1"
         @keydown="navigateSource($event, 'fuzzy')"
       >
         Fuzzy search
@@ -111,16 +118,16 @@ const navigationOptions = getNavigationOptions({
         id="vue-combobox-tab-server"
         :href="sourceHref('server')"
         role="tab"
-        :aria-selected="props.source === 'server'"
+        :aria-selected="activeSource === 'server'"
         aria-controls="vue-combobox-panel-server"
-        :tabindex="props.source === 'server' ? 0 : -1"
+        :tabindex="activeSource === 'server' ? 0 : -1"
         @keydown="navigateSource($event, 'server')"
       >
         Server search
       </a>
     </div>
     <section
-      v-if="props.source === 'fuzzy'"
+      v-if="activeSource === 'fuzzy'"
       id="vue-combobox-panel-fuzzy"
       class="vue-combobox-panel"
       role="tabpanel"

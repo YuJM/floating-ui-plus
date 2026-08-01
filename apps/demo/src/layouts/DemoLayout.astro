@@ -75,7 +75,7 @@ const metadata = {
         </div>
         <nav class="language-switch" aria-label={m.language_label(undefined, options)}>
           {(['en', 'ko', 'ja'] as const).map((target) => (
-            <a data-language-switch data-preserve-framework href={`${getRelativeLocaleUrl(target, localizedExamplePath)}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
+            <a data-language-switch data-preserve-query href={`${getRelativeLocaleUrl(target, localizedExamplePath)}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
               {{en: 'English', ko: '한국어', ja: '日本語'}[target]}
             </a>
           ))}
@@ -168,8 +168,20 @@ const metadata = {
           url.searchParams.set('framework', framework);
           link.href = url.href;
         });
+        document.querySelectorAll<HTMLAnchorElement>('[data-preserve-query]').forEach((link) => {
+          const url = new URL(link.href);
+          url.search = window.location.search;
+          link.href = url.href;
+        });
         document.querySelectorAll<HTMLAnchorElement>('[data-framework-switch]').forEach((link) => {
           const target = link.dataset.frameworkSwitch;
+          const currentUrl = new URL(window.location.href);
+          const source = currentUrl.searchParams.get('source');
+          const url = new URL(link.href);
+          if (source === 'fuzzy' || source === 'server') {
+            url.searchParams.set('source', source);
+          }
+          link.href = url.href;
           link.setAttribute('aria-current', target === framework ? 'page' : 'false');
         });
       }

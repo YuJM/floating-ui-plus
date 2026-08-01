@@ -1,5 +1,7 @@
 ---
 import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
+
+const {hidden = false} = Astro.props as {hidden?: boolean};
 ---
 
 <section
@@ -8,6 +10,7 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
   id="combobox-panel-server"
   role="tabpanel"
   aria-labelledby="combobox-tab-server"
+  hidden={hidden}
 >
   <h3>Server-side search</h3>
   <p>

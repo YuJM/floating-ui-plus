@@ -53,6 +53,15 @@ test('uses component names and applied-function badges on every example', async 
   await expect(page.locator('.implementation-badge--gold')).toHaveCount(1);
 });
 
+test('opens the default combobox route without a redirect', async ({page}) => {
+  await page.goto('/');
+
+  await page.locator('.demo-example-link[data-example-link="combobox"]').click();
+
+  await expect(page).toHaveURL(/\/combobox\?framework=web-components$/);
+  await expect(page.locator('[data-demo="combobox"]')).toBeVisible();
+});
+
 test('redirects legacy prefixed English URLs to their canonical routes', async ({page}) => {
   await page.goto('/en');
   await expect(page).toHaveURL(/\/$/);
@@ -118,12 +127,32 @@ test('integrated demo selects an example and preserves it while switching implem
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeVisible();
 });
 
-test('preserves the selected framework when switching locale', async ({page}) => {
-  await page.goto('/ko/modal?framework=vue');
+test('preserves the combobox source when switching implementations', async ({page}) => {
+  await page.goto('/combobox?framework=web-components&source=server');
+
+  const switcher = page.getByRole('group', {name: 'Implementation'});
+  await switcher.getByRole('link', {name: 'Vue'}).click();
+  await expect(page).toHaveURL(/\/combobox\?framework=vue&source=server$/);
+  await expect(
+    page.locator('[data-framework-panel="vue"]').getByRole('tab', {name: 'Server search'}),
+  ).toHaveAttribute('aria-selected', 'true');
+
+  await switcher.getByRole('link', {name: /Web Components/}).click();
+  await expect(page).toHaveURL(/\/combobox\?framework=web-components&source=server$/);
+  await expect(
+    page.locator('[data-framework-panel="web-components"]').getByRole('tab', {name: 'Server search'}),
+  ).toHaveAttribute('aria-selected', 'true');
+});
+
+test('preserves query parameters when switching locale', async ({page}) => {
+  await page.goto('/ko/combobox?framework=vue&source=server');
 
   await page.getByRole('link', {name: 'English'}).click();
 
-  await expect(page).toHaveURL(/\/modal\?framework=vue$/);
+  await expect(page).toHaveURL(/\/combobox\?framework=vue&source=server$/);
   await expect(page.locator('[data-framework-panel="vue"]')).toBeVisible();
   await expect(page.locator('[data-framework-panel="web-components"]')).toBeHidden();
+  await expect(
+    page.locator('[data-framework-panel="vue"]').getByRole('tab', {name: 'Server search'}),
+  ).toHaveAttribute('aria-selected', 'true');
 });

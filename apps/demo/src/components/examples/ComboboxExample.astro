@@ -4,9 +4,11 @@ import type {ComboboxSource} from '../../i18n';
 import AsyncComboboxExample from './AsyncComboboxExample.astro';
 
 const {source = 'fuzzy'} = Astro.props as {source?: ComboboxSource};
-const comboboxPath = Astro.url.pathname.replace(/\/(?:fuzzy|server)$/, '');
-const sourceHref = (nextSource: ComboboxSource) =>
-  `${comboboxPath}/${nextSource}${Astro.url.search}`;
+const sourceHref = (nextSource: ComboboxSource) => {
+  const url = new URL(Astro.url);
+  url.searchParams.set('source', nextSource);
+  return `${url.pathname}${url.search}`;
+};
 ---
 
 <div class="combobox-examples">
@@ -19,6 +21,7 @@ const sourceHref = (nextSource: ComboboxSource) =>
     <a
       id="combobox-tab-local"
       href={sourceHref('fuzzy')}
+      data-combobox-source="fuzzy"
       role="tab"
       aria-selected={source === 'fuzzy' ? 'true' : 'false'}
       aria-controls="combobox-panel-local"
@@ -29,6 +32,7 @@ const sourceHref = (nextSource: ComboboxSource) =>
     <a
       id="combobox-tab-server"
       href={sourceHref('server')}
+      data-combobox-source="server"
       role="tab"
       aria-selected={source === 'server' ? 'true' : 'false'}
       aria-controls="combobox-panel-server"
@@ -37,13 +41,13 @@ const sourceHref = (nextSource: ComboboxSource) =>
       Server search
     </a>
   </div>
-  {source === 'fuzzy' && (
   <section
     class="combobox-panel"
     data-demo="combobox"
     id="combobox-panel-local"
     role="tabpanel"
     aria-labelledby="combobox-tab-local"
+    hidden={source !== 'fuzzy'}
   >
   <h3>Multilingual combobox</h3>
   <p>Search by city, country, local script, alias, or forgiving typo.</p>
@@ -152,9 +156,8 @@ const sourceHref = (nextSource: ComboboxSource) =>
     &lt;floating-list-item&gt;
   </code>
   </section>
-  )}
 
-  {source === 'server' && <AsyncComboboxExample />}
+  <AsyncComboboxExample hidden={source !== 'server'} />
   </article>
 </div>
 
@@ -220,6 +223,38 @@ const sourceHref = (nextSource: ComboboxSource) =>
       const tabs = Array.from(
         tablist.querySelectorAll<HTMLAnchorElement>('[role="tab"]'),
       );
+      tabs.forEach((tab) => {
+        const source = tab.dataset.comboboxSource;
+        if (!source) return;
+        const url = new URL(window.location.href);
+        url.searchParams.set('source', source);
+        tab.href = `${url.pathname}${url.search}`;
+      });
+      const card = tablist.closest<HTMLElement>('.combobox-card');
+      const panels = tabs.map((tab) => {
+        const panelId = tab.getAttribute('aria-controls');
+        return panelId ? card?.querySelector<HTMLElement>(`#${panelId}`) : null;
+      });
+
+      const selectTab = (selectedIndex: number, focus = false) => {
+        tabs.forEach((tab, index) => {
+          const selected = index === selectedIndex;
+          tab.setAttribute('aria-selected', String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+          panels[index]?.toggleAttribute('hidden', !selected);
+        });
+        if (focus) tabs[selectedIndex]?.focus();
+      };
+
+      const requestedSource = new URLSearchParams(window.location.search).get('source');
+      selectTab(
+        requestedSource === 'server'
+          ? 1
+          : requestedSource === 'fuzzy'
+            ? 0
+            : Math.max(0, tabs.findIndex((tab) => tab.getAttribute('aria-selected') === 'true')),
+      );
+
       tabs.forEach((tab, index) => {
         tab.addEventListener('keydown', (event) => {
           if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
