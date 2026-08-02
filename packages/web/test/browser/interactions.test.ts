@@ -81,7 +81,7 @@ describe('native interaction plugins', () => {
     const harness = createHarness({plugins: [click()]});
     harness.outside.focus();
 
-    fireEvent.pointerDown(harness.reference, {pointerType: 'mouse'});
+    dispatchPointerDown(harness.reference, 'mouse');
     fireEvent.click(harness.reference);
 
     expect(document.activeElement).toBe(harness.reference);
@@ -445,3 +445,12 @@ describe('native interaction plugins', () => {
     harness.controller.destroy();
   });
 });
+
+function dispatchPointerDown(target: Element, pointerType: string) {
+  const event = new Event('pointerdown', {
+    bubbles: true,
+    cancelable: true,
+  });
+  Object.defineProperty(event, 'pointerType', {value: pointerType});
+  target.dispatchEvent(event);
+}

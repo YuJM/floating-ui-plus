@@ -31,6 +31,10 @@ export default defineConfig({
       process.env.TEST_ENV === 'browser'
         ? ['browser/**/*.test.ts']
         : ['**/*.test.ts'],
+    exclude:
+      process.env.TEST_ENV === 'browser'
+        ? []
+        : ['browser/FloatingRootElement.test.ts'],
     browser: {
       provider: playwright(),
       enabled: process.env.TEST_ENV === 'browser',
