@@ -91,6 +91,34 @@ function applyDialogSafeArea(element: HTMLDialogElement) {
   };
 }
 
+function applyPopoverPositionReset(element: HTMLElement) {
+  const inset = {
+    value: element.style.getPropertyValue('inset'),
+    priority: element.style.getPropertyPriority('inset'),
+  };
+  const margin = {
+    value: element.style.getPropertyValue('margin'),
+    priority: element.style.getPropertyPriority('margin'),
+  };
+  // Native popovers start with `inset: 0` and `margin: auto`. Floating UI
+  // controls the position with left, top, and transform, so those defaults
+  // must not leave right/bottom constraints behind in Safari.
+  element.style.setProperty('inset', 'auto');
+  element.style.setProperty('margin', '0');
+  return () => {
+    if (inset.value) {
+      element.style.setProperty('inset', inset.value, inset.priority);
+    } else {
+      element.style.removeProperty('inset');
+    }
+    if (margin.value) {
+      element.style.setProperty('margin', margin.value, margin.priority);
+    } else {
+      element.style.removeProperty('margin');
+    }
+  };
+}
+
 export function supportsFloatingTopLayer(kind: FloatingTopLayer) {
   if (kind === 'popover') {
     return typeof HTMLElement !== 'undefined' &&
@@ -261,6 +289,7 @@ export class FloatingTopLayerController {
     if (!this.#connected || !this.#element || !this.supported) return;
     const element = this.#element;
     if (this.#kind === 'popover' && isPopoverElement(element)) {
+      const restorePosition = applyPopoverPositionReset(element);
       const handleToggle = (event: Event) => {
         const open = element.matches(':popover-open');
         if (open === this.#open) return;
@@ -272,7 +301,10 @@ export class FloatingTopLayerController {
         if (!open && accepted === false) this.sync(true);
       };
       element.addEventListener('toggle', handleToggle);
-      this.#cleanup = () => element.removeEventListener('toggle', handleToggle);
+      this.#cleanup = () => {
+        restorePosition();
+        element.removeEventListener('toggle', handleToggle);
+      };
       return;
     }
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {

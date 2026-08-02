@@ -681,6 +681,7 @@ export class FloatingRootRuntime {
   }
 
   #syncComponentPlugins() {
+    this.#pruneDisconnectedComponentPluginOwners();
     if (
       this.#componentPluginsSource === this.#host.plugins &&
       this.#componentInteractions === this.#host.interactions &&
@@ -717,6 +718,20 @@ export class FloatingRootRuntime {
     if (this.#componentPluginContext) {
       this.#connectComponentPlugins(this.#componentPluginContext);
     }
+  }
+
+  #pruneDisconnectedComponentPluginOwners() {
+    let removed = false;
+    for (const owner of this.#registeredComponentPlugins.keys()) {
+      // A conditional template removes its custom elements before their
+      // lifecycle cleanups run. Do not let an old list-navigation handler
+      // consume the next key event while its replacement is mounting.
+      if (owner instanceof Node && !owner.isConnected) {
+        this.#registeredComponentPlugins.delete(owner);
+        removed = true;
+      }
+    }
+    if (removed) this.#registeredComponentPluginsVersion++;
   }
 
   #connectComponentPlugins(context: FloatingContext) {

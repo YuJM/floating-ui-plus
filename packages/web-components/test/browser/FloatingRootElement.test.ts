@@ -1,4 +1,6 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
+import {userEvent} from 'vitest/browser';
+import type {FloatingPlugin} from '@floating-ui-plus/web';
 
 import {
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
@@ -23,6 +25,7 @@ import {
   offset,
   supportsFloatingTopLayer,
 } from '../../src';
+import {getFloatingRootRuntime} from '../../src/FloatingController';
 
 const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
 
@@ -594,6 +597,116 @@ describe('FloatingRootElement', () => {
         ),
       ).toBe(true);
     });
+  });
+
+  test('restores menu keyboard navigation after an Escape-close template remount', async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    const root = document.createElement('floating-root');
+    root.interactions = 'click dismiss';
+    root.floatingRole = 'menu';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <template slot="content">
+        <section aria-label="Actions">
+          <floating-list navigation loop item-selector="[role=menuitem]">
+            <button role="menuitem">Inspect</button>
+            <button role="menuitem">Signal</button>
+          </floating-list>
+        </section>
+      </template>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    const reference = root.querySelector<HTMLButtonElement>('button')!;
+
+    await userEvent.click(reference);
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+    const firstOpenItems = Array.from(
+      root.floatingElement!.querySelectorAll<HTMLButtonElement>(
+        '[role=menuitem]',
+      ),
+    );
+    await vi.waitFor(() => expect(firstOpenItems).toHaveLength(2));
+    await userEvent.keyboard('{ArrowDown}');
+    await vi.waitFor(() =>
+      expect(document.activeElement).toBe(firstOpenItems[0]),
+    );
+
+    await userEvent.keyboard('{Escape}');
+    await vi.waitFor(() => expect(root.floatingElement).toBeNull());
+
+    await userEvent.click(reference);
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+    const secondOpenItems = Array.from(
+      root.floatingElement!.querySelectorAll<HTMLButtonElement>(
+        '[role=menuitem]',
+      ),
+    );
+    await vi.waitFor(() => expect(secondOpenItems).toHaveLength(2));
+    await userEvent.keyboard('{ArrowDown}');
+    await vi.waitFor(() =>
+      expect(document.activeElement).toBe(secondOpenItems[0]),
+    );
+  });
+
+  test('excludes plugins whose conditional component owner is disconnected', async () => {
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <button slot="reference">Open</button>
+      <section slot="floating">Content</section>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    const reference =
+      root.querySelector<HTMLButtonElement>('[slot=reference]')!;
+    const staleOwner = document.createElement('div');
+    const currentOwner = document.createElement('div');
+    let staleKeydowns = 0;
+    let currentKeydowns = 0;
+    const stalePlugin: FloatingPlugin = {
+      name: 'stale-component-plugin',
+      connect(context) {
+        const onKeyDown = (event: Event) => {
+          staleKeydowns++;
+          event.preventDefault();
+        };
+        context.elements.domReference?.addEventListener('keydown', onKeyDown);
+        return () =>
+          context.elements.domReference?.removeEventListener(
+            'keydown',
+            onKeyDown,
+          );
+      },
+    };
+    const currentPlugin: FloatingPlugin = {
+      name: 'current-component-plugin',
+      connect(context) {
+        const onKeyDown = (event: Event) => {
+          if (!event.defaultPrevented) currentKeydowns++;
+        };
+        context.elements.domReference?.addEventListener('keydown', onKeyDown);
+        return () =>
+          context.elements.domReference?.removeEventListener(
+            'keydown',
+            onKeyDown,
+          );
+      },
+    };
+    const runtime = getFloatingRootRuntime(root);
+
+    document.body.append(staleOwner);
+    runtime.registerComponentPlugins(staleOwner, [stalePlugin]);
+    staleOwner.remove();
+    document.body.append(currentOwner);
+    runtime.registerComponentPlugins(currentOwner, [currentPlugin]);
+
+    reference.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+
+    expect(staleKeydowns).toBe(0);
+    expect(currentKeydowns).toBe(1);
   });
 
   test('composes a declarative virtual-focus combobox with list items', async () => {

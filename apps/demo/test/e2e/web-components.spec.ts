@@ -286,6 +286,13 @@ test("menu starts roving focus at the first item after opening with a pointer", 
   await expect(secondItem).not.toBeFocused();
   await firstItem.press("s");
   await expect(signalItem).toBeFocused();
+
+  await signalItem.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+
+  await trigger.click();
+  await trigger.press("ArrowDown");
+  await expect(firstItem).toBeFocused();
 });
 
 test("nested menu preserves the complete keyboard path", async ({ page }) => {
