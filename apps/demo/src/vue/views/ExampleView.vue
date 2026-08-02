@@ -4,6 +4,7 @@ import ExampleClientPoint from '../components/ExampleClientPoint.vue';
 import ExampleCombobox from '../components/ExampleCombobox.vue';
 import ExampleMenu from '../components/ExampleMenu.vue';
 import ExampleModal from '../components/ExampleModal.vue';
+import ExampleSheet from '../components/ExampleSheet.vue';
 import ExampleNestedMenu from '../components/ExampleNestedMenu.vue';
 import ExamplePopover from '../components/ExamplePopover.vue';
 import ExampleTooltip from '../components/ExampleTooltip.vue';
@@ -22,6 +23,7 @@ const examples = {
   placement: PlacementView,
   middleware: MiddlewareView,
   modal: ExampleModal,
+  sheet: ExampleSheet,
 } as const;
 
 const props = defineProps<{
@@ -37,5 +39,6 @@ const example = computed(() => examples[props.exampleName] ?? examples.tooltip);
     v-if="props.exampleName === 'combobox'"
     :source="props.source"
   />
+  <ExampleSheet v-else-if="props.exampleName === 'sheet'" :locale="props.locale" />
   <component v-else :is="example" />
 </template>

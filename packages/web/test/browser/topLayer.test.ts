@@ -60,6 +60,41 @@ describe('FloatingTopLayerController', () => {
     topLayer.destroy();
   });
 
+  test('closes dialogs immediately so CSS controls discrete exit transitions', () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const element = document.createElement('dialog');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('dialog');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    topLayer.sync(false);
+
+    expect(element.open).toBe(false);
+    expect(element.hidden).toBe(true);
+    topLayer.destroy();
+  });
+
+  test('reopens a dialog after a CSS-driven exit', () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const element = document.createElement('dialog');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('dialog');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+    topLayer.sync(false);
+
+    topLayer.sync(true);
+
+    expect(element.open).toBe(true);
+    expect(element.hidden).toBe(false);
+    topLayer.destroy();
+  });
+
   test('locks document scroll only while native dialogs are open', async () => {
     if (!supportsFloatingTopLayer('dialog')) return;
     document.body.style.overflow = 'scroll';

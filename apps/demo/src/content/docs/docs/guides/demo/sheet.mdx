@@ -1,0 +1,66 @@
+---
+title: 'Demo: Sheet'
+description: Open a modal sheet from every viewport edge with native dialog focus, backdrop dismissal, and exit animation.
+---
+
+import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
+import sheetSource from '../../../../../components/examples/SheetExample.astro?raw';
+import sheetVueSource from '../../../../../vue/components/ExampleSheet.vue?raw';
+
+[Open the live Sheet demo](/sheet?framework=wc)
+
+<DemoPreview route="/preview/sheet" title="Sheet" height={560} webCode={sheetSource} vueCode={sheetVueSource} webTitle="SheetExample.astro" vueTitle="ExampleSheet.vue" />
+
+The example uses the native `<dialog>` top layer as a modal Sheet. Choose top,
+right, bottom, or left before opening it. Focus moves into the Sheet, the page
+behind it becomes inert, and focus returns to the trigger after it closes.
+
+`dismiss()` treats a press on the native dialog backdrop as an outside press.
+Escape and the explicit close controls use the same close-request path. Set
+`outsidePress: false` when a workflow must require an explicit choice.
+
+```html
+<floating-root placement="right" strategy="fixed">
+  <floating-reference><button>Open sheet</button></floating-reference>
+  <dialog
+    slot="floating"
+    data-side="right"
+    aria-labelledby="sheet-title"
+  >
+    <h2 id="sheet-title">Activity</h2>
+    <button data-fup-close>Close</button>
+  </dialog>
+</floating-root>
+```
+
+```js
+root.configure({plugins: [click(), dismiss(), role({role: 'dialog'})]});
+```
+
+Native dialog transitions should use the platform's discrete transition support,
+so `close()` remains immediate while CSS keeps the visual surface and backdrop
+present until the transition completes.
+
+```css
+.sheet {
+  opacity: 0;
+  translate: 2.5rem 0;
+  transition: opacity 180ms ease, translate 180ms ease,
+    display 180ms allow-discrete, overlay 180ms allow-discrete;
+}
+
+.sheet:open {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@starting-style {
+  .sheet:open {
+    opacity: 0;
+    translate: 2.5rem 0;
+  }
+}
+```
+
+The Vue example uses the same attributes on
+`<FloatingContent as="dialog">` and the same `dismiss()` behavior.

@@ -273,7 +273,11 @@ export const FloatingContent = defineComponent({
             // Portals used to remove closed content from the render tree. A
             // direct surface keeps its DOM ownership, so it needs the same
             // closed-state visibility contract without requiring Teleport.
-            hidden: rootOpen ? !rootOpen.value : undefined,
+            hidden: usesNativeDialog()
+              ? undefined
+              : rootOpen
+                ? !rootOpen.value
+                : undefined,
           },
           attrs,
           floating.floatingAttrs,

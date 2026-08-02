@@ -9,5 +9,6 @@
   "example_combobox_build": "一つの UI フレームワークに縛られない多言語目的地ピッカーを構築しました。",
   "example_placement_build": "一つのプロダクト判断がフローティングサーフェスを即座に更新する配置ラボを構築しました。",
   "example_middleware_build": "各レイアウト制約の効果を実際の動作として確認できるようにしました。",
-  "example_modal_build": "inert な周囲、スクロールロック、フォーカス復帰、順序ある Escape dismiss を持つ階層ダイアログを構築しました。"
+  "example_modal_build": "inert な周囲、スクロールロック、フォーカス復帰、順序ある Escape dismiss を持つ階層ダイアログを構築しました。",
+  "example_sheet_build": "モバイルでも次の操作に集中できる、読みやすく閉じやすいシートを構成します。"
 }

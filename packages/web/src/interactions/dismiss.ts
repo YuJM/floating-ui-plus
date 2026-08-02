@@ -6,6 +6,27 @@ import type {FloatingTree} from '../tree';
 import type {FloatingPlugin, ValueOrGetter} from '../types';
 import {contains, getTarget, getValue} from '../utils/common';
 
+function isNativeDialogBackdropPress(
+  event: MouseEvent,
+  floating: HTMLElement | null,
+  target: EventTarget | null,
+) {
+  if (
+    !(floating instanceof HTMLDialogElement) ||
+    target !== floating ||
+    !floating.open
+  ) {
+    return false;
+  }
+  const rect = floating.getBoundingClientRect();
+  return (
+    event.clientX < rect.left ||
+    event.clientX > rect.right ||
+    event.clientY < rect.top ||
+    event.clientY > rect.bottom
+  );
+}
+
 export interface DismissOptions {
   enabled?: boolean | undefined;
   escapeKey?: boolean | undefined;
@@ -114,9 +135,14 @@ export function dismiss(
         }
         const target = getTarget(event);
         if (!(target instanceof Node) || !target.isConnected) return;
+        const nativeBackdropPress = isNativeDialogBackdropPress(
+          event,
+          floating,
+          target,
+        );
         const {descendants} = getTreeState();
         if (
-          contains(floating, target as Element) ||
+          (!nativeBackdropPress && contains(floating, target as Element)) ||
           contains(reference, target as Element) ||
           descendants.some((node) =>
             contains(node.controller.context.elements.floating, target as Element),

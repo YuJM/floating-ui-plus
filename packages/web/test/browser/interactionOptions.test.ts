@@ -20,13 +20,14 @@ function createHarness({
   open = false,
   plugins,
   reference = document.createElement('div'),
+  floating = document.createElement('div'),
 }: {
   open?: boolean;
   plugins: FloatingPlugin[];
   reference?: HTMLElement;
+  floating?: HTMLElement;
 }) {
   reference.tabIndex ||= 0;
-  const floating = document.createElement('div');
   const outside = document.createElement('button');
   if (!reference.isConnected) {
     document.body.append(reference);
@@ -163,6 +164,36 @@ describe('click option parity', () => {
 });
 
 describe('dismiss option parity', () => {
+  test('treats a native dialog backdrop press as an outside press', () => {
+    const floating = document.createElement('dialog');
+    Object.defineProperty(floating, 'open', {value: true, configurable: true});
+    vi.spyOn(floating, 'getBoundingClientRect').mockReturnValue({
+      x: 700,
+      y: 0,
+      top: 0,
+      right: 1000,
+      bottom: 800,
+      left: 700,
+      width: 300,
+      height: 800,
+      toJSON: () => ({}),
+    });
+    const harness = createHarness({
+      open: true,
+      plugins: [dismiss({outsidePressEvent: 'mousedown'})],
+      floating,
+    });
+
+    fireEvent.mouseDown(floating, {clientX: 100, clientY: 400});
+
+    expect(harness.onOpenChange).toHaveBeenLastCalledWith(
+      false,
+      expect.any(Event),
+      'outside-press',
+    );
+    harness.controller.destroy();
+  });
+
   test('can independently disable escape and outside press', () => {
     const harness = createHarness({
       open: true,

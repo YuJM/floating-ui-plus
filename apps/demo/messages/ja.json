@@ -59,5 +59,8 @@
   "pattern_middleware_description": "offset、shift、flip、size、arrow、hide、inline、auto-placement がどう協調するかを確認します。",
   "pattern_modal_label": "モーダル",
   "pattern_modal_heading": "フォーカスには安全な境界が必要です。",
-  "pattern_modal_description": "フォーカスを閉じ込め、スクロールをロックし、Escape dismiss を階層化して、ユーザーを元の場所へ戻します。"
+  "pattern_modal_description": "フォーカスを閉じ込め、スクロールをロックし、Escape dismiss を階層化して、ユーザーを元の場所へ戻します。",
+  "pattern_sheet_label": "シート",
+  "pattern_sheet_heading": "次の一歩を近くに。",
+  "pattern_sheet_description": "ネイティブdialogのフォーカス、閉じる操作、スクロール可能な本文を備えたモバイル向けエッジシートです。"
 }

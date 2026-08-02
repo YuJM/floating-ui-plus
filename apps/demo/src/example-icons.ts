@@ -7,6 +7,7 @@ import {
   MousePointer2,
   Move,
   PanelTop,
+  PanelRight,
   SlidersHorizontal,
 } from 'lucide-astro';
 import type {ExampleId} from './i18n';
@@ -21,4 +22,5 @@ export const EXAMPLE_ICONS: Record<ExampleId, typeof CircleHelp> = {
   placement: Move,
   middleware: SlidersHorizontal,
   modal: Focus,
+  sheet: PanelRight,
 };

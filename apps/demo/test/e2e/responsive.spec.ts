@@ -11,6 +11,7 @@ const examples = [
   'placement',
   'middleware',
   'modal',
+  'sheet',
 ] as const;
 const localizedRoutes = locales.flatMap((locale) => [
   `/${locale}`,

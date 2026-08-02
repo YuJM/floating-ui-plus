@@ -140,6 +140,29 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await expect(trigger).toBeFocused();
 });
 
+test('opens the Vue edge sheet as a modal and restores focus on Escape', async ({page}) => {
+  await page.goto('/sheet?framework=vue');
+  const demo = page.locator('[data-framework-panel="vue"]');
+  const trigger = demo.getByRole('button', {name: /Open activity sheet/});
+  const sheet = demo.getByRole('dialog', {name: 'Activity digest'});
+
+  await trigger.click();
+  await expect(sheet).toBeVisible();
+  expect(await sheet.evaluate((element) => element.matches(':modal'))).toBe(true);
+  const box = await sheet.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(box!.x + box!.width).toBeCloseTo(viewport!.width, 0);
+  expect(box!.height).toBeCloseTo(viewport!.height, 0);
+
+  await page.mouse.click(20, Math.round(viewport!.height / 2));
+  await expect(sheet).toHaveCSS('transition-property', /display/);
+  await expect(sheet).toHaveCSS('transition-property', /overlay/);
+  await expect(sheet).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test('routes to individual Vue examples and the middleware lab', async ({
   page,
 }) => {

@@ -59,5 +59,8 @@
   "pattern_middleware_description": "offset, shift, flip, size, arrow, hide, inline, auto-placement가 어떻게 협력하는지 봅니다.",
   "pattern_modal_label": "모달",
   "pattern_modal_heading": "포커스에는 안전한 경계가 필요합니다.",
-  "pattern_modal_description": "포커스를 가두고, 스크롤을 잠그고, Escape dismiss를 계층화하고, 사용자를 출발점으로 돌려보냅니다."
+  "pattern_modal_description": "포커스를 가두고, 스크롤을 잠그고, Escape dismiss를 계층화하고, 사용자를 출발점으로 돌려보냅니다.",
+  "pattern_sheet_label": "시트",
+  "pattern_sheet_heading": "다음 행동을 가까이.",
+  "pattern_sheet_description": "네이티브 dialog 포커스와 닫기 동작, 스크롤 가능한 본문을 갖춘 모바일 엣지 시트를 만듭니다."
 }
