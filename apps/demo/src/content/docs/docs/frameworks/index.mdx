@@ -220,15 +220,15 @@ cursor pagination; each renderer owns the phase markup.
         <input aria-label="Destination" />
       </floating-reference>
       <template slot="content">
-        <floating-search>
-          <template data-search-loading>Searching…</template>
-          <template data-search-empty>No matches</template>
-          <template data-search-result>
+        <floating-results>
+          <floating-results-status type="loading">Searching…</floating-results-status>
+          <floating-results-status type="empty">No matches</floating-results-status>
+          <floating-results-item>
             <floating-list-item>
               <button type="button" data-search-text="label"></button>
             </floating-list-item>
-          </template>
-        </floating-search>
+          </floating-results-item>
+        </floating-results>
       </template>
     </floating-query>
   </floating-list>
@@ -255,7 +255,7 @@ for a command palette or `semantics="none"` when the renderer owns ARIA.
   >
     <FloatingReference as="input" v-bind="query.inputProps" />
     <FloatingContent>
-      <FloatingSearch :search="search">
+      <FloatingResults :search="search">
         <template #loading>Searching…</template>
         <template #empty>No matches</template>
         <template #results>
@@ -268,7 +268,7 @@ for a command palette or `semantics="none"` when the renderer owns ARIA.
             v-bind="query.getOptionProps(item, index)"
           >{{ item.label }}</FloatingListItem>
         </template>
-      </FloatingSearch>
+      </FloatingResults>
     </FloatingContent>
   </FloatingList>
 </FloatingRoot>

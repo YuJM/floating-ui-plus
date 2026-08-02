@@ -1,5 +1,5 @@
 ---
-title: "Demo: Toast"
+title: "Toast"
 description: Build stacked, timed, non-modal notifications with pausable dismissal and controlled presence.
 ---
 
@@ -25,17 +25,87 @@ manager creates notifications, a viewport owns their stack, each notification
 can close itself, and a default timeout removes it automatically. The demo caps
 the visible stack at three notifications.
 
-`FloatingPresenceStack` owns the generic transient-surface lifecycle: a maximum
-visible count, the remaining auto-close duration, overlapping pause reasons,
-and the snapshot consumed by a renderer. It intentionally does not provide a
-Toast UI, ARIA live region, or visual stack. Those stay in application markup,
-so the same primitive can coordinate banners, transient editors, or other
-surfaces that need delayed removal.
+`FloatingPresenceStack` owns the framework-neutral lifecycle. The Web Component
+adapter, `floating-presence-stack`, also owns template cloning, value binding,
+transition presence, raw stack state, and final DOM removal. Application code
+owns pause/resume triggers and keyboard focus policy; application markup and CSS
+own semantics, layout, and appearance. The same element can therefore render
+banners, transient editors, or other delayed-removal surfaces without becoming
+a Toast component.
 
-The demo combines it with `FloatingTransition` (or Vue's
-`useFloatingTransition()`) so each rendered notification stays mounted through
-its CSS exit. `floating-composite` / Vue's `Composite` provides arrow-key
-movement between close buttons after `F6` enters the viewport.
+The Web Component example needs no list or composite wrapper. Native buttons
+already participate in the document's Tab order, while `F6` moves focus to the
+newest notification's close button. Vue exposes the same controller methods
+through `useFloatingPresenceStack()` and adds reactive state for template
+rendering.
+
+```html
+<floating-presence-stack
+  class="toast-viewport"
+  role="region"
+  aria-label="Notifications"
+  aria-live="polite"
+>
+  <template slot="content">
+    <article class="toast-item" role="status">
+      <strong data-presence-text="title"></strong>
+      <p data-presence-text="description"></p>
+      <button type="button" data-presence-close>Dismiss</button>
+    </article>
+  </template>
+</floating-presence-stack>
+```
+
+```ts
+const viewport = document.querySelector("floating-presence-stack");
+viewport.configure({
+  limit: 3,
+  timeout: 5_000,
+  exitDuration: 220,
+  topLayer: "popover",
+});
+
+viewport.add({
+  title: "Saved",
+  description: "Your changes have been saved successfully.",
+});
+
+viewport.addEventListener("pointerenter", () => viewport.pause("pointer"));
+viewport.addEventListener("pointerleave", () => viewport.resume("pointer"));
+```
+
+`configure()` accepts a partial object, so behavioral values stay with the
+application's JavaScript configuration. Assigning `viewport.options = {...}`
+is equivalent. The `limit`, `timeout`, `exit-duration`, and `top-layer`
+attributes remain a static-HTML fallback; explicit code options take
+precedence. Keep landmark and live-region attributes in markup because they
+describe the rendered region rather than behavior configuration.
+
+Vue receives the same lifecycle API without a component wrapper:
+
+```ts
+const notices = useFloatingPresenceStack<ToastContent>({
+  limit: 3,
+  timeout: 5_000,
+});
+
+notices.add({title: "Saved", description: "Your changes were saved."});
+notices.pause("pointer");
+notices.resume("pointer");
+// Render notices.records.value; call notices.remove(id) after CSS exit.
+```
+
+For a fixed Vue surface that should participate in the browser's native Top
+Layer, pair the presence lifecycle with `useFloatingTopLayer()` on the element
+you render. This keeps the API parallel with `top-layer="popover"` on the Web
+Component while leaving the element's markup and CSS in application code:
+
+```ts
+const surface = ref<HTMLElement | null>(null);
+useFloatingTopLayer(surface, computed(() => record.open), {
+  kind: 'popover',
+});
+```
 
 ## Interaction contract
 
@@ -47,67 +117,36 @@ movement between close buttons after `F6` enters the viewport.
 - The close button starts an exit transition. DOM removal occurs after the
   transition finishes.
 - The viewport is a labelled landmark with polite live announcements. `F6`
-  moves focus to the viewport without taking focus when a notification first
-  appears; arrow keys then move across close buttons.
+  moves focus to the newest close button without taking focus when a
+  notification first appears; Tab continues through the remaining controls.
+- `template[slot="content"]` follows the same declarative surface contract as
+  `floating-root`. With `topLayer: "popover"`, every cloned notification uses
+  the native manual Popover API. Dialog is intentionally avoided because a
+  Toast must not trap focus, inert the page, or lock scrolling.
 
-```ts
-const stack = new FloatingPresenceStack<ToastContent>({
-  limit: 3,
-  timeout: 5_000,
-});
-
-stack.subscribe(({records, paused}) => render(records, paused));
-const id = stack.add({title: "Saved"});
-
-const transition = new FloatingTransition(() => "top-end", {
-  duration: { close: 180 },
-});
-
-transition.subscribe(() => {
-  toast.dataset.status = transition.status;
-  if (!transition.isMounted) {
-    toast.remove();
-    stack.remove(id);
-  }
-});
-
-transition.setOpen(true);
-// Later: stack.close(id); transition.setOpen(false)
-```
-
-CSS owns the visual stack through `--toast-index` for depth and
-`--toast-offset-y` for the expanded position. The Web Components and Vue
-examples share the same CSS and accessibility contract; Vue uses
-`useFloatingTransition()` for the equivalent presence state.
+CSS owns the visual stack. `floating-presence-stack` only exposes raw state:
+`--floating-presence-index`, `data-presence-index`,
+`data-presence-overflowed`, `data-presence-paused`, and the transition's
+`data-status`. The application decides how those values affect layout and
+motion. The Vue example calculates equivalent values through bindings and uses
+`useFloatingPresenceStack()` plus `useFloatingTransition()` for presence.
 
 ## Stack values
 
-Write the newest toast as index `0`. The collapsed stack uses the index for
-depth, while the expanded stack uses the full measured row step. The demo's
-toast height plus gap is `84px`:
+The newest surface is index `0`. The component supplies the index, while the
+demo's CSS decides that a collapsed row advances by 10px and a paused stack
+advances by the full 84px row-and-gap measurement.
 
-```ts
-records.forEach((record, index) => {
-  record.element.style.setProperty("--toast-index", String(index));
-  record.element.style.setProperty("--toast-offset-y", `${index * -84}px`);
-  record.element.toggleAttribute("data-behind", index > 0);
-});
-
-viewport.toggleAttribute("data-expanded", isPointerOrFocusPaused);
-```
-
-Vue computes the same custom properties and binds the state attributes. Its
-`Composite` wraps the viewport and its `CompositeItem` wraps each close button:
+Vue computes the same custom properties and binds the state attributes:
 
 ```vue
-<ol class="toast-viewport" :data-expanded="paused ? '' : undefined">
+<ol class="toast-viewport" :data-presence-paused="paused ? '' : undefined">
   <li
     class="toast-item"
     :data-status="status"
-    :data-behind="index > 0 ? '' : undefined"
+    :data-presence-index="index"
     :style="{
-      '--toast-index': String(index),
-      '--toast-offset-y': `${index * -84}px`,
+      '--floating-presence-index': String(index),
     }"
   />
 </ol>
@@ -129,33 +168,29 @@ the stack's expanded/collapsed state.
 }
 
 .toast-item {
-  --toast-index: 0;
-  --toast-offset-y: 0px;
+  --floating-presence-index: 0;
 
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  z-index: calc(30 - var(--toast-index));
-  width: 100%;
+  position: fixed;
+  inset: auto max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom)) auto;
+  z-index: calc(30 - var(--floating-presence-index));
+  width: min(360px, calc(100vw - 32px));
+  margin: 0;
   pointer-events: auto;
-  transform: translateY(0) scale(1);
+  transform: translateY(calc(var(--floating-presence-index) * -10px))
+    scale(calc(1 - var(--floating-presence-index) * 0.04));
   transform-origin: 100% 100%;
-  opacity: 1;
+  opacity: calc(1 - var(--floating-presence-index) * 0.14);
   transition:
     opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-/* Covered items stay visible as a compact depth preview. */
-.toast-item[data-behind] {
-  transform: translateY(calc(var(--toast-index) * -10px))
-    scale(calc(1 - var(--toast-index) * 0.04));
-  opacity: calc(1 - var(--toast-index) * 0.14);
+    transform 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    display 220ms allow-discrete,
+    overlay 220ms allow-discrete;
 }
 
 /* Hover or focus pauses dismissal and reveals the complete stack. */
-.toast-viewport[data-expanded] .toast-item {
-  transform: translateY(var(--toast-offset-y)) scale(1);
+.toast-viewport[data-presence-paused] .toast-item {
+  transform: translateY(calc(var(--floating-presence-index) * -84px)) scale(1);
   opacity: 1;
 }
 
@@ -177,12 +212,11 @@ the stack's expanded/collapsed state.
 ```
 
 The reduced-motion rule keeps a short presence window so the transition helper
-can finish removing the node, but removes most of the perceived travel. If the
-application changes that duration, pass the same close duration to
-`FloatingTransition` or `useFloatingTransition`.
+can finish removing the node, but removes most of the perceived travel. Keep
+the CSS duration aligned with `exit-duration`; Vue passes the duration to
+`useFloatingTransition()`.
 
-`FloatingPresenceStack` emits a closed record immediately, while
-`FloatingTransition` (or `useFloatingTransition`) keeps the node mounted until
-the exit CSS ends. Remove the record from the stack only at that point. The
-same controller is used by both demos; only the renderer and framework adapter
-differ.
+At the lower level, `FloatingPresenceStack` emits a closed record immediately.
+The Web Component adapter keeps its clone mounted until `exit-duration` ends
+and then removes the record. Consumers call `add()` or `close()` and connect
+`pause()` / `resume()` to the interaction policy they choose.

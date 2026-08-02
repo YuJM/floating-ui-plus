@@ -1,5 +1,5 @@
 ---
-title: "Demo: Command"
+title: "Command"
 description: Build a searchable dialog command palette with grouped actions and complete keyboard navigation.
 ---
 
@@ -57,7 +57,7 @@ const command = useQuery({
 
 The Web Components version keeps the native dialog as the root's direct
 `<dialog slot="floating">` surface, with `<floating-query>`,
-`<floating-search>`, `<floating-list navigation>`, and `<floating-list-item>`
+`<floating-results>`, `<floating-list navigation>`, and `<floating-list-item>`
 inside it. Those elements own query input bindings, IME handling, search phase
 rendering, result registration, arrow-key navigation, Enter activation, and
 the dialog role contract. Vue uses the equivalent

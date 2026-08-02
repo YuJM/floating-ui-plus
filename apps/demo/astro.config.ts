@@ -27,6 +27,7 @@ export default defineConfig({
     '/en/toast': '/toast',
     '/en/command': '/command',
     '/docs/guides/combobox': '/docs/guides/demo/combobox/fuzzy',
+    '/docs/guides/getting-started': '/docs/getting-started',
     '/docs/guides/demo/combobox': '/docs/guides/demo/combobox/fuzzy',
   },
   integrations: [
@@ -42,6 +43,7 @@ export default defineConfig({
       },
       sidebar: [
         {label: 'Introduction', items: [{slug: 'docs'}]},
+        {label: 'Getting started', items: [{slug: 'docs/getting-started'}]},
         {
           label: 'Installation',
           items: [
@@ -62,7 +64,6 @@ export default defineConfig({
           label: 'Guides',
           items: [
             {slug: 'docs/guides/animation'},
-            {slug: 'docs/guides/llms'},
             {
               label: 'Demo',
               items: [
@@ -88,7 +89,6 @@ export default defineConfig({
               ],
             },
             {slug: 'docs/guides/dismiss'},
-            {slug: 'docs/guides/getting-started'},
             {slug: 'docs/guides/popover'},
             {slug: 'docs/guides/usage'},
           ],
