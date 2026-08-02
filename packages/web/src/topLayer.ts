@@ -10,6 +10,8 @@ export interface FloatingTopLayerOptions {
     event?: Event,
     reason?: OpenChangeReason,
   ): boolean | void;
+  /** Called after a closed native surface has been restored to `hidden`. */
+  onExitComplete?(element: HTMLElement): void;
 }
 
 type PopoverElement = HTMLElement & {
@@ -22,6 +24,42 @@ function isPopoverElement(element: HTMLElement): element is PopoverElement {
     typeof (element as Partial<PopoverElement>).showPopover === 'function' &&
     typeof (element as Partial<PopoverElement>).hidePopover === 'function'
   );
+}
+
+function getTimeInMilliseconds(value: string) {
+  const duration = value.trim();
+  if (duration.endsWith('ms')) return Number.parseFloat(duration) || 0;
+  if (duration.endsWith('s')) return (Number.parseFloat(duration) || 0) * 1000;
+  return 0;
+}
+
+function getNativeExitTransitionDuration(element: HTMLElement) {
+  if (typeof getComputedStyle !== 'function') return 0;
+  const style = getComputedStyle(element);
+  const properties = style.transitionProperty
+    .split(',')
+    .map((value) => value.trim());
+  const durations = style.transitionDuration.split(',');
+  const delays = style.transitionDelay.split(',');
+  const behaviors = style
+    .getPropertyValue('transition-behavior')
+    .split(',')
+    .map((value) => value.trim());
+  return properties.reduce((longest, property, index) => {
+    if (property !== 'display' && property !== 'overlay') {
+      return longest;
+    }
+    // A duration on display/overlay is not enough: discrete transitions only
+    // run when allow-discrete is part of the same transition item.
+    if (behaviors[index % behaviors.length] !== 'allow-discrete') {
+      return longest;
+    }
+    const duration = getTimeInMilliseconds(
+      durations[index % durations.length] ?? '0s',
+    );
+    const delay = getTimeInMilliseconds(delays[index % delays.length] ?? '0s');
+    return Math.max(longest, duration + delay);
+  }, 0);
 }
 
 export function supportsFloatingTopLayer(kind: FloatingTopLayer) {
@@ -49,6 +87,7 @@ export class FloatingTopLayerController {
   #connected = false;
   #cleanup: (() => void) | undefined;
   #unlockScroll: (() => void) | undefined;
+  #cancelDeferredHide: (() => void) | undefined;
 
   constructor(options: FloatingTopLayerOptions) {
     this.#options = options;
@@ -120,19 +159,30 @@ export class FloatingTopLayerController {
       element.setAttribute('popover', 'manual');
       const shown = element.matches(':popover-open');
       if (open && !shown) {
+        this.#cancelDeferredHide?.();
+        this.#cancelDeferredHide = undefined;
         element.hidden = false;
         element.showPopover();
       } else if (!open && shown) {
         element.hidePopover();
-        element.hidden = true;
-      } else if (!open) {
-        element.hidden = true;
+        // Read the closed selector after :popover-open has changed. This lets
+        // applications use asymmetric entry and exit timings.
+        this.#deferHidden(
+          element,
+          getNativeExitTransitionDuration(element),
+        );
+      } else if (!open && !this.#cancelDeferredHide) {
+        const exitDuration = getNativeExitTransitionDuration(element);
+        if (exitDuration > 0) this.#deferHidden(element, exitDuration);
+        else element.hidden = true;
       }
       return true;
     }
 
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {
       if (open && !element.open) {
+        this.#cancelDeferredHide?.();
+        this.#cancelDeferredHide = undefined;
         element.hidden = false;
         try {
           element.showModal();
@@ -147,10 +197,15 @@ export class FloatingTopLayerController {
       } else if (!open && element.open) {
         this.#releaseScrollLock();
         element.close();
-        element.hidden = true;
-      } else if (!open) {
+        this.#deferHidden(
+          element,
+          getNativeExitTransitionDuration(element),
+        );
+      } else if (!open && !this.#cancelDeferredHide) {
         this.#releaseScrollLock();
-        element.hidden = true;
+        const exitDuration = getNativeExitTransitionDuration(element);
+        if (exitDuration > 0) this.#deferHidden(element, exitDuration);
+        else element.hidden = true;
       }
       return true;
     }
@@ -205,13 +260,52 @@ export class FloatingTopLayerController {
   #hideNative() {
     const element = this.#element;
     if (!element) return;
+    this.#cancelDeferredHide?.();
+    this.#cancelDeferredHide = undefined;
     if (this.#kind === 'popover' && isPopoverElement(element)) {
       if (element.matches(':popover-open')) element.hidePopover();
+      element.hidden = true;
       return;
     }
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {
       if (element.open) element.close();
+      element.hidden = true;
     }
+  }
+
+  #deferHidden(element: HTMLElement, duration: number) {
+    if (duration <= 0) {
+      element.hidden = true;
+      this.#options.onExitComplete?.(element);
+      return;
+    }
+    let timer = -1;
+    const finish = () => {
+      if (this.#open || this.#element !== element) return;
+      cleanup();
+      element.hidden = true;
+      this.#options.onExitComplete?.(element);
+    };
+    const handleTransitionEnd = (event: TransitionEvent) => {
+      if (
+        event.target === element &&
+        (event.propertyName === 'display' || event.propertyName === 'overlay')
+      ) {
+        finish();
+      }
+    };
+    const cleanup = () => {
+      window.clearTimeout(timer);
+      element.removeEventListener('transitionend', handleTransitionEnd);
+      element.removeEventListener('transitioncancel', handleTransitionEnd);
+      if (this.#cancelDeferredHide === cleanup) {
+        this.#cancelDeferredHide = undefined;
+      }
+    };
+    element.addEventListener('transitionend', handleTransitionEnd);
+    element.addEventListener('transitioncancel', handleTransitionEnd);
+    timer = window.setTimeout(finish, duration + 50);
+    this.#cancelDeferredHide = cleanup;
   }
 
   #acquireScrollLock(element: HTMLDialogElement) {

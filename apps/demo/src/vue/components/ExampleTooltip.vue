@@ -2,7 +2,6 @@
 import {
   FloatingArrow,
   FloatingContent,
-  FloatingPortal,
   FloatingReference,
   FloatingRoot,
   arrow,
@@ -52,25 +51,27 @@ const plugins = [
       descriptive ARIA.
     </p>
     <div class="card-action">
-      <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+      <FloatingRoot
+        v-model:open="open"
+        v-slot="{floating}"
+        :options="options"
+        :plugins="plugins"
+      >
         <FloatingReference class="ink-button">
           Inspect signal <span aria-hidden="true">↗</span>
         </FloatingReference>
-        <FloatingPortal>
-          <Transition name="vue-surface">
-            <FloatingContent
-              class="tooltip"
-            >
-              Positioned by <b>autoUpdate</b>
-              <FloatingArrow
-                class="tooltip-arrow"
-                :width="TOOLTIP_ARROW.width"
-                :height="TOOLTIP_ARROW.height"
-                @element-change="arrowElement = $event"
-              />
-            </FloatingContent>
-          </Transition>
-        </FloatingPortal>
+        <FloatingContent
+          class="tooltip"
+          :data-placement="floating.placement.value"
+        >
+          Positioned by <b>autoUpdate</b>
+          <FloatingArrow
+            class="tooltip-arrow"
+            :width="TOOLTIP_ARROW.width"
+            :height="TOOLTIP_ARROW.height"
+            @element-change="arrowElement = $event"
+          />
+        </FloatingContent>
       </FloatingRoot>
     </div>
     <code>hover() → focus() → dismiss()</code>

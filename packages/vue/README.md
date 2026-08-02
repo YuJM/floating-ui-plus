@@ -104,6 +104,43 @@ The default uses CSS `overflow: hidden`; touch-event interception is not
 installed. Add a touch guard in the host application only for legacy iOS or a
 WebView that still requires it.
 
+## Native entry and exit animation
+
+Keep `<FloatingContent>` in the Vue tree and style the native surface states
+directly. A non-zero `display` or `overlay` transition with `allow-discrete`
+opts into CSS exit motion; without one, closed content receives `hidden`
+immediately.
+
+```css
+.floating-panel {
+  opacity: 0;
+  translate: 0 -0.25rem;
+  transition:
+    opacity 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    translate 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    display 120ms allow-discrete,
+    overlay 120ms allow-discrete;
+}
+
+.floating-panel:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@starting-style {
+  .floating-panel:popover-open {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+```
+
+Do not wrap an animated native surface in `v-if`; removing it bypasses the CSS
+exit. Reopening cancels a pending hide. For `top-layer="none"`, use
+`FloatingTransition` or `useFloatingTransition` and keep the surface mounted
+until its close state completes. See the
+[entry and exit animation guide](https://fup.polcaneli.com/docs/guides/animation).
+
 ## Search and `useQuery()`
 
 `useSearch()` owns request state: debouncing, IME composition, cancellation,
@@ -195,6 +232,7 @@ confirmation first, then set `open.value = false`.
 
 - [Home](https://fup.polcaneli.com/docs) · [Getting started](https://fup.polcaneli.com/docs/guides/getting-started) · [Vue guide](https://fup.polcaneli.com/docs/frameworks)
 - [Usage recipes](https://fup.polcaneli.com/docs/guides/usage) · [Combobox demos](https://fup.polcaneli.com/docs/guides/demo/combobox/fuzzy) · [Dismiss and closing](https://fup.polcaneli.com/docs/guides/dismiss)
+- [Entry and exit animation](https://fup.polcaneli.com/docs/guides/animation)
 
 ## Verify
 

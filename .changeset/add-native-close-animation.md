@@ -4,4 +4,5 @@
 "@floating-ui-plus/vue": patch
 ---
 
-Support native CSS discrete transitions for native dialog top-layer surfaces.
+Support CSS discrete entry and exit transitions for native Popover and dialog
+top-layer surfaces without JavaScript animation timers.

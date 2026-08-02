@@ -153,6 +153,42 @@ import { createSearch } from "@floating-ui-plus/web/search";
 import { createFuzzySearchSource } from "@floating-ui-plus/web/fuzzy";
 ```
 
+## Native entry and exit animation
+
+`createFloatingTopLayer()` keeps instant closing as the default. When a native
+Popover or `<dialog>` surface explicitly transitions `display` or `overlay`
+with `allow-discrete`, it leaves the closed surface unhidden until that CSS
+transition finishes. No animation option or JavaScript duration is required.
+
+```css
+.floating-panel {
+  opacity: 0;
+  translate: 0 -0.25rem;
+  transition:
+    opacity 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    translate 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    display 120ms allow-discrete,
+    overlay 120ms allow-discrete;
+}
+
+.floating-panel:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@starting-style {
+  .floating-panel:popover-open {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+```
+
+Without the explicit discrete transition, the controller applies `hidden`
+immediately. Reopening cancels a pending hide. For non-native surfaces, keep
+presence in your renderer and use `FloatingTransition` instead. See the
+[entry and exit animation guide](https://fup.polcaneli.com/docs/guides/animation).
+
 ## Compatibility
 
 `createCombobox()` and `ComboboxController` remain available from the root and

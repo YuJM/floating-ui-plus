@@ -33,7 +33,9 @@ test('opens native nested menu popovers in place', async ({page}) => {
   await expect(rootMenu).toHaveAttribute('popover', 'manual');
   await expect(rootMenu).not.toHaveAttribute('data-fup-portal');
 
-  await page.getByRole('menuitem', {name: /Move to project/}).press('ArrowRight');
+  await page
+    .getByRole('menuitem', {name: /Move to project/})
+    .press('ArrowRight');
   const projectMenu = page.getByTestId('project-menu');
   await expect(projectMenu).toBeVisible();
   await expect(projectMenu).toHaveAttribute('popover', 'manual');
@@ -61,7 +63,9 @@ test('traps modal focus and closes on Escape', async ({page}) => {
     name: /You are inside the focus trap/,
   });
   await expect(dialog).toBeVisible();
-  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(true);
+  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(
+    true,
+  );
   const dialogBox = await dialog.boundingBox();
   const viewport = page.viewportSize();
   expect(dialogBox).not.toBeNull();
@@ -89,8 +93,10 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await expect(popover).toBeVisible();
   expect(
     await popover.evaluate((element) => {
-      return element.matches(':popover-open') &&
-        document.querySelector('.vue-modal-demo')?.contains(element);
+      return (
+        element.matches(':popover-open') &&
+        document.querySelector('.vue-modal-demo')?.contains(element)
+      );
     }),
   ).toBe(true);
   await demo.getByRole('button', {name: 'Close details'}).click();
@@ -107,9 +113,9 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await nestedDialogTrigger.click();
   const nestedDialog = demo.getByRole('dialog', {name: 'Nested dialog'});
   await expect(nestedDialog).toBeVisible();
-  expect(await nestedDialog.evaluate((element) => element.matches(':modal'))).toBe(
-    true,
-  );
+  expect(
+    await nestedDialog.evaluate((element) => element.matches(':modal')),
+  ).toBe(true);
   const nestedDialogBox = await nestedDialog.boundingBox();
   expect(nestedDialogBox).not.toBeNull();
   expect(
@@ -122,9 +128,7 @@ test('traps modal focus and closes on Escape', async ({page}) => {
       nestedDialogBox!.y + nestedDialogBox!.height / 2 - viewport!.height / 2,
     ),
   ).toBeLessThanOrEqual(1);
-  await page
-    .getByRole('button', {name: 'Return to focus room'})
-    .click();
+  await page.getByRole('button', {name: 'Return to focus room'}).click();
   await expect(nestedDialog).toBeHidden();
   await expect(nestedDialogTrigger).toBeFocused();
   await expect(dialog).toBeVisible();
@@ -140,7 +144,9 @@ test('traps modal focus and closes on Escape', async ({page}) => {
   await expect(trigger).toBeFocused();
 });
 
-test('opens the Vue edge sheet as a modal and restores focus on Escape', async ({page}) => {
+test('opens the Vue edge sheet as a modal and restores focus on Escape', async ({
+  page,
+}) => {
   await page.goto('/sheet?framework=vue');
   const demo = page.locator('[data-framework-panel="vue"]');
   const trigger = demo.getByRole('button', {name: /Open activity sheet/});
@@ -148,7 +154,9 @@ test('opens the Vue edge sheet as a modal and restores focus on Escape', async (
 
   await trigger.click();
   await expect(sheet).toBeVisible();
-  expect(await sheet.evaluate((element) => element.matches(':modal'))).toBe(true);
+  expect(await sheet.evaluate((element) => element.matches(':modal'))).toBe(
+    true,
+  );
   const box = await sheet.boundingBox();
   const viewport = page.viewportSize();
   expect(box).not.toBeNull();
@@ -189,10 +197,22 @@ test('routes to individual Vue examples and the middleware lab', async ({
   const tooltip = page.getByRole('tooltip');
   await expect(tooltip).toBeVisible();
   await expect(tooltip).toHaveCSS('position', 'absolute');
+  await expect(tooltip).toHaveAttribute('data-placement', /^top/);
+  expect(
+    await tooltip.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        startY: style.getPropertyValue('--surface-motion-start-y').trim(),
+        origin: style.getPropertyValue('--surface-motion-origin').trim(),
+      };
+    }),
+  ).toEqual({startY: '.25rem', origin: '50% 100%'});
 
   await page.goto('/middleware?framework=vue');
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Middleware'}),
+    page
+      .locator('.route-copy')
+      .getByRole('heading', {level: 2, name: 'Middleware'}),
   ).toBeVisible();
   await expect(page.locator('.vue-middleware-card')).toHaveCount(8);
   await expect(page.locator('.vue-mw-panel')).toHaveCount(10);
@@ -207,7 +227,9 @@ test('routes to individual Vue examples and the middleware lab', async ({
   await expect(offsetPanels).toHaveCount(2);
   const zeroOffsetBox = await offsetPanels.nth(0).boundingBox();
   const tenOffsetBox = await offsetPanels.nth(1).boundingBox();
-  const offsetDelta = Math.abs((zeroOffsetBox?.y ?? 0) - (tenOffsetBox?.y ?? 0));
+  const offsetDelta = Math.abs(
+    (zeroOffsetBox?.y ?? 0) - (tenOffsetBox?.y ?? 0),
+  );
   if ((page.viewportSize()?.width ?? 0) <= 520) {
     expect(offsetDelta).toBeGreaterThan(100);
   } else {
@@ -287,16 +309,18 @@ test('routes to individual Vue examples and the middleware lab', async ({
     0,
   );
   expect(arrowTipToReferenceGap).toBeCloseTo(MIDDLEWARE_ARROW.gap, 0);
-  await expect(
-    page.locator('[data-kind="inline"] .vue-mw-panel'),
-  ).toHaveCount(2);
+  await expect(page.locator('[data-kind="inline"] .vue-mw-panel')).toHaveCount(
+    2,
+  );
 });
 
 test('placement constants drive all 12 Vue positions', async ({page}) => {
   await page.goto('/placement?framework=vue');
 
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Placement'}),
+    page
+      .locator('.route-copy')
+      .getByRole('heading', {level: 2, name: 'Placement'}),
   ).toBeVisible();
   const vuePanel = page.locator('[data-framework-panel="vue"]');
   await expect(vuePanel.locator('[data-placement-control]')).toHaveCount(12);
@@ -336,7 +360,9 @@ test('multilingual Vue combobox keeps input focus in a native popover', async ({
 
   await vuePanel.getByRole('tab', {name: 'Server search'}).click();
   await expect(page).toHaveURL(/\/combobox\?framework=vue&source=server$/);
-  await expect(vuePanel.getByRole('combobox', {name: 'Remote destination'})).toBeVisible();
+  await expect(
+    vuePanel.getByRole('combobox', {name: 'Remote destination'}),
+  ).toBeVisible();
   await vuePanel.getByRole('tab', {name: 'Fuzzy search'}).click();
   await expect(page).toHaveURL(/\/combobox\?framework=vue&source=fuzzy$/);
   await expect(input).toBeVisible();
@@ -363,8 +389,9 @@ test('multilingual Vue combobox keeps input focus in a native popover', async ({
     ['deutschland', 'München'],
   ] as const) {
     await input.fill(query);
-    await expect(page.getByRole('option', {name: new RegExp(expected)}))
-      .toBeVisible();
+    await expect(
+      page.getByRole('option', {name: new RegExp(expected)}),
+    ).toBeVisible();
   }
 
   await input.fill('');
@@ -396,10 +423,7 @@ test('multilingual Vue combobox keeps input focus in a native popover', async ({
   await page.addScriptTag({content: axe.source});
   const violations = await page.evaluate(async () => {
     const result = await (window as any).axe.run({
-      include: [
-        ['.vue-combobox-card'],
-        ['[data-floating-query-popup]'],
-      ],
+      include: [['.vue-combobox-card'], ['[data-floating-query-popup]']],
     });
     return result.violations.filter((violation: {impact: string | null}) =>
       ['critical', 'serious'].includes(violation.impact ?? ''),

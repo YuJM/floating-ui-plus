@@ -10,6 +10,7 @@ import {
   hover,
   requestFloatingContextScope,
   role,
+  supportsFloatingTopLayer,
   type FloatingController,
   type FloatingContext,
   type FloatingPlugin,
@@ -81,6 +82,16 @@ export class FloatingRootRuntime {
     this.topLayer = createFloatingTopLayer({
       onOpenChange: (open, event, reason) => {
         return host.commitOpenChange(open, event, reason);
+      },
+      onExitComplete: (element) => {
+        queueMicrotask(() => {
+          if (
+            !host.open &&
+            element === this.#templateFloatingElement
+          ) {
+            this.#unmountTemplate();
+          }
+        });
       },
     });
     this.#contentScopes.set(host, null);
@@ -479,9 +490,13 @@ export class FloatingRootRuntime {
   }
 
   #syncTemplateMount() {
+    const nativeTemplateSurface = supportsFloatingTopLayer(
+      this.#templateTopLayer,
+    );
     const shouldMount =
       this.#connected &&
-      this.#host.open &&
+      (this.#host.open ||
+        (nativeTemplateSurface && this.#templateFloatingElement != null)) &&
       this.#contentTemplate != null &&
       this.#manualFloatingElement == null &&
       this.#slottedFloatingElement == null;

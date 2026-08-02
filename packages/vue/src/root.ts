@@ -225,6 +225,8 @@ export const FloatingContent = defineComponent({
     };
     const usesNativeDialog = () =>
       surfaceTopLayer() === 'dialog' && supportsFloatingTopLayer('dialog');
+    const usesNativeTopLayer = () =>
+      supportsFloatingTopLayer(surfaceTopLayer());
     let surfaceElement: HTMLElement | null = null;
     const syncNativeTopLayer = () => {
       if (!topLayerController || !rootOpen) return;
@@ -273,7 +275,7 @@ export const FloatingContent = defineComponent({
             // Portals used to remove closed content from the render tree. A
             // direct surface keeps its DOM ownership, so it needs the same
             // closed-state visibility contract without requiring Teleport.
-            hidden: usesNativeDialog()
+            hidden: usesNativeTopLayer()
               ? undefined
               : rootOpen
                 ? !rootOpen.value

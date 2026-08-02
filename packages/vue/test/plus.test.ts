@@ -29,6 +29,7 @@ import {
   dismiss,
   requestFloatingContext,
   role,
+  supportsFloatingTopLayer,
   useCombobox,
   useFloating,
   useQuery,
@@ -550,6 +551,78 @@ describe('Floating UI Plus Vue adapter', () => {
       expect(reference).toHaveAttribute('aria-controls', content.id);
       expect(content).toHaveAttribute('role', 'dialog');
     });
+  });
+
+  test('keeps native popover content mounted but hidden without exit CSS', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const open = ref(false);
+    const App = defineComponent(() => () =>
+      h(FloatingRoot, {open: open.value}, {
+        default: () => [
+          h(FloatingReference, {'data-testid': 'reference'}, {default: () => 'Open'}),
+          h(FloatingContent, {'data-testid': 'content'}, {default: () => 'Content'}),
+        ],
+      }),
+    );
+
+    const {getByTestId} = render(App);
+    const content = getByTestId('content');
+    await waitFor(() => expect(content).toHaveAttribute('popover', 'manual'));
+    expect(content).toHaveAttribute('hidden');
+    expect(content.matches(':popover-open')).toBe(false);
+
+    open.value = true;
+    await nextTick();
+    await waitFor(() => expect(content.matches(':popover-open')).toBe(true));
+
+    open.value = false;
+    await nextTick();
+    await waitFor(() => expect(content.matches(':popover-open')).toBe(false));
+    expect(content).toHaveAttribute('hidden');
+  });
+
+  test('defers native popover hidden through exit CSS and cancels it on reopen', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const open = ref(false);
+    const App = defineComponent(() => () =>
+      h(FloatingRoot, {open: open.value}, {
+        default: () => [
+          h(FloatingReference, {'data-testid': 'reference'}, {default: () => 'Open'}),
+          h(FloatingContent, {
+            'data-testid': 'content',
+            style:
+              'transition: display 100ms allow-discrete, overlay 100ms allow-discrete',
+          }, {default: () => 'Content'}),
+        ],
+      }),
+    );
+
+    const {getByTestId} = render(App);
+    const content = getByTestId('content');
+    open.value = true;
+    await nextTick();
+    await waitFor(() => expect(content.matches(':popover-open')).toBe(true));
+
+    open.value = false;
+    await nextTick();
+    await waitFor(() => expect(content.matches(':popover-open')).toBe(false));
+    expect(content).not.toHaveAttribute('hidden');
+
+    open.value = true;
+    await nextTick();
+    await waitFor(() => expect(content.matches(':popover-open')).toBe(true));
+    content.dispatchEvent(
+      new TransitionEvent('transitionend', {propertyName: 'overlay'}),
+    );
+    expect(content).not.toHaveAttribute('hidden');
+
+    open.value = false;
+    await nextTick();
+    await waitFor(() => expect(content.matches(':popover-open')).toBe(false));
+    content.dispatchEvent(
+      new TransitionEvent('transitionend', {propertyName: 'display'}),
+    );
+    expect(content).toHaveAttribute('hidden');
   });
 
   test('lets a portal follow the nearest FloatingRoot open state', async () => {

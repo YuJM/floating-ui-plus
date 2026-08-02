@@ -14,9 +14,11 @@ test('loads the Tailwind v4 design tokens without horizontal overflow', async ({
     }),
   ).toBeVisible();
 
-  expect(await page.evaluate(
-    () => document.documentElement.scrollWidth - window.innerWidth,
-  )).toBe(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    ),
+  ).toBe(0);
 });
 
 test('registers floating elements before the example module runs', async ({
@@ -56,24 +58,59 @@ test('keeps native popover template content inert across refresh until it opens'
   const demo = page.locator('[data-framework-panel="web-components"]');
   const trigger = demo.getByRole('button', {name: /Open coordinates/});
   const panel = demo.locator('.popover-panel');
-  await expect(panel).toHaveCount(0);
+  await expect(panel).toHaveCount(1);
+  await expect(panel).toBeHidden();
 
   await trigger.click();
   await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute('data-placement', /^bottom/);
   expect(
-    await panel.evaluate((element) =>
-      element.matches(':popover-open') &&
-      element.parentElement?.localName === 'floating-root',
+    await panel.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        startY: style.getPropertyValue('--surface-motion-start-y').trim(),
+        origin: style.getPropertyValue('--surface-motion-origin').trim(),
+        easing: style.getPropertyValue('--surface-motion-easing').trim(),
+      };
+    }),
+  ).toEqual({
+    startY: '-.25rem',
+    origin: '50% 0%',
+    easing: 'cubic-bezier(.23, 1, .32, 1)',
+  });
+  expect(
+    await panel.evaluate(
+      (element) =>
+        element.matches(':popover-open') &&
+        element.parentElement?.localName === 'floating-root',
     ),
   ).toBe(true);
-  await page.getByRole('button', {name: 'Close panel'}).click();
-  await expect(panel).toHaveCount(0);
+  await expect(panel).toHaveCSS('transition-property', /display/);
+  await expect(panel).toHaveCSS('transition-property', /overlay/);
+  const exitTransitions = await panel.evaluate(
+    (element) =>
+      new Promise<string[]>((resolve) => {
+        const properties = new Set<string>();
+        element.addEventListener('transitionrun', (event) => {
+          properties.add((event as TransitionEvent).propertyName);
+        });
+        element.querySelector<HTMLElement>('[data-fup-close]')?.click();
+        window.setTimeout(() => resolve([...properties]), 80);
+      }),
+  );
+  expect(exitTransitions).toContain('opacity');
+  expect(exitTransitions).toContain('scale');
+  await expect(panel).toHaveCount(1);
+  await expect(panel).toBeHidden();
+  await expect(panel).toHaveAttribute('hidden');
 
   await trigger.click();
   await expect(panel).toBeVisible();
 });
 
-test('only native dialog surfaces use the direct floating slot', async ({page}) => {
+test('only native dialog surfaces use the direct floating slot', async ({
+  page,
+}) => {
   await page.goto('/modal');
 
   const directSurfaces = await page
@@ -82,7 +119,9 @@ test('only native dialog surfaces use the direct floating slot', async ({page}) 
   expect(directSurfaces).toEqual(['dialog', 'dialog']);
 });
 
-test('opens the edge sheet as a modal and restores focus on Escape', async ({page}) => {
+test('opens the edge sheet as a modal and restores focus on Escape', async ({
+  page,
+}) => {
   await page.goto('/sheet');
   const demo = page.locator('[data-framework-panel="web-components"]');
   const trigger = demo.getByRole('button', {name: /Open activity sheet/});
@@ -90,7 +129,9 @@ test('opens the edge sheet as a modal and restores focus on Escape', async ({pag
 
   await trigger.click();
   await expect(sheet).toBeVisible();
-  expect(await sheet.evaluate((element) => element.matches(':modal'))).toBe(true);
+  expect(await sheet.evaluate((element) => element.matches(':modal'))).toBe(
+    true,
+  );
   const box = await sheet.boundingBox();
   const viewport = page.viewportSize();
   expect(box).not.toBeNull();
@@ -181,9 +222,7 @@ test('nested menu preserves the complete keyboard path', async ({page}) => {
     }
     const menuRect = menu.getBoundingClientRect();
     const parentRect = document
-      .querySelector<HTMLElement>(
-        '.nested-menu-root [aria-haspopup="menu"]',
-      )
+      .querySelector<HTMLElement>('.nested-menu-root [aria-haspopup="menu"]')
       ?.getBoundingClientRect();
     return {
       hasSurfaceAnimation: Boolean(animation),
@@ -212,7 +251,9 @@ test('nested menu preserves the complete keyboard path', async ({page}) => {
   await expect(trigger).toBeFocused();
 });
 
-test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => {
+test('nested dialog surfaces dismiss only the topmost layer', async ({
+  page,
+}) => {
   await page.goto('/modal');
   await expect(page.locator('[data-demo="modal"]')).toHaveAttribute(
     'data-initialized',
@@ -226,13 +267,17 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
     .locator('.modal-panel')
     .filter({hasText: 'Nested surfaces keep their own dismissal step.'});
   const hintTrigger = demo.getByRole('button', {name: 'Show placement hint'});
-  const popoverTrigger = demo.getByRole('button', {name: 'Open room details'});
+  const popoverTrigger = demo.getByRole('button', {
+    name: 'Open room details',
+  });
   const nestedDialogTrigger = demo.getByRole('button', {
     name: 'Open nested dialog',
   });
 
   await expect(dialog).toBeVisible();
-  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(true);
+  expect(await dialog.evaluate((element) => element.matches(':modal'))).toBe(
+    true,
+  );
   await expect(hintTrigger).toBeFocused();
 
   await hintTrigger.hover();
@@ -250,9 +295,9 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
     hasText: 'Details stay above the dialog.',
   });
   await expect(popover).toBeVisible();
-  expect(await popover.evaluate((element) => element.parentElement?.localName)).toBe(
-    'floating-root',
-  );
+  expect(
+    await popover.evaluate((element) => element.parentElement?.localName),
+  ).toBe('floating-root');
   await demo.getByRole('button', {name: 'Close details'}).click();
   await expect(popover).toBeHidden();
   await expect(dialog).toBeVisible();
@@ -274,13 +319,13 @@ test('nested dialog surfaces dismiss only the topmost layer', async ({page}) => 
   const nestedDialog = demo.locator('.nested-modal-panel');
   await expect(nestedDialog).toBeVisible();
   expect(
-    await nestedDialog.evaluate((element) =>
-      element.matches(':modal') && element.parentElement?.localName === 'floating-root'
+    await nestedDialog.evaluate(
+      (element) =>
+        element.matches(':modal') &&
+        element.parentElement?.localName === 'floating-root',
     ),
   ).toBe(true);
-  await page
-    .getByRole('button', {name: 'Return to focus room'})
-    .click();
+  await page.getByRole('button', {name: 'Return to focus room'}).click();
   await expect(nestedDialog).toBeHidden();
   await expect(dialog).toBeVisible();
 
@@ -298,8 +343,20 @@ test('tooltip component opens from hover or keyboard focus and dismisses cleanly
 
   await trigger.focus();
   await expect(tooltip).toBeVisible();
+  await expect(tooltip).toHaveAttribute('data-placement', /^top/);
+  expect(
+    await tooltip.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        startY: style.getPropertyValue('--surface-motion-start-y').trim(),
+        origin: style.getPropertyValue('--surface-motion-origin').trim(),
+      };
+    }),
+  ).toEqual({startY: '.25rem', origin: '50% 100%'});
   await expect
-    .poll(() => tooltip.evaluate((element) => getComputedStyle(element).overflow))
+    .poll(() =>
+      tooltip.evaluate((element) => getComputedStyle(element).overflow),
+    )
     .toBe('visible');
   await trigger.press('Escape');
   await expect(tooltip).toBeHidden();
@@ -349,9 +406,9 @@ test('cursor signal follows the pointer virtual reference', async ({page}) => {
   expect(
     Math.abs(tooltipBox!.x + tooltipBox!.width / 2 - pointer.x),
   ).toBeLessThanOrEqual(2);
-  expect(pointer.y - (tooltipBox!.y + tooltipBox!.height)).toBeGreaterThanOrEqual(
-    14,
-  );
+  expect(
+    pointer.y - (tooltipBox!.y + tooltipBox!.height),
+  ).toBeGreaterThanOrEqual(14);
 });
 
 test('all middleware fixtures expose their observable behavior', async ({
@@ -363,7 +420,9 @@ test('all middleware fixtures expose their observable behavior', async ({
     'true',
   );
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Middleware'}),
+    page
+      .locator('.route-copy')
+      .getByRole('heading', {level: 2, name: 'Middleware'}),
   ).toBeVisible();
   await expect(page.locator('.middleware-title a')).toHaveCount(8);
   await expect(
@@ -380,12 +439,18 @@ test('all middleware fixtures expose their observable behavior', async ({
   const offsetStages = page.locator(
     '[data-middleware-example="offset"] .mw-static-stage',
   );
-  const zeroReference = await offsetStages.nth(0).locator('button').boundingBox();
+  const zeroReference = await offsetStages
+    .nth(0)
+    .locator('button')
+    .boundingBox();
   const zeroFloating = await offsetStages
     .nth(0)
     .locator('.mw-panel')
     .boundingBox();
-  const tenReference = await offsetStages.nth(1).locator('button').boundingBox();
+  const tenReference = await offsetStages
+    .nth(1)
+    .locator('button')
+    .boundingBox();
   const tenFloating = await offsetStages
     .nth(1)
     .locator('.mw-panel')
@@ -507,9 +572,9 @@ test('all middleware fixtures expose their observable behavior', async ({
         arrowReferenceBox!.width / 2 -
         (arrowBox!.x + arrowBox!.width / 2),
     ),
-  // The centered arrow can shift with the floating panel to remain inside its
-  // constrained scroll stage; it must still stay visibly associated with its
-  // reference rather than escaping the panel bounds checked above.
+    // The centered arrow can shift with the floating panel to remain inside its
+    // constrained scroll stage; it must still stay visibly associated with its
+    // reference rather than escaping the panel bounds checked above.
   ).toBeLessThanOrEqual(40);
 
   const sizeStage = page.locator('.mw-stage-size');
@@ -564,7 +629,9 @@ test('all middleware fixtures expose their observable behavior', async ({
         withoutDistance: Math.abs(
           center(withoutPanel) - center(withoutReference),
         ),
-        withDistance: Math.abs(center(withPanel) - center(withReferenceRects[0]!)),
+        withDistance: Math.abs(
+          center(withPanel) - center(withReferenceRects[0]!),
+        ),
       };
     });
   expect(inlineMetrics.lines).toBeGreaterThan(1);
@@ -581,7 +648,9 @@ test('placement controls drive all 12 component positions', async ({page}) => {
 
   const webPanel = page.locator('[data-framework-panel="web-components"]');
   await expect(
-    page.locator('.route-copy').getByRole('heading', {level: 2, name: 'Placement'}),
+    page
+      .locator('.route-copy')
+      .getByRole('heading', {level: 2, name: 'Placement'}),
   ).toBeVisible();
   await expect(webPanel.locator('[data-placement-control]')).toHaveCount(12);
 
@@ -650,8 +719,9 @@ test('multilingual combobox keeps input focus and renders results', async ({
     ['deutschland', 'München'],
   ] as const) {
     await input.fill(query);
-    await expect(page.getByRole('option', {name: new RegExp(expected)}))
-      .toBeVisible();
+    await expect(
+      page.getByRole('option', {name: new RegExp(expected)}),
+    ).toBeVisible();
   }
 
   await input.fill('');

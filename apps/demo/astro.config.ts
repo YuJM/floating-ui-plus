@@ -49,6 +49,7 @@ export default defineConfig({
         {
           label: 'Guides',
           items: [
+            {slug: 'docs/guides/animation'},
             {
               label: 'Demo',
               items: [

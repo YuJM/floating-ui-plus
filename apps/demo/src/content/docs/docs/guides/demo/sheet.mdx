@@ -1,15 +1,23 @@
 ---
-title: 'Demo: Sheet'
+title: "Demo: Sheet"
 description: Open a modal sheet from every viewport edge with native dialog focus, backdrop dismissal, and exit animation.
 ---
 
-import DemoPreview from '../../../../../components/docs/DemoPreview.astro';
-import sheetSource from '../../../../../components/examples/SheetExample.astro?raw';
-import sheetVueSource from '../../../../../vue/components/ExampleSheet.vue?raw';
+import DemoPreview from "../../../../../components/docs/DemoPreview.astro";
+import sheetSource from "../../../../../components/examples/SheetExample.astro?raw";
+import sheetVueSource from "../../../../../vue/components/ExampleSheet.vue?raw";
 
 [Open the live Sheet demo](/sheet?framework=wc)
 
-<DemoPreview route="/preview/sheet" title="Sheet" height={560} webCode={sheetSource} vueCode={sheetVueSource} webTitle="SheetExample.astro" vueTitle="ExampleSheet.vue" />
+<DemoPreview
+  route="/preview/sheet"
+  title="Sheet"
+  height={560}
+  webCode={sheetSource}
+  vueCode={sheetVueSource}
+  webTitle="SheetExample.astro"
+  vueTitle="ExampleSheet.vue"
+/>
 
 The example uses the native `<dialog>` top layer as a modal Sheet. Choose top,
 right, bottom, or left before opening it. Focus moves into the Sheet, the page
@@ -22,11 +30,7 @@ Escape and the explicit close controls use the same close-request path. Set
 ```html
 <floating-root placement="right" strategy="fixed">
   <floating-reference><button>Open sheet</button></floating-reference>
-  <dialog
-    slot="floating"
-    data-side="right"
-    aria-labelledby="sheet-title"
-  >
+  <dialog slot="floating" data-side="right" aria-labelledby="sheet-title">
     <h2 id="sheet-title">Activity</h2>
     <button data-fup-close>Close</button>
   </dialog>
@@ -34,7 +38,7 @@ Escape and the explicit close controls use the same close-request path. Set
 ```
 
 ```js
-root.configure({plugins: [click(), dismiss(), role({role: 'dialog'})]});
+root.configure({ plugins: [click(), dismiss(), role({ role: "dialog" })] });
 ```
 
 Native dialog transitions should use the platform's discrete transition support,
@@ -43,24 +47,36 @@ present until the transition completes.
 
 ```css
 .sheet {
+  --surface-motion-start-x: 1.5rem;
+  --surface-motion-start-y: 0px;
+  --surface-motion-enter-duration: 240ms;
+  --surface-motion-exit-duration: 180ms;
+  --surface-motion-easing: cubic-bezier(0.32, 0.72, 0, 1);
   opacity: 0;
-  translate: 2.5rem 0;
-  transition: opacity 180ms ease, translate 180ms ease,
-    display 180ms allow-discrete, overlay 180ms allow-discrete;
+  translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
+  transition:
+    opacity var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    translate var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    display var(--surface-motion-exit-duration) allow-discrete,
+    overlay var(--surface-motion-exit-duration) allow-discrete;
 }
 
 .sheet:open {
   opacity: 1;
   translate: 0 0;
+  transition-duration: var(--surface-motion-enter-duration);
 }
 
 @starting-style {
   .sheet:open {
     opacity: 0;
-    translate: 2.5rem 0;
+    translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
   }
 }
 ```
+
+The four demo directions only override `--surface-motion-start-x` and
+`--surface-motion-start-y`, keeping the lifecycle CSS shared.
 
 The Vue example uses the same attributes on
 `<FloatingContent as="dialog">` and the same `dismiss()` behavior.

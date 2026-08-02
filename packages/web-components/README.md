@@ -91,6 +91,43 @@ cancelable `floatingbeforeclose` event is the synchronous guard point; an
 application with asynchronous confirmation should finish that work first and
 then call `close()`.
 
+## Native entry and exit animation
+
+Native Popover and `<dialog>` surfaces close instantly unless their own CSS
+explicitly includes a non-zero `display` or `overlay` transition with
+`allow-discrete`. With that CSS present, the element remains mounted and
+unhidden through the exit transition and is hidden after `transitionend`.
+
+```css
+.floating-panel {
+  opacity: 0;
+  translate: 0 -0.25rem;
+  transition:
+    opacity 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    translate 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    display 120ms allow-discrete,
+    overlay 120ms allow-discrete;
+}
+
+.floating-panel:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@starting-style {
+  .floating-panel:popover-open {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+```
+
+Template content stays mounted only while the native exit is running, and a
+reopen cancels the pending unmount. Use `<floating-transition>` for a custom
+surface with `top-layer="none"`. See the
+[entry and exit animation guide](https://fup.polcaneli.com/docs/guides/animation)
+for Popover, dialog, reduced-motion, and presence examples.
+
 ## Editable query
 
 `<floating-query>` is the general searchable-result primitive. Its default
@@ -201,6 +238,7 @@ Use it only when those form-associated selected-value semantics are required.
 - [Installation](https://fup.polcaneli.com/docs/guides/installation/web-components)
 - [Getting started](https://fup.polcaneli.com/docs/guides/getting-started)
 - [Popover and dialog](https://fup.polcaneli.com/docs/guides/popover)
+- [Entry and exit animation](https://fup.polcaneli.com/docs/guides/animation)
 - [Query demos: fuzzy and server search](https://fup.polcaneli.com/docs/guides/demo/combobox/fuzzy)
 - [Dismiss and before-close](https://fup.polcaneli.com/docs/guides/dismiss)
 - [Usage recipes](https://fup.polcaneli.com/docs/guides/usage)

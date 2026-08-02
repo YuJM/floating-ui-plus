@@ -26,12 +26,18 @@ const plugins = [click(), dismiss(), role({role: 'dialog'})];
 
 <template>
   <article class="vue-demo-card bg-vue-sky">
-    <div class="vue-card-top"><span class="vue-number">B</span><span>native top layer</span></div>
+    <div class="vue-card-top">
+      <span class="vue-number">B</span><span>native top layer</span>
+    </div>
     <h3>Anchored popover</h3>
-    <p>The browser lifts the panel above the page while Vue keeps its normal component tree.</p>
+    <p>
+      The browser lifts the panel above the page while Vue keeps its normal
+      component tree.
+    </p>
     <div class="mt-auto pt-7">
       <FloatingRoot
         v-model:open="open"
+        v-slot="{floating}"
         :options="options"
         :plugins="plugins"
       >
@@ -41,6 +47,7 @@ const plugins = [click(), dismiss(), role({role: 'dialog'})];
         <FloatingContent
           as="section"
           class="popover-panel"
+          :data-placement="floating.placement.value"
         >
           <span class="panel-kicker">NATIVE TOP LAYER / 42.8°</span>
           <strong>Popover, still connected.</strong>
