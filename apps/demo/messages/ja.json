@@ -65,5 +65,8 @@
   "pattern_sheet_description": "ネイティブdialogのフォーカス、閉じる操作、スクロール可能な本文を備えたモバイル向けエッジシートです。",
   "pattern_toast_label": "トースト",
   "pattern_toast_heading": "流れを止めないフィードバック。",
-  "pattern_toast_description": "通知を重ね、確認中はタイマーを止め、自然に閉じます。"
+  "pattern_toast_description": "通知を重ね、確認中はタイマーを止め、自然に閉じます。",
+  "pattern_command_label": "コマンド",
+  "pattern_command_heading": "検索して、選んで、進み続ける。",
+  "pattern_command_description": "検索可能なダイアログパレットから、完全なキーボード操作でグループ化されたアクションを実行します。"
 }

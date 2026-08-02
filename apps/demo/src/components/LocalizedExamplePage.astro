@@ -7,6 +7,7 @@ import MiddlewareExamples from './examples/MiddlewareExamples.astro';
 import ModalExample from './examples/ModalExample.astro';
 import SheetExample from './examples/SheetExample.astro';
 import ToastExample from './examples/ToastExample.astro';
+import CommandExample from './examples/CommandExample.astro';
 import NestedMenuExample from './examples/NestedMenuExample.astro';
 import PlacementExample from './examples/PlacementExample.astro';
 import PopoverExample from './examples/PopoverExample.astro';
@@ -27,7 +28,7 @@ const {locale, example, source} = Astro.props as {
   source?: ComboboxSource;
 };
 const details = getExample(locale, example);
-const webExamples = {tooltip: TooltipExample, popover: PopoverExample, menu: MenuExample, 'nested-menu': NestedMenuExample, 'client-point': ClientPointExample, combobox: ComboboxExample, placement: PlacementExample, middleware: MiddlewareExamples, modal: ModalExample, sheet: SheetExample, toast: ToastExample};
+const webExamples = {tooltip: TooltipExample, popover: PopoverExample, menu: MenuExample, 'nested-menu': NestedMenuExample, 'client-point': ClientPointExample, combobox: ComboboxExample, placement: PlacementExample, middleware: MiddlewareExamples, modal: ModalExample, sheet: SheetExample, toast: ToastExample, command: CommandExample};
 const WebExample = webExamples[example];
 const variant = example === 'middleware' ? 'full' : example === 'placement' ? 'wide' : 'default';
 const examplePath = source ? `${example}/${source}` : example;

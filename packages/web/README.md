@@ -167,6 +167,13 @@ import { createFuzzySearchSource } from "@floating-ui-plus/web/fuzzy";
 
 ## Native entry and exit animation
 
+When `createFloatingTopLayer()` manages a native `<dialog>`, it adds
+`data-fup-safe-area` and the CSS variables
+`--fup-safe-area-inset-top`, `--fup-safe-area-inset-right`,
+`--fup-safe-area-inset-bottom`, and `--fup-safe-area-inset-left`. Use those
+variables in the dialog's own layout CSS; the positioning kernel does not force
+padding on surfaces with different layouts.
+
 `createFloatingTopLayer()` keeps instant closing as the default. When a native
 Popover or `<dialog>` surface explicitly transitions `display` or `overlay`
 with `allow-discrete`, it leaves the closed surface unhidden until that CSS

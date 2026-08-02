@@ -6,6 +6,7 @@ import ExampleMenu from '../components/ExampleMenu.vue';
 import ExampleModal from '../components/ExampleModal.vue';
 import ExampleSheet from '../components/ExampleSheet.vue';
 import ExampleToast from '../components/ExampleToast.vue';
+import ExampleCommand from '../components/ExampleCommand.vue';
 import ExampleNestedMenu from '../components/ExampleNestedMenu.vue';
 import ExamplePopover from '../components/ExamplePopover.vue';
 import ExampleTooltip from '../components/ExampleTooltip.vue';
@@ -26,6 +27,7 @@ const examples = {
   modal: ExampleModal,
   sheet: ExampleSheet,
   toast: ExampleToast,
+  command: ExampleCommand,
 } as const;
 
 const props = defineProps<{
@@ -43,5 +45,6 @@ const example = computed(() => examples[props.exampleName] ?? examples.tooltip);
   />
   <ExampleSheet v-else-if="props.exampleName === 'sheet'" :locale="props.locale" />
   <ExampleToast v-else-if="props.exampleName === 'toast'" :locale="props.locale" />
+  <ExampleCommand v-else-if="props.exampleName === 'command'" />
   <component v-else :is="example" />
 </template>

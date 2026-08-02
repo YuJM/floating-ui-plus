@@ -62,6 +62,33 @@ function getNativeExitTransitionDuration(element: HTMLElement) {
   }, 0);
 }
 
+const safeAreaStyleProperties = [
+  ['--fup-safe-area-inset-top', 'env(safe-area-inset-top, 0px)'],
+  ['--fup-safe-area-inset-right', 'env(safe-area-inset-right, 0px)'],
+  ['--fup-safe-area-inset-bottom', 'env(safe-area-inset-bottom, 0px)'],
+  ['--fup-safe-area-inset-left', 'env(safe-area-inset-left, 0px)'],
+] as const;
+
+function applyDialogSafeArea(element: HTMLDialogElement) {
+  const previous = new Map<string, string>();
+  for (const [property, value] of safeAreaStyleProperties) {
+    previous.set(property, element.style.getPropertyValue(property));
+    if (!element.style.getPropertyValue(property)) {
+      element.style.setProperty(property, value);
+    }
+  }
+  const hadAttribute = element.hasAttribute('data-fup-safe-area');
+  element.setAttribute('data-fup-safe-area', '');
+  return () => {
+    for (const [property] of safeAreaStyleProperties) {
+      const previousValue = previous.get(property) ?? '';
+      if (previousValue) element.style.setProperty(property, previousValue);
+      else element.style.removeProperty(property);
+    }
+    if (!hadAttribute) element.removeAttribute('data-fup-safe-area');
+  };
+}
+
 export function supportsFloatingTopLayer(kind: FloatingTopLayer) {
   if (kind === 'popover') {
     return typeof HTMLElement !== 'undefined' &&
@@ -232,6 +259,7 @@ export class FloatingTopLayerController {
       return;
     }
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {
+      const restoreSafeArea = applyDialogSafeArea(element);
       const handleCancel = (event: Event) => {
         if (!this.#open) return;
         event.preventDefault();
@@ -251,6 +279,7 @@ export class FloatingTopLayerController {
       element.addEventListener('cancel', handleCancel);
       element.addEventListener('close', handleClose);
       this.#cleanup = () => {
+        restoreSafeArea();
         element.removeEventListener('cancel', handleCancel);
         element.removeEventListener('close', handleClose);
       };

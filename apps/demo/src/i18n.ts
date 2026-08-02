@@ -9,7 +9,7 @@ export function isLocale(value: string): value is Locale {
 
 export const EXAMPLE_IDS = [
   'tooltip', 'popover', 'menu', 'nested-menu', 'client-point', 'combobox',
-  'placement', 'middleware', 'modal', 'sheet', 'toast',
+  'placement', 'middleware', 'modal', 'sheet', 'toast', 'command',
 ] as const;
 export type ExampleId = (typeof EXAMPLE_IDS)[number];
 
@@ -32,6 +32,7 @@ const COMPONENT_NAMES: Record<ExampleId, string> = {
   modal: 'Modal',
   sheet: 'Sheet',
   toast: 'Toast',
+  command: 'Command',
 };
 
 const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
@@ -52,6 +53,7 @@ const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
   modal: ['dialog', 'floating-node', 'click()', 'dismiss()', 'role()'],
   sheet: ['dialog', 'click()', 'dismiss()', 'role()', 'native focus'],
   toast: ['FloatingTransition', 'timeout', 'pause()', 'stack', 'aria-live'],
+  command: ['SearchController', 'useQuery()', 'dialog', 'navigation', 'dismiss()'],
 };
 
 export function getExamples(locale: Locale) {
@@ -68,6 +70,7 @@ export function getExamples(locale: Locale) {
     modal: m.example_modal_build,
     sheet: m.example_sheet_build,
     toast: m.example_toast_build,
+    command: m.example_command_build,
   };
   return [
     {id: 'tooltip' as const, label: m.pattern_tooltip_label(undefined, options), heading: COMPONENT_NAMES.tooltip, description: m.pattern_tooltip_description(undefined, options), build: builds.tooltip(undefined, options), features: APPLIED_FEATURES.tooltip},
@@ -81,6 +84,7 @@ export function getExamples(locale: Locale) {
     {id: 'modal' as const, label: m.pattern_modal_label(undefined, options), heading: COMPONENT_NAMES.modal, description: m.pattern_modal_description(undefined, options), build: builds.modal(undefined, options), features: APPLIED_FEATURES.modal},
     {id: 'sheet' as const, label: m.pattern_sheet_label(undefined, options), heading: COMPONENT_NAMES.sheet, description: m.pattern_sheet_description(undefined, options), build: builds.sheet(undefined, options), features: APPLIED_FEATURES.sheet},
     {id: 'toast' as const, label: m.pattern_toast_label(undefined, options), heading: COMPONENT_NAMES.toast, description: m.pattern_toast_description(undefined, options), build: builds.toast(undefined, options), features: APPLIED_FEATURES.toast},
+    {id: 'command' as const, label: m.pattern_command_label(undefined, options), heading: COMPONENT_NAMES.command, description: m.pattern_command_description(undefined, options), build: builds.command(undefined, options), features: APPLIED_FEATURES.command},
   ];
 }
 

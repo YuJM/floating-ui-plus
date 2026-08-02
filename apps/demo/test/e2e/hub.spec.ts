@@ -33,6 +33,7 @@ test('uses component names and applied-function badges on every example', async 
     ['modal', 'Modal'],
     ['sheet', 'Sheet'],
     ['toast', 'Toast'],
+    ['command', 'Command'],
   ] as const;
 
   for (const [path, title] of examples) {

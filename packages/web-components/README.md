@@ -63,6 +63,12 @@ CSS `overflow: hidden`. No touch-event interception is installed by default;
 add an application-specific touch guard only when targeting a legacy iOS or
 WebView environment that needs one.
 
+Native dialogs also receive `data-fup-safe-area` and the CSS variables
+`--fup-safe-area-inset-top`, `--fup-safe-area-inset-right`,
+`--fup-safe-area-inset-bottom`, and `--fup-safe-area-inset-left`. Consume these
+variables in surface CSS where a notch or home indicator needs extra space; the
+package does not force a padding policy on custom dialog layouts.
+
 Use a real `<dialog slot="floating">` for a modal. The browser then owns the
 top layer, focus, and inertness. Reserve `<floating-portal>` for a surface that
 explicitly must escape a clipping ancestor or render at a custom target.

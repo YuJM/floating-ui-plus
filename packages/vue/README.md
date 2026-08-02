@@ -110,6 +110,12 @@ The default uses CSS `overflow: hidden`; touch-event interception is not
 installed. Add a touch guard in the host application only for legacy iOS or a
 WebView that still requires it.
 
+Native dialogs also receive `data-fup-safe-area` and the CSS variables
+`--fup-safe-area-inset-top`, `--fup-safe-area-inset-right`,
+`--fup-safe-area-inset-bottom`, and `--fup-safe-area-inset-left`. Consume these
+variables in surface CSS where a notch or home indicator needs extra space; the
+package does not force a padding policy on custom dialog layouts.
+
 ## Native entry and exit animation
 
 Keep `<FloatingContent>` in the Vue tree and style the native surface states

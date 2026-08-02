@@ -86,6 +86,13 @@ export const EXAMPLES = [
     description:
       'Create timed notifications that stack, pause while being inspected, and leave with a controlled transition.',
   },
+  {
+    id: 'command',
+    label: 'Command',
+    heading: 'Search, choose,<br /><span>keep moving.</span>',
+    description:
+      'Run grouped actions from a searchable dialog command palette with complete keyboard navigation.',
+  },
 ] as const;
 
 export type ExampleId = (typeof EXAMPLES)[number]['id'];

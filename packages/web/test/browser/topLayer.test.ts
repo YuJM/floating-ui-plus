@@ -60,6 +60,32 @@ describe('FloatingTopLayerController', () => {
     topLayer.destroy();
   });
 
+  test('exposes safe-area insets on native dialogs without overriding author styles', () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const element = document.createElement('dialog');
+    element.style.setProperty('--fup-safe-area-inset-bottom', '12px');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('dialog');
+    topLayer.setElement(element);
+    topLayer.connect();
+
+    expect(element).toHaveAttribute('data-fup-safe-area', '');
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-top')).toBe(
+      'env(safe-area-inset-top, 0px)',
+    );
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-bottom')).toBe(
+      '12px',
+    );
+
+    topLayer.destroy();
+    expect(element).not.toHaveAttribute('data-fup-safe-area');
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-top')).toBe('');
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-bottom')).toBe(
+      '12px',
+    );
+  });
+
   test('restores hidden after a dialog discrete exit transition', () => {
     if (!supportsFloatingTopLayer('dialog')) return;
     const element = document.createElement('dialog');

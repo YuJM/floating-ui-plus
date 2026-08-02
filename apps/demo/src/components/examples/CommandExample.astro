@@ -1,0 +1,147 @@
+---
+---
+
+<section class="command-demo" aria-label="Command palette example" data-demo="command">
+  <div class="command-demo-copy">
+    <span class="panel-kicker">COMMAND / QUICK ACTIONS</span>
+    <h3>Move at the speed of thought.</h3>
+    <p>Search grouped actions, navigate with arrow keys, and press Enter to run the active command.</p>
+    <floating-root data-command-root strategy="fixed">
+      <floating-reference><button class="command-trigger" type="button">Open command palette <kbd>⌘ K</kbd></button></floating-reference>
+      <dialog slot="floating" class="command-dialog" aria-labelledby="command-title">
+        <h4 id="command-title" class="sr-only">Command palette</h4>
+        <div class="command-shell" data-slot="command">
+          <div class="command-input-row" data-slot="command-input-wrapper">
+            <span aria-hidden="true">⌕</span>
+            <input class="command-input" data-slot="command-input" type="text" autocomplete="off" spellcheck="false" placeholder="Type a command or search…" aria-label="Search commands" aria-controls="command-list" />
+            <button class="command-close" type="button" data-fup-close aria-label="Close command palette">Esc</button>
+          </div>
+          <div id="command-list" class="command-list" data-slot="command-list" role="listbox" aria-label="Commands" data-command-list></div>
+          <div class="command-empty" data-slot="command-empty" data-command-empty hidden>No results found.</div>
+          <p class="sr-only" aria-live="polite" data-query-status>Start typing to search commands</p>
+        </div>
+      </dialog>
+    </floating-root>
+    <p class="command-result" aria-live="polite" data-command-result>Choose a command to continue.</p>
+  </div>
+</section>
+
+<script>
+  import {FloatingRootElement, SearchController, click, createFuzzySearchSource, dismiss, role} from '@floating-ui-plus/web-components';
+  import {commandGroups, commandItems, commandSearchKeys, type CommandItem} from '../../command-items';
+  import {initializeExample} from './initialize-example';
+
+  initializeExample('command', (scope) => {
+    const root = FloatingRootElement.query(scope, '[data-command-root]');
+    const list = scope.querySelector<HTMLElement>('[data-command-list]');
+    const empty = scope.querySelector<HTMLElement>('[data-command-empty]');
+    const status = scope.querySelector<HTMLElement>('[data-query-status]');
+    const result = scope.querySelector<HTMLElement>('[data-command-result]');
+    const input = scope.querySelector<HTMLInputElement>('[data-slot="command-input"]');
+    if (!list || !empty || !status || !result || !input) return;
+
+    root.transform = false;
+    root.configure({plugins: [click(), dismiss(), role({role: 'dialog'})]});
+    const search = new SearchController<CommandItem>({
+      source: createFuzzySearchSource(commandItems, {keys: commandSearchKeys, threshold: 0.35}),
+      getItemKey: (item) => item.id,
+      debounceMs: 0,
+    });
+    let activeIndex: number | null = null;
+
+    const activate = (item: CommandItem) => {
+      result.textContent = `${item.label} selected.`;
+      root.open = false;
+    };
+    const render = (items: readonly CommandItem[]) => {
+      list.replaceChildren();
+      empty.hidden = items.length > 0;
+      list.hidden = items.length === 0;
+      commandGroups.forEach((group, groupIndex) => {
+        const groupItems = items.filter((item) => item.group === group);
+        if (!groupItems.length) return;
+        if (list.childElementCount) {
+          const separator = document.createElement('div');
+          separator.className = 'command-separator';
+          separator.dataset.slot = 'command-separator';
+          separator.setAttribute('role', 'separator');
+          list.append(separator);
+        }
+        const section = document.createElement('section');
+        section.className = 'command-group';
+        section.dataset.slot = 'command-group';
+        section.setAttribute('aria-labelledby', `command-group-${groupIndex}`);
+        const heading = document.createElement('h5');
+        heading.id = `command-group-${groupIndex}`;
+        heading.textContent = group;
+        section.append(heading);
+        groupItems.forEach((item) => {
+          const index = items.indexOf(item);
+          const option = document.createElement('div');
+          option.className = 'command-item';
+          option.dataset.slot = 'command-item';
+          option.dataset.active = String(index === activeIndex);
+          option.id = `command-option-${item.id}`;
+          option.setAttribute('role', 'option');
+          option.setAttribute('aria-selected', String(index === activeIndex));
+          option.addEventListener('mousedown', (event) => event.preventDefault());
+          option.addEventListener('click', () => activate(item));
+          option.innerHTML = `<span class="command-item-icon" aria-hidden="true">${item.icon}</span><span>${item.label}</span>${item.shortcut ? `<kbd data-slot="command-shortcut">${item.shortcut}</kbd>` : ''}`;
+          section.append(option);
+        });
+        list.append(section);
+      });
+      const active = activeIndex == null ? null : items[activeIndex];
+      if (active) input.setAttribute('aria-activedescendant', `command-option-${active.id}`);
+      else input.removeAttribute('aria-activedescendant');
+    };
+
+    const unsubscribe = search.subscribe((snapshot) => {
+      if (activeIndex != null && activeIndex >= snapshot.items.length) activeIndex = null;
+      render(snapshot.items);
+      status.textContent = snapshot.items.length ? `${snapshot.items.length} commands available` : `No commands found for ${snapshot.query}`;
+    });
+    const handleInput = () => {
+      activeIndex = null;
+      search.setQuery(input.value);
+    };
+    const handleKeydown = (event: KeyboardEvent) => {
+      const items = search.items;
+      if (event.key === 'Enter' && activeIndex != null && items[activeIndex]) {
+        event.preventDefault();
+        activate(items[activeIndex]);
+        return;
+      }
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      if (!items.length) return;
+      event.preventDefault();
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      const current = activeIndex ?? (direction > 0 ? -1 : 0);
+      activeIndex = (current + direction + items.length) % items.length;
+      render(items);
+      list.querySelector<HTMLElement>('[data-active="true"]')?.scrollIntoView({block: 'nearest'});
+    };
+    const shortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        root.open = !root.open;
+      }
+    };
+    root.addEventListener('openchange', () => {
+      if (root.open) requestAnimationFrame(() => input.focus());
+    });
+    input.addEventListener('input', handleInput);
+    input.addEventListener('keydown', handleKeydown);
+    input.addEventListener('compositionstart', () => search.startComposition());
+    input.addEventListener('compositionend', () => search.endComposition(input.value));
+    document.addEventListener('keydown', shortcut);
+    void search.refresh();
+    return () => {
+      unsubscribe();
+      search.destroy();
+      input.removeEventListener('input', handleInput);
+      input.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener('keydown', shortcut);
+    };
+  });
+</script>
