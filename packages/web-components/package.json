@@ -1,6 +1,6 @@
 {
   "name": "@floating-ui-plus/web-components",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/",
   "description": "Floating UI custom elements with interactions, focus management, portals, collections, and search",
