@@ -9,6 +9,7 @@ import PlacementExample from '../../components/examples/PlacementExample.astro';
 import MiddlewareExamples from '../../components/examples/MiddlewareExamples.astro';
 import ModalExample from '../../components/examples/ModalExample.astro';
 import SheetExample from '../../components/examples/SheetExample.astro';
+import ToastExample from '../../components/examples/ToastExample.astro';
 import ExampleTooltip from '../../vue/components/ExampleTooltip.vue';
 import ExamplePopover from '../../vue/components/ExamplePopover.vue';
 import ExampleMenu from '../../vue/components/ExampleMenu.vue';
@@ -18,6 +19,7 @@ import PlacementView from '../../vue/views/PlacementView.vue';
 import MiddlewareView from '../../vue/views/MiddlewareView.vue';
 import ExampleModal from '../../vue/components/ExampleModal.vue';
 import ExampleSheet from '../../vue/components/ExampleSheet.vue';
+import ExampleToast from '../../vue/components/ExampleToast.vue';
 import {EXAMPLE_IDS, type ExampleId} from '../../i18n';
 
 export function getStaticPaths() {
@@ -37,6 +39,7 @@ const labels: Record<Exclude<ExampleId, 'combobox'>, string> = {
   middleware: 'Middleware',
   modal: 'Modal focus room',
   sheet: 'Sheet',
+  toast: 'Toast',
 };
 const webExamples = {
   tooltip: TooltipExample,
@@ -48,6 +51,7 @@ const webExamples = {
   middleware: MiddlewareExamples,
   modal: ModalExample,
   sheet: SheetExample,
+  toast: ToastExample,
 } as const;
 const WebExample = webExamples[example];
 ---
@@ -66,5 +70,6 @@ const WebExample = webExamples[example];
     {example === 'middleware' && <MiddlewareView client:only="vue" />}
     {example === 'modal' && <ExampleModal client:only="vue" />}
     {example === 'sheet' && <ExampleSheet client:only="vue" locale="en" />}
+    {example === 'toast' && <ExampleToast client:only="vue" locale="en" />}
   </section>
 </PreviewFrame>

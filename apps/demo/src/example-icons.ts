@@ -8,6 +8,7 @@ import {
   Move,
   PanelTop,
   PanelRight,
+  Bell,
   SlidersHorizontal,
 } from 'lucide-astro';
 import type {ExampleId} from './i18n';
@@ -23,4 +24,5 @@ export const EXAMPLE_ICONS: Record<ExampleId, typeof CircleHelp> = {
   middleware: SlidersHorizontal,
   modal: Focus,
   sheet: PanelRight,
+  toast: Bell,
 };

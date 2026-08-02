@@ -1,0 +1,170 @@
+---
+title: "Demo: Toast"
+description: Build stacked, timed, non-modal notifications with pausable dismissal and controlled presence.
+---
+
+import DemoPreview from "../../../../../components/docs/DemoPreview.astro";
+import toastSource from "../../../../../components/examples/ToastExample.astro?raw";
+import toastVueSource from "../../../../../vue/components/ExampleToast.vue?raw";
+
+[Open the live Toast demo](/toast?framework=wc)
+
+<DemoPreview
+  route="/preview/toast"
+  title="Toast"
+  height={520}
+  webCode={toastSource}
+  vueCode={toastVueSource}
+  webTitle="ToastExample.astro"
+  vueTitle="ExampleToast.vue"
+/>
+
+This example follows the core behavior of the
+[Base UI Toast specification](https://base-ui.com/react/components/toast): a
+manager creates notifications, a viewport owns their stack, each notification
+can close itself, and a default timeout removes it automatically. The demo caps
+the visible stack at three notifications.
+
+Floating UI Plus does not currently expose a dedicated Toast provider or
+manager. Toasts do not need an anchor, collision middleware, or a focus trap, so
+the example keeps its small notification store in application code and uses the
+package's `FloatingTransition` presence state for enter and exit lifecycle.
+This avoids turning a demo-specific notification data model into a positioning
+primitive.
+
+## Interaction contract
+
+- A notification remains for five seconds by default.
+- Hovering the viewport or moving keyboard focus into it pauses every active
+  timeout; leaving resumes the remaining duration rather than restarting it.
+- The stack expands while paused so covered notification content becomes
+  readable.
+- The close button starts an exit transition. DOM removal occurs after the
+  transition finishes.
+- The viewport is a labelled landmark with polite live announcements. `F6`
+  moves focus to it without taking focus when a notification first appears.
+
+```ts
+const transition = new FloatingTransition(() => "top-end", {
+  duration: { close: 180 },
+});
+
+transition.subscribe(() => {
+  toast.dataset.status = transition.status;
+  if (!transition.isMounted) toast.remove();
+});
+
+transition.setOpen(true);
+// Later: transition.setOpen(false)
+```
+
+CSS owns the visual stack through `--toast-index` for depth and
+`--toast-offset-y` for the expanded position. The Web Components and Vue
+examples share the same CSS and accessibility contract; Vue uses
+`useFloatingTransition()` for the equivalent presence state.
+
+## Stack values
+
+Write the newest toast as index `0`. The collapsed stack uses the index for
+depth, while the expanded stack uses the full measured row step. The demo's
+toast height plus gap is `84px`:
+
+```ts
+records.forEach((record, index) => {
+  record.element.style.setProperty("--toast-index", String(index));
+  record.element.style.setProperty("--toast-offset-y", `${index * -84}px`);
+  record.element.toggleAttribute("data-behind", index > 0);
+});
+
+viewport.toggleAttribute("data-expanded", isPointerOrFocusPaused);
+```
+
+Vue computes the same custom properties and binds the state attributes:
+
+```vue
+<ol class="toast-viewport" :data-expanded="paused ? '' : undefined">
+  <li
+    class="toast-item"
+    :data-status="status"
+    :data-behind="index > 0 ? '' : undefined"
+    :style="{
+      '--toast-index': String(index),
+      '--toast-offset-y': `${index * -84}px`,
+    }"
+  />
+</ol>
+```
+
+The CSS below is the complete motion contract. Toasts are anchored to the
+viewport bottom, so both entry and exit travel downward. `data-status` comes
+from `FloatingTransition` or `useFloatingTransition`; it is independent from
+the stack's expanded/collapsed state.
+
+```css
+.toast-viewport {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  width: min(360px, calc(100vw - 32px));
+  height: 290px;
+  pointer-events: none;
+}
+
+.toast-item {
+  --toast-index: 0;
+  --toast-offset-y: 0px;
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: calc(30 - var(--toast-index));
+  width: 100%;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transform-origin: 100% 100%;
+  opacity: 1;
+  transition:
+    opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Covered items stay visible as a compact depth preview. */
+.toast-item[data-behind] {
+  transform: translateY(calc(var(--toast-index) * -10px))
+    scale(calc(1 - var(--toast-index) * 0.04));
+  opacity: calc(1 - var(--toast-index) * 0.14);
+}
+
+/* Hover or focus pauses dismissal and reveals the complete stack. */
+.toast-viewport[data-expanded] .toast-item {
+  transform: translateY(var(--toast-offset-y)) scale(1);
+  opacity: 1;
+}
+
+.toast-item[data-status="initial"],
+.toast-item[data-status="close"] {
+  transform: translateY(120%) scale(0.98);
+  opacity: 0;
+}
+
+.toast-item[data-status="close"] {
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item {
+    transition-duration: 80ms;
+  }
+}
+```
+
+The reduced-motion rule keeps a short presence window so the transition helper
+can finish removing the node, but removes most of the perceived travel. If the
+application changes that duration, pass the same close duration to
+`FloatingTransition` or `useFloatingTransition`.
+
+Web Components create each `<li>` from the notification store and subscribe to
+`FloatingTransition` before removing it. Vue keeps the store in the parent and
+renders a child item with `v-if="isMounted"`; the child emits `remove` after
+`useFloatingTransition()` reports that exit presence has finished. The CSS,
+custom properties, and status attribute are otherwise identical.

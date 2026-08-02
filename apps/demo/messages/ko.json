@@ -62,5 +62,8 @@
   "pattern_modal_description": "포커스를 가두고, 스크롤을 잠그고, Escape dismiss를 계층화하고, 사용자를 출발점으로 돌려보냅니다.",
   "pattern_sheet_label": "시트",
   "pattern_sheet_heading": "다음 행동을 가까이.",
-  "pattern_sheet_description": "네이티브 dialog 포커스와 닫기 동작, 스크롤 가능한 본문을 갖춘 모바일 엣지 시트를 만듭니다."
+  "pattern_sheet_description": "네이티브 dialog 포커스와 닫기 동작, 스크롤 가능한 본문을 갖춘 모바일 엣지 시트를 만듭니다.",
+  "pattern_toast_label": "토스트",
+  "pattern_toast_heading": "흐름을 끊지 않는 피드백.",
+  "pattern_toast_description": "알림을 쌓고, 살펴보는 동안 타이머를 멈추고, 자연스럽게 닫습니다."
 }

@@ -7,7 +7,7 @@ const open = ref(false);
 const side = ref<'top' | 'right' | 'bottom' | 'left'>('right');
 const sides = ['top', 'right', 'bottom', 'left'] as const;
 const props = defineProps<{locale: Locale}>();
-const options = {placement: 'right', strategy: 'fixed', whileElementsMounted: autoUpdate} as const;
+const options = {placement: 'right', strategy: 'fixed', transform: false, whileElementsMounted: autoUpdate} as const;
 const plugins = [click(), dismiss(), role({role: 'dialog'})];
 </script>
 

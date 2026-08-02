@@ -36,7 +36,10 @@ const {locale = 'en'} = Astro.props as {locale?: Locale};
   import {initializeExample} from './initialize-example';
   initializeExample('sheet', (scope) => {
     const sheet = FloatingRootElement.query(scope, '[data-sheet-root]');
-    sheet.configure({plugins: [click(), dismiss(), role({role: 'dialog'})]});
+    sheet.transform = false;
+    sheet.configure({
+      plugins: [click(), dismiss(), role({role: 'dialog'})],
+    });
     const panel = sheet.querySelector<HTMLDialogElement>('[slot="floating"]');
     scope.querySelectorAll<HTMLButtonElement>('[data-sheet-side]').forEach((button) => {
       button.addEventListener('click', () => {

@@ -42,13 +42,13 @@ or coordinates. It writes the reference-aware origin directly to the floating
 element, including aligned, shifted, and virtual references:
 
 ```ts
-import {flip, offset, shift, transformOrigin} from '@floating-ui-plus/web';
+import { flip, offset, shift, transformOrigin } from "@floating-ui-plus/web";
 
 const middleware = [
   offset(8),
   flip(),
-  shift({padding: 12}),
-  transformOrigin({padding: 8}),
+  shift({ padding: 12 }),
+  transformOrigin({ padding: 8 }),
 ];
 ```
 
@@ -236,6 +236,11 @@ state completes. This is the flexible fallback for animation systems that need
 JavaScript-controlled presence, but it also requires a duration to coordinate
 unmounting. Prefer the native CSS path above for native Popover and dialog
 surfaces because CSS remains the single source of truth.
+
+The [Toast demo](/docs/guides/demo/toast) uses this custom-presence path. Its
+stack CSS consumes `data-status` from `FloatingTransition` or
+`useFloatingTransition`, while application state supplies the independent
+expanded and behind-item states.
 
 An extra overlay component is not required for a Popover exit. In this context,
 `overlay` is the browser-managed CSS property that represents top-layer

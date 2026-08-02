@@ -79,6 +79,13 @@ export const EXAMPLES = [
     description:
       'Build a mobile-friendly edge sheet with native dialog focus, dismissal, and a scrollable body.',
   },
+  {
+    id: 'toast',
+    label: 'Toast',
+    heading: 'Feedback that<br /><span>does not interrupt.</span>',
+    description:
+      'Create timed notifications that stack, pause while being inspected, and leave with a controlled transition.',
+  },
 ] as const;
 
 export type ExampleId = (typeof EXAMPLES)[number]['id'];

@@ -171,6 +171,79 @@ test('opens the Vue edge sheet as a modal and restores focus on Escape', async (
   await expect(trigger).toBeFocused();
 });
 
+test('places every Vue sheet side on the viewport edge after reopening', async ({
+  page,
+}) => {
+  await page.goto('/sheet?framework=vue');
+  const demo = page.locator('[data-framework-panel="vue"]');
+  const trigger = demo.getByRole('button', {name: /Open activity sheet/});
+  const sheet = demo.getByRole('dialog', {name: 'Activity digest'});
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+
+  for (const side of ['top', 'right', 'bottom', 'left'] as const) {
+    await demo
+      .getByRole('button', {name: new RegExp(`^${side}$`, 'i')})
+      .click();
+    for (let opening = 0; opening < 2; opening++) {
+      await trigger.click();
+      await expect(sheet).toBeVisible();
+      await expect(sheet).toHaveAttribute('data-side', side);
+      await expect
+        .poll(async () => {
+          const current = await sheet.boundingBox();
+          if (!current) return Number.POSITIVE_INFINITY;
+          if (side === 'top') return Math.abs(current.y);
+          if (side === 'right') {
+            return Math.abs(viewport!.width - current.x - current.width);
+          }
+          if (side === 'bottom') {
+            return Math.abs(viewport!.height - current.y - current.height);
+          }
+          return Math.abs(current.x);
+        })
+        .toBeLessThanOrEqual(1);
+      const box = await sheet.boundingBox();
+      expect(box).not.toBeNull();
+      if (side === 'top') {
+        expect(box!.width).toBeCloseTo(viewport!.width, 0);
+      } else if (side === 'right') {
+        expect(box!.height).toBeCloseTo(viewport!.height, 0);
+      } else if (side === 'bottom') {
+        expect(box!.width).toBeCloseTo(viewport!.width, 0);
+      } else {
+        expect(box!.height).toBeCloseTo(viewport!.height, 0);
+      }
+      await sheet.getByRole('button', {name: 'Close sheet'}).click();
+      await expect(sheet).toBeHidden();
+    }
+  }
+});
+
+test('stacks, pauses, focuses, and dismisses Vue toasts', async ({page}) => {
+  await page.goto('/toast?framework=vue');
+  const create = page.getByRole('button', {name: /Create notification/});
+  const viewport = page.getByRole('region', {name: 'Notifications'});
+
+  await create.click();
+  await create.click();
+  await expect(viewport.locator('.toast-item')).toHaveCount(2);
+  await expect(viewport.locator('.toast-item').first()).toHaveAttribute(
+    'data-status',
+    'open',
+  );
+
+  await viewport.locator('.toast-item').first().hover();
+  await expect(viewport).toHaveAttribute('data-expanded', '');
+  await page.keyboard.press('F6');
+  await expect(viewport).toBeFocused();
+
+  await viewport.getByRole('button', {name: 'Dismiss notification 1'}).click();
+  await expect(
+    viewport.getByRole('button', {name: 'Dismiss notification 1'}),
+  ).toHaveCount(0);
+});
+
 test('routes to individual Vue examples and the middleware lab', async ({
   page,
 }) => {

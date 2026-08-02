@@ -10,5 +10,6 @@
   "example_placement_build": "하나의 제품 결정이 플로팅 표면을 즉시 갱신하는 배치 실험실을 만들었습니다.",
   "example_middleware_build": "각 레이아웃 제약의 효과를 실제 동작으로 확인할 수 있게 만들었습니다.",
   "example_modal_build": "inert 주변부, 스크롤 잠금, 포커스 복귀, 순서 있는 Escape dismiss를 갖춘 계층형 다이얼로그를 만들었습니다.",
-  "example_sheet_build": "모바일에서도 다음 행동을 놓치지 않도록 집중·닫기·읽기 흐름을 유지합니다."
+  "example_sheet_build": "모바일에서도 다음 행동을 놓치지 않도록 집중·닫기·읽기 흐름을 유지합니다.",
+  "example_toast_build": "포커스를 빼앗지 않고 알림 스택, 일시정지 가능한 타이머, 닫기, 정중한 안내를 조율합니다."
 }

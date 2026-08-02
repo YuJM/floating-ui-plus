@@ -38,20 +38,39 @@ Escape and the explicit close controls use the same close-request path. Set
 ```
 
 ```js
+root.transform = false;
 root.configure({ plugins: [click(), dismiss(), role({ role: "dialog" })] });
 ```
 
-Native dialog transitions should use the platform's discrete transition support,
-so `close()` remains immediate while CSS keeps the visual surface and backdrop
-present until the transition completes.
+An edge Sheet is positioned by viewport insets rather than reference
+coordinates. Disable Floating UI's transform positioning as shown above. In
+Vue, pass the equivalent option to `FloatingRoot`:
+
+```vue
+<FloatingRoot
+  v-model:open="open"
+  :options="{ placement: 'right', strategy: 'fixed', transform: false }"
+  :plugins="plugins"
+>
+  <FloatingContent as="dialog" class="sheet" :data-side="side" />
+</FloatingRoot>
+```
+
+Native dialog transitions should use the platform's discrete transition
+support, so `close()` remains immediate while CSS keeps the visual surface and
+backdrop present until the transition completes.
 
 ```css
 .sheet {
-  --surface-motion-start-x: 1.5rem;
+  position: fixed;
+  margin: 0;
+
+  --surface-motion-start-x: 100%;
   --surface-motion-start-y: 0px;
   --surface-motion-enter-duration: 240ms;
   --surface-motion-exit-duration: 180ms;
   --surface-motion-easing: cubic-bezier(0.32, 0.72, 0, 1);
+
   opacity: 0;
   translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
   transition:
@@ -67,16 +86,84 @@ present until the transition completes.
   transition-duration: var(--surface-motion-enter-duration);
 }
 
+.sheet[data-side="top"] {
+  inset: 0 0 auto 0;
+  width: 100%;
+  height: min(34rem, 78dvh);
+  --surface-motion-start-x: 0px;
+  --surface-motion-start-y: -100%;
+}
+
+.sheet[data-side="right"] {
+  inset: 0 0 0 auto;
+  width: min(25rem, 100vw);
+  height: 100dvh;
+}
+
+.sheet[data-side="bottom"] {
+  inset: auto 0 0 0;
+  width: 100%;
+  height: min(34rem, 78dvh);
+  --surface-motion-start-x: 0px;
+  --surface-motion-start-y: 100%;
+}
+
+.sheet[data-side="left"] {
+  inset: 0 auto 0 0;
+  width: min(25rem, 100vw);
+  height: 100dvh;
+  --surface-motion-start-x: -100%;
+  --surface-motion-start-y: 0px;
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0%);
+  transition:
+    background-color var(--surface-motion-exit-duration)
+      var(--surface-motion-easing),
+    display var(--surface-motion-exit-duration) allow-discrete,
+    overlay var(--surface-motion-exit-duration) allow-discrete;
+}
+
+.sheet:open::backdrop {
+  background: rgb(0 0 0 / 16%);
+}
+
 @starting-style {
   .sheet:open {
     opacity: 0;
     translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
   }
+
+  .sheet:open::backdrop {
+    background: rgb(0 0 0 / 0%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    --surface-motion-start-x: 0px;
+    --surface-motion-start-y: 0px;
+    transition-duration: 80ms;
+  }
 }
 ```
 
-The four demo directions only override `--surface-motion-start-x` and
-`--surface-motion-start-y`, keeping the lifecycle CSS shared.
+Each direction owns both its physical viewport inset and its travel vector.
+Using physical `top`, `right`, `bottom`, and `left` properties makes the edge
+contract explicit. If a shared component-layer rule uses `!important`, keep
+these directional overrides in that same cascade layer so a base inset cannot
+win unexpectedly.
 
-The Vue example uses the same attributes on
-`<FloatingContent as="dialog">` and the same `dismiss()` behavior.
+The `display` and `overlay` transitions are required for native exit motion.
+They keep the closing dialog in layout and in the top layer while `opacity`,
+`translate`, and `::backdrop` finish. Without a supported discrete transition,
+the Sheet still closes correctly; it simply closes without the exit motion.
+
+The Web Components example sets `root.transform = false`; Vue sets
+`transform: false` inside `options`. Both ultimately render the same native
+`<dialog>` and use the same side, open-state, backdrop, `dismiss()`, and
+reduced-motion CSS.
+
+For the general native Popover/dialog lifecycle and browser support notes, see
+[Entry and exit animation](/docs/guides/animation).

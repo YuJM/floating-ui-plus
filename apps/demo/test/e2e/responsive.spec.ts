@@ -12,6 +12,7 @@ const examples = [
   'middleware',
   'modal',
   'sheet',
+  'toast',
 ] as const;
 const localizedRoutes = locales.flatMap((locale) => [
   `/${locale}`,
@@ -71,8 +72,8 @@ test('pattern picker constrains a short mobile viewport and exposes every exampl
     await panel.evaluate((element) => element.scrollHeight > element.clientHeight),
   ).toBe(true);
 
-  const lastExample = panel.locator('[data-example-link="modal"]');
+  const lastExample = panel.locator('[data-example-link="toast"]');
   await lastExample.scrollIntoViewIfNeeded();
   await lastExample.click();
-  await expect(page).toHaveURL(/\/modal\?framework=wc$/);
+  await expect(page).toHaveURL(/\/toast\?framework=wc$/);
 });
