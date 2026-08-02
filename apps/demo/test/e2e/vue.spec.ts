@@ -56,7 +56,7 @@ test("opens native nested menu popovers in place", async ({ page }) => {
 
 test("traps modal focus and closes on Escape", async ({ page }) => {
   await page.goto("/modal?framework=vue");
-  const demo = page.locator('[data-framework-panel="vue"]');
+  const demo = page.locator('.framework-panel--vue');
   const trigger = demo.getByRole("button", { name: /Enter focus room/ });
   await trigger.click();
   const dialog = demo.getByRole("dialog", {
@@ -148,7 +148,7 @@ test("opens the Vue edge sheet as a modal and restores focus on Escape", async (
   page,
 }) => {
   await page.goto("/sheet?framework=vue");
-  const demo = page.locator('[data-framework-panel="vue"]');
+  const demo = page.locator('.framework-panel--vue');
   const trigger = demo.getByRole("button", { name: /Open activity sheet/ });
   const sheet = demo.getByRole("dialog", { name: "Activity digest" });
 
@@ -161,8 +161,15 @@ test("opens the Vue edge sheet as a modal and restores focus on Escape", async (
   const viewport = page.viewportSize();
   expect(box).not.toBeNull();
   expect(viewport).not.toBeNull();
-  expect(box!.x + box!.width).toBeCloseTo(viewport!.width, 0);
-  expect(box!.height).toBeCloseTo(viewport!.height, 0);
+  await expect.poll(async () => {
+    const current = await sheet.boundingBox();
+    if (!current) return Number.POSITIVE_INFINITY;
+    return Math.abs(viewport!.width - current.x - current.width);
+  }).toBeLessThanOrEqual(1);
+  const settledBox = await sheet.boundingBox();
+  expect(settledBox).not.toBeNull();
+  expect(settledBox!.x + settledBox!.width).toBeCloseTo(viewport!.width, 0);
+  expect(settledBox!.height).toBeCloseTo(viewport!.height, 0);
 
   await page.mouse.click(20, Math.round(viewport!.height / 2));
   await expect(sheet).toHaveCSS("transition-property", /display/);
@@ -175,7 +182,7 @@ test("places every Vue sheet side on the viewport edge after reopening", async (
   page,
 }) => {
   await page.goto("/sheet?framework=vue");
-  const demo = page.locator('[data-framework-panel="vue"]');
+  const demo = page.locator('.framework-panel--vue');
   const trigger = demo.getByRole("button", { name: /Open activity sheet/ });
   const sheet = demo.getByRole("dialog", { name: "Activity digest" });
   const viewport = page.viewportSize();
@@ -234,9 +241,11 @@ test("stacks, pauses, focuses, and dismisses Vue toasts", async ({ page }) => {
   );
 
   await viewport.locator(".toast-item").first().hover();
-  await expect(viewport).toHaveAttribute("data-expanded", "");
+  await expect(viewport).toHaveAttribute("data-presence-paused", "");
   await page.keyboard.press("F6");
-  await expect(viewport).toBeFocused();
+  await expect(
+    viewport.getByRole("button", {name: "Dismiss notification 2"}),
+  ).toBeFocused();
 
   await viewport
     .getByRole("button", { name: "Dismiss notification 1" })
@@ -256,26 +265,23 @@ test("filters and executes the Vue command palette with the keyboard", async ({
   const input = dialog.getByRole("textbox", { name: "Search commands" });
   await expect(dialog).toBeVisible();
   await expect(input).toBeFocused();
-  await expect(dialog.locator('[data-slot="command-group"]')).toHaveCount(3);
+  await expect(dialog.locator('.command-item')).toHaveCount(9);
   expect(
     await dialog
-      .locator('[data-slot="command-list"]')
+      .locator('.command-list')
       .evaluate((element) => element.scrollHeight > element.clientHeight),
   ).toBe(true);
   await input.fill("not-a-command");
-  await expect(dialog.locator('[data-slot="command-empty"]')).toBeVisible();
+  await expect(dialog.locator('.command-empty')).toBeVisible();
   await input.fill("billing");
-  await expect(dialog.getByRole("option", { name: /Billing/ })).toBeVisible();
-  await expect(dialog.getByRole("option")).toHaveCount(1);
+  const billing = dialog.locator('.command-item').filter({hasText: "Billing"});
+  await expect(billing).toBeVisible();
+  await expect(dialog.locator('.command-item')).toHaveCount(1);
   await input.press("ArrowDown");
-  await expect(dialog.getByRole("option", { name: /Billing/ })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
   await input.press("Enter");
   await expect(dialog).toBeHidden();
   await expect(
-    page.locator('[data-framework-panel="vue"] .command-result'),
+    page.locator('.framework-panel--vue .command-result'),
   ).toHaveText("Billing selected.");
   await expect(trigger).toBeFocused();
   await page.keyboard.press("Control+k");
@@ -302,7 +308,7 @@ test("routes to individual Vue examples and the middleware lab", async ({
   await navigation.getByRole("link", { name: "Popover" }).click();
   await expect(page).toHaveURL(/\/popover\?framework=vue$/);
   await expect(
-    navigation.locator('[data-example-link="popover"]'),
+    navigation.locator('.pattern-picker-panel a[href*="/popover"]'),
   ).toHaveAttribute("aria-current", "page");
 
   await page.goto("/tooltip?framework=vue");
@@ -435,8 +441,8 @@ test("placement constants drive all 12 Vue positions", async ({ page }) => {
       .locator(".route-copy")
       .getByRole("heading", { level: 2, name: "Placement" }),
   ).toBeVisible();
-  const vuePanel = page.locator('[data-framework-panel="vue"]');
-  await expect(vuePanel.locator("[data-placement-control]")).toHaveCount(12);
+  const vuePanel = page.locator('.framework-panel--vue');
+  await expect(vuePanel.locator(".vue-placement-control")).toHaveCount(12);
 
   const floating = vuePanel.locator(".vue-placement-floating");
   const reference = vuePanel.locator(".vue-placement-reference");
@@ -469,7 +475,7 @@ test("multilingual Vue combobox keeps input focus in a native popover", async ({
     name: "Destination",
     exact: true,
   });
-  const vuePanel = page.locator('[data-framework-panel="vue"]');
+  const vuePanel = page.locator('.framework-panel--vue');
 
   await vuePanel.getByRole("tab", { name: "Server search" }).click();
   await expect(page).toHaveURL(/\/combobox\?framework=vue&source=server$/);

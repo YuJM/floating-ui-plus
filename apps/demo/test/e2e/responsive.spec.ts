@@ -73,7 +73,7 @@ test('pattern picker constrains a short mobile viewport and exposes every exampl
     await panel.evaluate((element) => element.scrollHeight > element.clientHeight),
   ).toBe(true);
 
-  const lastExample = panel.locator('[data-example-link="command"]');
+  const lastExample = panel.locator('a[href*="/command"]');
   await lastExample.scrollIntoViewIfNeeded();
   await lastExample.click();
   await expect(page).toHaveURL(/\/command\?framework=wc$/);
