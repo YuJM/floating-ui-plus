@@ -1,5 +1,11 @@
 # @floating-ui-plus/web
 
+## 0.8.1
+
+### Patch Changes
+
+- e3dff0f: Preserve authored Popover insets and connect presence-stack top-layer surfaces after they are mounted, fixing native Popover toast geometry in Safari. Dynamic result items now also keep their rendered option IDs in sync with `aria-activedescendant` while prior items disconnect.
+
 ## 0.8.0
 
 ### Minor Changes

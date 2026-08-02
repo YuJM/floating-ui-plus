@@ -1,5 +1,12 @@
 # @floating-ui-plus/vue
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [e3dff0f]
+  - @floating-ui-plus/web@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes
