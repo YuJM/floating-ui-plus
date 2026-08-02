@@ -48,6 +48,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
     role,
     safePolygon,
     shift,
+    transformOrigin,
   } from '@floating-ui-plus/web-components';
   import {TOOLTIP_ARROW} from '../../example-config';
   import {initializeExample} from './initialize-example';
@@ -59,6 +60,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
         offset(TOOLTIP_ARROW.gap),
         flip(),
         shift({padding: 12}),
+        transformOrigin({padding: 8}),
       ],
       plugins: [
         hover({handleClose: safePolygon({buffer: 4})}),
@@ -74,6 +76,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
         flip(),
         shift({padding: 12}),
         ...(arrowElement ? [arrow({element: arrowElement})] : []),
+        transformOrigin({padding: 8}),
       ];
     });
   });

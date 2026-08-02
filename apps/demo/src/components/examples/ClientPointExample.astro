@@ -34,6 +34,7 @@
     offset,
     role,
     shift,
+    transformOrigin,
   } from '@floating-ui-plus/web-components';
   import {initializeExample} from './initialize-example';
 
@@ -47,7 +48,12 @@
     if (!field || !label) return;
 
     floating.configure({
-      middleware: [offset(16), flip(), shift({padding: 18})],
+      middleware: [
+        offset(16),
+        flip(),
+        shift({padding: 18}),
+        transformOrigin({padding: 8}),
+      ],
       plugins: [
         hover({move: true}),
         clientPoint(),

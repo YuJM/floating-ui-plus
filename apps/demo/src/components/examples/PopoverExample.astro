@@ -35,13 +35,19 @@
     flip,
     offset,
     shift,
+    transformOrigin,
   } from '@floating-ui-plus/web-components';
   import {initializeExample} from './initialize-example';
 
   initializeExample('popover', (scope) => {
     const floating = FloatingRootElement.query(scope, '[data-popover-root]');
     floating.configure({
-      middleware: [offset(12), flip(), shift({padding: 18})],
+      middleware: [
+        offset(12),
+        flip(),
+        shift({padding: 18}),
+        transformOrigin({padding: 12}),
+      ],
     });
   });
 </script>

@@ -12,6 +12,7 @@ import {
   offset,
   role,
   shift,
+  transformOrigin,
 } from '@floating-ui-plus/vue';
 import {ref} from 'vue';
 
@@ -19,7 +20,12 @@ const open = ref(false);
 const label = ref('Awaiting pointer');
 const options = {
   placement: 'top',
-  middleware: [offset(16), flip(), shift({padding: 18})],
+  middleware: [
+    offset(16),
+    flip(),
+    shift({padding: 18}),
+    transformOrigin({padding: 8}),
+  ],
   whileElementsMounted: autoUpdate,
 } as const;
 const plugins = [

@@ -62,12 +62,18 @@ import {
   offset,
   role,
   shift,
+  transformOrigin,
 } from '@floating-ui-plus/vue';
 
 const open = ref(false);
 const options = {
   placement: 'bottom-start',
-  middleware: [offset(8), flip({padding: 12}), shift({padding: 12})],
+  middleware: [
+    offset(8),
+    flip({padding: 12}),
+    shift({padding: 12}),
+    transformOrigin({padding: 8}),
+  ],
   whileElementsMounted: autoUpdate,
 };
 const plugins = [click(), dismiss(), role({role: 'dialog'})];
@@ -115,6 +121,7 @@ immediately.
 .floating-panel {
   opacity: 0;
   translate: 0 -0.25rem;
+  transform-origin: var(--floating-transform-origin, 50% 0%);
   transition:
     opacity 120ms cubic-bezier(0.23, 1, 0.32, 1),
     translate 120ms cubic-bezier(0.23, 1, 0.32, 1),
@@ -134,6 +141,15 @@ immediately.
   }
 }
 ```
+
+`transformOrigin()` writes the CSS variable from the final placement and
+reference geometry. Keep it after placement-changing middleware; the CSS
+fallback remains valid when it is omitted.
+
+For a fixed placement, you may omit the middleware and define
+`transform-origin` in CSS. CSS alone cannot observe `flip()` or `shift()`
+results, so use `transformOrigin()` whenever the surface can move to another
+side or alignment.
 
 Do not wrap an animated native surface in `v-if`; removing it bypasses the CSS
 exit. Reopening cancels a pending hide. For `top-layer="none"`, use

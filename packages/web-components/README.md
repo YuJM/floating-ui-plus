@@ -77,12 +77,18 @@ import {
   flip,
   offset,
   shift,
+  transformOrigin,
   type FloatingRootElement,
 } from '@floating-ui-plus/web-components';
 
 const root = document.querySelector<FloatingRootElement>('floating-root')!;
 root.configure({
-  middleware: [offset(8), flip({padding: 12}), shift({padding: 12})],
+  middleware: [
+    offset(8),
+    flip({padding: 12}),
+    shift({padding: 12}),
+    transformOrigin({padding: 8}),
+  ],
 });
 ```
 
@@ -102,6 +108,7 @@ unhidden through the exit transition and is hidden after `transitionend`.
 .floating-panel {
   opacity: 0;
   translate: 0 -0.25rem;
+  transform-origin: var(--floating-transform-origin, 50% 0%);
   transition:
     opacity 120ms cubic-bezier(0.23, 1, 0.32, 1),
     translate 120ms cubic-bezier(0.23, 1, 0.32, 1),
@@ -121,6 +128,15 @@ unhidden through the exit transition and is hidden after `transitionend`.
   }
 }
 ```
+
+`transformOrigin()` writes the CSS variable from the final placement and
+reference geometry. Keep it after placement-changing middleware; the CSS
+fallback remains valid when it is omitted.
+
+For a fixed placement, you may omit the middleware and define
+`transform-origin` in CSS. CSS alone cannot observe `flip()` or `shift()`
+results, so use `transformOrigin()` whenever the surface can move to another
+side or alignment.
 
 Template content stays mounted only while the native exit is running, and a
 reopen cancels the pending unmount. Use `<floating-transition>` for a custom

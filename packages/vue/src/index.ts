@@ -77,6 +77,7 @@ export {
   shift,
   size,
   supportsFloatingTopLayer,
+  transformOrigin,
 } from '@floating-ui-plus/web';
 export type {
   ClickOptions,
@@ -158,6 +159,8 @@ export type {
   SafePolygonOptions,
   TransitionStatus,
   TransitionStyles,
+  TransformOriginData,
+  TransformOriginOptions,
   TypeaheadOptions,
   ValueOrGetter,
   WhileElementsMounted,

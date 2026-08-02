@@ -5,4 +5,5 @@
 ---
 
 Support CSS discrete entry and exit transitions for native Popover and dialog
-top-layer surfaces without JavaScript animation timers.
+top-layer surfaces without JavaScript animation timers, and add a
+`transformOrigin()` middleware for reference-aware surface motion.

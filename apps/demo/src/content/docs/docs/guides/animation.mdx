@@ -37,6 +37,21 @@ Style the closed state on the surface, the open state with `:popover-open`, and
 include discrete transitions for `display` and `overlay`. This is the
 recommended option when entry and exit motion are useful:
 
+Add `transformOrigin()` after middleware that can change the final placement
+or coordinates. It writes the reference-aware origin directly to the floating
+element, including aligned, shifted, and virtual references:
+
+```ts
+import {flip, offset, shift, transformOrigin} from '@floating-ui-plus/web';
+
+const middleware = [
+  offset(8),
+  flip(),
+  shift({padding: 12}),
+  transformOrigin({padding: 8}),
+];
+```
+
 ```css
 .floating-panel {
   --surface-motion-start-x: 0px;
@@ -50,7 +65,10 @@ recommended option when entry and exit motion are useful:
   opacity: 0;
   translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
   scale: var(--surface-motion-start-scale);
-  transform-origin: var(--surface-motion-origin);
+  transform-origin: var(
+    --floating-transform-origin,
+    var(--surface-motion-origin)
+  );
   transition:
     opacity var(--surface-motion-exit-duration) var(--surface-motion-easing),
     translate var(--surface-motion-exit-duration) var(--surface-motion-easing),
@@ -75,20 +93,51 @@ recommended option when entry and exit motion are useful:
 }
 ```
 
-These are application CSS variables, not required package options. Override
-them per surface to keep the motion spatially connected to its reference. A
-surface above its reference should begin slightly below its resting position
-and scale from its bottom edge; reverse those values for a surface below:
+`--floating-transform-origin` is written by the middleware. The nested
+`--surface-motion-origin` fallback keeps the CSS usable when the middleware is
+omitted. The other variables are application motion tokens; placement
+selectors only choose the short travel direction:
+
+### CSS-only origin
+
+When the placement is fixed, no middleware is required. Set the origin in CSS
+and optionally expose a side attribute from your own renderer:
+
+```css
+.floating-panel {
+  --surface-motion-origin: 50% 0%;
+  transform-origin: var(--surface-motion-origin);
+}
+
+.floating-panel[data-side="top"] {
+  --surface-motion-origin: 50% 100%;
+}
+
+.floating-panel[data-side="right"] {
+  --surface-motion-origin: 0% 50%;
+}
+
+.floating-panel[data-side="bottom"] {
+  --surface-motion-origin: 50% 0%;
+}
+
+.floating-panel[data-side="left"] {
+  --surface-motion-origin: 100% 50%;
+}
+```
+
+CSS cannot observe the final placement selected by `flip()` or the shifted
+coordinates produced by `shift()`. Use `transformOrigin()` when the surface
+can move or flip; omit it when a fixed placement and a CSS-defined origin are
+enough.
 
 ```css
 .floating-panel[data-placement^="top"] {
   --surface-motion-start-y: 0.25rem;
-  --surface-motion-origin: 50% 100%;
 }
 
 .floating-panel[data-placement^="bottom"] {
   --surface-motion-start-y: -0.25rem;
-  --surface-motion-origin: 50% 0%;
 }
 ```
 

@@ -13,6 +13,7 @@ import {
   role,
   size,
   shift,
+  transformOrigin,
 } from '@floating-ui-plus/vue';
 import {ref} from 'vue';
 import {MENU_LABELS} from '../../example-data';
@@ -35,6 +36,7 @@ const options = {
         );
       },
     }),
+    transformOrigin({padding: 12}),
   ],
   whileElementsMounted: autoUpdate,
 } as const;

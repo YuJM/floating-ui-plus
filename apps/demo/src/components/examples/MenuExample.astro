@@ -65,6 +65,7 @@ import {MENU_LABELS} from '../../example-data';
     offset,
     size,
     shift,
+    transformOrigin,
   } from '@floating-ui-plus/web-components';
   import {initializeExample} from './initialize-example';
 
@@ -85,6 +86,7 @@ import {MENU_LABELS} from '../../example-data';
             );
           },
         }),
+        transformOrigin({padding: 12}),
       ],
     });
   });

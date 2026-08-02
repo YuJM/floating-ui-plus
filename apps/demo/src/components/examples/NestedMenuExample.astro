@@ -119,6 +119,7 @@ import {
     safePolygon,
     size,
     shift,
+    transformOrigin,
   } from '@floating-ui-plus/web-components';
   import {initializeExample} from './initialize-example';
 
@@ -141,6 +142,7 @@ import {
             );
           },
         }),
+        transformOrigin({padding: 12}),
       ],
       plugins: [
         click(),
@@ -171,6 +173,7 @@ import {
               );
             },
           }),
+          transformOrigin({padding: 12}),
         ],
         plugins: [
           click(),

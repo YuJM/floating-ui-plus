@@ -34,6 +34,7 @@ import {
   hover,
   offset,
   role,
+  transformOrigin,
 } from "@floating-ui-plus/web";
 
 let open = false;
@@ -44,7 +45,7 @@ const tooltip = createFloating(() => ({
     open = nextOpen;
     render();
   },
-  middleware: [offset(6)],
+  middleware: [offset(6), transformOrigin({ padding: 8 })],
   whileElementsMounted: autoUpdate,
 })).pipe(hover(), focus(), dismiss(), role({ role: "tooltip" }));
 
@@ -60,6 +61,17 @@ tooltip.connect();
 `.pipe()`—for example `click()`, `hover()`, `focus()`, `dismiss()`, `role()`,
 `listNavigation()`, and `typeahead()`—then apply the controller's positioning
 styles and attributes in your renderer.
+
+`transformOrigin()` writes `--floating-transform-origin` to the floating
+element from its final placement and reference geometry. Put it after `flip()`,
+`shift()`, and `size()`, then consume it with
+`transform-origin: var(--floating-transform-origin, 50% 0%)`. The fallback
+keeps the surface styled when the middleware is omitted.
+
+For a fixed placement, middleware is optional: set `transform-origin` (or a
+CSS variable such as `--surface-motion-origin`) directly in your stylesheet.
+CSS cannot detect a placement change caused by `flip()` or the final offset
+from `shift()`, so use `transformOrigin()` when the surface can move.
 
 ## Query quick start
 

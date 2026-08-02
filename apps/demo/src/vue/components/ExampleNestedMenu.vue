@@ -17,6 +17,7 @@ import {
   safePolygon,
   size,
   shift,
+  transformOrigin,
 } from '@floating-ui-plus/vue';
 import {ref, watch} from 'vue';
 import {
@@ -45,6 +46,7 @@ const rootOptions = {
         );
       },
     }),
+    transformOrigin({padding: 12}),
   ],
   whileElementsMounted: autoUpdate,
 } as const;
@@ -74,6 +76,7 @@ const projectOptions = {
         );
       },
     }),
+    transformOrigin({padding: 12}),
   ],
   whileElementsMounted: autoUpdate,
 } as const;
