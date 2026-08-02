@@ -1,5 +1,7 @@
 {
   "site_name": "Floating UI Plus Demos",
+  "release_banner_label": "Latest release",
+  "release_banner_link": "View changelog",
   "brand_lede": "Build interfaces ready for your product that work consistently in Web Components and Vue.",
   "language_label": "Language",
   "framework_label": "Implementation",

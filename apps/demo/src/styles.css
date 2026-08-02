@@ -79,18 +79,26 @@ h1,
 
 @layer components {
 floating-ui-demo { @apply block min-h-screen overflow-x-hidden; }
+.release-banner { color: var(--paper); background: var(--ink); }
+.release-banner-label { color: var(--cyan); font: 650 10px/1.2 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.release-banner-version { color: var(--paper); font: 650 12px/1.2 var(--font-mono); }
+.release-banner-summary { min-width: 0; flex: 1 1 18rem; color: color-mix(in srgb, var(--paper) 76%, transparent); font-size: 12px; line-height: 1.4; }
+.release-banner a { flex: none; color: var(--cyan); font-size: 12px; font-weight: 650; text-underline-offset: 3px; }
+.release-banner a:hover { color: white; }
 .demo-shell.is-example .masthead { padding-top: 25px; padding-bottom: 31px; }
 .demo-shell.is-example .masthead h1 { font-size: clamp(52px, 6vw, 82px); }
 .demo-shell.is-example .masthead .lede { max-width: 520px; margin-top: 15px; font-size: 13px; }
 .demo-shell.is-example .integrated-nav { margin-top: -18px; margin-bottom: 0; }
 .global-utilities { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(14px); }
 .demo-shell.is-embedded .global-utilities,
+  .demo-shell.is-embedded .release-banner,
   .demo-shell.is-embedded .masthead,
   .demo-shell.is-embedded .integrated-nav,
   .demo-shell.is-embedded .back-link { display: none;}
 .demo-shell.is-embedded main { padding-top: 0; }
 .demo-shell.is-embedded .route-view { min-height: 0; padding-top: 18px; padding-bottom: 18px; }
 html[data-embed="true"] .demo-shell .global-utilities,
+  html[data-embed="true"] .demo-shell .release-banner,
   html[data-embed="true"] .demo-shell .masthead,
   html[data-embed="true"] .demo-shell .integrated-nav,
   html[data-embed="true"] .demo-shell .back-link { display: none;}

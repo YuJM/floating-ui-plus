@@ -1,0 +1,225 @@
+---
+import {packageChangelogs, type PackageChangelog} from '../../changelog';
+
+interface ChangeGroup {
+  title: string;
+  items: string[];
+}
+
+interface Release {
+  version: string;
+  groups: ChangeGroup[];
+}
+
+function parseChangelog(markdown: string): Release[] {
+  const releases: Release[] = [];
+  let release: Release | undefined;
+  let group: ChangeGroup | undefined;
+
+  const flushGroup = () => {
+    if (release && group) release.groups.push(group);
+    group = undefined;
+  };
+
+  for (const line of markdown.split(/\r?\n/)) {
+    const releaseMatch = line.match(/^##\s+(.+)$/);
+    if (releaseMatch) {
+      flushGroup();
+      release = {version: releaseMatch[1].trim(), groups: []};
+      releases.push(release);
+      continue;
+    }
+
+    const groupMatch = line.match(/^###\s+(.+)$/);
+    if (groupMatch && release) {
+      flushGroup();
+      group = {title: groupMatch[1].trim(), items: []};
+      continue;
+    }
+
+    const itemMatch = line.match(/^-\s+(.+)$/);
+    if (itemMatch && release) {
+      if (!group) group = {title: 'Changes', items: []};
+      group.items.push(itemMatch[1].trim());
+      continue;
+    }
+
+    const continuation = line.match(/^\s{2,}(.+)$/);
+    if (continuation && group?.items.length) {
+      group.items[group.items.length - 1] += ` ${continuation[1].trim()}`;
+    }
+  }
+
+  flushGroup();
+  return releases;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[character] ?? character);
+}
+
+function renderInline(value: string) {
+  const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+  let html = '';
+  let cursor = 0;
+
+  for (const match of value.matchAll(linkPattern)) {
+    const index = match.index ?? 0;
+    html += escapeHtml(value.slice(cursor, index));
+    html += `<a href="${escapeHtml(match[2])}" target="_blank" rel="noreferrer">${escapeHtml(match[1])}</a>`;
+    cursor = index + match[0].length;
+  }
+
+  html += escapeHtml(value.slice(cursor));
+  return html
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function packageSlug(packageInfo: PackageChangelog) {
+  return `changelog-${packageInfo.id}`;
+}
+---
+
+<div class="package-changelog-list">
+  {packageChangelogs.map((packageInfo) => {
+    const releases = parseChangelog(packageInfo.markdown);
+    const packageId = packageSlug(packageInfo);
+
+    return (
+      <section class="package-changelog" aria-labelledby={`${packageId}-title`}>
+        <header class="package-changelog-header">
+          <div>
+            <p class="package-changelog-kicker">Published package</p>
+            <h2 id={`${packageId}-title`}>{packageInfo.name}</h2>
+          </div>
+          <a href={packageInfo.sourceUrl} target="_blank" rel="noreferrer">Source CHANGELOG.md ↗</a>
+        </header>
+        <div class="package-changelog-releases">
+          {releases.map((release) => (
+            <article class="package-changelog-release" id={`${packageId}-${release.version.replaceAll('.', '-')}`}>
+              <h3>{release.version}</h3>
+              {release.groups.map((changeGroup) => (
+                <section class="package-changelog-group">
+                  <h4>{changeGroup.title}</h4>
+                  <ul>
+                    {changeGroup.items.map((item) => <li set:html={renderInline(item)} />)}
+                  </ul>
+                </section>
+              ))}
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  })}
+</div>
+
+<style>
+  .package-changelog-list {
+    display: grid;
+    gap: 3rem;
+  }
+
+  .package-changelog {
+    overflow: hidden;
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.9rem;
+    background: color-mix(in srgb, var(--sl-color-bg-nav) 72%, transparent);
+    box-shadow: var(--sl-shadow-sm);
+  }
+
+  .package-changelog-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.3rem 1.35rem 1.15rem;
+    border-bottom: 1px solid var(--sl-color-hairline);
+    background: color-mix(in srgb, var(--sl-color-bg-inline-code) 44%, transparent);
+  }
+
+  .package-changelog-kicker {
+    margin: 0 0 0.35rem;
+    color: var(--sl-color-text-accent);
+    font: 650 var(--sl-text-xs) / 1.2 var(--sl-font-mono);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .package-changelog-header h2 {
+    margin: 0;
+    font: 650 1.25rem / 1.2 var(--sl-font-mono);
+    letter-spacing: -0.035em;
+    overflow-wrap: anywhere;
+  }
+
+  .package-changelog-header a {
+    flex: none;
+    color: var(--sl-color-text-accent);
+    font-size: var(--sl-text-xs);
+    text-underline-offset: 0.2em;
+  }
+
+  .package-changelog-releases {
+    display: grid;
+  }
+
+  .package-changelog-release {
+    padding: 1.4rem 1.35rem 1.55rem;
+    border-bottom: 1px solid var(--sl-color-hairline);
+    scroll-margin-top: calc(var(--sl-nav-height) + 1rem);
+  }
+
+  .package-changelog-release:last-child {
+    border-bottom: 0;
+  }
+
+  .package-changelog-release h3 {
+    margin: 0;
+    color: var(--sl-color-white);
+    font: 700 1.35rem / 1.2 var(--sl-font-mono);
+    letter-spacing: -0.04em;
+  }
+
+  .package-changelog-group {
+    margin-top: 1.3rem;
+  }
+
+  .package-changelog-group h4 {
+    margin: 0 0 0.55rem;
+    color: var(--sl-color-text-accent);
+    font-size: var(--sl-text-sm);
+    letter-spacing: 0.01em;
+  }
+
+  .package-changelog-group ul {
+    margin: 0;
+  }
+
+  .package-changelog-group li {
+    margin-top: 0.55rem;
+    line-height: 1.65;
+  }
+
+  .package-changelog-group li:first-child {
+    margin-top: 0;
+  }
+
+  .package-changelog-group li :global(code) {
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 38rem) {
+    .package-changelog-header {
+      align-items: start;
+      flex-direction: column;
+    }
+  }
+</style>

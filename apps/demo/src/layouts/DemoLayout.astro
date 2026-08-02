@@ -8,6 +8,7 @@ import {getRelativeLocaleUrl} from '../locale-url';
 import * as m from '../paraglide/messages';
 import {getExamples, type Locale} from '../i18n';
 import {EXAMPLE_ICONS} from '../example-icons';
+import {latestRelease} from '../changelog';
 import '../styles.css';
 import '../vue/styles.css';
 
@@ -67,6 +68,14 @@ const metadata = {
   </head>
   <body>
     <floating-ui-demo class:list={['demo-shell', example ? 'is-example' : 'is-home', isEmbed && 'is-embedded']}>
+    <aside class="release-banner" aria-label={m.release_banner_label(undefined, options)}>
+      <div class="container mx-auto flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-2.5 sm:px-8">
+        <span class="release-banner-label">{m.release_banner_label(undefined, options)}</span>
+        <span class="release-banner-version">v{latestRelease.version}</span>
+        <span class="release-banner-summary">{latestRelease.summary}</span>
+        <a href="/changelog">{m.release_banner_link(undefined, options)} <span aria-hidden="true">↗</span></a>
+      </div>
+    </aside>
     <div class="global-utilities border-b border-border/70 bg-surface/60">
       <div class="container mx-auto flex items-center justify-end gap-3 px-5 py-3 sm:px-8">
         <a class="docs-nav-link" href="/docs">Docs</a>

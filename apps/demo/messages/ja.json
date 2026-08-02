@@ -1,5 +1,7 @@
 {
   "site_name": "Floating UI Plus デモ",
+  "release_banner_label": "最新リリース",
+  "release_banner_link": "変更履歴を見る",
   "brand_lede": "Web Components と Vue で一貫して動く、プロダクトですぐに使えるインターフェースを構築します。",
   "language_label": "言語",
   "framework_label": "実装",

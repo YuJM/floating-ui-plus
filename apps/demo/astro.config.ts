@@ -43,6 +43,7 @@ export default defineConfig({
       },
       sidebar: [
         {label: 'Introduction', items: [{slug: 'docs'}]},
+        {label: 'Release notes', items: [{slug: 'changelog'}]},
         {label: 'Getting started', items: [{slug: 'docs/getting-started'}]},
         {
           label: 'Installation',

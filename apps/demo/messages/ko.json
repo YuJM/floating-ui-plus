@@ -1,5 +1,7 @@
 {
   "site_name": "Floating UI Plus 데모",
+  "release_banner_label": "최신 릴리스",
+  "release_banner_link": "변경 기록 보기",
   "brand_lede": "Web Components와 Vue에서 일관되게 동작하는, 제품에 바로 쓸 수 있는 인터페이스를 만드세요.",
   "language_label": "언어",
   "framework_label": "구현 방식",
