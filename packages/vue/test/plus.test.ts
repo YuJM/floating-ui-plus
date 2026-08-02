@@ -553,6 +553,26 @@ describe('Floating UI Plus Vue adapter', () => {
     });
   });
 
+  test('keeps an application-provided floating content id', async () => {
+    const App = defineComponent(() => () =>
+      h(FloatingRoot, {open: true}, {
+        default: () => [
+          h(FloatingReference, {'data-testid': 'reference'}, {default: () => 'Open'}),
+          h(FloatingContent, {id: 'account-panel', 'data-testid': 'content'}, {default: () => 'Content'}),
+        ],
+      }),
+    );
+
+    const {getByTestId} = render(App);
+    await waitFor(() => {
+      expect(getByTestId('content')).toHaveAttribute('id', 'account-panel');
+      expect(getByTestId('reference')).toHaveAttribute(
+        'aria-controls',
+        'account-panel',
+      );
+    });
+  });
+
   test('keeps native popover content mounted but hidden without exit CSS', async () => {
     if (!supportsFloatingTopLayer('popover')) return;
     const open = ref(false);

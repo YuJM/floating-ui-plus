@@ -203,10 +203,21 @@ export class FloatingRootRuntime {
       this.setReferenceElement(nextReference);
     }
 
-    this.#setSlottedFloatingElement(
-      nextFloating instanceof HTMLElement ? nextFloating : null,
-    );
+    const slottedFloating =
+      nextFloating instanceof HTMLElement &&
+      !this.#isStructuralFloatingComponent(nextFloating)
+        ? nextFloating
+        : null;
+    this.#setSlottedFloatingElement(slottedFloating);
     this.syncBindings();
+  }
+
+  #isStructuralFloatingComponent(element: HTMLElement) {
+    return (
+      element.localName.startsWith('floating-') &&
+      element.localName !== 'floating-content' &&
+      element.localName !== 'floating-portal'
+    );
   }
 
   sync() {
@@ -293,6 +304,13 @@ export class FloatingRootRuntime {
       return 'dialog';
     }
     if (element?.localName === 'dialog') return 'dialog';
+    // Structural components such as floating-list and floating-query can be
+    // the root's default-slotted child. They are not surfaces themselves;
+    // treating them as one makes their default Popover preference override a
+    // native surface inferred from a nested content template.
+    if (element && this.#isStructuralFloatingComponent(element)) {
+      return 'none';
+    }
     if (explicitTopLayer === 'popover' || explicitTopLayer === 'dialog') {
       return explicitTopLayer;
     }
@@ -330,8 +348,12 @@ export class FloatingRootRuntime {
         ? portal.topLayer
         : 'none';
     }
-    const templateDialog = template.content.querySelector(':scope > dialog');
-    if (templateDialog) return 'dialog' as const;
+    // `:scope` on a DocumentFragment is inconsistent across browsers. The
+    // content contract already requires one top-level element, so inspect it
+    // directly to preserve a native dialog template.
+    if (template.content.firstElementChild?.localName === 'dialog') {
+      return 'dialog' as const;
+    }
     return 'popover' as const;
   }
 
@@ -587,10 +609,10 @@ export class FloatingRootRuntime {
       this.#manualFloatingElement ?? this.#slottedFloatingElement,
     );
     const topLayer =
-      surfaceTopLayer !== 'none'
-        ? surfaceTopLayer
-        : this.#templateFloatingElement && this.#templateTopLayer !== 'none'
-          ? this.#templateTopLayer
+      this.#templateFloatingElement && this.#templateTopLayer !== 'none'
+        ? this.#templateTopLayer
+        : surfaceTopLayer !== 'none'
+          ? surfaceTopLayer
           : this.#host.topLayer;
     this.topLayer.setKind(
       topLayer,

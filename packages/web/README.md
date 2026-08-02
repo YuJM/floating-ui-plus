@@ -19,6 +19,14 @@ Use this package directly for a custom DOM renderer. For Vue or Custom
 Elements, install the matching adapter instead; it already includes this shared
 runtime.
 
+## Attribute policy
+
+Use `id` for a unique application-owned element and classes for repeated
+presentation or app selectors. The controller may return `data-*` attributes
+as runtime state (for example, `data-loading`); preserve those attributes when
+you spread the controller props. Do not add application-only `data-*` hooks
+solely for DOM lookup.
+
 - [Installation guide](https://fup.polcaneli.com/docs/guides/installation)
 - [Web usage guide](https://fup.polcaneli.com/docs/guides/usage)
 - [Query demo](https://fup.polcaneli.com/docs/guides/demo/combobox/fuzzy)
@@ -207,6 +215,29 @@ Without the explicit discrete transition, the controller applies `hidden`
 immediately. Reopening cancels a pending hide. For non-native surfaces, keep
 presence in your renderer and use `FloatingTransition` instead. See the
 [entry and exit animation guide](https://fup.polcaneli.com/docs/guides/animation).
+
+### Bounded transient presence
+
+`FloatingPresenceStack` is a framework-neutral lifecycle controller for timed,
+stacked transient surfaces. It owns the limit, remaining timeout, and
+pause/resume reasons; the renderer owns ARIA, layout, and exit animation. Keep
+a closed record until the renderer finishes its transition, then call `remove`.
+
+```ts
+import {FloatingPresenceStack} from '@floating-ui-plus/web';
+
+const stack = new FloatingPresenceStack<{message: string}>({
+  limit: 3,
+  timeout: 5_000,
+});
+
+const id = stack.add({message: 'Saved'});
+stack.pause('pointer');
+stack.resume('pointer');
+stack.close(id);
+// After the renderer's exit transition:
+stack.remove(id);
+```
 
 ## Compatibility
 

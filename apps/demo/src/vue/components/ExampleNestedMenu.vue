@@ -130,7 +130,7 @@ watch(rootOpen, (open) => {
               <Transition name="vue-surface">
                 <FloatingContent
                   class="menu-panel"
-                  data-testid="actions-menu"
+                  id="vue-actions-menu"
                 >
                   <div class="menu-heading">Tree coordinated actions</div>
                   <FloatingListItem
@@ -169,7 +169,7 @@ watch(rootOpen, (open) => {
                         <Transition name="vue-surface">
                           <FloatingContent
                             class="menu-panel nested-menu-submenu"
-                            data-testid="project-menu"
+                            id="vue-project-menu"
                           >
                             <div class="menu-heading">Choose a project</div>
                             <FloatingListItem

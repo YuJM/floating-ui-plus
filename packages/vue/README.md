@@ -5,6 +5,14 @@ It adds interactions, focus management, portals, collections, search, and native
 
 The package includes `@floating-ui-plus/web`; installing this package is sufficient.
 
+## Attribute policy
+
+Use `id` for a unique application-owned element and classes for repeated
+presentation or app selectors. Preserve the `data-*` attributes returned by
+Floating UI Plus bindings because they describe runtime state (for example,
+`data-loading`) or declarative package behavior. Avoid application-only
+`data-*` attributes that are merely selector hooks.
+
 ## Install
 
 ```sh
@@ -60,7 +68,6 @@ import {
   dismiss,
   flip,
   offset,
-  role,
   shift,
   transformOrigin,
 } from '@floating-ui-plus/vue';
@@ -76,7 +83,7 @@ const options = {
   ],
   whileElementsMounted: autoUpdate,
 };
-const plugins = [click(), dismiss(), role({role: 'dialog'})];
+const plugins = [click(), dismiss()];
 </script>
 
 <template>

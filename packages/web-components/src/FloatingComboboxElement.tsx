@@ -366,7 +366,7 @@ const FloatingComboboxBase = c(
       },
       statusSelector: {
         type: String,
-        value: (): string => '[data-combobox-status]',
+        value: (): string => ':is([aria-live], [data-combobox-status])',
         attr: 'status-selector',
       },
       name: {type: String, value: (): string => '', reflect: true},

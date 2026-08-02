@@ -16,6 +16,7 @@ import {
   FloatingList,
   FloatingTree,
   NextDelayGroup,
+  type QueryController,
   listNavigation,
   typeahead,
   type CompositeOptions,
@@ -254,7 +255,6 @@ const FloatingListBase = c(
         clearDiscoveredItems(currentElements);
         for (const element of elements) {
           const label =
-            element.dataset.label ??
             element.getAttribute('aria-label') ??
             element.textContent;
           const existing = discoveredItems.get(element);
@@ -285,7 +285,7 @@ const FloatingListBase = c(
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['aria-label', 'data-label'],
+        attributeFilter: ['aria-label'],
       });
       return () => {
         observer.disconnect();
@@ -507,14 +507,27 @@ interface FloatingListItemHost extends HTMLElement {
   label: string | null;
   value: unknown;
   list: FloatingList<unknown> | undefined;
+  query: FloatingOptionBinder | undefined;
 }
+
+type FloatingOptionBinder = Pick<QueryController<unknown>, 'bindOption'>;
 
 const FloatingListItemBase = c(
   () => {
     const host = useHost<FloatingListItemHost>().current;
     const componentContext = useContext(floatingComponentContext);
     const inheritedList = componentContext.list;
-    const query = componentContext.query ?? componentContext.combobox;
+    // Search result templates are cloned after their owning query has rendered,
+    // so their Atomico context can be absent. Fall back to the nearest query
+    // element to retain its option ARIA and activation bindings.
+    const owningQuery = host.closest(
+      'floating-query, floating-combobox',
+    ) as (HTMLElement & {controller?: FloatingOptionBinder}) | null;
+    const query =
+      host.query ??
+      componentContext.query ??
+      componentContext.combobox ??
+      owningQuery?.controller;
     const slot = useRef<HTMLSlotElement>();
     const children = useSlot<HTMLElement>(
       slot,
@@ -586,6 +599,7 @@ const FloatingListItemBase = c(
 export class FloatingListItemElement extends FloatingListItemBase {
   #value: unknown;
   #list: FloatingList<unknown> | undefined;
+  #query: FloatingOptionBinder | undefined;
 
   get updateComplete() {
     return this.updated;
@@ -608,6 +622,16 @@ export class FloatingListItemElement extends FloatingListItemBase {
   set list(value: FloatingList<unknown> | undefined) {
     if (value === this.#list) return;
     this.#list = value;
+    void this.update();
+  }
+
+  get query() {
+    return this.#query;
+  }
+
+  set query(value: FloatingOptionBinder | undefined) {
+    if (value === this.#query) return;
+    this.#query = value;
     void this.update();
   }
 }

@@ -55,16 +55,27 @@ const command = useQuery({
 });
 ```
 
-The Web Components version subscribes directly to the framework-neutral
-`SearchController`. Because its search input lives inside the dialog rather
-than acting as the floating reference, the application owns the small active
-index loop and applies `aria-activedescendant` to the input. Vue renders groups
-with `v-for` and uses `useQuery()` plus `getOptionProps()` for the equivalent
-active-item and activation state. Both adapters reuse the same search source;
-neither needs a Command-specific package primitive.
+The Web Components version keeps the native dialog as the root's direct
+`<dialog slot="floating">` surface, with `<floating-query>`,
+`<floating-search>`, `<floating-list navigation>`, and `<floating-list-item>`
+inside it. Those elements own query input bindings, IME handling, search phase
+rendering, result registration, arrow-key navigation, Enter activation, and
+the dialog role contract. Vue uses the equivalent
+`useSearch()`/`useQuery()` state with `<FloatingList>` and
+`<FloatingListItem>`. Both adapters reuse the same search source; neither
+needs a Command-specific package primitive.
 
-The Command palette is viewport-centered, so set `transform: false` and let
-dialog CSS own its fixed inset. The list itself has a bounded block size and
+This matches the modal and Sheet examples: use `<dialog slot="floating">` for
+a modal native surface. Reserve `<template slot="content">` for ordinary
+conditional Popover content, rather than wrapping a dialog in that template.
+Because this query is inside a native dialog, Web Components infers dialog
+semantics and generates unique option IDs; the example therefore does not need
+`semantics="dialog"` or `option-id-prefix`. Keep `semantics="dialog"` when a
+query is rendered in a non-native dialog surface.
+
+The Command palette is viewport-centered by its dialog CSS. A direct native
+`<dialog>` surface skips Floating UI positioning styles, so no placement or
+transform override is needed. The list itself has a bounded block size and
 `overflow-y: auto`, allowing groups to remain usable on short mobile screens.
 
 The component names in shadcn are composition names rather than APIs added by

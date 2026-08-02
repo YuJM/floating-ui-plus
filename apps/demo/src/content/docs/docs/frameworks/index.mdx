@@ -29,7 +29,6 @@ Register the elements once, then compose a root-owned template:
 <floating-root
   placement="bottom-start"
   interactions="click dismiss"
-  floating-role="dialog"
 >
   <floating-reference>
     <button type="button">Open settings</button>
@@ -75,11 +74,10 @@ import {
   click,
   dismiss,
   offset,
-  role,
 } from "@floating-ui-plus/vue";
 
 const open = ref(false);
-const plugins = [click(), dismiss(), role({ role: "dialog" })];
+const plugins = [click(), dismiss()];
 const options = { placement: "bottom-start", middleware: [offset(8)] };
 </script>
 
@@ -101,8 +99,10 @@ requiring the declarative child components.
 </TabItem>
 </Tabs>
 
-`floating-role` and `role()` set ARIA semantics; they do not choose a native
-top-layer surface. Web Components root-owned templates and ordinary slotted
+Every floating surface starts with dialog semantics. Use `floating-role` or
+`role()` only when a surface needs a different ARIA contract, such as `menu`,
+`tooltip`, or `combobox`; they do not choose a native top-layer surface. Web
+Components root-owned templates and ordinary slotted
 surfaces, as well as Vue `FloatingContent`, use the Popover API by default.
 Use `top-layer="none"` for an intentionally positioned/custom surface and
 `as="dialog"` for a native dialog.
@@ -116,7 +116,7 @@ the browser use Popover. For a modal, use a real dialog element:
 <TabItem label="Web Components">
 
 ```html
-<floating-root interactions="click dismiss" floating-role="dialog">
+<floating-root interactions="click dismiss">
   <floating-reference><button>Open account</button></floating-reference>
   <dialog slot="floating" aria-labelledby="account-title">
     <h2 id="account-title">Account settings</h2>
@@ -131,7 +131,7 @@ the browser use Popover. For a modal, use a real dialog element:
 ```vue
 <FloatingRoot
   v-model:open="open"
-  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+  :plugins="[click(), dismiss()]"
 >
   <FloatingReference>Open account</FloatingReference>
   <FloatingContent as="dialog" aria-labelledby="account-title">

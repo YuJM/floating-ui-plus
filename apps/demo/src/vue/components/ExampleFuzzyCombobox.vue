@@ -47,7 +47,6 @@ const {
 } = useQuery({
   search,
   getItemLabel: (item) => item.label,
-  optionIdPrefix: 'vue-destination-option',
   onActivate(item) {
     selectedDestination.value = item;
     // QueryController leaves result presentation to the application. Preserve
@@ -128,16 +127,13 @@ const navigationOptions = getNavigationOptions({
             spellcheck="false"
             placeholder="Search city or country…"
             aria-describedby="vue-query-hints vue-query-status"
-            data-floating-query-input
+            class="vue-combobox-input"
             v-bind="inputProps"
           />
         </div>
 
         <Transition name="vue-surface">
-            <FloatingContent
-              class="vue-combobox-popup"
-              data-floating-query-popup
-            >
+            <FloatingContent class="vue-combobox-popup">
               <FloatingSearch :search="search">
                 <template #loading>
                   <div class="vue-combobox-empty" role="option" aria-disabled="true">
@@ -158,7 +154,6 @@ const navigationOptions = getNavigationOptions({
                     :value="item"
                     v-bind="getOptionProps(item, index)"
                     class="vue-combobox-option"
-                    data-floating-query-option
                   >
                     <span>
                       <strong>{{ item.label }}</strong>
@@ -184,8 +179,8 @@ const navigationOptions = getNavigationOptions({
       <button
         v-for="[sample, destination] in multilingualSearchPrompts"
         :key="sample"
+        :id="`vue-query-sample-${sample}`"
         type="button"
-        :data-search-sample="sample"
         v-bind="getQueryTriggerProps(sample)"
       >
         <code>{{ sample }}</code><span>→ {{ destination }}</span>

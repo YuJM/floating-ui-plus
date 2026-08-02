@@ -13,6 +13,7 @@ import {
   DelayGroup,
   FloatingList,
   FloatingTransition,
+  FloatingPresenceStack,
   FloatingTree,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   FLOATING_UI_PLUS_OVERLAY_ATTRIBUTE,
@@ -567,6 +568,37 @@ describe('FloatingTransition', () => {
     expect(states).toEqual(['initial', 'open', 'close', 'unmounted']);
     transition.destroy();
     vi.unstubAllGlobals();
+  });
+});
+
+describe('FloatingPresenceStack', () => {
+  test('bounds the stack, pauses timers, and leaves exit presence to the renderer', () => {
+    vi.useFakeTimers();
+    const controller = new FloatingPresenceStack<string>({limit: 2, timeout: 100});
+    const first = controller.add('First', {id: 'first'});
+    controller.add('Second', {id: 'second'});
+    const third = controller.add('Third', {id: 'third'});
+
+    expect(first).toBe('first');
+    expect(third).toBe('third');
+    expect(controller.snapshot.records).toEqual([
+      expect.objectContaining({id: 'first', open: false, overflowed: true}),
+      expect.objectContaining({id: 'second', open: true}),
+      expect.objectContaining({id: 'third', open: true}),
+    ]);
+
+    controller.pause('pointer');
+    vi.advanceTimersByTime(200);
+    expect(controller.snapshot.records.filter((record) => record.open)).toHaveLength(2);
+
+    controller.resume('pointer');
+    vi.advanceTimersByTime(100);
+    expect(controller.snapshot.records.filter((record) => record.open)).toHaveLength(0);
+    expect(controller.snapshot.records).toHaveLength(3);
+
+    controller.remove('first');
+    expect(controller.snapshot.records).toHaveLength(2);
+    controller.destroy();
   });
 });
 

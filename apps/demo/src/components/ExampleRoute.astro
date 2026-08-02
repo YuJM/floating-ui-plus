@@ -19,13 +19,13 @@ const badgeTones = ['cyan', 'lavender', 'coral', 'mint', 'gold'] as const;
   'grid grid-cols-1 gap-8 py-12 lg:grid-cols-2 lg:gap-x-20 lg:py-16',
   `route-view--${variant}`,
 ]}>
-  <a class="back-link" href={getRelativeLocaleUrl(locale)} data-preserve-framework>← {m.back_to_patterns(undefined, {locale})}</a>
+  <a class="back-link preserve-framework" href={getRelativeLocaleUrl(locale)}>← {m.back_to_patterns(undefined, {locale})}</a>
   <div class="route-copy">
     <h2>{heading}</h2>
     <p class="route-outcome">{description}</p>
     <aside class="implementation-story" aria-label={m.built_with(undefined, {locale})}>
       <div class="implementation-heading">
-        <code class="implementation-package" data-framework-package>
+        <code class="implementation-package framework-package">
           @floating-ui-plus/web-components
         </code>
         <span>{m.implemented_with(undefined, {locale})}</span>
@@ -34,7 +34,6 @@ const badgeTones = ['cyan', 'lavender', 'coral', 'mint', 'gold'] as const;
         {features.map((feature, index) => (
           <li
             class:list={['implementation-badge', `implementation-badge--${badgeTones[index % badgeTones.length]}`]}
-            data-badge-tone={badgeTones[index % badgeTones.length]}
           >
             <code>{feature}</code>
           </li>
@@ -47,7 +46,7 @@ const badgeTones = ['cyan', 'lavender', 'coral', 'mint', 'gold'] as const;
     <div class="route-stage-header">
       <span>{m.live_demo(undefined, {locale})}</span>
       <span class="route-stage-rule" aria-hidden="true"></span>
-      <code data-framework-name>web-components</code>
+      <code class="framework-name">web-components</code>
     </div>
     <slot />
   </div>

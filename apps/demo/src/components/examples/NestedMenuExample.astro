@@ -5,7 +5,7 @@ import {
 } from '../../example-data';
 ---
 
-<article class="demo-card nested-menu-card" data-demo="nested-menu">
+<article id="nested-menu-demo" class="demo-card nested-menu-card">
   <div class="card-top">
     <span class="number">T</span><span class="chip">2 coordinated roots</span>
   </div>
@@ -16,41 +16,38 @@ import {
   </p>
   <div class="card-action">
     <floating-tree>
-      <floating-root data-nested-root placement="bottom-start">
+      <floating-root id="nested-menu-root" placement="bottom-start">
         <floating-node node-id="actions">
           <floating-reference>
             <button class="dark-button">
               Open actions <span aria-hidden="true">⌄</span>
             </button>
           </floating-reference>
-          <template slot="content" data-nested-menu-content>
+          <template slot="content">
             <div class="menu-panel nested-menu-root">
               <div class="menu-heading">Tree coordinated actions</div>
               <floating-list
                 navigation
                 typeahead
                 loop
-                item-selector="[data-root-menu-item]"
+                item-selector=".root-menu-item"
               >
                 <button
-                  class="menu-item"
                   role="menuitem"
                   data-fup-close
-                  data-root-menu-item
-                  data-root-menu-action
-                  data-label={NESTED_MENU_ROOT_LABELS[0]}
+                  class="menu-item root-menu-item root-menu-action"
+                  aria-label={NESTED_MENU_ROOT_LABELS[0]}
                 >
                   <span>{NESTED_MENU_ROOT_LABELS[0]}</span><kbd>{NESTED_MENU_ROOT_LABELS[0].slice(0, 1).toUpperCase()}</kbd>
                 </button>
-                <floating-root data-projects-root placement="right-start">
+                <floating-root id="nested-menu-projects-root" placement="right-start">
                   <floating-node node-id="projects">
                     <floating-reference>
                       <button
-                        class="menu-item"
+                        class="menu-item root-menu-item"
                         role="menuitem"
                         aria-haspopup="menu"
-                        data-root-menu-item
-                        data-label={NESTED_MENU_ROOT_LABELS[1]}
+                        aria-label={NESTED_MENU_ROOT_LABELS[1]}
                       >
                         <span>{NESTED_MENU_ROOT_LABELS[1]}</span>
                         <span class="menu-item-shortcuts"><kbd>{NESTED_MENU_ROOT_LABELS[1].slice(0, 1).toUpperCase()}</kbd><kbd aria-hidden="true">→</kbd></span>
@@ -61,9 +58,9 @@ import {
                       typeahead
                       loop
                       nested
-                      item-selector="[data-project-menu-item]"
+                      item-selector=".project-menu-item"
                     >
-                      <template slot="content" data-project-menu-content>
+                      <template slot="content">
                         <div
                           class="menu-panel nested-menu-submenu"
                           aria-label="Move to project"
@@ -72,11 +69,10 @@ import {
                           {
                             NESTED_MENU_PROJECT_LABELS.map((label) => (
                               <button
-                                class="menu-item"
+                                class="menu-item project-menu-item"
                                 role="menuitem"
                                 data-fup-close
-                                data-project-menu-item
-                                data-label={label}
+                                aria-label={label}
                               >
                                 <span>{label}</span><kbd>{label.slice(0, 1).toUpperCase()}</kbd>
                               </button>
@@ -88,12 +84,10 @@ import {
                   </floating-node>
                 </floating-root>
                 <button
-                  class="menu-item"
+                  class="menu-item root-menu-item root-menu-action"
                   role="menuitem"
                   data-fup-close
-                  data-root-menu-item
-                  data-root-menu-action
-                  data-label={NESTED_MENU_ROOT_LABELS[2]}
+                  aria-label={NESTED_MENU_ROOT_LABELS[2]}
                 >
                   <span>{NESTED_MENU_ROOT_LABELS[2]}</span><kbd>{NESTED_MENU_ROOT_LABELS[2].slice(0, 1).toUpperCase()}</kbd>
                 </button>
@@ -124,7 +118,7 @@ import {
   import {initializeExample} from './initialize-example';
 
   initializeExample('nested-menu', (scope) => {
-    const parent = FloatingRootElement.query(scope, '[data-nested-root]');
+    const parent = FloatingRootElement.query(scope, '#nested-menu-root');
     let child: FloatingRootElement | null = null;
 
     parent.configure({
@@ -157,7 +151,7 @@ import {
     });
 
     parent.on('floatingmount', ({element}) => {
-      child = FloatingRootElement.query(element, '[data-projects-root]');
+      child = FloatingRootElement.query(element, '#nested-menu-projects-root');
       child.configure({
         middleware: [
           offset({mainAxis: 6, alignmentAxis: -6}),
@@ -191,7 +185,7 @@ import {
         childElement.addEventListener('click', (event) => {
           if (!(event.target instanceof Element)) return;
           const item = event.target.closest<HTMLElement>(
-            '[data-project-menu-item]',
+            '.project-menu-item',
           );
           if (!item || !childElement.contains(item)) return;
           parent.close(event, 'click');

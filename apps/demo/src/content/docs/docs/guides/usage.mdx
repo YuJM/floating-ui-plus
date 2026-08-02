@@ -188,7 +188,7 @@ fallback context bridge when your renderer intentionally mounts elsewhere.
 
 ```html
 <!-- Non-modal anchored surface: keep the template beside the reference. -->
-<floating-root interactions="click dismiss" floating-role="dialog">
+<floating-root interactions="click dismiss">
   <floating-reference><button>Open settings</button></floating-reference>
   <template slot="content">
     <section aria-label="Settings">
@@ -199,7 +199,7 @@ fallback context bridge when your renderer intentionally mounts elsewhere.
 </floating-root>
 
 <!-- Modal: let the browser own focus, inertness, and the top layer. -->
-<floating-root interactions="click dismiss" floating-role="dialog">
+<floating-root interactions="click dismiss">
   <floating-reference><button>Open account</button></floating-reference>
   <dialog slot="floating" aria-label="Account settings">
     Account settings
@@ -218,7 +218,7 @@ not needed for the normal template or native dialog composition.
 <!-- Anchored Popover: keep FloatingContent in the root tree. -->
 <FloatingRoot
   v-model:open="open"
-  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+  :plugins="[click(), dismiss()]"
 >
   <FloatingReference>Open settings</FloatingReference>
   <FloatingContent>Settings <FloatingClose>Close</FloatingClose></FloatingContent>
@@ -227,7 +227,7 @@ not needed for the normal template or native dialog composition.
 <!-- Modal dialog: use the native element. -->
 <FloatingRoot
   v-model:open="open"
-  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+  :plugins="[click(), dismiss()]"
 >
   <FloatingReference>Open account</FloatingReference>
   <FloatingContent as="dialog" aria-label="Account settings">
@@ -253,7 +253,7 @@ enough.
 <TabItem label="Web Components">
 
 ```html
-<floating-root interactions="click dismiss" floating-role="dialog">
+<floating-root interactions="click dismiss">
   <floating-reference><button>Open</button></floating-reference>
   <floating-portal>
     <floating-overlay lock-scroll>
@@ -280,7 +280,7 @@ should dismiss its owner.
 ```vue
 <FloatingRoot
   v-model:open="open"
-  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+  :plugins="[click(), dismiss()]"
 >
   <FloatingReference>Open</FloatingReference>
   <FloatingPortal>
@@ -356,7 +356,7 @@ query library, omit `source` and push state through `setControlledState()`.
 ```html
 <floating-root placement="bottom-start">
   <floating-list navigation loop allow-escape>
-    <floating-query data-destination-query>
+    <floating-query id="destination-query">
       <floating-reference
         ><input aria-label="Destination"
       /></floating-reference>
@@ -375,7 +375,7 @@ query library, omit `source` and push state through `setControlledState()`.
           </template>
         </floating-search>
       </template>
-      <p data-query-status aria-live="polite"></p>
+      <p aria-live="polite"></p>
     </floating-query>
   </floating-list>
 </floating-root>

@@ -52,7 +52,7 @@ const APPLIED_FEATURES: Record<ExampleId, readonly string[]> = {
   middleware: ['floating-root', 'offset', 'shift', 'flip', 'arrow', 'size', 'autoPlacement', 'hide', 'inline'],
   modal: ['dialog', 'floating-node', 'click()', 'dismiss()', 'role()'],
   sheet: ['dialog', 'click()', 'dismiss()', 'role()', 'native focus'],
-  toast: ['FloatingTransition', 'timeout', 'pause()', 'stack', 'aria-live'],
+  toast: ['FloatingPresenceStack', 'FloatingTransition', 'Composite', 'pause()', 'aria-live'],
   command: ['SearchController', 'useQuery()', 'dialog', 'navigation', 'dismiss()'],
 };
 

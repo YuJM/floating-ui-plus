@@ -281,8 +281,8 @@ export const FloatingContent = defineComponent({
                 ? !rootOpen.value
                 : undefined,
           },
-          attrs,
           floating.floatingAttrs,
+          attrs,
           {
             ref: setFloatingElement,
           },

@@ -96,6 +96,7 @@ function bindTemplate<T>(
  */
 export class FloatingSearchElement<T = unknown> extends HTMLElement {
   #search: SearchController<T> | undefined;
+  #query: QueryController<T> | undefined;
   #getItemLabel: ((item: T) => string) | undefined;
   #onRender: (() => void) | undefined;
   #unsubscribe: (() => void) | undefined;
@@ -126,6 +127,16 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
 
   get search() {
     return this.#search;
+  }
+
+  get query() {
+    return this.#query;
+  }
+
+  set query(value: QueryController<T> | undefined) {
+    if (value === this.#query) return;
+    this.#query = value;
+    this.render();
   }
 
   set search(value: SearchController<T> | undefined) {
@@ -234,9 +245,11 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
       const listItem = element as HTMLElement & {
         label: string;
         value: T;
+        query?: QueryController<T> | undefined;
       };
       listItem.label = label;
       listItem.value = item;
+      listItem.query = this.#query;
     }
     queueMicrotask(() => this.#onRender?.());
   }
@@ -260,6 +273,7 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
       localQuery?.controller;
     if (!query) return;
     this.#search = query.search as SearchController<T>;
+    this.#query = query as QueryController<T>;
     this.#getItemLabel = (item) =>
       query.getItemLabel(item as unknown) as string;
     this.#onRender ??= () => {

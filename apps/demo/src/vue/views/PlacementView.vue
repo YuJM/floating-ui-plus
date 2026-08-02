@@ -25,7 +25,7 @@ const positioning = useFloating(reference, floating, {
         type="button"
         class="vue-placement-control"
         :class="{ 'is-selected': placement === selectedPlacement }"
-        :data-placement-control="placement"
+        :value="placement"
         :aria-pressed="placement === selectedPlacement"
         :aria-label="`Place floating element at ${placement}`"
         @click="selectedPlacement = placement"

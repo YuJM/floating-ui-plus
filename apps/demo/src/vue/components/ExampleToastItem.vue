@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import {computed, watch} from 'vue';
-import {useFloatingTransition} from '@floating-ui-plus/vue';
+import {CompositeItem, useFloatingTransition} from '@floating-ui-plus/vue';
 
 const props = defineProps<{
-  id: number;
+  id: string;
   open: boolean;
   index: number;
   limited: boolean;
+  title: string;
+  description: string;
 }>();
 const emit = defineEmits<{
-  close: [id: number];
-  remove: [id: number];
+  close: [id: string];
+  remove: [id: string];
 }>();
 const {isMounted, status} = useFloatingTransition(
   computed(() => props.open),
@@ -39,9 +41,9 @@ watch(isMounted, (mounted, previous) => {
   >
     <span class="toast-icon" aria-hidden="true">✓</span>
     <div class="toast-content">
-      <strong>Notification {{ props.id }} created</strong>
-      <p>Your changes have been saved successfully.</p>
+      <strong>{{ props.title }}</strong>
+      <p>{{ props.description }}</p>
     </div>
-    <button class="toast-close" type="button" :aria-label="`Dismiss notification ${props.id}`" @click="emit('close', props.id)">×</button>
+    <CompositeItem tag="button" class="toast-close" type="button" :aria-label="`Dismiss notification ${props.id}`" @click="emit('close', props.id)">×</CompositeItem>
   </li>
 </template>

@@ -25,12 +25,17 @@ manager creates notifications, a viewport owns their stack, each notification
 can close itself, and a default timeout removes it automatically. The demo caps
 the visible stack at three notifications.
 
-Floating UI Plus does not currently expose a dedicated Toast provider or
-manager. Toasts do not need an anchor, collision middleware, or a focus trap, so
-the example keeps its small notification store in application code and uses the
-package's `FloatingTransition` presence state for enter and exit lifecycle.
-This avoids turning a demo-specific notification data model into a positioning
-primitive.
+`FloatingPresenceStack` owns the generic transient-surface lifecycle: a maximum
+visible count, the remaining auto-close duration, overlapping pause reasons,
+and the snapshot consumed by a renderer. It intentionally does not provide a
+Toast UI, ARIA live region, or visual stack. Those stay in application markup,
+so the same primitive can coordinate banners, transient editors, or other
+surfaces that need delayed removal.
+
+The demo combines it with `FloatingTransition` (or Vue's
+`useFloatingTransition()`) so each rendered notification stays mounted through
+its CSS exit. `floating-composite` / Vue's `Composite` provides arrow-key
+movement between close buttons after `F6` enters the viewport.
 
 ## Interaction contract
 
@@ -42,20 +47,32 @@ primitive.
 - The close button starts an exit transition. DOM removal occurs after the
   transition finishes.
 - The viewport is a labelled landmark with polite live announcements. `F6`
-  moves focus to it without taking focus when a notification first appears.
+  moves focus to the viewport without taking focus when a notification first
+  appears; arrow keys then move across close buttons.
 
 ```ts
+const stack = new FloatingPresenceStack<ToastContent>({
+  limit: 3,
+  timeout: 5_000,
+});
+
+stack.subscribe(({records, paused}) => render(records, paused));
+const id = stack.add({title: "Saved"});
+
 const transition = new FloatingTransition(() => "top-end", {
   duration: { close: 180 },
 });
 
 transition.subscribe(() => {
   toast.dataset.status = transition.status;
-  if (!transition.isMounted) toast.remove();
+  if (!transition.isMounted) {
+    toast.remove();
+    stack.remove(id);
+  }
 });
 
 transition.setOpen(true);
-// Later: transition.setOpen(false)
+// Later: stack.close(id); transition.setOpen(false)
 ```
 
 CSS owns the visual stack through `--toast-index` for depth and
@@ -79,7 +96,8 @@ records.forEach((record, index) => {
 viewport.toggleAttribute("data-expanded", isPointerOrFocusPaused);
 ```
 
-Vue computes the same custom properties and binds the state attributes:
+Vue computes the same custom properties and binds the state attributes. Its
+`Composite` wraps the viewport and its `CompositeItem` wraps each close button:
 
 ```vue
 <ol class="toast-viewport" :data-expanded="paused ? '' : undefined">
@@ -163,8 +181,8 @@ can finish removing the node, but removes most of the perceived travel. If the
 application changes that duration, pass the same close duration to
 `FloatingTransition` or `useFloatingTransition`.
 
-Web Components create each `<li>` from the notification store and subscribe to
-`FloatingTransition` before removing it. Vue keeps the store in the parent and
-renders a child item with `v-if="isMounted"`; the child emits `remove` after
-`useFloatingTransition()` reports that exit presence has finished. The CSS,
-custom properties, and status attribute are otherwise identical.
+`FloatingPresenceStack` emits a closed record immediately, while
+`FloatingTransition` (or `useFloatingTransition`) keeps the node mounted until
+the exit CSS ends. Remove the record from the stack only at that point. The
+same controller is used by both demos; only the renderer and framework adapter
+differ.

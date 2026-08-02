@@ -47,7 +47,7 @@ interface FloatingQueryHost extends HTMLElement {
   optionIdPrefix: string;
   queryTriggerSelector: string;
   statusSelector: string;
-  semantics: QuerySemantics;
+  semantics: QuerySemantics | '';
   search: SearchController<unknown> | undefined;
   getItemKey: ((item: unknown) => string | number) | undefined;
   getItemLabel: ((item: unknown) => string) | undefined;
@@ -94,6 +94,11 @@ function getQueryTriggerValue(element: Element) {
   return element.getAttribute('data-query') ?? element.textContent?.trim() ?? '';
 }
 
+function getQuerySemantics(host: FloatingQueryHost): QuerySemantics {
+  if (host.semantics) return host.semantics;
+  return host.closest('dialog') ? 'dialog' : 'combobox';
+}
+
 const FloatingQueryBase = c(
   () => {
     const host = useHost<FloatingQueryHost>().current;
@@ -103,11 +108,12 @@ const FloatingQueryBase = c(
       'floating-list',
     ) as FloatingListElement | null;
     const input = findInput(host);
+    const semantics = getQuerySemantics(host);
     const controller = useMemo(() => {
       if (!root || !host.search) return undefined;
       return new QueryController<unknown>({
         search: host.search,
-        semantics: host.semantics,
+        semantics,
         getItemLabel: (item) =>
           host.getItemLabel?.(item) ??
           getDefaultItemLabel(item, host.itemLabelKey),
@@ -135,7 +141,7 @@ const FloatingQueryBase = c(
       root,
       listElement,
       host.search,
-      host.semantics,
+      semantics,
       host.getItemKey,
       host.getItemLabel,
       host.itemLabelKey,
@@ -173,6 +179,7 @@ const FloatingQueryBase = c(
           view.getItemLabel = getItemLabel;
           view.onRender = () => root?.controller.refresh();
           view.search = search;
+          view.query = controller;
           boundViews.add(view);
         }
       };
@@ -192,11 +199,19 @@ const FloatingQueryBase = c(
         for (const view of boundViews) {
           if (view.search === search) {
             view.search = undefined;
+            view.query = undefined;
             view.onRender = undefined;
           }
         }
       };
-    }, [host, root, host.search, host.getItemLabel, host.itemLabelKey]);
+    }, [
+      host,
+      root,
+      controller,
+      host.search,
+      host.getItemLabel,
+      host.itemLabelKey,
+    ]);
 
     useLayoutEffect(() => {
       if (!root || !controller || !input) return;
@@ -343,12 +358,12 @@ const FloatingQueryBase = c(
       },
       statusSelector: {
         type: String,
-        value: (): string => '[data-query-status]',
+        value: (): string => ':is([aria-live], [data-query-status])',
         attr: 'status-selector',
       },
       semantics: {
         type: String,
-        value: (): string => 'combobox',
+        value: (): string => '',
         reflect: true,
       },
     },
@@ -422,7 +437,9 @@ export class FloatingQueryElement extends FloatingQueryBase {
     this.getItemKey = configuration.getItemKey as
       | ((item: unknown) => string | number)
       | undefined;
-    this.semantics = configuration.semantics ?? 'combobox';
+    if (configuration.semantics !== undefined) {
+      this.semantics = configuration.semantics;
+    }
     this.statusFormatter = configuration.status
       ? ((typeof configuration.status === 'function'
           ? configuration.status

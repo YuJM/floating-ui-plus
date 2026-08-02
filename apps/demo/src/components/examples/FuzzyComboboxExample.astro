@@ -9,7 +9,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   </div>
   <section
     class="combobox-panel"
-    data-demo="combobox"
+    id="combobox-demo"
   >
   <h3>Multilingual query</h3>
   <p>Search by city, country, local script, alias, or forgiving typo.</p>
@@ -18,12 +18,11 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
     <label class="combobox-label" for="destination-search">
       Destination
     </label>
-    <floating-root data-combobox-root placement="bottom-start">
+    <floating-root id="combobox-root" placement="bottom-start">
       <floating-list navigation loop allow-escape>
-        <floating-query
-          data-combobox
-          option-id-prefix="destination-option"
-          query-trigger-selector="#combobox-hints [data-search-sample]"
+          <floating-query
+            id="combobox-query"
+            query-trigger-selector="#combobox-hints .search-sample"
         >
           <floating-reference>
             <input
@@ -36,10 +35,10 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
               placeholder="Search city or country…"
             />
           </floating-reference>
-          <template slot="content" data-combobox-content>
+          <template slot="content">
               <div
                 class="combobox-popup"
-                data-combobox-popup
+                class="combobox-popup"
                 aria-label="Destination suggestions"
               >
                 <floating-search>
@@ -93,7 +92,6 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
             id="combobox-status"
             class="sr-only"
             aria-live="polite"
-            data-query-status
           >
             Destination suggestions closed
           </p>
@@ -106,7 +104,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   <div id="combobox-hints" class="combobox-hints">
     {
       multilingualSearchPrompts.map(([sample, destination]) => (
-        <button type="button" value={sample} data-search-sample={sample}>
+        <button type="button" value={sample} class="search-sample">
           <code>{sample}</code><span>→ {destination}</span>
         </button>
       ))
@@ -141,10 +139,10 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   initializeExample('combobox', (scope) => {
     const floating = FloatingRootElement.query(
       scope,
-      '[data-combobox-root]',
+      '#combobox-root',
     );
     const query = scope.querySelector<FloatingQueryElement>(
-      '[data-combobox]',
+      '#combobox-query',
     );
     if (!query) return;
 

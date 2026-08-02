@@ -8,11 +8,10 @@ import {
   click,
   createFuzzySearchSource,
   dismiss,
-  role,
   useQuery,
   useSearch,
 } from "@floating-ui-plus/vue";
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
   commandGroups,
   commandItems,
@@ -31,6 +30,23 @@ const search = useSearch<CommandItem>({
   getItemKey: (item) => item.id,
   debounceMs: 0,
 });
+const command = useQuery({
+  search,
+  semantics: "dialog",
+  getItemLabel: (item) => item.label,
+  status: {
+    closed: "Command palette closed",
+    idle: "Start typing to search commands",
+    loading: "Searching commands",
+    error: "Command search failed",
+    empty: ({ search: state }) => `No commands found for ${state.query}`,
+    results: ({ search: state }) => `${state.items.length} commands available`,
+  },
+  onActivate(item) {
+    selected.value = `${item.label} selected.`;
+    open.value = false;
+  },
+});
 const {
   open,
   activeIndex,
@@ -38,16 +54,8 @@ const {
   getItemId,
   getNavigationOptions,
   getOptionProps,
-} = useQuery({
-  search,
-  semantics: "dialog",
-  getItemKey: (item) => item.id,
-  getItemLabel: (item) => item.label,
-  optionIdPrefix: "vue-command-option",
-  onActivate(item) {
-    selected.value = `${item.label} selected.`;
-  },
-});
+  statusText,
+} = command;
 const groups = computed(() =>
   commandGroups
     .map((label) => ({
@@ -56,8 +64,7 @@ const groups = computed(() =>
     }))
     .filter((group) => group.items.length),
 );
-const options = { strategy: "fixed", transform: false } as const;
-const plugins = [click(), dismiss(), role({ role: "dialog" })];
+const plugins = [click(), dismiss(), command.rolePlugin];
 const navigationOptions = getNavigationOptions({
   allowEscape: true,
   loop: true,
@@ -76,16 +83,16 @@ function itemIndex(item: CommandItem) {
 }
 
 function handleShortcut(event: KeyboardEvent) {
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+  const usesPrimaryModifier =
+    shortcutLabel === "⌘ K" ? event.metaKey : event.ctrlKey;
+  if (usesPrimaryModifier && event.key.toLowerCase() === "k") {
     event.preventDefault();
-    open.value = !open.value;
+    if (open.value) {
+      input.value?.focus();
+    } else {
+      open.value = true;
+    }
   }
-}
-
-async function focusOnOpen(value: boolean) {
-  if (!value) return;
-  await nextTick();
-  input.value?.focus();
 }
 
 onMounted(() => document.addEventListener("keydown", handleShortcut));
@@ -104,12 +111,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
         Search grouped actions, navigate with arrow keys, and press Enter to run
         the active command.
       </p>
-      <FloatingRoot
-        v-model:open="open"
-        :options="options"
-        :plugins="plugins"
-        @update:open="focusOnOpen"
-      >
+      <FloatingRoot v-model:open="open" :plugins="plugins">
         <FloatingReference class="command-trigger">
           Open command palette <kbd>{{ shortcutLabel }}</kbd>
         </FloatingReference>
@@ -125,13 +127,12 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
             loop
             :navigation-options="navigationOptions"
           >
-            <div class="command-shell" data-slot="command">
-              <div class="command-input-row" data-slot="command-input-wrapper">
+            <div class="command-shell">
+              <div class="command-input-row">
                 <span aria-hidden="true">⌕</span>
                 <input
                   ref="input"
                   class="command-input"
-                  data-slot="command-input"
                   type="text"
                   autocomplete="off"
                   spellcheck="false"
@@ -139,6 +140,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
                   aria-label="Search commands"
                   aria-controls="vue-command-list"
                   :aria-activedescendant="activeId"
+                  autofocus
                   v-bind="inputProps"
                 />
                 <button
@@ -154,7 +156,6 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
                 v-if="search.items.value.length"
                 id="vue-command-list"
                 class="command-list"
-                data-slot="command-list"
                 role="listbox"
                 aria-label="Commands"
               >
@@ -165,12 +166,10 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
                   <div
                     v-if="groupIndex"
                     class="command-separator"
-                    data-slot="command-separator"
                     role="separator"
                   />
                   <section
                     class="command-group"
-                    data-slot="command-group"
                     :aria-labelledby="`vue-command-group-${groupIndex}`"
                   >
                     <h5 :id="`vue-command-group-${groupIndex}`">
@@ -185,7 +184,6 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
                     >
                       <div
                         class="command-item"
-                        data-slot="command-item"
                         role="option"
                         :aria-selected="itemIndex(item) === activeIndex"
                       >
@@ -195,7 +193,6 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
                         <span>{{ item.label }}</span>
                         <kbd
                           v-if="item.shortcut"
-                          data-slot="command-shortcut"
                           >{{ item.shortcut }}</kbd
                         >
                       </div>
@@ -203,9 +200,12 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
                   </section>
                 </template>
               </div>
-              <div v-else class="command-empty" data-slot="command-empty">
+              <div v-else class="command-empty">
                 No results found.
               </div>
+              <p class="sr-only" aria-live="polite">
+                {{ statusText }}
+              </p>
             </div>
           </FloatingList>
         </FloatingContent>

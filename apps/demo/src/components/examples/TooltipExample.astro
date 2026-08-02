@@ -2,7 +2,7 @@
 import {TOOLTIP_ARROW} from '../../example-config';
 ---
 
-<article class="demo-card tooltip-card" data-demo="tooltip">
+<article id="tooltip-demo" class="demo-card tooltip-card">
   <div class="card-top">
     <span class="number">A</span><span class="chip">hover + focus</span>
   </div>
@@ -13,7 +13,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
   </p>
   <div class="card-action">
     <floating-root
-      data-tooltip-root
+      id="tooltip-root"
       placement="top"
     >
       <floating-reference>
@@ -21,7 +21,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
           Inspect signal <span aria-hidden="true">↗</span>
         </button>
       </floating-reference>
-      <template slot="content" data-tooltip-content>
+      <template slot="content">
         <div class="tooltip">
           Positioned by <b>autoUpdate</b>
           <floating-arrow
@@ -54,7 +54,7 @@ import {TOOLTIP_ARROW} from '../../example-config';
   import {initializeExample} from './initialize-example';
 
   initializeExample('tooltip', (scope) => {
-    const floating = FloatingRootElement.query(scope, '[data-tooltip-root]');
+    const floating = FloatingRootElement.query(scope, '#tooltip-root');
     floating.configure({
       middleware: [
         offset(TOOLTIP_ARROW.gap),

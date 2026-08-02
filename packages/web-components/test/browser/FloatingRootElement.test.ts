@@ -245,6 +245,70 @@ describe('FloatingRootElement', () => {
     await vi.waitFor(() => expect(root.floatingElement).toBeNull());
   });
 
+  test('keeps a dialog template native beneath structural components', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-list navigation>
+        <floating-query semantics="dialog">
+          <floating-reference><button>Open</button></floating-reference>
+          <template slot="content"><dialog>Content</dialog></template>
+        </floating-query>
+      </floating-list>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBeInstanceOf(HTMLDialogElement);
+      const dialog = root.floatingElement as HTMLDialogElement;
+      expect(dialog.open, JSON.stringify({
+        hidden: dialog.hidden,
+        popover: dialog.getAttribute('popover'),
+        status: dialog.dataset.status,
+        rootOpen: root.open,
+      })).toBe(true);
+      expect(dialog.getAttribute('popover')).toBeNull();
+    });
+  });
+
+  test('infers dialog semantics for a query inside a native dialog', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const command = {id: 'open', label: 'Open project'};
+    const search = new SearchController({
+      items: [command],
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <dialog slot="floating">
+        <floating-list navigation>
+          <floating-query>
+            <input aria-label="Search commands" autofocus />
+            <floating-list-item label="Open project"><div>Open project</div></floating-list-item>
+          </floating-query>
+        </floating-list>
+      </dialog>
+    `;
+    const query = root.querySelector('floating-query')!;
+    const item = root.querySelector('floating-list-item')!;
+    const input = root.querySelector('input')!;
+    item.value = command;
+    query.configure({search, getItemLabel: (value) => value.label});
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      expect((root.floatingElement as HTMLDialogElement).open).toBe(true);
+      expect(query.controller?.getOptionProps(command, 0).role).toBeUndefined();
+      expect(document.activeElement).toBe(input);
+    });
+    search.destroy();
+  });
+
   test('uses a slotted dialog as a native modal surface', async () => {
     if (!supportsFloatingTopLayer('dialog')) return;
     const root = document.createElement('floating-root');
@@ -717,7 +781,7 @@ describe('FloatingRootElement', () => {
               </section>
             </template>
           </floating-portal>
-          <p data-combobox-status></p>
+          <p id="combobox-status" aria-live="polite"></p>
         </floating-combobox>
       </floating-list>
     `;
@@ -745,7 +809,7 @@ describe('FloatingRootElement', () => {
       expect(document.querySelector('floating-search')?.textContent).toContain(
         'Try a query',
       );
-      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+      expect(combobox.querySelector('#combobox-status')?.textContent).toBe(
         'idle',
       );
     });
@@ -768,7 +832,7 @@ describe('FloatingRootElement', () => {
       expect(item?.label).toBe('北京');
       expect(item?.value).toBe(destination);
       expect(item?.textContent).toContain('北京China');
-      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+      expect(combobox.querySelector('#combobox-status')?.textContent).toBe(
         'results',
       );
       expect(document.querySelector('[data-search-load-more]')?.textContent).toContain(
@@ -790,7 +854,7 @@ describe('FloatingRootElement', () => {
         document.querySelector<HTMLButtonElement>('[data-search-load-more]')
           ?.disabled,
       ).toBe(true);
-      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+      expect(combobox.querySelector('#combobox-status')?.textContent).toBe(
         'loading',
       );
     });
@@ -1546,10 +1610,10 @@ describe('FloatingRootElement', () => {
 
   test('discovers list items from a selector and tracks DOM changes', async () => {
     const list = document.createElement('floating-list');
-    list.setAttribute('item-selector', '[data-command]');
+    list.setAttribute('item-selector', '.command');
     list.innerHTML = `
-      <button data-command data-label="One">First label</button>
-      <button data-command>Two</button>
+      <button class="command" aria-label="One">First label</button>
+      <button class="command">Two</button>
     `;
     document.body.append(list);
     await list.updateComplete;
@@ -1562,7 +1626,7 @@ describe('FloatingRootElement', () => {
     });
 
     const first = list.querySelector('button')!;
-    first.dataset.label = 'Updated';
+    first.setAttribute('aria-label', 'Updated');
     list.lastElementChild?.remove();
     await vi.waitFor(() => {
       expect(list.list.items.map((item) => item.label)).toEqual([

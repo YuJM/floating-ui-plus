@@ -70,10 +70,10 @@ const metadata = {
       <div class="container mx-auto flex items-center justify-end gap-3 px-5 py-3 sm:px-8">
         <a class="docs-nav-link" href="/docs">Docs</a>
         <div class="framework-switch" role="group" aria-label={m.framework_label(undefined, options)} title={m.framework_switch_title(undefined, options)}>
-          <a data-framework-switch="web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=wc`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
+          <a id="framework-switch-web-components" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=wc`} aria-label={m.framework_web_components(undefined, options)} title={m.framework_web_components_title(undefined, options)}>
             <Box aria-hidden="true" size={15} strokeWidth={1.8} />
           </a>
-          <a data-framework-switch="vue" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=vue`} aria-label="Vue" title={m.framework_vue_title(undefined, options)}>
+          <a id="framework-switch-vue" href={`${getRelativeLocaleUrl(locale, localizedExamplePath)}?framework=vue`} aria-label="Vue" title={m.framework_vue_title(undefined, options)}>
             <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
               <path d={siVuedotjs.path} />
             </svg>
@@ -81,7 +81,7 @@ const metadata = {
         </div>
         <nav class="language-switch" aria-label={m.language_label(undefined, options)}>
           {(['en', 'ko', 'ja'] as const).map((target) => (
-            <a data-language-switch data-preserve-query href={`${getRelativeLocaleUrl(target, localizedExamplePath)}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
+            <a class="preserve-query" href={`${getRelativeLocaleUrl(target, localizedExamplePath)}${frameworkSearch}`} aria-current={target === locale ? 'page' : undefined}>
               {{en: 'English', ko: '한국어', ja: '日本語'}[target]}
             </a>
           ))}
@@ -92,9 +92,8 @@ const metadata = {
       <div class="header-row">
         <div>
           <a
-            class="brand-link"
+            class="brand-link preserve-framework"
             href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`}
-            data-preserve-framework
             aria-label={m.site_name(undefined, options)}
           >
             <h1>
@@ -110,10 +109,8 @@ const metadata = {
     <nav class="integrated-nav" aria-label={m.nav_examples(undefined, options)}>
       <floating-root
         class="pattern-picker"
-        data-pattern-picker-root
+        id="pattern-picker-root"
         interactions="click dismiss"
-        floating-role="dialog"
-        placement="bottom"
       >
         <floating-reference>
           <button class="pattern-picker-trigger" type="button" aria-label={m.nav_examples(undefined, options)}>
@@ -126,7 +123,7 @@ const metadata = {
         </floating-reference>
         <template slot="content">
           <div class="pattern-picker-panel">
-            <a href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`} data-example-link="home" data-preserve-framework aria-current={example ? undefined : 'page'}>
+            <a class="preserve-framework" href={`${getRelativeLocaleUrl(locale)}${frameworkSearch}`} aria-current={example ? undefined : 'page'}>
               <House aria-hidden="true" size={16} strokeWidth={1.8} />
               <span>{m.site_name(undefined, options)}</span>
             </a>
@@ -134,8 +131,7 @@ const metadata = {
               examples.map((item) => (
                 <a
                   href={`${getRelativeLocaleUrl(locale, item.id)}?framework=wc`}
-                  data-example-link={item.id}
-                  data-preserve-framework
+                  class="preserve-framework"
                   aria-current={example === item.id ? 'page' : undefined}
                 >
                   {(() => {
@@ -173,12 +169,12 @@ const metadata = {
             ? '@floating-ui-plus/vue'
             : '@floating-ui-plus/web-components';
         document
-          .querySelectorAll<HTMLElement>('[data-framework-package]')
+          .querySelectorAll<HTMLElement>('.framework-package')
           .forEach((element) => {
             element.textContent = frameworkPackage;
           });
         document
-          .querySelectorAll<HTMLElement>('[data-framework-name]')
+          .querySelectorAll<HTMLElement>('.framework-name')
           .forEach((element) => {
             element.textContent = framework;
           });
@@ -186,18 +182,18 @@ const metadata = {
           .querySelector('meta[name="theme-color"]')
           ?.setAttribute('content', framework === 'vue' ? '#effaf5' : '#edf3ff');
 
-        document.querySelectorAll<HTMLAnchorElement>('[data-preserve-framework]').forEach((link) => {
+        document.querySelectorAll<HTMLAnchorElement>('.preserve-framework').forEach((link) => {
           const url = new URL(link.href);
           url.searchParams.set('framework', framework === 'vue' ? 'vue' : 'wc');
           link.href = url.href;
         });
-        document.querySelectorAll<HTMLAnchorElement>('[data-preserve-query]').forEach((link) => {
+        document.querySelectorAll<HTMLAnchorElement>('.preserve-query').forEach((link) => {
           const url = new URL(link.href);
           url.search = window.location.search;
           link.href = url.href;
         });
-        document.querySelectorAll<HTMLAnchorElement>('[data-framework-switch]').forEach((link) => {
-          const target = link.dataset.frameworkSwitch;
+        document.querySelectorAll<HTMLAnchorElement>('#framework-switch-web-components, #framework-switch-vue').forEach((link) => {
+          const target = link.id.replace('framework-switch-', '');
           const currentUrl = new URL(window.location.href);
           const source = currentUrl.searchParams.get('source');
           const url = new URL(link.href);
@@ -219,7 +215,7 @@ const metadata = {
       customElements.whenDefined('floating-root').then(() => {
         const patternPicker = FloatingRootElement.query(
           document,
-          '[data-pattern-picker-root]',
+          '#pattern-picker-root',
         );
 
         patternPicker.configure({

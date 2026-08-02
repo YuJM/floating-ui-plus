@@ -28,7 +28,7 @@ test("opens native nested menu popovers in place", async ({ page }) => {
     }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Open actions" }).click();
-  const rootMenu = page.getByTestId("actions-menu");
+  const rootMenu = page.locator("#vue-actions-menu");
   await expect(rootMenu).toBeVisible();
   await expect(rootMenu).toHaveAttribute("popover", "manual");
   await expect(rootMenu).not.toHaveAttribute("data-fup-portal");
@@ -36,7 +36,7 @@ test("opens native nested menu popovers in place", async ({ page }) => {
   await page
     .getByRole("menuitem", { name: /Move to project/ })
     .press("ArrowRight");
-  const projectMenu = page.getByTestId("project-menu");
+  const projectMenu = page.locator("#vue-project-menu");
   await expect(projectMenu).toBeVisible();
   await expect(projectMenu).toHaveAttribute("popover", "manual");
   await expect(projectMenu).not.toHaveAttribute("data-fup-portal");
@@ -482,7 +482,7 @@ test("multilingual Vue combobox keeps input focus in a native popover", async ({
 
   await input.focus();
   await expect(page.getByRole("option")).toHaveCount(4);
-  await vuePanel.locator('[data-search-sample="bejing"]').click();
+  await vuePanel.locator('#vue-query-sample-bejing').click();
   await expect(input).toBeFocused();
   await expect(input).toHaveValue("bejing");
   const firstResult = page.getByRole("option", { name: /^北京/ });
@@ -513,7 +513,7 @@ test("multilingual Vue combobox keeps input focus in a native popover", async ({
   await input.fill("bejing");
   const option = page.getByRole("option", { name: /北京/ });
   await expect(option).toBeVisible();
-  const popup = page.locator("[data-floating-query-popup]:visible");
+  const popup = page.locator(".vue-combobox-popup:visible");
   await expect(popup).toHaveAttribute("popover", "manual");
   expect(
     await popup.evaluate((element) =>
@@ -536,7 +536,7 @@ test("multilingual Vue combobox keeps input focus in a native popover", async ({
   await page.addScriptTag({ content: axe.source });
   const violations = await page.evaluate(async () => {
     const result = await (window as any).axe.run({
-      include: [[".vue-combobox-card"], ["[data-floating-query-popup]"]],
+      include: [[".vue-combobox-card"], [".vue-combobox-popup"]],
     });
     return result.violations.filter((violation: { impact: string | null }) =>
       ["critical", "serious"].includes(violation.impact ?? ""),

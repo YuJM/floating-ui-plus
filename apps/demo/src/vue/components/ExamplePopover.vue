@@ -9,7 +9,6 @@ import {
   dismiss,
   flip,
   offset,
-  role,
   shift,
   transformOrigin,
 } from '@floating-ui-plus/vue';
@@ -27,7 +26,7 @@ const options = {
   ],
   whileElementsMounted: autoUpdate,
 } as const;
-const plugins = [click(), dismiss(), role({role: 'dialog'})];
+const plugins = [click(), dismiss()];
 </script>
 
 <template>
