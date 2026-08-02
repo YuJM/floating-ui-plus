@@ -7,7 +7,7 @@
     <h3>Move at the speed of thought.</h3>
     <p>Search grouped actions, navigate with arrow keys, and press Enter to run the active command.</p>
     <floating-root data-command-root strategy="fixed">
-      <floating-reference><button class="command-trigger" type="button">Open command palette <kbd>⌘ K</kbd></button></floating-reference>
+      <floating-reference><button class="command-trigger" type="button">Open command palette <kbd data-command-shortcut>Ctrl K</kbd></button></floating-reference>
       <dialog slot="floating" class="command-dialog" aria-labelledby="command-title">
         <h4 id="command-title" class="sr-only">Command palette</h4>
         <div class="command-shell" data-slot="command">
@@ -39,6 +39,12 @@
     const result = scope.querySelector<HTMLElement>('[data-command-result]');
     const input = scope.querySelector<HTMLInputElement>('[data-slot="command-input"]');
     if (!list || !empty || !status || !result || !input) return;
+
+    const isApplePlatform = /Macintosh|Mac OS X|iPhone|iPad|iPod/i.test(
+      navigator.userAgent,
+    );
+    scope.querySelector<HTMLElement>('[data-command-shortcut]')!.textContent =
+      isApplePlatform ? '⌘ K' : 'Ctrl K';
 
     root.transform = false;
     root.configure({plugins: [click(), dismiss(), role({role: 'dialog'})]});

@@ -1,0 +1,45 @@
+---
+title: Styling floating surfaces
+description: A styling guide for positioning, surfaces, safe areas, and motion with Floating UI Plus.
+---
+
+The package owns interaction state and geometry. Your application owns the
+surface markup, visual tokens, and responsive layout. This separation keeps a
+tooltip, sheet, toast, or command palette consistent without forcing one visual
+design on every product.
+
+The Styling group collects the decisions that are specific to floating UI:
+
+- [Positioning and overflow](./styling/positioning): connect middleware output
+  to CSS without introducing scrollbars or fighting fixed edge layouts.
+- [Surfaces, backdrops, and safe areas](./styling/surfaces): style native
+  popovers and dialogs, including mobile viewport insets.
+- [Component states](./styling/states): style placement, active options,
+  focus, and transition state without coupling visuals to framework code.
+- [CSS animation examples](./styling/animation): apply entry, exit, backdrop,
+  Sheet, and Toast motion with CSS variables.
+
+For a complete close lifecycle, see [Entry and exit animation](../animation).
+The [Sheet](/docs/guides/demo/sheet), [Toast](/docs/guides/demo/toast), and
+[Command](/docs/guides/demo/command) demos show these patterns in context.
+
+## A useful ownership rule
+
+Use package state to answer “is it open, dismissed, or active?” and CSS to
+answer “where should it appear, how large is it, and how should it move?”
+
+```css
+.surface {
+  /* application-owned design tokens */
+  --surface-radius: 0.75rem;
+  --surface-shadow: 0 18px 50px rgb(15 23 42 / 0.18);
+
+  border-radius: var(--surface-radius);
+  box-shadow: var(--surface-shadow);
+}
+```
+
+Avoid conditional rendering that removes a native surface before its close
+transition can run. Keep it mounted and let Floating UI Plus apply `hidden`
+after the browser transition (or after `FloatingTransition` for a custom
+presence surface).

@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "generate:messages": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy url baseLocale --emit-ts-declarations --silent",
+    "generate:llms": "bun scripts/generate-llms.ts",
     "generate:fake-server-destinations": "bun scripts/generate-fake-server-destinations.ts",
-    "dev": "bun run generate:messages && astro dev --host 127.0.0.1 --port 5173",
+    "dev": "bun run generate:messages && bun run generate:llms && astro dev --host 127.0.0.1 --port 5173",
     "preview": "astro preview --host 127.0.0.1",
-    "build": "bun run generate:messages && astro check && astro build",
-    "typecheck": "bun run generate:messages && astro check",
+    "build": "bun run generate:messages && bun run generate:llms && astro check && astro build",
+    "typecheck": "bun run generate:messages && bun run generate:llms && astro check",
     "test:unit": "bun test test/unit",
     "test": "playwright test --config playwright.config.ts",
     "test:headed": "playwright test --config playwright.config.ts --headed",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@comneed/textby": "0.0.3",
     "@faker-js/faker": "^10.5.0",
     "@inlang/plugin-message-format": "^4.3.0",
     "@tailwindcss/vite": "^4.3.3",

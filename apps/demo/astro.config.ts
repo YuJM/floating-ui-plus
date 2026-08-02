@@ -37,6 +37,9 @@ export default defineConfig({
         'Framework-neutral floating UI primitives for Web, Web Components, and Vue.',
       disable404Route: true,
       customCss: ['./src/styles/docs.css'],
+      components: {
+        Header: './src/components/docs/DocsHeader.astro',
+      },
       sidebar: [
         {label: 'Introduction', items: [{slug: 'docs'}]},
         {
@@ -49,9 +52,17 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Styling',
+          // Let Starlight discover this documentation group. This avoids a
+          // broken docs route when a page is added, renamed, or moved during
+          // local development before the sidebar has been updated.
+          items: [{autogenerate: {directory: 'docs/guides/styling'}}],
+        },
+        {
           label: 'Guides',
           items: [
             {slug: 'docs/guides/animation'},
+            {slug: 'docs/guides/llms'},
             {
               label: 'Demo',
               items: [

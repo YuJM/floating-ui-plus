@@ -1,0 +1,204 @@
+---
+title: CSS animation examples
+description: Apply CSS entry, exit, backdrop, Sheet, and Toast animations with Floating UI Plus.
+---
+
+Keep motion values in CSS custom properties so a design system can tune them
+without changing interaction code. `transformOrigin()` is optional: it is
+useful when `flip()` or `shift()` can change the final side, while a fixed
+placement can use a CSS-only origin.
+
+```ts
+import { flip, offset, shift, transformOrigin } from "@floating-ui-plus/web";
+
+const middleware = [
+  offset(8),
+  flip(),
+  shift({ padding: 8 }),
+  transformOrigin({ padding: 8 }),
+];
+```
+
+```css
+.popover {
+  --motion-distance: 0.35rem;
+  --motion-scale: 0.98;
+  --motion-duration-in: 160ms;
+  --motion-duration-out: 120ms;
+  --motion-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  opacity: 0;
+  translate: 0 var(--motion-distance);
+  scale: var(--motion-scale);
+  transform-origin: var(--floating-transform-origin, 50% 0%);
+  transition:
+    opacity var(--motion-duration-out) var(--motion-ease),
+    translate var(--motion-duration-out) var(--motion-ease),
+    scale var(--motion-duration-out) var(--motion-ease),
+    display var(--motion-duration-out) allow-discrete,
+    overlay var(--motion-duration-out) allow-discrete;
+}
+
+.popover:popover-open {
+  opacity: 1;
+  translate: 0;
+  scale: 1;
+  transition-duration: var(--motion-duration-in);
+}
+
+@starting-style {
+  .popover:popover-open {
+    opacity: 0;
+    translate: 0 var(--motion-distance);
+    scale: var(--motion-scale);
+  }
+}
+```
+
+The discrete `display` and `overlay` transitions keep a native Popover in the
+top layer until its visual exit finishes. Without those properties, the
+surface still closes correctly, but it closes immediately. See [Entry and exit
+animation](../animation) for the dialog variant and browser fallback details.
+
+## Dialog and Sheet from an edge
+
+Native dialogs use `:open`. A Sheet disables transform positioning so CSS owns
+the physical edge and the travel direction:
+
+```css
+.sheet {
+  position: fixed;
+  inset: auto 0 0;
+  width: 100%;
+  max-height: 90dvh;
+  margin: 0;
+  --sheet-enter-y: 100%;
+  --sheet-enter-x: 0;
+  --sheet-duration-in: 240ms;
+  --sheet-duration-out: 180ms;
+
+  opacity: 0;
+  translate: var(--sheet-enter-x) var(--sheet-enter-y);
+  transition:
+    opacity var(--sheet-duration-out) ease,
+    translate var(--sheet-duration-out) cubic-bezier(0.32, 0.72, 0, 1),
+    display var(--sheet-duration-out) allow-discrete,
+    overlay var(--sheet-duration-out) allow-discrete;
+}
+
+.sheet:open {
+  opacity: 1;
+  translate: 0;
+  transition-duration: var(--sheet-duration-in);
+}
+
+.sheet[data-side="top"] {
+  inset: 0 0 auto;
+  --sheet-enter-y: -100%;
+}
+
+.sheet[data-side="right"] {
+  inset: 0 0 0 auto;
+  width: min(25rem, 100vw);
+  --sheet-enter-y: 0;
+  --sheet-enter-x: 100%;
+  translate: var(--sheet-enter-x) 0;
+}
+
+@starting-style {
+  .sheet:open {
+    opacity: 0;
+    translate: var(--sheet-enter-x) var(--sheet-enter-y);
+  }
+}
+
+.sheet::backdrop {
+  background: rgb(15 23 42 / 0%);
+  transition:
+    background-color var(--sheet-duration-out) ease,
+    display var(--sheet-duration-out) allow-discrete,
+    overlay var(--sheet-duration-out) allow-discrete;
+}
+
+.sheet:open::backdrop {
+  background: rgb(15 23 42 / 32%);
+}
+```
+
+Use the same contract for Web Components and Vue. Only the renderer differs;
+the CSS remains application-owned. The [Sheet demo](../demo/sheet) includes
+all four directions, backdrop dismissal, safe-area padding, and reduced-motion
+handling.
+
+## Toast from the viewport edge
+
+Toast is not a native top-layer surface, so keep it mounted with
+`FloatingTransition` or `useFloatingTransition`. Target its lifecycle status
+and animate from the bottom of the viewport:
+
+```css
+.toast-item {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-end: 0;
+  width: min(22.5rem, calc(100vw - 2rem));
+  transform-origin: 100% 100%;
+  transition:
+    opacity 180ms ease,
+    translate 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    scale 220ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.toast-item[data-status="initial"],
+.toast-item[data-status="close"] {
+  opacity: 0;
+  translate: 0 120%;
+  scale: 0.98;
+}
+
+.toast-item[data-status="close"] {
+  pointer-events: none;
+}
+```
+
+The package controls `data-status`; stack depth, `data-expanded`, and
+`--toast-offset-y` remain application state. See the [Toast demo](../demo/toast)
+for the complete pause, stack, and accessibility example.
+
+## CSS-only origin
+
+If the placement never flips, expose a side attribute and choose the origin in
+CSS:
+
+```css
+.popover[data-side="top"] { --motion-origin: 50% 100%; }
+.popover[data-side="right"] { --motion-origin: 0% 50%; }
+.popover[data-side="bottom"] { --motion-origin: 50% 0%; }
+.popover[data-side="left"] { --motion-origin: 100% 50%; }
+
+.popover { transform-origin: var(--floating-transform-origin, var(--motion-origin, 50% 0%)); }
+```
+
+CSS cannot detect a runtime flip or the exact shifted reference point. Use the
+middleware when those values affect the motion origin.
+
+## Custom presence and reduced motion
+
+Toast and other non-native surfaces use `FloatingTransition` (or Vue's
+`useFloatingTransition`) to keep the node mounted while the exit CSS runs. The
+transition status is an attribute your CSS can target; the package removes the
+node when the close state finishes. For motion-sensitive users, preserve the
+lifecycle but reduce travel and duration:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .popover,
+  .toast-item {
+    --motion-distance: 0;
+    --motion-scale: 1;
+    --motion-duration-in: 80ms;
+    --motion-duration-out: 80ms;
+    transition-duration: 80ms;
+  }
+}
+```

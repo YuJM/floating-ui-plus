@@ -65,6 +65,11 @@ const navigationOptions = getNavigationOptions({
 const activeId = computed(() =>
   activeIndex.value == null ? undefined : getItemId(activeIndex.value),
 );
+const shortcutLabel =
+  typeof navigator !== "undefined" &&
+  /Macintosh|Mac OS X|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    ? "⌘ K"
+    : "Ctrl K";
 
 function itemIndex(item: CommandItem) {
   return search.items.value.findIndex((candidate) => candidate.id === item.id);
@@ -106,7 +111,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
         @update:open="focusOnOpen"
       >
         <FloatingReference class="command-trigger">
-          Open command palette <kbd>⌘ K</kbd>
+          Open command palette <kbd>{{ shortcutLabel }}</kbd>
         </FloatingReference>
         <FloatingContent
           as="dialog"
