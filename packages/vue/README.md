@@ -48,10 +48,36 @@ Use the component layer for ordinary popovers, menus, and dialogs. The root
 owns one controller and its descendants receive the corresponding bindings.
 
 ```vue
+<script setup lang="ts">
+import {ref} from 'vue';
+import {
+  FloatingClose,
+  FloatingContent,
+  FloatingReference,
+  FloatingRoot,
+  autoUpdate,
+  click,
+  dismiss,
+  flip,
+  offset,
+  role,
+  shift,
+} from '@floating-ui-plus/vue';
+
+const open = ref(false);
+const options = {
+  placement: 'bottom-start',
+  middleware: [offset(8), flip({padding: 12}), shift({padding: 12})],
+  whileElementsMounted: autoUpdate,
+};
+const plugins = [click(), dismiss(), role({role: 'dialog'})];
+</script>
+
 <template>
   <FloatingRoot
     v-model:open="open"
-    :plugins="[click(), dismiss(), role({role: 'dialog'})]"
+    :options="options"
+    :plugins="plugins"
   >
     <FloatingReference>Open settings</FloatingReference>
     <FloatingContent class="popover">

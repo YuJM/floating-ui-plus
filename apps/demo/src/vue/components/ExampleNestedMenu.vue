@@ -15,6 +15,7 @@ import {
   offset,
   role,
   safePolygon,
+  size,
   shift,
 } from '@floating-ui-plus/vue';
 import {ref, watch} from 'vue';
@@ -30,7 +31,21 @@ const projectsOpen = ref(false);
 
 const rootOptions = {
   placement: 'bottom-start',
-  middleware: [offset(8), flip(), shift({padding: 18})],
+  middleware: [
+    offset(8),
+    flip({padding: 18}),
+    shift({padding: 18}),
+    size({
+      padding: 18,
+      rootBoundary: 'viewport',
+      apply({availableHeight, elements}) {
+        elements.floating.style.setProperty(
+          '--menu-panel-max-height',
+          `${Math.max(0, availableHeight)}px`,
+        );
+      },
+    }),
+  ],
   whileElementsMounted: autoUpdate,
 } as const;
 const rootPlugins = [
@@ -47,8 +62,18 @@ const projectOptions = {
   placement: 'right-start',
   middleware: [
     offset({mainAxis: 6, alignmentAxis: -6}),
-    flip(),
+    flip({padding: 18}),
     shift({padding: 18}),
+    size({
+      padding: 18,
+      rootBoundary: 'viewport',
+      apply({availableHeight, elements}) {
+        elements.floating.style.setProperty(
+          '--menu-panel-max-height',
+          `${Math.max(0, availableHeight)}px`,
+        );
+      },
+    }),
   ],
   whileElementsMounted: autoUpdate,
 } as const;

@@ -28,7 +28,6 @@ not needed for the usual case.
 <floating-root
   placement="bottom-start"
   interactions="click dismiss"
-  floating-role="dialog"
 >
   <floating-reference>
     <button type="button">Open settings</button>
@@ -42,6 +41,12 @@ not needed for the usual case.
   </template>
 </floating-root>
 ```
+
+`floating-role` is optional here because the root's baseline accessibility
+contract uses `dialog` for an interactive floating surface. Add
+`floating-role="dialog"` when making that intent explicit. `region` is a
+landmark role, not a role supported by the package's public floating-role
+contract.
 
 The root-owned `template[slot="content"]` is the explicit native Popover
 composition. A direct `<dialog slot="floating">` (or a top-level dialog in
@@ -62,14 +67,29 @@ Use a real `<dialog slot="floating">` for a modal. The browser then owns the
 top layer, focus, and inertness. Reserve `<floating-portal>` for a surface that
 explicitly must escape a clipping ancestor or render at a custom target.
 
-Configure function values as properties, rather than attributes:
+Configure function values as properties, rather than attributes. `configure()`
+keeps root middleware, plugins, and an optional explicit `topLayer` together;
+use it when more than one setting changes. Attribute values remain useful only
+for declarative strings such as `placement` and `interactions`.
 
 ```ts
-import {flip, offset, shift, type FloatingRootElement} from '@floating-ui-plus/web-components';
+import {
+  flip,
+  offset,
+  shift,
+  type FloatingRootElement,
+} from '@floating-ui-plus/web-components';
 
 const root = document.querySelector<FloatingRootElement>('floating-root')!;
-root.middleware = [offset(8), flip(), shift({padding: 12})];
+root.configure({
+  middleware: [offset(8), flip({padding: 12}), shift({padding: 12})],
+});
 ```
+
+Use `root.close(event, 'click')` for an imperative approved close. The root's
+cancelable `floatingbeforeclose` event is the synchronous guard point; an
+application with asynchronous confirmation should finish that work first and
+then call `close()`.
 
 ## Editable query
 

@@ -229,11 +229,18 @@ const metadata = {
             shift({padding: 16}),
             size({
               padding: 16,
-              apply({availableWidth, elements, rects}) {
-                elements.floating.style.width = `${Math.min(
-                  rects.reference.width,
-                  availableWidth,
-                )}px`;
+              apply({availableWidth, availableHeight, elements, rects}) {
+                const width = Math.max(
+                  0,
+                  Math.min(rects.reference.width, availableWidth),
+                );
+                const maxHeight = `${Math.max(0, availableHeight)}px`;
+                Object.assign(elements.floating.style, {
+                  width: `${width}px`,
+                  maxHeight,
+                  overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                });
               },
             }),
           ],

@@ -50,3 +50,28 @@ test('pattern picker remains keyboard-operable and contained at every viewport',
   await panel.getByRole('link', {name: '툴팁'}).click();
   await expect(page).toHaveURL(/\/ko\/tooltip\?framework=vue$/);
 });
+
+test('pattern picker constrains a short mobile viewport and exposes every example', async ({page}) => {
+  await page.setViewportSize({width: 390, height: 480});
+  await page.goto('/');
+
+  const picker = page.locator('.pattern-picker');
+  await picker.locator('.pattern-picker-trigger').click();
+  const panel = picker.locator('.pattern-picker-panel');
+  const viewport = page.viewportSize();
+  const panelBox = await panel.boundingBox();
+
+  expect(viewport).not.toBeNull();
+  expect(panelBox).not.toBeNull();
+  expect(panelBox!.y).toBeGreaterThanOrEqual(0);
+  expect(panelBox!.y + panelBox!.height).toBeLessThanOrEqual(viewport!.height);
+  await expect(panel).toHaveCSS('overflow-y', 'auto');
+  expect(
+    await panel.evaluate((element) => element.scrollHeight > element.clientHeight),
+  ).toBe(true);
+
+  const lastExample = panel.locator('[data-example-link="modal"]');
+  await lastExample.scrollIntoViewIfNeeded();
+  await lastExample.click();
+  await expect(page).toHaveURL(/\/modal\?framework=wc$/);
+});

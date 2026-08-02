@@ -70,6 +70,7 @@ roles, active descendant, virtual list navigation, and Enter activation.
 ```ts
 import {
   createFloating,
+  createFuzzySearchSource,
   createQuery,
   createSearch,
   dismiss,
@@ -86,7 +87,7 @@ const floating = createFloating(() => ({
 }));
 
 const search = createSearch({
-  items: destinations,
+  source: createFuzzySearchSource(destinations, {keys: ['name']}),
   getItemKey: (item) => item.id,
 });
 
@@ -101,12 +102,17 @@ const query = createQuery({
 floating.pipe(dismiss(), ...query.interactions({ loop: true }));
 
 query.bindInput(input);
-query.setListElements(optionElements);
-optionElements.forEach((element, index) => {
-  query.bindOption(element, search.items[index]!, index);
-});
+const renderResults = () => {
+  const optionElements = renderOptions(search.items);
+  query.setListElements(optionElements);
+  optionElements.forEach((element, index) => {
+    query.bindOption(element, search.items[index]!, index);
+  });
+};
+const unsubscribe = search.subscribe(renderResults);
 
 // Dispose both owners when the rendered surface is removed.
+unsubscribe();
 query.destroy();
 search.destroy();
 floating.destroy();
@@ -119,6 +125,13 @@ combobox option semantics.
 
 The `onActivate` callback is deliberately not a selected value. It lets search,
 autocomplete, filters, and command palettes decide what activation means.
+
+`createSearch()` is a state controller, not a renderer. Subscribe it to render
+the current `search.items`, then replace the query's list elements after each
+render. Use `createFuzzySearchSource()` for local matching or provide an async
+`source` for a server-backed query. If the application already owns its result
+state, use `items` instead of `source` and update that state in response to the
+input lifecycle.
 
 ## Essential API
 
