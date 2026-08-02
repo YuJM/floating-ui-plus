@@ -1,4 +1,4 @@
-# @floating-ui/vue
+# @floating-ui-plus/vue
 
 ## 0.8.0
 
@@ -49,6 +49,8 @@
 ### Patch Changes
 
 - @floating-ui-plus/web@0.7.4
+- Restore keyboard continuity after pointer-opening a floating surface in Safari and
+  preserve native Popover positioning when applying controller styles.
 
 ## 0.7.3
 

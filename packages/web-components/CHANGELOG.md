@@ -49,6 +49,9 @@
 ### Patch Changes
 
 - 4314ed7: Restore menu keyboard navigation immediately after a template-backed surface is closed and reopened.
+- Restore keyboard continuity after pointer-opening a floating surface in Safari and
+  preserve native Popover positioning when applying controller styles.
+- Updated dependencies
   - @floating-ui-plus/web@0.7.4
 
 ## 0.7.3

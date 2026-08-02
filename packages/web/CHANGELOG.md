@@ -41,6 +41,11 @@
 
 ## 0.7.4
 
+### Patch Changes
+
+- Restore keyboard continuity after pointer-opening a floating surface in Safari and
+  preserve native Popover positioning when applying controller styles.
+
 ## 0.7.3
 
 ### Patch Changes
