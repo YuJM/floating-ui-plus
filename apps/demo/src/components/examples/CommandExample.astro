@@ -21,20 +21,20 @@
                   <button class="command-close" type="button" data-fup-close aria-label="Close command palette">Esc</button>
                 </div>
                 <div id="command-list" class="command-list" role="listbox" aria-label="Commands">
-                  <floating-search>
-                    <template data-search-idle>
+                  <floating-results>
+                    <floating-results-status type="idle">
                       <div class="command-empty">Start typing to search commands.</div>
-                    </template>
-                    <template data-search-loading>
+                    </floating-results-status>
+                    <floating-results-status type="loading">
                       <div class="command-empty">Searching commands…</div>
-                    </template>
-                    <template data-search-error>
+                    </floating-results-status>
+                    <floating-results-status type="error">
                       <div class="command-empty">Command search failed.</div>
-                    </template>
-                    <template data-search-empty>
+                    </floating-results-status>
+                    <floating-results-status type="empty">
                       <div class="command-empty">No commands found for “<span data-search-text="$query"></span>”.</div>
-                    </template>
-                    <template data-search-result>
+                    </floating-results-status>
+                    <floating-results-item>
                       <floating-list-item>
                         <div class="command-item">
                           <span class="command-item-icon" aria-hidden="true" data-search-text="icon"></span>
@@ -42,8 +42,8 @@
                           <kbd data-search-text="shortcut"></kbd>
                         </div>
                       </floating-list-item>
-                    </template>
-                  </floating-search>
+                    </floating-results-item>
+                  </floating-results>
                 </div>
                 <p id="command-status" class="sr-only" aria-live="polite">Command palette closed</p>
               </div>

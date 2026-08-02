@@ -5,7 +5,7 @@ import {
   FloatingListItem,
   FloatingReference,
   FloatingRoot,
-  FloatingSearch,
+  FloatingResults,
   autoUpdate,
   createFuzzySearchSource,
   dismiss,
@@ -132,9 +132,8 @@ const navigationOptions = getNavigationOptions({
           />
         </div>
 
-        <Transition name="vue-surface">
-            <FloatingContent class="vue-combobox-popup">
-              <FloatingSearch :search="search">
+        <FloatingContent class="vue-combobox-popup">
+          <FloatingResults :search="search">
                 <template #loading>
                   <div class="vue-combobox-empty" role="option" aria-disabled="true">
                     Searching…
@@ -169,9 +168,8 @@ const navigationOptions = getNavigationOptions({
                     No destination found for “{{ search.query.value }}”
                   </div>
                 </template>
-              </FloatingSearch>
-            </FloatingContent>
-        </Transition>
+          </FloatingResults>
+        </FloatingContent>
       </FloatingList>
     </FloatingRoot>
 

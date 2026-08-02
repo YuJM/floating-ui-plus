@@ -31,12 +31,11 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
             <span class="combobox-loading-indicator" aria-hidden="true"></span>
           </floating-reference>
           <template slot="content">
-              <div
+                <floating-results
                 class="combobox-popup async-combobox-popup"
                 aria-label="Remote destination suggestions"
-              >
-                <floating-search>
-                  <template data-search-loading>
+                >
+                  <floating-results-status type="loading">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -44,8 +43,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                     >
                       Querying remote endpoint…
                     </div>
-                  </template>
-                  <template data-search-error>
+                  </floating-results-status>
+                  <floating-results-status type="error">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -53,8 +52,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                     >
                       Remote search failed.
                     </div>
-                  </template>
-                  <template data-search-empty>
+                  </floating-results-status>
+                  <floating-results-status type="empty">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -64,8 +63,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                         data-search-text="$query"
                       ></span>”
                     </div>
-                  </template>
-                  <template data-search-result>
+                  </floating-results-status>
+                  <floating-results-item>
                     <floating-list-item>
                       <div class="combobox-option">
                         <span>
@@ -75,8 +74,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                         <span class="language-badge">API</span>
                       </div>
                     </floating-list-item>
-                  </template>
-                  <template data-search-more>
+                  </floating-results-item>
+                  <floating-results-more>
                     <div class="combobox-pagination" role="status">
                       <span class="combobox-pagination-progress">
                         <strong data-search-text="$count"></strong> of
@@ -91,9 +90,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                         <span class="combobox-load-more-pending">Loading…</span>
                       </button>
                     </div>
-                  </template>
-                </floating-search>
-              </div>
+                  </floating-results-more>
+                </floating-results>
           </template>
           <p
             id="remote-combobox-status"

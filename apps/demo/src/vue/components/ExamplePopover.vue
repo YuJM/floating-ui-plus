@@ -17,7 +17,6 @@ import {ref} from 'vue';
 const open = ref(false);
 const options = {
   placement: 'bottom-start',
-  strategy: 'fixed',
   middleware: [
     offset(12),
     flip(),

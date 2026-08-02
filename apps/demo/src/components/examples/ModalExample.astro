@@ -5,7 +5,8 @@
 -->
 <section id="modal-demo" class="modal-demo" aria-label="Modal focus management example">
   <p>Open the focus room to test focus trapping, inert neighbors, and layered Escape dismissal.</p>
-  <floating-root id="modal-root">
+  <floating-tree>
+    <floating-root id="modal-root">
     <floating-node node-id="focus-room">
       <floating-reference>
         <button class="outline-button">
@@ -87,7 +88,8 @@
         <span class="modal-hint">ESC closes the top layer</span>
       </div>
     </dialog>
-  </floating-root>
+    </floating-root>
+  </floating-tree>
 </section>
 
 <script>

@@ -36,13 +36,11 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
             />
           </floating-reference>
           <template slot="content">
-              <div
-                class="combobox-popup"
-                class="combobox-popup"
-                aria-label="Destination suggestions"
-              >
-                <floating-search>
-                  <template data-search-loading>
+                <floating-results
+                  class="combobox-popup"
+                  aria-label="Destination suggestions"
+                >
+                  <floating-results-status type="loading">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -50,8 +48,8 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
                     >
                       Searching…
                     </div>
-                  </template>
-                  <template data-search-error>
+                  </floating-results-status>
+                  <floating-results-status type="error">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -59,8 +57,8 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
                     >
                       Search failed.
                     </div>
-                  </template>
-                  <template data-search-empty>
+                  </floating-results-status>
+                  <floating-results-status type="empty">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -70,8 +68,8 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
                         data-search-text="$query"
                       ></span>”
                     </div>
-                  </template>
-                  <template data-search-result>
+                  </floating-results-status>
+                  <floating-results-item>
                     <floating-list-item>
                       <div class="combobox-option">
                         <span>
@@ -84,9 +82,8 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
                         ></span>
                       </div>
                     </floating-list-item>
-                  </template>
-                </floating-search>
-              </div>
+                  </floating-results-item>
+                </floating-results>
           </template>
           <p
             id="combobox-status"
@@ -112,7 +109,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
   </div>
 
   <code>
-    &lt;floating-query&gt; + &lt;floating-search&gt; +
+    &lt;floating-query&gt; + &lt;floating-results&gt; +
     &lt;floating-list-item&gt;
   </code>
   </section>

@@ -110,7 +110,7 @@ watch(rootOpen, (open) => {
       <FloatingNode id="vue-nested-root">
         <article class="vue-demo-card bg-vue-leaf">
           <div class="vue-card-top">
-            <span class="vue-number">T</span><span>tree + teleport</span>
+            <span class="vue-number">T</span><span>2 coordinated roots</span>
           </div>
           <h3>Nested command tree</h3>
           <p>
@@ -127,84 +127,80 @@ watch(rootOpen, (open) => {
               loop
               @update:active-index="handleRootNavigate"
             >
-              <Transition name="vue-surface">
-                <FloatingContent
-                  class="menu-panel"
-                  id="vue-actions-menu"
+              <FloatingContent
+                class="menu-panel"
+                id="vue-actions-menu"
+              >
+                <div class="menu-heading">Tree coordinated actions</div>
+                <FloatingListItem
+                  tag="button"
+                  :label="rootLabels[0]"
+                  class="menu-item"
+                  role="menuitem"
+                  close-on-click
                 >
-                  <div class="menu-heading">Tree coordinated actions</div>
-                  <FloatingListItem
-                    tag="button"
-                    :label="rootLabels[0]"
-                    class="menu-item"
-                    role="menuitem"
-                    close-on-click
-                  >
-                    <span>{{ rootLabels[0] }}</span>
-                    <kbd>{{ rootLabels[0].slice(0, 1).toUpperCase() }}</kbd>
-                  </FloatingListItem>
+                  <span>{{ rootLabels[0] }}</span>
+                  <kbd>{{ rootLabels[0].slice(0, 1).toUpperCase() }}</kbd>
+                </FloatingListItem>
 
-                  <FloatingRoot
-                    v-model:open="projectsOpen"
-                    :options="projectOptions"
-                    :plugins="projectPlugins"
-                  >
-                    <FloatingNode id="vue-nested-projects">
-                      <FloatingListItem
-                        reference
-                        tag="button"
-                        :label="rootLabels[1]"
-                        class="menu-item"
-                        role="menuitem"
-                        aria-haspopup="menu"
-                        :aria-expanded="projectsOpen"
+                <FloatingRoot
+                  v-model:open="projectsOpen"
+                  :options="projectOptions"
+                  :plugins="projectPlugins"
+                >
+                  <FloatingNode id="vue-nested-projects">
+                    <FloatingListItem
+                      reference
+                      tag="button"
+                      :label="rootLabels[1]"
+                      class="menu-item"
+                      role="menuitem"
+                      aria-haspopup="menu"
+                      :aria-expanded="projectsOpen"
+                    >
+                      <span>{{ rootLabels[1] }}</span>
+                      <span class="menu-item-shortcuts">
+                        <kbd>{{ rootLabels[1].slice(0, 1).toUpperCase() }}</kbd>
+                        <kbd aria-hidden="true">→</kbd>
+                      </span>
+                    </FloatingListItem>
+                    <FloatingList navigation typeahead loop nested>
+                      <FloatingContent
+                        class="menu-panel nested-menu-submenu"
+                        id="vue-project-menu"
                       >
-                        <span>{{ rootLabels[1] }}</span>
-                        <span class="menu-item-shortcuts">
-                          <kbd>{{ rootLabels[1].slice(0, 1).toUpperCase() }}</kbd>
-                          <kbd aria-hidden="true">→</kbd>
-                        </span>
-                      </FloatingListItem>
-                      <FloatingList navigation typeahead loop nested>
-                        <Transition name="vue-surface">
-                          <FloatingContent
-                            class="menu-panel nested-menu-submenu"
-                            id="vue-project-menu"
-                          >
-                            <div class="menu-heading">Choose a project</div>
-                            <FloatingListItem
-                              v-for="label in projectLabels"
-                              :key="label"
-                              tag="button"
-                              :label="label"
-                              class="menu-item"
-                              role="menuitem"
-                              close-on-click="all"
-                            >
-                              <span>{{ label }}</span>
-                              <kbd>{{ label.slice(0, 1).toUpperCase() }}</kbd>
-                            </FloatingListItem>
-                          </FloatingContent>
-                        </Transition>
-                      </FloatingList>
-                    </FloatingNode>
-                  </FloatingRoot>
+                        <div class="menu-heading">Choose a project</div>
+                        <FloatingListItem
+                          v-for="label in projectLabels"
+                          :key="label"
+                          tag="button"
+                          :label="label"
+                          class="menu-item"
+                          role="menuitem"
+                          close-on-click="all"
+                        >
+                          <span>{{ label }}</span>
+                          <kbd>{{ label.slice(0, 1).toUpperCase() }}</kbd>
+                        </FloatingListItem>
+                      </FloatingContent>
+                    </FloatingList>
+                  </FloatingNode>
+                </FloatingRoot>
 
-                  <FloatingListItem
-                    tag="button"
-                    :label="rootLabels[2]"
-                    class="menu-item"
-                    role="menuitem"
-                    close-on-click
-                  >
-                    <span>{{ rootLabels[2] }}</span>
-                    <kbd>{{ rootLabels[2].slice(0, 1).toUpperCase() }}</kbd>
-                  </FloatingListItem>
-                </FloatingContent>
-              </Transition>
+                <FloatingListItem
+                  tag="button"
+                  :label="rootLabels[2]"
+                  class="menu-item"
+                  role="menuitem"
+                  close-on-click
+                >
+                  <span>{{ rootLabels[2] }}</span>
+                  <kbd>{{ rootLabels[2].slice(0, 1).toUpperCase() }}</kbd>
+                </FloatingListItem>
+              </FloatingContent>
             </FloatingList>
           </div>
-          <code>FloatingList navigation typeahead nested</code>
+          <code>&lt;FloatingTree&gt; + &lt;FloatingNode&gt;</code>
         </article>
       </FloatingNode>
     </FloatingRoot>

@@ -13,121 +13,85 @@ const {locale = 'en'} = Astro.props as {locale?: Locale};
       Create notification <span aria-hidden="true">＋</span>
     </button>
   </div>
-  <floating-composite id="toast-composite" orientation="vertical" loop>
-    <ol
-      class="toast-viewport"
-      id="toast-viewport"
-      role="region"
-      aria-label="Notifications"
-      aria-live="polite"
-      aria-relevant="additions"
-      aria-atomic="false"
-      tabindex="-1"
-    ></ol>
-  </floating-composite>
+  <floating-presence-stack
+    class="toast-viewport"
+    id="toast-viewport"
+    role="region"
+    aria-label="Notifications"
+    aria-live="polite"
+    aria-relevant="additions"
+    aria-atomic="false"
+  >
+    <template slot="content">
+      <article class="toast-item" role="status">
+        <span class="toast-icon" aria-hidden="true">✓</span>
+        <div class="toast-content">
+          <strong data-presence-text="title"></strong>
+          <p data-presence-text="description"></p>
+        </div>
+        <button
+          class="toast-close"
+          type="button"
+          data-presence-close
+          aria-label="Dismiss notification"
+        >×</button>
+      </article>
+    </template>
+  </floating-presence-stack>
 </section>
 
 <script>
-  import {
-    FloatingTransition,
-    FloatingPresenceStack,
-    type PresenceStackSnapshot,
-  } from '@floating-ui-plus/web-components';
+  import type {FloatingPresenceStackElement} from '@floating-ui-plus/web-components';
   import {initializeExample} from './initialize-example';
-
-  const EXIT_DURATION = 220;
 
   interface ToastContent {
     title: string;
     description: string;
   }
 
-  interface ToastElementRecord {
-    element: HTMLLIElement;
-    transition: FloatingTransition;
-  }
-
   initializeExample('toast', (scope) => {
-    const viewport = scope.querySelector<HTMLOListElement>('#toast-viewport');
+    const viewport = scope.querySelector<FloatingPresenceStackElement<ToastContent>>(
+      '#toast-viewport',
+    );
     const createButton = scope.querySelector<HTMLButtonElement>('#toast-create');
     if (!viewport || !createButton) return;
 
-    const controller = new FloatingPresenceStack<ToastContent>({limit: 3, timeout: 5000});
-    const elements = new Map<string, ToastElementRecord>();
+    viewport.configure({
+      limit: 3,
+      timeout: 5000,
+      exitDuration: 220,
+      topLayer: 'popover',
+    });
+
     let sequence = 0;
-
-    const sync = (snapshot: PresenceStackSnapshot<ToastContent>) => {
-      const visible = snapshot.records.filter((record) => record.open).reverse();
-      for (const record of snapshot.records) {
-        let entry = elements.get(record.id);
-        if (!entry && record.open) {
-          const element = document.createElement('li');
-          element.className = 'toast-item';
-          element.dataset.toastId = record.id;
-          element.setAttribute('role', 'status');
-          element.innerHTML = `
-            <span class="toast-icon" aria-hidden="true">✓</span>
-            <div class="toast-content">
-              <strong>${record.value.title}</strong>
-              <p>${record.value.description}</p>
-            </div>
-            <floating-composite-item>
-              <button class="toast-close" type="button" aria-label="Dismiss notification ${record.id}">×</button>
-            </floating-composite-item>
-          `;
-          viewport.append(element);
-          const transition = new FloatingTransition(() => 'bottom-end', {
-            duration: {close: EXIT_DURATION},
-          });
-          entry = {element, transition};
-          elements.set(record.id, entry);
-          const unsubscribe = transition.subscribe(() => {
-            element.dataset.status = transition.status;
-            if (!transition.isMounted && transition.status === 'unmounted') {
-              unsubscribe();
-              transition.destroy();
-              elements.delete(record.id);
-              element.remove();
-              controller.remove(record.id);
-            }
-          });
-          element.querySelector('button')?.addEventListener('click', () => controller.close(record.id));
-          transition.setOpen(true);
-        }
-        if (!entry) continue;
-        const index = visible.findIndex((visibleRecord) => visibleRecord.id === record.id);
-        entry.element.style.setProperty('--toast-index', String(Math.max(0, index)));
-        entry.element.style.setProperty('--toast-offset-y', `${Math.max(0, index) * -84}px`);
-        entry.element.toggleAttribute('data-behind', index > 0);
-        entry.element.toggleAttribute('data-limited', record.overflowed);
-        if (!record.open) entry.transition.setOpen(false);
-      }
-      viewport.toggleAttribute('data-expanded', snapshot.paused);
-    };
-
-    const createToast = () => {
+    createButton.addEventListener('click', () => {
       const id = ++sequence;
-      controller.add({
-        title: `Notification ${id} created`,
-        description: 'Your changes have been saved successfully.',
-      }, {id: String(id)});
-    };
-
-    controller.subscribe(sync);
-    createButton.addEventListener('click', createToast);
-    viewport.addEventListener('pointerenter', () => controller.pause('pointer'));
-    viewport.addEventListener('pointerleave', () => controller.resume('pointer'));
-    viewport.addEventListener('focusin', () => controller.pause('focus'));
+      viewport.add(
+        {
+          title: `Notification ${id} created`,
+          description: 'Your changes have been saved successfully.',
+        },
+        {id: String(id)},
+      );
+    });
+    viewport.addEventListener('pointerenter', () => viewport.pause('pointer'));
+    viewport.addEventListener('pointerleave', () => viewport.resume('pointer'));
+    viewport.addEventListener('focusin', () => viewport.pause('focus'));
     viewport.addEventListener('focusout', () => {
       queueMicrotask(() => {
-        if (!viewport.contains(document.activeElement)) controller.resume('focus');
+        if (!viewport.contains(document.activeElement)) viewport.resume('focus');
       });
     });
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'F6' && controller.snapshot.records.some((record) => record.open)) {
-        event.preventDefault();
-        viewport.focus();
+      if (event.key !== 'F6' || !viewport.snapshot.records.some((record) => record.open)) {
+        return;
       }
+      const latestClose = viewport.querySelector<HTMLButtonElement>(
+        '[data-presence-index="0"] [data-presence-close]',
+      );
+      if (!latestClose) return;
+      event.preventDefault();
+      latestClose.focus();
     });
   });
 </script>

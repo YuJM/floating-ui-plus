@@ -5,7 +5,7 @@ import {
   FloatingListItem,
   FloatingReference,
   FloatingRoot,
-  FloatingSearch,
+  FloatingResults,
   autoUpdate,
   dismiss,
   flip,
@@ -131,12 +131,9 @@ const loadMore = () => void search.controller.loadMore();
           ></span>
         </div>
 
-        <Transition name="vue-surface">
-            <FloatingContent
-              class="vue-combobox-popup vue-async-combobox-popup"
-            >
-              <div class="vue-async-combobox-scroll">
-                <FloatingSearch :search="search">
+        <FloatingContent class="vue-combobox-popup vue-async-combobox-popup">
+          <div class="vue-async-combobox-scroll">
+            <FloatingResults :search="search">
                   <template #loading>
                     <div class="vue-combobox-empty" role="option" aria-disabled="true">
                       Querying remote endpoint…
@@ -189,10 +186,9 @@ const loadMore = () => void search.controller.loadMore();
                       The server found no match for “{{ search.query.value }}”
                     </div>
                   </template>
-                </FloatingSearch>
-              </div>
-            </FloatingContent>
-        </Transition>
+            </FloatingResults>
+          </div>
+        </FloatingContent>
       </FloatingList>
     </FloatingRoot>
 

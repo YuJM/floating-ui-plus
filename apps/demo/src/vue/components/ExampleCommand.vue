@@ -4,6 +4,7 @@ import {
   FloatingList,
   FloatingListItem,
   FloatingReference,
+  FloatingResults,
   FloatingRoot,
   click,
   createFuzzySearchSource,
@@ -13,7 +14,6 @@ import {
 } from "@floating-ui-plus/vue";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import {
-  commandGroups,
   commandItems,
   commandSearchKeys,
   type CommandItem,
@@ -56,14 +56,6 @@ const {
   getOptionProps,
   statusText,
 } = command;
-const groups = computed(() =>
-  commandGroups
-    .map((label) => ({
-      label,
-      items: search.items.value.filter((item) => item.group === label),
-    }))
-    .filter((group) => group.items.length),
-);
 const plugins = [click(), dismiss(), command.rolePlugin];
 const navigationOptions = getNavigationOptions({
   allowEscape: true,
@@ -77,10 +69,6 @@ const shortcutLabel =
   /Macintosh|Mac OS X|iPhone|iPad|iPod/i.test(navigator.userAgent)
     ? "⌘ K"
     : "Ctrl K";
-
-function itemIndex(item: CommandItem) {
-  return search.items.value.findIndex((candidate) => candidate.id === item.id);
-}
 
 function handleShortcut(event: KeyboardEvent) {
   const usesPrimaryModifier =
@@ -153,55 +141,45 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleShortcut));
                 </button>
               </div>
               <div
-                v-if="search.items.value.length"
                 id="vue-command-list"
                 class="command-list"
                 role="listbox"
                 aria-label="Commands"
               >
-                <template
-                  v-for="(group, groupIndex) in groups"
-                  :key="group.label"
-                >
-                  <div
-                    v-if="groupIndex"
-                    class="command-separator"
-                    role="separator"
-                  />
-                  <section
-                    class="command-group"
-                    :aria-labelledby="`vue-command-group-${groupIndex}`"
-                  >
-                    <h5 :id="`vue-command-group-${groupIndex}`">
-                      {{ group.label }}
-                    </h5>
+                <FloatingResults :search="search">
+                  <template #idle>
+                    <div class="command-empty">Start typing to search commands.</div>
+                  </template>
+                  <template #loading>
+                    <div class="command-empty">Searching commands…</div>
+                  </template>
+                  <template #error>
+                    <div class="command-empty">Command search failed.</div>
+                  </template>
+                  <template #empty>
+                    <div class="command-empty">
+                      No commands found for “{{ search.query.value }}”.
+                    </div>
+                  </template>
+                  <template #results>
                     <FloatingListItem
-                      v-for="item in group.items"
+                      v-for="(item, index) in search.items.value"
                       :key="item.id"
                       :label="item.label"
                       :value="item"
-                      v-bind="getOptionProps(item, itemIndex(item))"
+                      v-bind="getOptionProps(item, index)"
                     >
-                      <div
-                        class="command-item"
-                        role="option"
-                        :aria-selected="itemIndex(item) === activeIndex"
-                      >
-                        <span class="command-item-icon" aria-hidden="true">{{
-                          item.icon
-                        }}</span>
-                        <span>{{ item.label }}</span>
-                        <kbd
-                          v-if="item.shortcut"
-                          >{{ item.shortcut }}</kbd
-                        >
+                      <div class="command-item">
+                        <span class="command-item-icon" aria-hidden="true">{{ item.icon }}</span>
+                        <span class="command-item-label">
+                          <strong>{{ item.label }}</strong>
+                          <small>{{ item.group }}</small>
+                        </span>
+                        <kbd v-if="item.shortcut">{{ item.shortcut }}</kbd>
                       </div>
                     </FloatingListItem>
-                  </section>
-                </template>
-              </div>
-              <div v-else class="command-empty">
-                No results found.
+                  </template>
+                </FloatingResults>
               </div>
               <p class="sr-only" aria-live="polite">
                 {{ statusText }}
