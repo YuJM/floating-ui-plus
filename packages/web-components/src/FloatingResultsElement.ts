@@ -264,8 +264,6 @@ export class FloatingResultsElement<T = unknown> extends HTMLElement {
       fragment.append(phaseFragment);
     }
 
-    this.#renderedNodes = Array.from(fragment.childNodes);
-    this.append(fragment);
     for (const {element, item, label} of resultBindings) {
       const listItem = element as HTMLElement & {
         label: string;
@@ -276,6 +274,8 @@ export class FloatingResultsElement<T = unknown> extends HTMLElement {
       listItem.value = item;
       listItem.query = this.#query;
     }
+    this.#renderedNodes = Array.from(fragment.childNodes);
+    this.append(fragment);
     queueMicrotask(() => this.#onRender?.());
   }
 

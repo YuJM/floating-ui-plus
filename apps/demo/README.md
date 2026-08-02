@@ -62,10 +62,18 @@ that route.
 ## Verification
 
 ```sh
+bun run test:browser:install
 bun run --filter floating-ui-plus-demo typecheck
 bun run --filter floating-ui-plus-demo build
 bun run --filter floating-ui-plus-demo test
 ```
+
+The E2E configuration uses Playwright-managed Chromium and WebKit binaries;
+it does not depend on an installed system Chrome or Safari process. On macOS,
+run the browser commands from a normal terminal with permission to launch GUI
+processes. A restricted sandbox can deny the macOS Mach rendezvous/AppKit
+initialization that Playwright needs and report a misleading `Target page,
+context or browser has been closed` error.
 
 Playwright builds the packages, serves the production output, and runs the
 hub, Web Components, and Vue suites in desktop Chrome, mobile Chrome, and the

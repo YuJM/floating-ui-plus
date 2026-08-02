@@ -16,10 +16,10 @@ const examples = [
   'command',
 ] as const;
 const localizedRoutes = locales.flatMap((locale) => [
-  `/${locale}`,
+  locale === 'en' ? '/' : `/${locale}`,
   ...examples.flatMap((example) => [
-    `/${locale}/${example}?framework=wc`,
-    `/${locale}/${example}?framework=vue`,
+    `${locale === 'en' ? '' : `/${locale}`}/${example}?framework=wc`,
+    `${locale === 'en' ? '' : `/${locale}`}/${example}?framework=vue`,
   ]),
 ]);
 

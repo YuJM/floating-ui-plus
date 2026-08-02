@@ -10,7 +10,7 @@ test('publishes complete canonical and social metadata', async ({page}) => {
   );
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     'content',
-    /Give help, reveal context/i,
+    /From tooltips to command palettes/i,
   );
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',

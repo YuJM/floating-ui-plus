@@ -173,7 +173,6 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     <article
       id="hide"
       class="middleware-card"
-      id="middleware-hide"
     >
       <MiddlewareTitle id={hideExample.id} />
       <p>{hideExample.description}</p>
@@ -412,7 +411,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       );
       panel?.setAttribute('data-escaped', String(escaped));
       const readout = scope.querySelector<HTMLElement>(
-        '#middleware-hide .mw-state-readout',
+        '#hide .mw-state-readout',
       );
       if (readout) {
         readout.textContent = `State: ${

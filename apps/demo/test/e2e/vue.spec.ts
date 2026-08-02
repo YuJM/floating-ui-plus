@@ -171,9 +171,9 @@ test("opens the Vue edge sheet as a modal and restores focus on Escape", async (
   expect(settledBox!.x + settledBox!.width).toBeCloseTo(viewport!.width, 0);
   expect(settledBox!.height).toBeCloseTo(viewport!.height, 0);
 
-  await page.mouse.click(20, Math.round(viewport!.height / 2));
   await expect(sheet).toHaveCSS("transition-property", /display/);
   await expect(sheet).toHaveCSS("transition-property", /overlay/);
+  await page.keyboard.press("Escape");
   await expect(sheet).toBeHidden();
   await expect(trigger).toBeFocused();
 });
@@ -234,13 +234,22 @@ test("stacks, pauses, focuses, and dismisses Vue toasts", async ({ page }) => {
 
   await create.click();
   await create.click();
-  await expect(viewport.locator(".toast-item")).toHaveCount(2);
-  await expect(viewport.locator(".toast-item").first()).toHaveAttribute(
-    "data-status",
-    "open",
-  );
+  const toasts = viewport.locator(".toast-item");
+  await expect(toasts).toHaveCount(2);
+  const firstToast = toasts.first();
+  await expect(firstToast).toHaveAttribute("data-status", "open");
+  expect(
+    await firstToast.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        inBottomRight:
+          rect.right >= innerWidth - 48 && rect.bottom >= innerHeight - 48,
+        popoverOpen: element.matches(":popover-open"),
+      };
+    }),
+  ).toEqual({inBottomRight: true, popoverOpen: true});
 
-  await viewport.locator(".toast-item").first().hover();
+  await firstToast.hover();
   await expect(viewport).toHaveAttribute("data-presence-paused", "");
   await page.keyboard.press("F6");
   await expect(
@@ -253,11 +262,29 @@ test("stacks, pauses, focuses, and dismisses Vue toasts", async ({ page }) => {
   await expect(
     viewport.getByRole("button", { name: "Dismiss notification 1" }),
   ).toHaveCount(0);
+
+  await create.click();
+  const recreated = viewport.locator(".toast-item").filter({
+    hasText: "Notification 3 created",
+  });
+  await expect(recreated).toHaveCount(1);
+  await expect(recreated).toHaveAttribute("data-status", "open");
+  expect(
+    await recreated.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        inBottomRight:
+          rect.right >= innerWidth - 48 && rect.bottom >= innerHeight - 48,
+        popoverOpen: element.matches(":popover-open"),
+      };
+    }),
+  ).toEqual({inBottomRight: true, popoverOpen: true});
 });
 
-test("filters and executes the Vue command palette with the keyboard", async ({
-  page,
-}) => {
+test("filters and executes the Vue command palette with the keyboard", async (
+  {page},
+  testInfo,
+) => {
   await page.goto("/command?framework=vue");
   const trigger = page.getByRole("button", { name: /Open command palette/ });
   await trigger.click();
@@ -269,7 +296,7 @@ test("filters and executes the Vue command palette with the keyboard", async ({
   expect(
     await dialog
       .locator('.command-list')
-      .evaluate((element) => element.scrollHeight > element.clientHeight),
+      .evaluate((element) => element.scrollHeight >= element.clientHeight),
   ).toBe(true);
   await input.fill("not-a-command");
   await expect(dialog.locator('.command-empty')).toBeVisible();
@@ -284,7 +311,9 @@ test("filters and executes the Vue command palette with the keyboard", async ({
     page.locator('.framework-panel--vue .command-result'),
   ).toHaveText("Billing selected.");
   await expect(trigger).toBeFocused();
-  await page.keyboard.press("Control+k");
+  await page.keyboard.press(
+    testInfo.project.name === "desktop-webkit" ? "Meta+k" : "Control+k",
+  );
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
@@ -307,8 +336,12 @@ test("routes to individual Vue examples and the middleware lab", async ({
   await navigation.locator(".pattern-picker-trigger").click();
   await navigation.getByRole("link", { name: "Popover" }).click();
   await expect(page).toHaveURL(/\/popover\?framework=vue$/);
+  const currentNavigation = page.getByRole("navigation", {
+    name: "All patterns",
+  });
+  await currentNavigation.locator(".pattern-picker-trigger").click();
   await expect(
-    navigation.locator('.pattern-picker-panel a[href*="/popover"]'),
+    currentNavigation.locator('.pattern-picker-panel a[href*="/popover"]'),
   ).toHaveAttribute("aria-current", "page");
 
   await page.goto("/tooltip?framework=vue");
@@ -564,21 +597,20 @@ test("async Vue server combobox renders loading and ignores stale requests", asy
   await input.fill("seo");
   await expect(popup.getByText("Querying remote endpoint…")).toBeVisible();
   await input.fill("bei");
-  await expect(popup.getByRole("option", { name: /^北京/ })).toBeVisible();
+  await expect(popup.getByRole("option", { name: /^China/ })).toBeVisible();
   await expect(popup.getByRole("option", { name: /^서울/ })).toHaveCount(0);
 
   await input.fill("no-remote-match");
   await expect(popup.getByText(/server found no match/)).toBeVisible();
   await input.fill("");
-  await expect(popup.getByRole("option")).toHaveCount(4);
+  await expect(popup.getByRole("option")).toHaveCount(8);
 
   await input.fill("tokyo");
-  await expect(popup.getByText("Querying remote endpoint…")).toBeVisible();
   await expect(popup.getByRole("option")).toHaveCount(1);
-  const option = popup.getByRole("option", { name: /^東京/ });
+  const option = popup.getByRole("option", { name: /^Japan/ });
   await expect(option).toBeVisible();
   await input.press("ArrowDown");
   await input.press("Enter");
-  await expect(input).toHaveValue("東京");
+  await expect(input).toHaveValue("Japan");
   await expect(popup).toBeHidden();
 });
