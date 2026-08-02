@@ -1,5 +1,11 @@
 # @floating-ui/vue
 
+## 0.7.4
+
+### Patch Changes
+
+- @floating-ui-plus/web@0.7.4
+
 ## 0.7.3
 
 ### Patch Changes

@@ -15,6 +15,14 @@ const FLOATING_STYLE_KEYS = [
   'willChange',
 ] as const;
 
+function isNativePopoverSurface(element: HTMLElement) {
+  return (
+    element.hasAttribute('popover') &&
+    typeof (element as Partial<HTMLElement & {showPopover(): void}>)
+      .showPopover === 'function'
+  );
+}
+
 /** Applies a controller's complete positioning output to its floating surface. */
 export function applyFloatingStyles(
   element: HTMLElement,
@@ -30,6 +38,14 @@ export function applyFloatingStyles(
       element.style[name] = value;
     }
   });
+
+  // A native Popover's UA stylesheet supplies `inset: 0`. Clearing `right`
+  // and `bottom` above can expose that shorthand again, notably in Safari.
+  // Keep those constraints explicitly unset after applying left/top output.
+  if (isNativePopoverSurface(element)) {
+    element.style.right = 'auto';
+    element.style.bottom = 'auto';
+  }
 }
 
 export type PossibleRef<T> =

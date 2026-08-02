@@ -275,7 +275,7 @@ test("menu starts roving focus at the first item after opening with a pointer", 
   const signalItem = page.getByRole("menuitem", { name: /Signal log/ });
 
   await trigger.click();
-  await trigger.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
 
   await expect(firstItem).toBeFocused();
   expect(
@@ -291,7 +291,7 @@ test("menu starts roving focus at the first item after opening with a pointer", 
   await expect(page.getByRole("menu")).toBeHidden();
 
   await trigger.click();
-  await trigger.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
   await expect(firstItem).toBeFocused();
 });
 

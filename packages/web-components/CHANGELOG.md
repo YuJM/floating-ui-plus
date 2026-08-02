@@ -1,5 +1,12 @@
 # @floating-ui-plus/web-components
 
+## 0.7.4
+
+### Patch Changes
+
+- 4314ed7: Restore menu keyboard navigation immediately after a template-backed surface is closed and reopened.
+  - @floating-ui-plus/web@0.7.4
+
 ## 0.7.3
 
 ### Patch Changes

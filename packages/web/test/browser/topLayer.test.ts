@@ -1,6 +1,7 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
 
 import {
+  applyFloatingStyles,
   createFloatingTopLayer,
   supportsFloatingTopLayer,
 } from '../../src';
@@ -36,6 +37,63 @@ describe('FloatingTopLayerController', () => {
     });
     topLayer.sync(false);
     topLayer.destroy();
+  });
+
+  test('resets native popover positioning defaults without losing author styles', () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    element.style.setProperty('inset', '12px', 'important');
+    element.style.setProperty('margin', '7px');
+    element.style.setProperty('height', '24px', 'important');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+
+    expect(element.style.inset).toBe('auto');
+    expect(element.style.margin).toBe('0px');
+    expect(element.style.height).toBe('auto');
+
+    topLayer.destroy();
+
+    expect(element.style.getPropertyValue('inset')).toBe('12px');
+    expect(element.style.getPropertyPriority('inset')).toBe('important');
+    expect(element.style.margin).toBe('7px');
+    expect(element.style.getPropertyValue('height')).toBe('24px');
+    expect(element.style.getPropertyPriority('height')).toBe('important');
+  });
+
+  test('keeps native popover right and bottom constraints reset after positioning', () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    element.style.setProperty('right', '8px', 'important');
+    element.style.setProperty('bottom', '9px');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    applyFloatingStyles(element, {
+      position: 'absolute',
+      top: '20px',
+      left: '10px',
+    });
+
+    expect(element.style.right).toBe('auto');
+    expect(element.style.bottom).toBe('auto');
+    // Computed `auto` resolves to a used pixel value. Safari used to expose
+    // the Popover UA rule instead, leaving both constraints at `0px`.
+    expect(getComputedStyle(element).right).not.toBe('0px');
+    expect(getComputedStyle(element).bottom).not.toBe('0px');
+
+    topLayer.destroy();
+
+    expect(element.style.getPropertyValue('right')).toBe('8px');
+    expect(element.style.getPropertyPriority('right')).toBe('important');
+    expect(element.style.getPropertyValue('bottom')).toBe('9px');
   });
 
   test('uses a native modal dialog and maps Escape to the shared contract', () => {

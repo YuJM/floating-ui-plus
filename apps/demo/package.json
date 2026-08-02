@@ -13,6 +13,7 @@
     "typecheck": "bun run generate:messages && bun run generate:llms && astro check",
     "test:unit": "bun test test/unit",
     "test": "playwright test --config playwright.config.ts",
+    "test:webkit": "playwright test --config playwright.config.ts --project=desktop-webkit",
     "test:headed": "playwright test --config playwright.config.ts --headed",
     "test:ui": "playwright test --config playwright.config.ts --ui"
   },

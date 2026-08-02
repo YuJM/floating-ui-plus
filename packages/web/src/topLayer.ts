@@ -100,11 +100,25 @@ function applyPopoverPositionReset(element: HTMLElement) {
     value: element.style.getPropertyValue('margin'),
     priority: element.style.getPropertyPriority('margin'),
   };
+  const right = {
+    value: element.style.getPropertyValue('right'),
+    priority: element.style.getPropertyPriority('right'),
+  };
+  const bottom = {
+    value: element.style.getPropertyValue('bottom'),
+    priority: element.style.getPropertyPriority('bottom'),
+  };
+  const height = {
+    value: element.style.getPropertyValue('height'),
+    priority: element.style.getPropertyPriority('height'),
+  };
   // Native popovers start with `inset: 0` and `margin: auto`. Floating UI
   // controls the position with left, top, and transform, so those defaults
-  // must not leave right/bottom constraints behind in Safari.
+  // must not leave right/bottom or fit-content height constraints behind in
+  // Safari.
   element.style.setProperty('inset', 'auto');
   element.style.setProperty('margin', '0');
+  element.style.setProperty('height', 'auto');
   return () => {
     if (inset.value) {
       element.style.setProperty('inset', inset.value, inset.priority);
@@ -115,6 +129,21 @@ function applyPopoverPositionReset(element: HTMLElement) {
       element.style.setProperty('margin', margin.value, margin.priority);
     } else {
       element.style.removeProperty('margin');
+    }
+    if (right.value) {
+      element.style.setProperty('right', right.value, right.priority);
+    } else {
+      element.style.removeProperty('right');
+    }
+    if (bottom.value) {
+      element.style.setProperty('bottom', bottom.value, bottom.priority);
+    } else {
+      element.style.removeProperty('bottom');
+    }
+    if (height.value) {
+      element.style.setProperty('height', height.value, height.priority);
+    } else {
+      element.style.removeProperty('height');
     }
   };
 }
