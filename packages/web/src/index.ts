@@ -182,6 +182,15 @@ export {DelayGroup, NextDelayGroup} from './delayGroup';
 export type {DelayGroupOptions} from './delayGroup';
 export {FloatingTransition} from './transition';
 export type {TransitionStatus, TransitionStyles} from './transition';
+export {createFloatingPresenceStack, FloatingPresenceStack} from './presenceStack';
+export type {
+  FloatingPresenceStackContext,
+  PresenceStackAddOptions,
+  FloatingPresenceStackOptions,
+  PresenceStackListener,
+  PresenceStackRecord,
+  PresenceStackSnapshot,
+} from './presenceStack';
 export {
   FLOATING_TRANSFORM_ORIGIN_VARIABLE,
   getFloatingTransformOrigin,

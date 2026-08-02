@@ -3,18 +3,18 @@ import * as m from '../../paraglide/messages';
 import type {Locale} from '../../i18n';
 const {locale = 'en'} = Astro.props as {locale?: Locale};
 ---
-<section class="sheet-demo" aria-label="Sheet example" data-demo="sheet">
+<section id="sheet-demo" class="sheet-demo" aria-label="Sheet example">
   <div class="sheet-demo-copy">
     <span class="panel-kicker">SHEET / DIALOG</span>
     <h3>{m.pattern_sheet_heading(undefined, {locale})}</h3>
     <p>{m.pattern_sheet_description(undefined, {locale})}</p>
     <div class="sheet-side-picker" role="group" aria-label="Sheet side">
-      <button type="button" data-sheet-side="top">Top</button>
-      <button type="button" data-sheet-side="right" aria-pressed="true">Right</button>
-      <button type="button" data-sheet-side="bottom">Bottom</button>
-      <button type="button" data-sheet-side="left">Left</button>
+      <button type="button" name="sheet-side" value="top">Top</button>
+      <button type="button" name="sheet-side" value="right" aria-pressed="true">Right</button>
+      <button type="button" name="sheet-side" value="bottom">Bottom</button>
+      <button type="button" name="sheet-side" value="left">Left</button>
     </div>
-    <floating-root data-sheet-root placement="right" strategy="fixed" floating-role="dialog">
+    <floating-root id="sheet-root">
       <floating-reference><button class="sheet-trigger" type="button">Open activity sheet <span aria-hidden="true">→</span></button></floating-reference>
       <dialog slot="floating" class="sheet-panel" data-side="right" aria-labelledby="sheet-heading" aria-describedby="sheet-description">
         <header class="sheet-header"><div><span class="panel-kicker">TODAY / 08:42</span><h4 id="sheet-heading">Activity digest</h4></div><button class="sheet-close" type="button" data-fup-close aria-label="Close sheet">×</button></header>
@@ -32,20 +32,19 @@ const {locale = 'en'} = Astro.props as {locale?: Locale};
 </section>
 
 <script>
-  import {FloatingRootElement, click, dismiss, role} from '@floating-ui-plus/web-components';
+  import {FloatingRootElement, click, dismiss} from '@floating-ui-plus/web-components';
   import {initializeExample} from './initialize-example';
   initializeExample('sheet', (scope) => {
-    const sheet = FloatingRootElement.query(scope, '[data-sheet-root]');
-    sheet.transform = false;
+    const sheet = FloatingRootElement.query(scope, '#sheet-root');
     sheet.configure({
-      plugins: [click(), dismiss(), role({role: 'dialog'})],
+      plugins: [click(), dismiss()],
     });
     const panel = sheet.querySelector<HTMLDialogElement>('[slot="floating"]');
-    scope.querySelectorAll<HTMLButtonElement>('[data-sheet-side]').forEach((button) => {
+    scope.querySelectorAll<HTMLButtonElement>('[name="sheet-side"]').forEach((button) => {
       button.addEventListener('click', () => {
-        const side = button.dataset.sheetSide ?? 'right';
+        const side = button.value || 'right';
         panel?.setAttribute('data-side', side);
-        scope.querySelectorAll('[data-sheet-side]').forEach((candidate) => candidate.setAttribute('aria-pressed', String(candidate === button)));
+        scope.querySelectorAll('[name="sheet-side"]').forEach((candidate) => candidate.setAttribute('aria-pressed', String(candidate === button)));
       });
     });
   });

@@ -12,6 +12,8 @@ export interface FloatingTopLayerOptions {
   ): boolean | void;
   /** Called after a closed native surface has been restored to `hidden`. */
   onExitComplete?(element: HTMLElement): void;
+  /** Restore focus to the element that opened a native Dialog when it closes. */
+  restoreFocus?: boolean;
 }
 
 type PopoverElement = HTMLElement & {
@@ -89,6 +91,63 @@ function applyDialogSafeArea(element: HTMLDialogElement) {
   };
 }
 
+function applyPopoverPositionReset(element: HTMLElement) {
+  const inset = {
+    value: element.style.getPropertyValue('inset'),
+    priority: element.style.getPropertyPriority('inset'),
+  };
+  const margin = {
+    value: element.style.getPropertyValue('margin'),
+    priority: element.style.getPropertyPriority('margin'),
+  };
+  const right = {
+    value: element.style.getPropertyValue('right'),
+    priority: element.style.getPropertyPriority('right'),
+  };
+  const bottom = {
+    value: element.style.getPropertyValue('bottom'),
+    priority: element.style.getPropertyPriority('bottom'),
+  };
+  const height = {
+    value: element.style.getPropertyValue('height'),
+    priority: element.style.getPropertyPriority('height'),
+  };
+  // Native popovers start with `inset: 0` and `margin: auto`. Floating UI
+  // controls the position with left, top, and transform, so those defaults
+  // must not leave right/bottom or fit-content height constraints behind in
+  // Safari.
+  element.style.setProperty('inset', 'auto');
+  element.style.setProperty('margin', '0');
+  element.style.setProperty('height', 'auto');
+  return () => {
+    if (inset.value) {
+      element.style.setProperty('inset', inset.value, inset.priority);
+    } else {
+      element.style.removeProperty('inset');
+    }
+    if (margin.value) {
+      element.style.setProperty('margin', margin.value, margin.priority);
+    } else {
+      element.style.removeProperty('margin');
+    }
+    if (right.value) {
+      element.style.setProperty('right', right.value, right.priority);
+    } else {
+      element.style.removeProperty('right');
+    }
+    if (bottom.value) {
+      element.style.setProperty('bottom', bottom.value, bottom.priority);
+    } else {
+      element.style.removeProperty('bottom');
+    }
+    if (height.value) {
+      element.style.setProperty('height', height.value, height.priority);
+    } else {
+      element.style.removeProperty('height');
+    }
+  };
+}
+
 export function supportsFloatingTopLayer(kind: FloatingTopLayer) {
   if (kind === 'popover') {
     return typeof HTMLElement !== 'undefined' &&
@@ -115,6 +174,8 @@ export class FloatingTopLayerController {
   #cleanup: (() => void) | undefined;
   #unlockScroll: (() => void) | undefined;
   #cancelDeferredHide: (() => void) | undefined;
+  #previousFocus: HTMLElement | null = null;
+  #restoreFocusElement: HTMLElement | null = null;
 
   constructor(options: FloatingTopLayerOptions) {
     this.#options = options;
@@ -152,6 +213,15 @@ export class FloatingTopLayerController {
     this.#bind();
   }
 
+  /**
+   * Sets the element that should regain focus after a native Dialog closes.
+   * Renderers call this from their reference binding so pointer-down opening
+   * still restores focus to the trigger (before the browser focuses it).
+   */
+  setRestoreFocusElement(element: HTMLElement | null) {
+    this.#restoreFocusElement = element;
+  }
+
   connect() {
     if (this.#connected) return;
     this.#connected = true;
@@ -171,6 +241,7 @@ export class FloatingTopLayerController {
   destroy() {
     this.disconnect();
     this.#element = null;
+    this.#restoreFocusElement = null;
   }
 
   /** Returns whether a native top-layer surface is currently in use. */
@@ -186,6 +257,7 @@ export class FloatingTopLayerController {
       element.setAttribute('popover', 'manual');
       const shown = element.matches(':popover-open');
       if (open && !shown) {
+        this.#captureFocus(element);
         this.#cancelDeferredHide?.();
         this.#cancelDeferredHide = undefined;
         element.hidden = false;
@@ -208,6 +280,7 @@ export class FloatingTopLayerController {
 
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {
       if (open && !element.open) {
+        this.#captureFocus(element);
         this.#cancelDeferredHide?.();
         this.#cancelDeferredHide = undefined;
         element.hidden = false;
@@ -224,6 +297,7 @@ export class FloatingTopLayerController {
       } else if (!open && element.open) {
         this.#releaseScrollLock();
         element.close();
+        this.#restoreFocusAfterClose();
         this.#deferHidden(
           element,
           getNativeExitTransitionDuration(element),
@@ -244,6 +318,7 @@ export class FloatingTopLayerController {
     if (!this.#connected || !this.#element || !this.supported) return;
     const element = this.#element;
     if (this.#kind === 'popover' && isPopoverElement(element)) {
+      const restorePosition = applyPopoverPositionReset(element);
       const handleToggle = (event: Event) => {
         const open = element.matches(':popover-open');
         if (open === this.#open) return;
@@ -255,7 +330,10 @@ export class FloatingTopLayerController {
         if (!open && accepted === false) this.sync(true);
       };
       element.addEventListener('toggle', handleToggle);
-      this.#cleanup = () => element.removeEventListener('toggle', handleToggle);
+      this.#cleanup = () => {
+        restorePosition();
+        element.removeEventListener('toggle', handleToggle);
+      };
       return;
     }
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {
@@ -275,6 +353,7 @@ export class FloatingTopLayerController {
         if (!this.#open) return;
         const accepted = this.#options.onOpenChange(false, event, 'click');
         if (accepted === false) this.sync(true);
+        else this.#restoreFocusAfterClose();
       };
       element.addEventListener('cancel', handleCancel);
       element.addEventListener('close', handleClose);
@@ -300,6 +379,33 @@ export class FloatingTopLayerController {
       if (element.open) element.close();
       element.hidden = true;
     }
+    this.#previousFocus = null;
+  }
+
+  #captureFocus(element: HTMLElement) {
+    if (this.#options.restoreFocus === false) return;
+    if (this.#kind !== 'dialog' && this.#options.restoreFocus !== true) return;
+    const active = element.ownerDocument.activeElement;
+    const candidate = this.#restoreFocusElement ?? active;
+    this.#previousFocus =
+      candidate instanceof HTMLElement &&
+      candidate !== element &&
+      !element.contains(candidate)
+        ? candidate
+        : null;
+  }
+
+  #restoreFocusAfterClose() {
+    const target = this.#previousFocus ?? this.#restoreFocusElement;
+    this.#previousFocus = null;
+    if (!target?.isConnected) return;
+    // Native dialog focus management runs after the close event. Defer one
+    // task so the explicit reference restoration wins over the browser's
+    // default return to the document body.
+    globalThis.setTimeout(() => {
+      if (this.#open || !target.isConnected) return;
+      target.focus({preventScroll: true});
+    }, 0);
   }
 
   #deferHidden(element: HTMLElement, duration: number) {

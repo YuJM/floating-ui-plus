@@ -35,7 +35,7 @@ openUrl.searchParams.delete('embed');
 const openHref = `${openUrl.pathname}${openUrl.search}`;
 ---
 
-<section class="demo-preview" id={previewId} data-demo-preview>
+<section class="demo-preview" id={previewId}>
   <div class="demo-preview-toolbar">
     <div>
       <p class="demo-preview-kicker">Live demo</p>
@@ -44,7 +44,9 @@ const openHref = `${openUrl.pathname}${openUrl.search}`;
     <div class="demo-preview-switch" role="group" aria-label="Choose implementation">
       <button
         type="button"
-        data-demo-framework="web-components"
+        id={`${previewId}-framework-web-components`}
+        class="demo-preview-framework"
+        aria-controls={`${previewId}-source-web-components`}
         aria-label="Web Components"
         title="Web Components"
         aria-pressed="true"
@@ -56,7 +58,9 @@ const openHref = `${openUrl.pathname}${openUrl.search}`;
       </button>
       <button
         type="button"
-        data-demo-framework="vue"
+        id={`${previewId}-framework-vue`}
+        class="demo-preview-framework"
+        aria-controls={`${previewId}-source-vue`}
         aria-label="Vue"
         title="Vue"
         aria-pressed="false"
@@ -77,10 +81,10 @@ const openHref = `${openUrl.pathname}${openUrl.search}`;
   {(webCode || vueCode) && (
     <div class="demo-preview-source">
       <p class="demo-preview-source-label">Source for this preview</p>
-      <div data-demo-source="web-components" class="demo-preview-source-panel">
+      <div id={`${previewId}-source-web-components`} class="demo-preview-source-panel">
         {webCode && <Code code={webCode} lang={codeLang} title={webTitle} />}
       </div>
-      <div data-demo-source="vue" class="demo-preview-source-panel" hidden>
+      <div id={`${previewId}-source-vue`} class="demo-preview-source-panel" hidden>
         {vueCode && <Code code={vueCode} lang="vue" title={vueTitle} />}
       </div>
     </div>
@@ -93,27 +97,31 @@ const openHref = `${openUrl.pathname}${openUrl.search}`;
 </section>
 
 <script>
-  document.querySelectorAll<HTMLElement>('[data-demo-preview]').forEach((preview) => {
+  document.querySelectorAll<HTMLElement>('.demo-preview').forEach((preview) => {
     const frame = preview.querySelector<HTMLIFrameElement>('iframe');
     const openLink = preview.querySelector<HTMLAnchorElement>('.demo-preview-open a');
     if (!frame || !openLink) return;
 
-    preview.querySelectorAll<HTMLButtonElement>('[data-demo-framework]').forEach((button) => {
+    preview.querySelectorAll<HTMLButtonElement>('.demo-preview-framework').forEach((button) => {
       button.addEventListener('click', () => {
-        const framework = button.dataset.demoFramework;
-        if (framework !== 'vue' && framework !== 'web-components') return;
+        const framework = button.getAttribute('aria-controls')?.endsWith('-source-vue')
+          ? 'vue'
+          : button.getAttribute('aria-controls')?.endsWith('-source-web-components')
+            ? 'web-components'
+            : null;
+        if (!framework) return;
         const url = new URL(frame.src, window.location.href);
         url.searchParams.set('framework', framework === 'vue' ? 'vue' : 'wc');
         url.searchParams.set('embed', '1');
         frame.src = `${url.pathname}${url.search}`;
-        preview.querySelectorAll<HTMLElement>('[data-demo-source]').forEach((source) => {
-          source.hidden = source.dataset.demoSource !== framework;
+        preview.querySelectorAll<HTMLElement>('.demo-preview-source-panel').forEach((source) => {
+          source.hidden = source.id !== button.getAttribute('aria-controls');
         });
         const fullUrl = new URL(url);
         fullUrl.pathname = fullUrl.pathname.replace(/^\/preview(?=\/)/, '');
         fullUrl.searchParams.delete('embed');
         openLink.href = `${fullUrl.pathname}${fullUrl.search}`;
-        preview.querySelectorAll<HTMLButtonElement>('[data-demo-framework]').forEach((item) => {
+        preview.querySelectorAll<HTMLButtonElement>('.demo-preview-framework').forEach((item) => {
           item.setAttribute('aria-pressed', String(item === button));
         });
       });

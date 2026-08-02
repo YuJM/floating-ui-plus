@@ -54,6 +54,19 @@ export function click(
         context.onOpenChange(!shouldClose, event, 'click');
       }
 
+      function focusPointerReference() {
+        // Safari does not focus buttons when they are clicked. Preserve the
+        // reference as the keyboard event target so pointer-opened floating
+        // controls can immediately continue with keyboard interaction.
+        if (
+          pointerType != null &&
+          isMouseLikePointerType(pointerType) &&
+          reference instanceof HTMLElement
+        ) {
+          reference.focus({preventScroll: true});
+        }
+      }
+
       return cleanupAll([
         addListener(reference, 'pointerdown', (event) => {
           pointerType = event.pointerType;
@@ -79,6 +92,7 @@ export function click(
             event.preventDefault();
           }
           didMouseDown = true;
+          focusPointerReference();
           toggle(event);
         }),
         addListener(reference, 'click', (event) => {
@@ -95,6 +109,7 @@ export function click(
           ) {
             return;
           }
+          focusPointerReference();
           toggle(event);
         }),
         addListener(reference, 'keydown', (event) => {

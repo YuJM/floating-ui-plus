@@ -172,6 +172,7 @@ import {
 const topLayer = createFloatingTopLayer({ onOpenChange: setOpen });
 topLayer.setKind("popover"); // Use 'dialog' for an HTMLDialogElement.
 topLayer.setElement(panel);
+topLayer.setRestoreFocusElement(reference);
 topLayer.connect();
 
 function render() {
@@ -182,13 +183,16 @@ function render() {
 
 `createFloatingTopLayer()` does not move nodes. A `createPortalBridge()` is a
 fallback context bridge when your renderer intentionally mounts elsewhere.
+Native Dialog focus returns to the bound reference after close. When using the
+controller directly, bind it with `setRestoreFocusElement(reference)` before
+the first `sync()` call.
 
 </TabItem>
 <TabItem label="Web Components">
 
 ```html
 <!-- Non-modal anchored surface: keep the template beside the reference. -->
-<floating-root interactions="click dismiss" floating-role="dialog">
+<floating-root interactions="click dismiss">
   <floating-reference><button>Open settings</button></floating-reference>
   <template slot="content">
     <section aria-label="Settings">
@@ -199,7 +203,7 @@ fallback context bridge when your renderer intentionally mounts elsewhere.
 </floating-root>
 
 <!-- Modal: let the browser own focus, inertness, and the top layer. -->
-<floating-root interactions="click dismiss" floating-role="dialog">
+<floating-root interactions="click dismiss">
   <floating-reference><button>Open account</button></floating-reference>
   <dialog slot="floating" aria-label="Account settings">
     Account settings
@@ -218,7 +222,7 @@ not needed for the normal template or native dialog composition.
 <!-- Anchored Popover: keep FloatingContent in the root tree. -->
 <FloatingRoot
   v-model:open="open"
-  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+  :plugins="[click(), dismiss()]"
 >
   <FloatingReference>Open settings</FloatingReference>
   <FloatingContent>Settings <FloatingClose>Close</FloatingClose></FloatingContent>
@@ -227,7 +231,7 @@ not needed for the normal template or native dialog composition.
 <!-- Modal dialog: use the native element. -->
 <FloatingRoot
   v-model:open="open"
-  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+  :plugins="[click(), dismiss()]"
 >
   <FloatingReference>Open account</FloatingReference>
   <FloatingContent as="dialog" aria-label="Account settings">
@@ -253,7 +257,7 @@ enough.
 <TabItem label="Web Components">
 
 ```html
-<floating-root interactions="click dismiss" floating-role="dialog">
+<floating-root interactions="click dismiss">
   <floating-reference><button>Open</button></floating-reference>
   <floating-portal>
     <floating-overlay lock-scroll>
@@ -280,7 +284,7 @@ should dismiss its owner.
 ```vue
 <FloatingRoot
   v-model:open="open"
-  :plugins="[click(), dismiss(), role({ role: 'dialog' })]"
+  :plugins="[click(), dismiss()]"
 >
   <FloatingReference>Open</FloatingReference>
   <FloatingPortal>
@@ -356,26 +360,26 @@ query library, omit `source` and push state through `setControlledState()`.
 ```html
 <floating-root placement="bottom-start">
   <floating-list navigation loop allow-escape>
-    <floating-query data-destination-query>
+    <floating-query id="destination-query">
       <floating-reference
         ><input aria-label="Destination"
       /></floating-reference>
       <template slot="content">
-        <floating-search>
-          <template data-search-loading>Searching…</template>
-          <template data-search-error>Search failed</template>
-          <template data-search-empty>No matches</template>
-          <template data-search-result>
+        <floating-results>
+          <floating-results-status type="loading">Searching…</floating-results-status>
+          <floating-results-status type="error">Search failed</floating-results-status>
+          <floating-results-status type="empty">No matches</floating-results-status>
+          <floating-results-item>
             <floating-list-item
               ><span data-search-text="label"></span
             ></floating-list-item>
-          </template>
-          <template data-search-more>
+          </floating-results-item>
+          <floating-results-more>
             <button data-search-load-more>Load more</button>
-          </template>
-        </floating-search>
+          </floating-results-more>
+        </floating-results>
       </template>
-      <p data-query-status aria-live="polite"></p>
+      <p aria-live="polite"></p>
     </floating-query>
   </floating-list>
 </floating-root>
@@ -402,7 +406,7 @@ selected-value form behavior is specifically required.
   >
     <FloatingReference as="input" v-bind="query.inputProps" />
     <FloatingContent>
-      <FloatingSearch :search="search">
+      <FloatingResults :search="search">
         <template #loading>Searching…</template>
         <template #error>Search failed</template>
         <template #empty>No matches</template>
@@ -416,7 +420,7 @@ selected-value form behavior is specifically required.
             v-bind="query.getOptionProps(item, index)"
           >{{ item.label }}</FloatingListItem>
         </template>
-      </FloatingSearch>
+      </FloatingResults>
     </FloatingContent>
   </FloatingList>
 </FloatingRoot>

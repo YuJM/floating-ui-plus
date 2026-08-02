@@ -16,12 +16,11 @@ const sourceHref = (nextSource: ComboboxSource) => {
     class="combobox-tabs combobox-tabs--outside"
     role="tablist"
     aria-label="Combobox search source"
-    data-combobox-tabs
+    id="combobox-tabs"
   >
     <a
       id="combobox-tab-fuzzy"
       href={sourceHref('fuzzy')}
-      data-combobox-source="fuzzy"
       role="tab"
       aria-selected={source === 'fuzzy' ? 'true' : 'false'}
       aria-controls="combobox-panel-fuzzy"
@@ -32,7 +31,6 @@ const sourceHref = (nextSource: ComboboxSource) => {
     <a
       id="combobox-tab-server"
       href={sourceHref('server')}
-      data-combobox-source="server"
       role="tab"
       aria-selected={source === 'server' ? 'true' : 'false'}
       aria-controls="combobox-panel-server"
@@ -47,7 +45,6 @@ const sourceHref = (nextSource: ComboboxSource) => {
       id="combobox-panel-fuzzy"
       role="tabpanel"
       aria-labelledby="combobox-tab-fuzzy"
-      data-combobox-panel="fuzzy"
       hidden={source !== 'fuzzy'}
     >
       <FuzzyComboboxExample />
@@ -56,7 +53,6 @@ const sourceHref = (nextSource: ComboboxSource) => {
       id="combobox-panel-server"
       role="tabpanel"
       aria-labelledby="combobox-tab-server"
-      data-combobox-panel="server"
       hidden={source !== 'server'}
     >
       <AsyncComboboxExample />
@@ -65,7 +61,7 @@ const sourceHref = (nextSource: ComboboxSource) => {
 </div>
 
 <script>
-  document.querySelectorAll<HTMLElement>('[data-combobox-tabs]').forEach(
+  document.querySelectorAll<HTMLElement>('#combobox-tabs').forEach(
     (tablist) => {
       const tabs = Array.from(
         tablist.querySelectorAll<HTMLAnchorElement>('[role="tab"]'),
@@ -74,7 +70,10 @@ const sourceHref = (nextSource: ComboboxSource) => {
       if (!root) return;
 
       tabs.forEach((tab) => {
-        const source = tab.dataset.comboboxSource;
+        const source = tab.getAttribute('aria-controls')?.replace(
+          'combobox-panel-',
+          '',
+        );
         if (!source) return;
         const url = new URL(window.location.href);
         url.searchParams.set('source', source);

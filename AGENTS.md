@@ -24,6 +24,11 @@
   accessibility contracts. Reserve Playwright E2E for browser-only behavior:
   real portals, focus trapping/restoration, scroll locking, pointer/keyboard
   event paths, layout/positioning, and cross-surface integration.
+- Run Playwright E2E in Chrome by default. For Safari-specific bugs or
+  compatibility-sensitive floating, top-layer, focus, scroll, or layout
+  behavior, also run the demo's `desktop-webkit` project with
+  `bun run --filter floating-ui-plus-demo test:webkit`; Playwright WebKit is
+  the repository's Safari-engine coverage.
 
 ## Published packages
 

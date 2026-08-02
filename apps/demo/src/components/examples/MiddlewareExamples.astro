@@ -8,15 +8,15 @@ import {
 const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, autoExample, hideExample, inlineExample] = MIDDLEWARE_EXAMPLES;
 ---
 
-<section class="middleware-view" data-demo="middleware">
+<section id="middleware-demo" class="middleware-view">
   <section class="middleware-grid" aria-label="Floating UI middleware examples">
-    <article class="middleware-card" data-middleware-example="offset">
+    <article id="middleware-offset" class="middleware-card">
       <MiddlewareTitle id={offsetExample.id} />
       <p>{offsetExample.description}</p>
       <div class="mw-comparison" aria-label="Offset comparison">
         <div class="mw-static-stage">
           <span class="mw-demo-label">0px</span>
-          <floating-root data-offset-root="0" open placement="top">
+          <floating-root id="middleware-offset-0-root" open placement="top">
             <button slot="reference" class="mw-reference mw-reference-static">
               Reference
             </button>
@@ -27,7 +27,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
         </div>
         <div class="mw-static-stage">
           <span class="mw-demo-label">10px</span>
-          <floating-root data-offset-root="10" open placement="top">
+          <floating-root id="middleware-offset-10-root" open placement="top">
             <button slot="reference" class="mw-reference mw-reference-static">
               Reference
             </button>
@@ -40,7 +40,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       <code>offset(0) / offset(10)</code>
     </article>
 
-    <article class="middleware-card" data-middleware-example="shift">
+    <article id="middleware-shift" class="middleware-card">
       <MiddlewareTitle id={shiftExample.id} />
       <p>{shiftExample.description}</p>
       <div
@@ -50,7 +50,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       >
         <span class="mw-scroll-hint">scroll horizontally</span>
         <div class="mw-track mw-track-wide">
-          <floating-root data-shift-root open placement="top">
+          <floating-root id="middleware-shift-root" open placement="top">
             <button slot="reference" class="mw-reference mw-reference-shift">
               Reference
             </button>
@@ -63,7 +63,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       <code>{'shift({padding: 8})'}</code>
     </article>
 
-    <article class="middleware-card" data-middleware-example="flip">
+    <article id="middleware-flip" class="middleware-card">
       <MiddlewareTitle id={flipExample.id} />
       <p>{flipExample.description}</p>
       <div
@@ -73,7 +73,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       >
         <span class="mw-scroll-hint">scroll up</span>
         <div class="mw-track mw-track-tall">
-          <floating-root data-flip-root open placement="bottom">
+          <floating-root id="middleware-flip-root" open>
             <button slot="reference" class="mw-reference mw-reference-flip">
               Reference
             </button>
@@ -83,10 +83,10 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
           </floating-root>
         </div>
       </div>
-      <code>placement="bottom" + flip() → shift()</code>
+      <code>bottom (default) + flip() → shift()</code>
     </article>
 
-    <article class="middleware-card" data-middleware-example="arrow">
+    <article id="middleware-arrow" class="middleware-card">
       <MiddlewareTitle id={arrowExample.id} />
       <p>{arrowExample.description}</p>
       <div
@@ -96,7 +96,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       >
         <span class="mw-scroll-hint">scroll horizontally</span>
         <div class="mw-track mw-track-wide">
-          <floating-root data-arrow-root open placement="top">
+          <floating-root id="middleware-arrow-root" open placement="top">
             <button slot="reference" class="mw-reference mw-reference-arrow">
               Reference
             </button>
@@ -117,7 +117,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       <code>{'offset(GAP) → shift() → arrow({element})'}</code>
     </article>
 
-    <article class="middleware-card" data-middleware-example="size">
+    <article id="middleware-size" class="middleware-card">
       <MiddlewareTitle id={sizeExample.id} />
       <p>{sizeExample.description}</p>
       <div
@@ -127,7 +127,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       >
         <span class="mw-scroll-hint">scroll vertically</span>
         <div class="mw-track mw-track-size">
-          <floating-root data-size-root open placement="bottom">
+          <floating-root id="middleware-size-root" open>
             <button slot="reference" class="mw-reference mw-reference-size">
               Reference
             </button>
@@ -146,7 +146,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
 
     <article
       class="middleware-card"
-      data-middleware-example="auto-placement"
+      id="middleware-auto-placement"
     >
       <MiddlewareTitle id={autoExample.id} />
       <p>{autoExample.description}</p>
@@ -157,7 +157,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       >
         <span class="mw-scroll-hint">scroll vertically</span>
         <div class="mw-track mw-track-tall">
-          <floating-root data-auto-placement-root open>
+          <floating-root id="middleware-auto-placement-root" open>
             <button slot="reference" class="mw-reference mw-reference-auto">
               Reference
             </button>
@@ -173,7 +173,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     <article
       id="hide"
       class="middleware-card"
-      data-middleware-example="hide"
+      id="middleware-hide"
     >
       <MiddlewareTitle id={hideExample.id} />
       <p>{hideExample.description}</p>
@@ -184,7 +184,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       >
         <span class="mw-scroll-hint">scroll up</span>
         <div class="mw-track mw-track-tall">
-          <floating-root data-hide-root open placement="bottom">
+          <floating-root id="middleware-hide-root" open>
             <button slot="reference" class="mw-reference mw-reference-hide">
               Reference
             </button>
@@ -198,13 +198,13 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       <code>{"hide() + hide({strategy: 'escaped'})"}</code>
     </article>
 
-    <article class="middleware-card" data-middleware-example="inline">
+    <article id="middleware-inline" class="middleware-card">
       <MiddlewareTitle id={inlineExample.id} />
       <p>{inlineExample.description}</p>
       <div class="mw-inline-comparison" aria-label="Inline middleware comparison">
         <div class="mw-inline-case">
           <span class="mw-demo-label">without</span>
-          <floating-root data-inline-root="without" open placement="top">
+          <floating-root id="middleware-inline-without-root" open placement="top">
             <p>
               Text before
               <floating-reference>
@@ -223,7 +223,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
         </div>
         <div class="mw-inline-case">
           <span class="mw-demo-label">with inline()</span>
-          <floating-root data-inline-root="with" open placement="top">
+          <floating-root id="middleware-inline-with-root" open placement="top">
             <p>
               Text before
               <floating-reference>
@@ -264,18 +264,18 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
   initializeExample('middleware', (scope) => {
     const offsetZero = FloatingRootElement.query(
       scope,
-      '[data-offset-root="0"]',
+      '#middleware-offset-0-root',
     );
     const offsetTen = FloatingRootElement.query(
       scope,
-      '[data-offset-root="10"]',
+      '#middleware-offset-10-root',
     );
     offsetZero.middleware = [offset(0)];
     offsetTen.middleware = [offset(10)];
 
     const shiftStage =
       scope.querySelector<HTMLElement>('.mw-stage-shift');
-    const shiftRoot = FloatingRootElement.query(scope, '[data-shift-root]');
+    const shiftRoot = FloatingRootElement.query(scope, '#middleware-shift-root');
     shiftRoot.middleware = [
       shift({
         boundary: shiftStage ?? undefined,
@@ -285,7 +285,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     ];
 
     const flipStage = scope.querySelector<HTMLElement>('.mw-stage-flip');
-    const flipRoot = FloatingRootElement.query(scope, '[data-flip-root]');
+    const flipRoot = FloatingRootElement.query(scope, '#middleware-flip-root');
     flipRoot.middleware = [
       offset(8),
       flip({
@@ -302,7 +302,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
 
     const arrowStage =
       scope.querySelector<HTMLElement>('.mw-stage-arrow');
-    const arrowRoot = FloatingRootElement.query(scope, '[data-arrow-root]');
+    const arrowRoot = FloatingRootElement.query(scope, '#middleware-arrow-root');
     const arrowElement =
       scope.querySelector<HTMLElement>('floating-arrow');
     arrowRoot.middleware = [
@@ -318,7 +318,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     ];
 
     const sizeStage = scope.querySelector<HTMLElement>('.mw-stage-size');
-    const sizeRoot = FloatingRootElement.query(scope, '[data-size-root]');
+    const sizeRoot = FloatingRootElement.query(scope, '#middleware-size-root');
     sizeRoot.middleware = [
       offset(8),
       size({
@@ -339,7 +339,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     );
     const autoRoot = FloatingRootElement.query(
       scope,
-      '[data-auto-placement-root]',
+      '#middleware-auto-placement-root',
     );
     autoRoot.middleware = [
       autoPlacement({
@@ -355,7 +355,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
     ];
 
     const hideStage = scope.querySelector<HTMLElement>('.mw-stage-hide');
-    const hideRoot = FloatingRootElement.query(scope, '[data-hide-root]');
+    const hideRoot = FloatingRootElement.query(scope, '#middleware-hide-root');
     hideRoot.middleware = [
       offset(8),
       hide({
@@ -371,11 +371,11 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
 
     const withoutInline = FloatingRootElement.query(
       scope,
-      '[data-inline-root="without"]',
+      '#middleware-inline-without-root',
     );
     const withInline = FloatingRootElement.query(
       scope,
-      '[data-inline-root="with"]',
+      '#middleware-inline-with-root',
     );
     withoutInline.middleware = [offset(8)];
     withInline.middleware = [inline(), offset(8)];
@@ -412,7 +412,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       );
       panel?.setAttribute('data-escaped', String(escaped));
       const readout = scope.querySelector<HTMLElement>(
-        '[data-middleware-example="hide"] .mw-state-readout',
+        '#middleware-hide .mw-state-readout',
       );
       if (readout) {
         readout.textContent = `State: ${

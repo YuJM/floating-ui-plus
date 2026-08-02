@@ -5,7 +5,7 @@ import {
   FloatingListItem,
   FloatingReference,
   FloatingRoot,
-  FloatingSearch,
+  FloatingResults,
   autoUpdate,
   dismiss,
   flip,
@@ -43,7 +43,6 @@ const {
 } = useQuery({
   search,
   getItemLabel: (item) => item.label,
-  optionIdPrefix: 'vue-remote-destination-option',
   onActivate(item) {
     selectedDestination.value = item;
     // QueryController leaves result presentation to the application. Preserve
@@ -122,7 +121,7 @@ const loadMore = () => void search.controller.loadMore();
             spellcheck="false"
             placeholder="Try korea, japan, china…"
             aria-describedby="vue-remote-query-status"
-            data-floating-query-input
+            class="vue-combobox-input"
             v-bind="inputProps"
           />
           <span
@@ -132,13 +131,9 @@ const loadMore = () => void search.controller.loadMore();
           ></span>
         </div>
 
-        <Transition name="vue-surface">
-            <FloatingContent
-              class="vue-combobox-popup vue-async-combobox-popup"
-              data-floating-query-popup
-            >
-              <div class="vue-async-combobox-scroll">
-                <FloatingSearch :search="search">
+        <FloatingContent class="vue-combobox-popup vue-async-combobox-popup">
+          <div class="vue-async-combobox-scroll">
+            <FloatingResults :search="search">
                   <template #loading>
                     <div class="vue-combobox-empty" role="option" aria-disabled="true">
                       Querying remote endpoint…
@@ -158,7 +153,6 @@ const loadMore = () => void search.controller.loadMore();
                       :value="item"
                       v-bind="getOptionProps(item, index)"
                       class="vue-combobox-option"
-                      data-floating-query-option
                     >
                       <span>
                         <strong>{{ item.label }}</strong>
@@ -192,10 +186,9 @@ const loadMore = () => void search.controller.loadMore();
                       The server found no match for “{{ search.query.value }}”
                     </div>
                   </template>
-                </FloatingSearch>
-              </div>
-            </FloatingContent>
-        </Transition>
+            </FloatingResults>
+          </div>
+        </FloatingContent>
       </FloatingList>
     </FloatingRoot>
 

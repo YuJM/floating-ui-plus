@@ -1,5 +1,5 @@
 ---
-title: "Demo: Sheet"
+title: "Sheet"
 description: Open a modal sheet from every viewport edge with native dialog focus, backdrop dismissal, and exit animation.
 ---
 
@@ -28,7 +28,7 @@ Escape and the explicit close controls use the same close-request path. Set
 `outsidePress: false` when a workflow must require an explicit choice.
 
 ```html
-<floating-root placement="right" strategy="fixed">
+<floating-root>
   <floating-reference><button>Open sheet</button></floating-reference>
   <dialog slot="floating" data-side="right" aria-labelledby="sheet-title">
     <h2 id="sheet-title">Activity</h2>
@@ -38,20 +38,15 @@ Escape and the explicit close controls use the same close-request path. Set
 ```
 
 ```js
-root.transform = false;
-root.configure({ plugins: [click(), dismiss(), role({ role: "dialog" })] });
+root.configure({ plugins: [click(), dismiss()] });
 ```
 
 An edge Sheet is positioned by viewport insets rather than reference
-coordinates. Disable Floating UI's transform positioning as shown above. In
-Vue, pass the equivalent option to `FloatingRoot`:
+coordinates. A direct native dialog skips Floating UI positioning styles, so
+the edge CSS is the sole placement contract. Vue uses the same composition:
 
 ```vue
-<FloatingRoot
-  v-model:open="open"
-  :options="{ placement: 'right', strategy: 'fixed', transform: false }"
-  :plugins="plugins"
->
+<FloatingRoot v-model:open="open" :plugins="plugins">
   <FloatingContent as="dialog" class="sheet" :data-side="side" />
 </FloatingRoot>
 ```
@@ -160,10 +155,8 @@ They keep the closing dialog in layout and in the top layer while `opacity`,
 `translate`, and `::backdrop` finish. Without a supported discrete transition,
 the Sheet still closes correctly; it simply closes without the exit motion.
 
-The Web Components example sets `root.transform = false`; Vue sets
-`transform: false` inside `options`. Both ultimately render the same native
-`<dialog>` and use the same side, open-state, backdrop, `dismiss()`, and
-reduced-motion CSS.
+Both adapters render the same native `<dialog>` and use the same side,
+open-state, backdrop, `dismiss()`, and reduced-motion CSS.
 
 For the general native Popover/dialog lifecycle and browser support notes, see
 [Entry and exit animation](/docs/guides/animation).

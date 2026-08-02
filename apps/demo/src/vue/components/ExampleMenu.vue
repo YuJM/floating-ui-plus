@@ -58,27 +58,25 @@ const plugins = [
           Open navigator <span>⌄</span>
         </FloatingReference>
         <FloatingList navigation typeahead loop>
-          <Transition name="vue-surface">
-              <FloatingContent class="menu-panel">
-                <div class="menu-heading">
-                  <span>Jump to a field</span>
-                  <span class="menu-shortcuts" aria-label="Arrow keys to navigate, Enter to select, Escape to close">
-                    <kbd>↑</kbd><kbd>↓</kbd><kbd>↵</kbd><kbd>Esc</kbd>
-                  </span>
-                </div>
-                <FloatingListItem
-                  v-for="label in labels"
-                  :key="label"
-                  tag="button"
-                  :label="label"
-                  class="menu-item"
-                  role="menuitem"
-                  close-on-click
-                >
-                  <span>{{ label }}</span><kbd>{{ label.slice(0, 1).toUpperCase() }}</kbd>
-                </FloatingListItem>
-              </FloatingContent>
-          </Transition>
+          <FloatingContent class="menu-panel">
+            <div class="menu-heading">
+              <span>Jump to a field</span>
+              <span class="menu-shortcuts" aria-label="Arrow keys to navigate, Enter to select, Escape to close">
+                <kbd>↑</kbd><kbd>↓</kbd><kbd>↵</kbd><kbd>Esc</kbd>
+              </span>
+            </div>
+            <FloatingListItem
+              v-for="label in labels"
+              :key="label"
+              tag="button"
+              :label="label"
+              class="menu-item"
+              role="menuitem"
+              close-on-click
+            >
+              <span>{{ label }}</span><kbd>{{ label.slice(0, 1).toUpperCase() }}</kbd>
+            </FloatingListItem>
+          </FloatingContent>
         </FloatingList>
       </FloatingRoot>
     </div>

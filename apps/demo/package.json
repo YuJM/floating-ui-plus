@@ -1,6 +1,6 @@
 {
   "name": "floating-ui-plus-demo",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "typecheck": "bun run generate:messages && bun run generate:llms && astro check",
     "test:unit": "bun test test/unit",
     "test": "playwright test --config playwright.config.ts",
+    "test:webkit": "playwright test --config playwright.config.ts --project=desktop-webkit",
     "test:headed": "playwright test --config playwright.config.ts --headed",
     "test:ui": "playwright test --config playwright.config.ts --ui"
   },

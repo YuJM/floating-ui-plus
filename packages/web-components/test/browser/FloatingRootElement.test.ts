@@ -1,4 +1,6 @@
 import {afterEach, describe, expect, test, vi} from 'vitest';
+import {userEvent} from 'vitest/browser';
+import type {FloatingPlugin} from '@floating-ui-plus/web';
 
 import {
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
@@ -11,15 +13,19 @@ import {
   FloatingCompositeElement,
   FloatingListElement,
   FloatingPortalElement,
+  FloatingPresenceStackElement,
   FloatingQueryElement,
   FloatingReferenceElement,
+  FloatingResultsElement,
   FloatingRootElement,
+  FloatingSearchElement,
   SearchController,
   click,
   createAsyncSearchSource,
   offset,
   supportsFloatingTopLayer,
 } from '../../src';
+import {getFloatingRootRuntime} from '../../src/FloatingController';
 
 const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
 
@@ -36,6 +42,120 @@ afterEach(() => {
 describe('FloatingRootElement', () => {
   test('registers a direct floating-content surface', () => {
     expect(customElements.get('floating-content')).toBeDefined();
+  });
+
+  test('renders and removes transient surfaces from a declarative presence template', async () => {
+    const stack = document.createElement('floating-presence-stack');
+    stack.configure({limit: 3, timeout: 0, exitDuration: 1, topLayer: 'none'});
+    stack.tabIndex = -1;
+    stack.innerHTML = `
+      <template slot="content">
+        <article class="notice" role="status">
+          <strong data-presence-text="title"></strong>
+          <button type="button" data-presence-close>Dismiss</button>
+        </article>
+      </template>
+    `;
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    expect(stack).toBeInstanceOf(FloatingPresenceStackElement);
+    expect(stack.options).toEqual({
+      limit: 3,
+      timeout: 0,
+      exitDuration: 1,
+      topLayer: 'none',
+    });
+    const firstId = stack.add({title: 'First'}, {id: 'first'});
+    stack.add({title: 'Second'}, {id: 'second'});
+    const first = stack.querySelector<HTMLElement>(
+      '[data-presence-id="first"]',
+    );
+    const second = stack.querySelector<HTMLElement>(
+      '[data-presence-id="second"]',
+    );
+
+    expect(firstId).toBe('first');
+    expect(first?.textContent).toContain('First');
+    expect(second?.style.getPropertyValue('--floating-presence-index')).toBe(
+      '0',
+    );
+    expect(first?.dataset.presenceIndex).toBe('1');
+
+    stack.pause('pointer');
+    expect(stack.hasAttribute('data-presence-paused')).toBe(true);
+    stack.resume('pointer');
+    expect(stack.hasAttribute('data-presence-paused')).toBe(false);
+
+    first?.querySelector<HTMLButtonElement>('button')?.click();
+    expect(first?.getAttribute('data-status')).toBe('close');
+    await vi.waitFor(() => {
+      expect(stack.querySelector('[data-presence-id="first"]')).toBeNull();
+    });
+  });
+
+  test('lets code-owned presence options override static attributes', async () => {
+    const stack = document.createElement('floating-presence-stack');
+    stack.setAttribute('limit', '1');
+    stack.setAttribute('timeout', '50');
+    stack.innerHTML = '<template slot="content"><article></article></template>';
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    stack.options = {limit: 2, timeout: 0, exitDuration: 180, topLayer: 'popover'};
+
+    expect(stack.options).toEqual({
+      limit: 2,
+      timeout: 0,
+      exitDuration: 180,
+      topLayer: 'popover',
+    });
+    stack.add({title: 'Persistent'}, {id: 'persistent'});
+    await new Promise((resolve) => window.setTimeout(resolve, 60));
+    expect(stack.snapshot.records[0]).toMatchObject({
+      id: 'persistent',
+      open: true,
+    });
+  });
+
+  test('opens each transient content template clone as a native popover', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+
+    const stack = document.createElement('floating-presence-stack');
+    stack.configure({timeout: 0, exitDuration: 1, topLayer: 'popover'});
+    stack.innerHTML = `
+      <template slot="content">
+        <article role="status">
+          <strong data-presence-text="title"></strong>
+          <button type="button" data-presence-close>Dismiss</button>
+        </article>
+      </template>
+    `;
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    stack.add({title: 'Saved'}, {id: 'saved'});
+    const surface = stack.querySelector<HTMLElement>(
+      '[data-presence-id="saved"]',
+    );
+
+    expect(surface).toHaveAttribute('popover', 'manual');
+    expect(surface?.matches(':popover-open')).toBe(true);
+
+    surface?.querySelector<HTMLButtonElement>('button')?.click();
+    expect(surface?.matches(':popover-open')).toBe(false);
+    await vi.waitFor(() => {
+      expect(stack.querySelector('[data-presence-id="saved"]')).toBeNull();
+    });
+  });
+
+  test('registers floating-search as a compatibility alias for floating-results', () => {
+    expect(document.createElement('floating-results')).toBeInstanceOf(
+      FloatingResultsElement,
+    );
+    expect(document.createElement('floating-search')).toBeInstanceOf(
+      FloatingSearchElement,
+    );
   });
 
   test('binds native slotted elements without a directive', async () => {
@@ -245,6 +365,70 @@ describe('FloatingRootElement', () => {
     await vi.waitFor(() => expect(root.floatingElement).toBeNull());
   });
 
+  test('keeps a dialog template native beneath structural components', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-list navigation>
+        <floating-query semantics="dialog">
+          <floating-reference><button>Open</button></floating-reference>
+          <template slot="content"><dialog>Content</dialog></template>
+        </floating-query>
+      </floating-list>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      expect(root.floatingElement).toBeInstanceOf(HTMLDialogElement);
+      const dialog = root.floatingElement as HTMLDialogElement;
+      expect(dialog.open, JSON.stringify({
+        hidden: dialog.hidden,
+        popover: dialog.getAttribute('popover'),
+        status: dialog.dataset.status,
+        rootOpen: root.open,
+      })).toBe(true);
+      expect(dialog.getAttribute('popover')).toBeNull();
+    });
+  });
+
+  test('infers dialog semantics for a query inside a native dialog', async () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const command = {id: 'open', label: 'Open project'};
+    const search = new SearchController({
+      items: [command],
+      getItemKey: (item) => item.id,
+    });
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <dialog slot="floating">
+        <floating-list navigation>
+          <floating-query>
+            <input aria-label="Search commands" autofocus />
+            <floating-list-item label="Open project"><div>Open project</div></floating-list-item>
+          </floating-query>
+        </floating-list>
+      </dialog>
+    `;
+    const query = root.querySelector('floating-query')!;
+    const item = root.querySelector('floating-list-item')!;
+    const input = root.querySelector('input')!;
+    item.value = command;
+    query.configure({search, getItemLabel: (value) => value.label});
+    document.body.append(root);
+    await root.updateComplete;
+
+    await vi.waitFor(() => {
+      expect((root.floatingElement as HTMLDialogElement).open).toBe(true);
+      expect(query.controller?.getOptionProps(command, 0).role).toBeUndefined();
+      expect(document.activeElement).toBe(input);
+    });
+    search.destroy();
+  });
+
   test('uses a slotted dialog as a native modal surface', async () => {
     if (!supportsFloatingTopLayer('dialog')) return;
     const root = document.createElement('floating-root');
@@ -413,6 +597,116 @@ describe('FloatingRootElement', () => {
         ),
       ).toBe(true);
     });
+  });
+
+  test('restores menu keyboard navigation after an Escape-close template remount', async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    const root = document.createElement('floating-root');
+    root.interactions = 'click dismiss';
+    root.floatingRole = 'menu';
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <template slot="content">
+        <section aria-label="Actions">
+          <floating-list navigation loop item-selector="[role=menuitem]">
+            <button role="menuitem">Inspect</button>
+            <button role="menuitem">Signal</button>
+          </floating-list>
+        </section>
+      </template>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    const reference = root.querySelector<HTMLButtonElement>('button')!;
+
+    await userEvent.click(reference);
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+    const firstOpenItems = Array.from(
+      root.floatingElement!.querySelectorAll<HTMLButtonElement>(
+        '[role=menuitem]',
+      ),
+    );
+    await vi.waitFor(() => expect(firstOpenItems).toHaveLength(2));
+    await userEvent.keyboard('{ArrowDown}');
+    await vi.waitFor(() =>
+      expect(document.activeElement).toBe(firstOpenItems[0]),
+    );
+
+    await userEvent.keyboard('{Escape}');
+    await vi.waitFor(() => expect(root.floatingElement).toBeNull());
+
+    await userEvent.click(reference);
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+    const secondOpenItems = Array.from(
+      root.floatingElement!.querySelectorAll<HTMLButtonElement>(
+        '[role=menuitem]',
+      ),
+    );
+    await vi.waitFor(() => expect(secondOpenItems).toHaveLength(2));
+    await userEvent.keyboard('{ArrowDown}');
+    await vi.waitFor(() =>
+      expect(document.activeElement).toBe(secondOpenItems[0]),
+    );
+  });
+
+  test('excludes plugins whose conditional component owner is disconnected', async () => {
+    const root = document.createElement('floating-root');
+    root.open = true;
+    root.innerHTML = `
+      <button slot="reference">Open</button>
+      <section slot="floating">Content</section>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+    const reference =
+      root.querySelector<HTMLButtonElement>('[slot=reference]')!;
+    const staleOwner = document.createElement('div');
+    const currentOwner = document.createElement('div');
+    let staleKeydowns = 0;
+    let currentKeydowns = 0;
+    const stalePlugin: FloatingPlugin = {
+      name: 'stale-component-plugin',
+      connect(context) {
+        const onKeyDown = (event: Event) => {
+          staleKeydowns++;
+          event.preventDefault();
+        };
+        context.elements.domReference?.addEventListener('keydown', onKeyDown);
+        return () =>
+          context.elements.domReference?.removeEventListener(
+            'keydown',
+            onKeyDown,
+          );
+      },
+    };
+    const currentPlugin: FloatingPlugin = {
+      name: 'current-component-plugin',
+      connect(context) {
+        const onKeyDown = (event: Event) => {
+          if (!event.defaultPrevented) currentKeydowns++;
+        };
+        context.elements.domReference?.addEventListener('keydown', onKeyDown);
+        return () =>
+          context.elements.domReference?.removeEventListener(
+            'keydown',
+            onKeyDown,
+          );
+      },
+    };
+    const runtime = getFloatingRootRuntime(root);
+
+    document.body.append(staleOwner);
+    runtime.registerComponentPlugins(staleOwner, [stalePlugin]);
+    staleOwner.remove();
+    document.body.append(currentOwner);
+    runtime.registerComponentPlugins(currentOwner, [currentPlugin]);
+
+    reference.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+
+    expect(staleKeydowns).toBe(0);
+    expect(currentKeydowns).toBe(1);
   });
 
   test('composes a declarative virtual-focus combobox with list items', async () => {
@@ -683,7 +977,7 @@ describe('FloatingRootElement', () => {
     search.destroy();
   });
 
-  test('renders combobox search phases and result items from native templates', async () => {
+  test('renders combobox search phases and result items from results parts', async () => {
     const destination = {id: 'beijing', label: '北京', region: 'China'};
     const search = new SearchController<typeof destination>({
       items: [],
@@ -698,26 +992,26 @@ describe('FloatingRootElement', () => {
           <floating-portal>
             <template>
               <section>
-                <floating-search>
-                  <template data-search-idle><p>Try a query</p></template>
-                  <template data-search-loading><p>Searching</p></template>
-                  <template data-search-error><p data-search-text="$error"></p></template>
-                  <template data-search-empty><p>No match for <span data-search-text="$query"></span></p></template>
-                  <template data-search-result>
+                <floating-results>
+                  <floating-results-status type="idle"><p>Try a query</p></floating-results-status>
+                  <floating-results-status type="loading"><p>Searching</p></floating-results-status>
+                  <floating-results-status type="error"><p data-search-text="$error"></p></floating-results-status>
+                  <floating-results-status type="empty"><p>No match for <span data-search-text="$query"></span></p></floating-results-status>
+                  <floating-results-item>
                     <floating-list-item>
                       <div><strong data-search-text="label"></strong><small data-search-text="region"></small></div>
                     </floating-list-item>
-                  </template>
-                  <template data-search-more>
+                  </floating-results-item>
+                  <floating-results-more>
                     <button type="button" data-search-load-more>
                       Load next <span data-search-text="$count"></span>/<span data-search-text="$total"></span>
                     </button>
-                  </template>
-                </floating-search>
+                  </floating-results-more>
+                </floating-results>
               </section>
             </template>
           </floating-portal>
-          <p data-combobox-status></p>
+          <p id="combobox-status" aria-live="polite"></p>
         </floating-combobox>
       </floating-list>
     `;
@@ -739,20 +1033,20 @@ describe('FloatingRootElement', () => {
     await combobox.updateComplete;
 
     await vi.waitFor(() => {
-      expect(document.querySelector('floating-search')?.dataset.phase).toBe(
+      expect(document.querySelector('floating-results')?.dataset.phase).toBe(
         'idle',
       );
-      expect(document.querySelector('floating-search')?.textContent).toContain(
+      expect(document.querySelector('floating-results')?.textContent).toContain(
         'Try a query',
       );
-      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+      expect(combobox.querySelector('#combobox-status')?.textContent).toBe(
         'idle',
       );
     });
 
     search.setQuery('bejing');
     await vi.waitFor(() => {
-      expect(document.querySelector('floating-search')?.textContent).toContain(
+      expect(document.querySelector('floating-results')?.textContent).toContain(
         'No match for bejing',
       );
     });
@@ -768,7 +1062,7 @@ describe('FloatingRootElement', () => {
       expect(item?.label).toBe('北京');
       expect(item?.value).toBe(destination);
       expect(item?.textContent).toContain('北京China');
-      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+      expect(combobox.querySelector('#combobox-status')?.textContent).toBe(
         'results',
       );
       expect(document.querySelector('[data-search-load-more]')?.textContent).toContain(
@@ -782,7 +1076,7 @@ describe('FloatingRootElement', () => {
       loading: true,
     });
     await vi.waitFor(() => {
-      const searchElement = document.querySelector('floating-search');
+      const searchElement = document.querySelector('floating-results');
       expect(searchElement?.dataset.phase).toBe('results');
       expect(searchElement?.dataset.loading).toBe('true');
       expect(searchElement?.textContent).toContain('北京China');
@@ -790,7 +1084,7 @@ describe('FloatingRootElement', () => {
         document.querySelector<HTMLButtonElement>('[data-search-load-more]')
           ?.disabled,
       ).toBe(true);
-      expect(combobox.querySelector('[data-combobox-status]')?.textContent).toBe(
+      expect(combobox.querySelector('#combobox-status')?.textContent).toBe(
         'loading',
       );
     });
@@ -1546,10 +1840,10 @@ describe('FloatingRootElement', () => {
 
   test('discovers list items from a selector and tracks DOM changes', async () => {
     const list = document.createElement('floating-list');
-    list.setAttribute('item-selector', '[data-command]');
+    list.setAttribute('item-selector', '.command');
     list.innerHTML = `
-      <button data-command data-label="One">First label</button>
-      <button data-command>Two</button>
+      <button class="command" aria-label="One">First label</button>
+      <button class="command">Two</button>
     `;
     document.body.append(list);
     await list.updateComplete;
@@ -1562,12 +1856,42 @@ describe('FloatingRootElement', () => {
     });
 
     const first = list.querySelector('button')!;
-    first.dataset.label = 'Updated';
+    first.setAttribute('aria-label', 'Updated');
     list.lastElementChild?.remove();
     await vi.waitFor(() => {
       expect(list.list.items.map((item) => item.label)).toEqual([
         'Updated',
       ]);
+    });
+  });
+
+  test('discovers composite controls from a selector without item wrappers', async () => {
+    const composite = document.createElement('floating-composite');
+    composite.orientation = 'vertical';
+    composite.loop = true;
+    composite.itemSelector = '[data-action]';
+    composite.innerHTML = `
+      <button data-action>First</button>
+      <button data-action>Second</button>
+    `;
+    document.body.append(composite);
+    await composite.updateComplete;
+    const buttons = Array.from(composite.querySelectorAll('button'));
+
+    await vi.waitFor(() => {
+      expect(buttons.map((button) => button.tabIndex)).toEqual([0, -1]);
+    });
+    buttons[0]?.focus();
+    buttons[0]?.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+    expect(document.activeElement).toBe(buttons[1]);
+
+    const third = document.createElement('button');
+    third.dataset.action = '';
+    composite.append(third);
+    await vi.waitFor(() => {
+      expect(third.tabIndex).toBe(-1);
     });
   });
 

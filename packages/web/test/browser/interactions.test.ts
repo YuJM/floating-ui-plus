@@ -77,6 +77,17 @@ describe('native interaction plugins', () => {
     harness.controller.destroy();
   });
 
+  test('focuses a mouse-clicked reference for Safari keyboard continuity', () => {
+    const harness = createHarness({plugins: [click()]});
+    harness.outside.focus();
+
+    fireEvent.pointerDown(harness.reference, {pointerType: 'mouse'});
+    fireEvent.click(harness.reference);
+
+    expect(document.activeElement).toBe(harness.reference);
+    harness.controller.destroy();
+  });
+
   test('clientPoint replaces the position reference with the pointer coordinates', () => {
     const harness = createHarness({plugins: [clientPoint()]});
 

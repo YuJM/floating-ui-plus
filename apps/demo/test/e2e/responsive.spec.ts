@@ -54,6 +54,37 @@ test('pattern picker remains keyboard-operable and contained at every viewport',
   await expect(page).toHaveURL(/\/ko\/tooltip\?framework=vue$/);
 });
 
+test('pattern picker native popover remains content-sized after floating styles apply', async ({page}) => {
+  await page.goto('/');
+
+  const picker = page.locator('#pattern-picker-root');
+  await picker.locator('.pattern-picker-trigger').click();
+  await expect(picker).toHaveAttribute('open', '');
+
+  const panel = picker.locator('.pattern-picker-panel');
+  await expect(panel).toBeVisible();
+  const metrics = await panel.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return {
+      height: rect.height,
+      viewportHeight: window.innerHeight,
+      inlineRight: element.style.right,
+      inlineBottom: element.style.bottom,
+      inlineHeight: element.style.height,
+      computedRight: style.right,
+      computedBottom: style.bottom,
+    };
+  });
+
+  expect(metrics.height).toBeLessThan(400);
+  expect(metrics.inlineRight).toBe('auto');
+  expect(metrics.inlineBottom).toBe('auto');
+  expect(metrics.inlineHeight).toBe('auto');
+  expect(metrics.computedRight).not.toBe('0px');
+  expect(metrics.computedBottom).not.toBe('0px');
+});
+
 test('pattern picker constrains a short mobile viewport and exposes every example', async ({page}) => {
   await page.setViewportSize({width: 390, height: 480});
   await page.goto('/');
@@ -73,7 +104,7 @@ test('pattern picker constrains a short mobile viewport and exposes every exampl
     await panel.evaluate((element) => element.scrollHeight > element.clientHeight),
   ).toBe(true);
 
-  const lastExample = panel.locator('[data-example-link="command"]');
+  const lastExample = panel.locator('a[href*="/command"]');
   await lastExample.scrollIntoViewIfNeeded();
   await lastExample.click();
   await expect(page).toHaveURL(/\/command\?framework=wc$/);

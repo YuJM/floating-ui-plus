@@ -224,8 +224,7 @@ onMounted(async () => {
 
 <template>
   <article
-    class="vue-middleware-card"
-    :data-kind="kind"
+    :class="['vue-middleware-card', `vue-middleware-card--${kind}`]"
     :id="kind === 'hide' ? 'hide' : undefined"
   >
     <div class="vue-middleware-title">

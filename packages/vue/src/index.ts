@@ -4,7 +4,15 @@ export type * from './types';
 export {useFloating} from './useFloating';
 export {useSearch} from './search';
 export type {UseSearchReturn} from './search';
-export {FloatingSearch} from './search-content';
+export {useFloatingPresenceStack} from './presence-stack';
+export type {UseFloatingPresenceStackReturn} from './presence-stack';
+export {useFloatingTopLayer} from './top-layer';
+export type {UseFloatingTopLayerOptions} from './top-layer';
+export {
+  FloatingResults,
+  /** @deprecated Use `FloatingResults`. */
+  FloatingSearch,
+} from './results-content';
 export {useQuery} from './query';
 export type {
   QueryInputLifecycleProps,
@@ -43,6 +51,7 @@ export {
   createFuzzySearchSource,
   createSearch,
   createSearchRenderer,
+  createFloatingPresenceStack,
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   createOverlayElement,
@@ -69,6 +78,7 @@ export {
   PortalBridge,
   PortalNodeController,
   SearchRenderer,
+  FloatingPresenceStack,
   FloatingTopLayerController,
   provideFloatingContext,
   removePortalNode,
@@ -148,6 +158,12 @@ export type {
   SearchSourceHandler,
   SearchSourceInput,
   SearchSourceItem,
+  PresenceStackAddOptions,
+  FloatingPresenceStackContext,
+  FloatingPresenceStackOptions,
+  PresenceStackListener,
+  PresenceStackRecord,
+  PresenceStackSnapshot,
   ComboboxOptions,
   ComboboxNavigationOptions,
   ComboboxQueryTriggerProps,

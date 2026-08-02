@@ -22,13 +22,9 @@ const tooltipOpen = ref(false);
 const popoverOpen = ref(false);
 const nestedOpen = ref(false);
 
-const roomOptions = {
-  middleware: [offset(20), shift({padding: 24})],
-};
 const roomPlugins = [
   click(),
   dismiss({outsidePress: false}),
-  role({role: 'dialog'}),
 ];
 
 const tooltipOptions = {
@@ -49,16 +45,11 @@ const popoverOptions = {
 const popoverPlugins = [
   click(),
   dismiss(),
-  role({role: 'dialog'}),
 ];
 
-const nestedOptions = {
-  middleware: [offset(20), shift({padding: 24})],
-};
 const nestedPlugins = [
   click(),
   dismiss({outsidePress: false}),
-  role({role: 'dialog'}),
 ];
 
 watch(open, (next) => {
@@ -73,7 +64,6 @@ watch(open, (next) => {
   <FloatingTree>
     <FloatingRoot
       v-model:open="open"
-      :options="roomOptions"
       :plugins="roomPlugins"
     >
       <FloatingNode id="vue-focus-room">
@@ -150,7 +140,6 @@ watch(open, (next) => {
 
                       <FloatingRoot
                         v-model:open="nestedOpen"
-                        :options="nestedOptions"
                         :plugins="nestedPlugins"
                       >
                         <FloatingNode id="vue-focus-room-child-dialog">

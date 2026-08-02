@@ -36,7 +36,7 @@ const examplePath = source ? `${example}/${source}` : example;
 
 <DemoLayout locale={locale} example={example} examplePath={examplePath}>
   <ExampleRoute locale={locale} heading={details.heading} description={details.description} build={details.build} features={details.features} variant={variant}>
-    <section data-framework-panel="web-components" class="framework-panel"><WebExample source={source} locale={locale} /></section>
-    <section data-framework-panel="vue" class="framework-panel"><ExampleView exampleName={example} locale={locale} source={source} client:only="vue"><p>{m.loading_example(undefined, {locale})}</p></ExampleView></section>
+    <section class="framework-panel framework-panel--web-components"><WebExample source={source} locale={locale} /></section>
+    <section class="framework-panel framework-panel--vue"><ExampleView exampleName={example} locale={locale} source={source} client:only="vue"><p>{m.loading_example(undefined, {locale})}</p></ExampleView></section>
   </ExampleRoute>
 </DemoLayout>

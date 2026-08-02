@@ -68,7 +68,12 @@ bun run --filter floating-ui-plus-demo test
 ```
 
 Playwright builds the packages, serves the production output, and runs the
-hub, Web Components, and Vue suites in desktop and mobile Chrome.
+hub, Web Components, and Vue suites in desktop Chrome, mobile Chrome, and the
+WebKit Safari compatibility project. Run only the WebKit coverage with:
+
+```sh
+bun run --filter floating-ui-plus-demo test:webkit
+```
 
 ## Cloudflare Pages
 

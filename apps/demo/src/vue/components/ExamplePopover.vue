@@ -9,7 +9,6 @@ import {
   dismiss,
   flip,
   offset,
-  role,
   shift,
   transformOrigin,
 } from '@floating-ui-plus/vue';
@@ -18,7 +17,6 @@ import {ref} from 'vue';
 const open = ref(false);
 const options = {
   placement: 'bottom-start',
-  strategy: 'fixed',
   middleware: [
     offset(12),
     flip(),
@@ -27,7 +25,7 @@ const options = {
   ],
   whileElementsMounted: autoUpdate,
 } as const;
-const plugins = [click(), dismiss(), role({role: 'dialog'})];
+const plugins = [click(), dismiss()];
 </script>
 
 <template>

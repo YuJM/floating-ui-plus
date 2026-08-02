@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {FloatingClose, FloatingContent, FloatingReference, FloatingRoot, autoUpdate, click, dismiss, role} from '@floating-ui-plus/vue';
+import {FloatingClose, FloatingContent, FloatingReference, FloatingRoot, click, dismiss} from '@floating-ui-plus/vue';
 import {ref} from 'vue';
 import * as m from '../../paraglide/messages';
 import type {Locale} from '../../i18n';
@@ -7,15 +7,14 @@ const open = ref(false);
 const side = ref<'top' | 'right' | 'bottom' | 'left'>('right');
 const sides = ['top', 'right', 'bottom', 'left'] as const;
 const props = defineProps<{locale: Locale}>();
-const options = {placement: 'right', strategy: 'fixed', transform: false, whileElementsMounted: autoUpdate} as const;
-const plugins = [click(), dismiss(), role({role: 'dialog'})];
+const plugins = [click(), dismiss()];
 </script>
 
 <template>
   <section class="sheet-demo vue-sheet-demo" aria-label="Sheet example">
     <div class="sheet-demo-copy"><span class="panel-kicker">SHEET / DIALOG</span><h3>{{ m.pattern_sheet_heading(undefined, {locale: props.locale}) }}</h3><p>{{ m.pattern_sheet_description(undefined, {locale: props.locale}) }}</p>
       <div class="sheet-side-picker" role="group" aria-label="Sheet side"><button v-for="option in sides" :key="option" type="button" :aria-pressed="side === option" @click="side = option">{{ option }}</button></div>
-      <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+      <FloatingRoot v-model:open="open" :plugins="plugins">
         <FloatingReference class="sheet-trigger">Open activity sheet <span aria-hidden="true">→</span></FloatingReference>
         <FloatingContent as="dialog" class="sheet-panel" :data-side="side" aria-labelledby="vue-sheet-heading" aria-describedby="vue-sheet-description">
           <header class="sheet-header"><div><span class="panel-kicker">TODAY / 08:42</span><h4 id="vue-sheet-heading">Activity digest</h4></div><FloatingClose class="sheet-close" aria-label="Close sheet">×</FloatingClose></header>

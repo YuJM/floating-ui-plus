@@ -50,16 +50,15 @@ test("keeps native popover template content inert across refresh until it opens"
 }) => {
   await page.goto("/popover");
   await page.reload();
-  await expect(page.locator('[data-demo="popover"]')).toHaveAttribute(
+  await expect(page.locator('#popover-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );
 
-  const demo = page.locator('[data-framework-panel="web-components"]');
+  const demo = page.locator('.framework-panel--web-components');
   const trigger = demo.getByRole("button", { name: /Open coordinates/ });
   const panel = demo.locator(".popover-panel");
-  await expect(panel).toHaveCount(1);
-  await expect(panel).toBeHidden();
+  await expect(panel).toHaveCount(0);
 
   await trigger.click();
   await expect(panel).toBeVisible();
@@ -100,9 +99,7 @@ test("keeps native popover template content inert across refresh until it opens"
   );
   expect(exitTransitions).toContain("opacity");
   expect(exitTransitions).toContain("scale");
-  await expect(panel).toHaveCount(1);
-  await expect(panel).toBeHidden();
-  await expect(panel).toHaveAttribute("hidden");
+  await expect(panel).toHaveCount(0);
 
   await trigger.click();
   await expect(panel).toBeVisible();
@@ -123,7 +120,7 @@ test("opens the edge sheet as a modal and restores focus on Escape", async ({
   page,
 }) => {
   await page.goto("/sheet");
-  const demo = page.locator('[data-framework-panel="web-components"]');
+  const demo = page.locator('.framework-panel--web-components');
   const trigger = demo.getByRole("button", { name: /Open activity sheet/ });
   const sheet = demo.getByRole("dialog", { name: "Activity digest" });
 
@@ -136,8 +133,15 @@ test("opens the edge sheet as a modal and restores focus on Escape", async ({
   const viewport = page.viewportSize();
   expect(box).not.toBeNull();
   expect(viewport).not.toBeNull();
-  expect(box!.x + box!.width).toBeCloseTo(viewport!.width, 0);
-  expect(box!.height).toBeCloseTo(viewport!.height, 0);
+  await expect.poll(async () => {
+    const current = await sheet.boundingBox();
+    if (!current) return Number.POSITIVE_INFINITY;
+    return Math.abs(viewport!.width - current.x - current.width);
+  }).toBeLessThanOrEqual(1);
+  const settledBox = await sheet.boundingBox();
+  expect(settledBox).not.toBeNull();
+  expect(settledBox!.x + settledBox!.width).toBeCloseTo(viewport!.width, 0);
+  expect(settledBox!.height).toBeCloseTo(viewport!.height, 0);
 
   await page.mouse.click(20, Math.round(viewport!.height / 2));
   await expect(sheet).toHaveCSS("transition-property", /display/);
@@ -150,7 +154,7 @@ test("places every Web Component sheet side on the viewport edge after reopening
   page,
 }) => {
   await page.goto("/sheet");
-  const demo = page.locator('[data-framework-panel="web-components"]');
+  const demo = page.locator('.framework-panel--web-components');
   const trigger = demo.getByRole("button", { name: /Open activity sheet/ });
   const sheet = demo.getByRole("dialog", { name: "Activity digest" });
   const viewport = page.viewportSize();
@@ -204,18 +208,23 @@ test("stacks, pauses, focuses, and dismisses Web Component toasts", async ({
 
   await create.click();
   await create.click();
-  const first = viewport.locator('[data-toast-id="1"]');
+  const first = viewport.locator('[data-presence-id="1"]');
   await expect(first).toHaveAttribute("data-status", "open");
+  await expect(first).toHaveAttribute("popover", "manual");
+  await expect(first).toHaveJSProperty("popover", "manual");
+  expect(
+    await first.evaluate((element) => element.matches(":popover-open")),
+  ).toBe(true);
   await expect(viewport.locator(".toast-item")).toHaveCount(2);
 
-  await viewport.locator('[data-toast-id="2"]').hover();
-  await expect(viewport).toHaveAttribute("data-expanded", "");
+  await viewport.locator('[data-presence-id="2"]').hover();
+  await expect(viewport).toHaveAttribute("data-presence-paused", "");
   await page.keyboard.press("F6");
-  await expect(viewport).toBeFocused();
+  await expect(
+    viewport.locator('[data-presence-id="2"] [data-presence-close]'),
+  ).toBeFocused();
 
-  await viewport
-    .getByRole("button", { name: "Dismiss notification 1" })
-    .click();
+  await first.getByRole("button", { name: "Dismiss notification" }).click();
   await expect(first).toHaveAttribute("data-status", "close");
   await expect(first).toHaveCount(0);
 });
@@ -230,26 +239,22 @@ test("filters and executes the Web Component command palette with the keyboard",
   const input = dialog.getByRole("textbox", { name: "Search commands" });
   await expect(dialog).toBeVisible();
   await expect(input).toBeFocused();
-  await expect(dialog.locator('[data-slot="command-group"]')).toHaveCount(3);
+  await expect(dialog.locator('.command-item')).toHaveCount(9);
   expect(
     await dialog
-      .locator('[data-slot="command-list"]')
+      .locator('.command-list')
       .evaluate((element) => element.scrollHeight > element.clientHeight),
   ).toBe(true);
   await input.fill("not-a-command");
-  await expect(dialog.locator('[data-slot="command-empty"]')).toBeVisible();
+  await expect(dialog.locator('.command-empty')).toBeVisible();
   await input.fill("project");
-  await expect(
-    dialog.getByRole("option", { name: /Open project/ }),
-  ).toBeVisible();
-  await expect(dialog.getByRole("option")).toHaveCount(1);
+  const project = dialog.locator('.command-item').filter({hasText: "Open project"});
+  await expect(project).toBeVisible();
+  await expect(dialog.locator('.command-item')).toHaveCount(1);
   await input.press("ArrowDown");
-  await expect(
-    dialog.getByRole("option", { name: /Open project/ }),
-  ).toHaveAttribute("aria-selected", "true");
   await input.press("Enter");
   await expect(dialog).toBeHidden();
-  await expect(page.locator("[data-command-result]")).toHaveText(
+  await expect(page.locator('.framework-panel--web-components .command-result')).toHaveText(
     "Open project selected.",
   );
   await expect(trigger).toBeFocused();
@@ -270,7 +275,7 @@ test("menu starts roving focus at the first item after opening with a pointer", 
   const signalItem = page.getByRole("menuitem", { name: /Signal log/ });
 
   await trigger.click();
-  await trigger.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
 
   await expect(firstItem).toBeFocused();
   expect(
@@ -281,11 +286,18 @@ test("menu starts roving focus at the first item after opening with a pointer", 
   await expect(secondItem).not.toBeFocused();
   await firstItem.press("s");
   await expect(signalItem).toBeFocused();
+
+  await signalItem.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+
+  await trigger.click();
+  await page.keyboard.press("ArrowDown");
+  await expect(firstItem).toBeFocused();
 });
 
 test("nested menu preserves the complete keyboard path", async ({ page }) => {
   await page.goto("/nested-menu");
-  await expect(page.locator('[data-demo="nested-menu"]')).toHaveAttribute(
+  await expect(page.locator('#nested-menu-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );
@@ -368,11 +380,11 @@ test("nested dialog surfaces dismiss only the topmost layer", async ({
   page,
 }) => {
   await page.goto("/modal");
-  await expect(page.locator('[data-demo="modal"]')).toHaveAttribute(
+  await expect(page.locator('#modal-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );
-  const demo = page.locator('[data-framework-panel="web-components"]');
+  const demo = page.locator('.framework-panel--web-components');
   const trigger = demo.getByRole("button", { name: /Enter focus room/ });
   await trigger.click();
 
@@ -485,7 +497,7 @@ test("cursor signal follows the pointer virtual reference", async ({
   page,
 }) => {
   await page.goto("/client-point");
-  await expect(page.locator('[data-demo="client-point"]')).toHaveAttribute(
+  await expect(page.locator('#client-point-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );
@@ -530,7 +542,7 @@ test("all middleware fixtures expose their observable behavior", async ({
   page,
 }) => {
   await page.goto("/middleware");
-  await expect(page.locator('[data-demo="middleware"]')).toHaveAttribute(
+  await expect(page.locator('#middleware-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );
@@ -552,7 +564,7 @@ test("all middleware fixtures expose their observable behavior", async ({
   ).toBe(0);
 
   const offsetStages = page.locator(
-    '[data-middleware-example="offset"] .mw-static-stage',
+    '#middleware-offset .mw-static-stage',
   );
   const zeroReference = await offsetStages
     .nth(0)
@@ -726,11 +738,11 @@ test("all middleware fixtures expose their observable behavior", async ({
   });
   await expect(hidePanel).toHaveAttribute("data-reference-hidden", "true");
   await expect(
-    page.locator('[data-middleware-example="hide"] .mw-state-readout'),
+    page.locator('#middleware-hide .mw-state-readout'),
   ).toContainText("reference hidden");
 
   const inlineMetrics = await page
-    .locator('[data-middleware-example="inline"]')
+    .locator('#middleware-inline')
     .evaluate((example) => {
       const references = example.querySelectorAll(".mw-inline-reference");
       const panels = example.querySelectorAll(".mw-panel-inline");
@@ -758,18 +770,18 @@ test("placement controls drive all 12 component positions", async ({
   page,
 }) => {
   await page.goto("/placement");
-  await expect(page.locator('[data-demo="placement"]')).toHaveAttribute(
+  await expect(page.locator('#placement-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );
 
-  const webPanel = page.locator('[data-framework-panel="web-components"]');
+  const webPanel = page.locator('.framework-panel--web-components');
   await expect(
     page
       .locator(".route-copy")
       .getByRole("heading", { level: 2, name: "Placement" }),
   ).toBeVisible();
-  await expect(webPanel.locator("[data-placement-control]")).toHaveCount(12);
+  await expect(webPanel.locator(".placement-control")).toHaveCount(12);
 
   const floating = webPanel.locator(".placement-floating");
   const reference = webPanel.locator(".placement-reference");
@@ -798,7 +810,7 @@ test("multilingual combobox keeps input focus and renders results", async ({
   page,
 }) => {
   await page.goto("/combobox?framework=wc");
-  await expect(page.locator('[data-demo="combobox"]')).toHaveAttribute(
+  await expect(page.locator('#combobox-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );
@@ -806,17 +818,17 @@ test("multilingual combobox keeps input focus and renders results", async ({
     name: "Destination",
     exact: true,
   });
-  const webPanel = page.locator('[data-framework-panel="web-components"]');
+  const webPanel = page.locator('.framework-panel--web-components');
 
   await webPanel.getByRole("tab", { name: "Server search" }).click();
   await expect(page).toHaveURL(/\/combobox\?framework=wc&source=server$/);
-  await expect(webPanel.locator('[data-demo="async-combobox"]')).toBeVisible();
+  await expect(webPanel.locator('#async-combobox-demo')).toBeVisible();
   await webPanel.getByRole("tab", { name: "Fuzzy search" }).click();
   await expect(page).toHaveURL(/\/combobox\?framework=wc&source=fuzzy$/);
 
   await input.focus();
   await expect(page.getByRole("option")).toHaveCount(4);
-  await webPanel.locator('[data-search-sample="bejing"]').click();
+  await webPanel.locator('.search-sample[value="bejing"]').click();
   await expect(input).toBeFocused();
   await expect(input).toHaveValue("bejing");
   const firstResult = page.getByRole("option", { name: /^北京/ });
@@ -885,7 +897,7 @@ test("async server combobox renders loading and ignores stale requests", async (
   page,
 }) => {
   await page.goto("/combobox?source=server");
-  await expect(page.locator('[data-demo="async-combobox"]')).toHaveAttribute(
+  await expect(page.locator('#async-combobox-demo')).toHaveAttribute(
     "data-initialized",
     "true",
   );

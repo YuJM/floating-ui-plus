@@ -17,10 +17,10 @@ const title = `Combobox · ${source} search`;
 ---
 
 <PreviewFrame title={title}>
-  <section data-framework-panel="web-components" class="framework-panel">
+  <section class="framework-panel framework-panel--web-components">
     {source === 'fuzzy' ? <FuzzyComboboxExample /> : <AsyncComboboxExample />}
   </section>
-  <section data-framework-panel="vue" class="framework-panel">
+  <section class="framework-panel framework-panel--vue">
     {source === 'fuzzy'
       ? <ExampleFuzzyCombobox client:only="vue" />
       : <ExampleAsyncCombobox client:only="vue" />}

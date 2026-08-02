@@ -16,6 +16,7 @@ import {
   FloatingList,
   FloatingTree,
   NextDelayGroup,
+  type QueryController,
   listNavigation,
   typeahead,
   type CompositeOptions,
@@ -254,7 +255,6 @@ const FloatingListBase = c(
         clearDiscoveredItems(currentElements);
         for (const element of elements) {
           const label =
-            element.dataset.label ??
             element.getAttribute('aria-label') ??
             element.textContent;
           const existing = discoveredItems.get(element);
@@ -285,7 +285,7 @@ const FloatingListBase = c(
         childList: true,
         subtree: true,
         attributes: true,
-        attributeFilter: ['aria-label', 'data-label'],
+        attributeFilter: ['aria-label'],
       });
       return () => {
         observer.disconnect();
@@ -507,14 +507,27 @@ interface FloatingListItemHost extends HTMLElement {
   label: string | null;
   value: unknown;
   list: FloatingList<unknown> | undefined;
+  query: FloatingOptionBinder | undefined;
 }
+
+type FloatingOptionBinder = Pick<QueryController<unknown>, 'bindOption'>;
 
 const FloatingListItemBase = c(
   () => {
     const host = useHost<FloatingListItemHost>().current;
     const componentContext = useContext(floatingComponentContext);
     const inheritedList = componentContext.list;
-    const query = componentContext.query ?? componentContext.combobox;
+    // Search result templates are cloned after their owning query has rendered,
+    // so their Atomico context can be absent. Fall back to the nearest query
+    // element to retain its option ARIA and activation bindings.
+    const owningQuery = host.closest(
+      'floating-query, floating-combobox',
+    ) as (HTMLElement & {controller?: FloatingOptionBinder}) | null;
+    const query =
+      host.query ??
+      componentContext.query ??
+      componentContext.combobox ??
+      owningQuery?.controller;
     const slot = useRef<HTMLSlotElement>();
     const children = useSlot<HTMLElement>(
       slot,
@@ -586,6 +599,7 @@ const FloatingListItemBase = c(
 export class FloatingListItemElement extends FloatingListItemBase {
   #value: unknown;
   #list: FloatingList<unknown> | undefined;
+  #query: FloatingOptionBinder | undefined;
 
   get updateComplete() {
     return this.updated;
@@ -608,6 +622,16 @@ export class FloatingListItemElement extends FloatingListItemBase {
   set list(value: FloatingList<unknown> | undefined) {
     if (value === this.#list) return;
     this.#list = value;
+    void this.update();
+  }
+
+  get query() {
+    return this.#query;
+  }
+
+  set query(value: FloatingOptionBinder | undefined) {
+    if (value === this.#query) return;
+    this.#query = value;
     void this.update();
   }
 }
@@ -728,6 +752,7 @@ interface FloatingCompositeHost extends HTMLElement {
   loop: boolean;
   cols: number;
   rtl: boolean;
+  itemSelector: string;
   controller: CompositeController;
   syncController(): {
     controller: CompositeController;
@@ -745,7 +770,80 @@ const FloatingCompositeBase = c(
       () => ({...inheritedContext, composite: contextValue}),
       [inheritedContext, contextValue],
     );
+    const discoveredItems = useMemo(
+      () => new Map<HTMLElement, string | null>(),
+      [],
+    );
     useProvider(floatingComponentContext, providedContext);
+
+    useLayoutEffect(() => {
+      const restore = (element: HTMLElement) => {
+        const tabIndex = discoveredItems.get(element);
+        if (tabIndex == null) {
+          element.removeAttribute('tabindex');
+        } else {
+          element.setAttribute('tabindex', tabIndex);
+        }
+        discoveredItems.delete(element);
+      };
+      const clear = (except = new Set<HTMLElement>()) => {
+        for (const element of discoveredItems.keys()) {
+          if (except.has(element)) continue;
+          contextValue.elements.delete(element);
+          restore(element);
+        }
+      };
+      const sync = () => {
+        if (!host.itemSelector) {
+          clear();
+          contextValue.sync();
+          return;
+        }
+        let elements: HTMLElement[];
+        try {
+          elements = Array.from(
+            host.querySelectorAll<HTMLElement>(host.itemSelector),
+          ).filter(
+            (element) => element.closest('floating-composite') === host,
+          );
+        } catch {
+          clear();
+          contextValue.sync();
+          return;
+        }
+        const current = new Set(elements);
+        clear(current);
+        for (const element of elements) {
+          if (discoveredItems.has(element)) continue;
+          discoveredItems.set(element, element.getAttribute('tabindex'));
+          contextValue.elements.add(element);
+        }
+        contextValue.sync();
+      };
+
+      sync();
+      const observer = new MutationObserver((records) => {
+        if (
+          records.some(
+            (record) =>
+              record.type === 'childList' ||
+              record.attributeName !== 'tabindex',
+          )
+        ) {
+          sync();
+        }
+      });
+      observer.observe(host, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      });
+      return () => {
+        observer.disconnect();
+        clear();
+        contextValue.sync();
+      };
+    }, [host, host.itemSelector, contextValue, discoveredItems]);
 
     return (
       <host
@@ -768,6 +866,11 @@ const FloatingCompositeBase = c(
       loop: {type: Boolean, value: (): boolean => false, reflect: true},
       cols: {type: Number, value: (): number => 1},
       rtl: {type: Boolean, value: (): boolean => false, reflect: true},
+      itemSelector: {
+        type: String,
+        value: (): string => '',
+        attr: 'item-selector',
+      },
     },
   },
 );

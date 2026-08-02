@@ -3,9 +3,10 @@
   top-layer stack: modal inertness, nested surfaces, Escape ordering, and
   focus restoration. The other examples focus on one anchored interaction.
 -->
-<section class="modal-demo" aria-label="Modal focus management example" data-demo="modal">
+<section id="modal-demo" class="modal-demo" aria-label="Modal focus management example">
   <p>Open the focus room to test focus trapping, inert neighbors, and layered Escape dismissal.</p>
-  <floating-root data-modal-root placement="bottom" strategy="fixed">
+  <floating-tree>
+    <floating-root id="modal-root">
     <floating-node node-id="focus-room">
       <floating-reference>
         <button class="outline-button">
@@ -16,7 +17,6 @@
     <dialog
       slot="floating"
       class="modal-panel"
-      aria-label="Focus room"
       aria-labelledby="modal-heading"
     >
       <span class="panel-kicker">FOCUS ROOM / PRIVATE</span>
@@ -27,7 +27,7 @@
       </p>
       <div class="modal-nested-actions">
         <floating-root
-          data-modal-tooltip-root
+          id="modal-tooltip-root"
           interactions="hover focus dismiss"
           floating-role="tooltip"
           placement="top"
@@ -42,9 +42,8 @@
           </template>
         </floating-root>
         <floating-root
-          data-modal-popover-root
+          id="modal-popover-root"
           interactions="click dismiss"
-          floating-role="dialog"
           placement="bottom-start"
           strategy="fixed"
         >
@@ -63,9 +62,7 @@
           </template>
         </floating-root>
         <floating-root
-          data-nested-modal-root
-          placement="bottom"
-          strategy="fixed"
+          id="nested-modal-root"
         >
           <floating-node node-id="focus-room-child-dialog" parent-id="focus-room">
             <floating-reference>
@@ -91,7 +88,8 @@
         <span class="modal-hint">ESC closes the top layer</span>
       </div>
     </dialog>
-  </floating-root>
+    </floating-root>
+  </floating-tree>
 </section>
 
 <script>
@@ -101,33 +99,31 @@
     dismiss,
     flip,
     offset,
-    role,
     shift,
   } from '@floating-ui-plus/web-components';
   import {initializeExample} from './initialize-example';
 
   initializeExample('modal', (scope) => {
-    const floating = FloatingRootElement.query(scope, '[data-modal-root]');
+    const floating = FloatingRootElement.query(scope, '#modal-root');
     floating.configure({
       middleware: [offset(20), shift({padding: 24})],
       plugins: [
         click(),
         // The backdrop owns the whole viewport. Nested surfaces dismiss first.
         dismiss({outsidePress: false}),
-        role({role: 'dialog'}),
       ],
     });
     const tooltip = FloatingRootElement.query(
       scope,
-      '[data-modal-tooltip-root]',
+      '#modal-tooltip-root',
     );
     const popover = FloatingRootElement.query(
       scope,
-      '[data-modal-popover-root]',
+      '#modal-popover-root',
     );
     const nestedModal = FloatingRootElement.query(
       scope,
-      '[data-nested-modal-root]',
+      '#nested-modal-root',
     );
     tooltip.middleware = [offset(12), flip(), shift({padding: 12})];
     popover.middleware = [offset(12), flip(), shift({padding: 18})];
@@ -136,7 +132,6 @@
       plugins: [
         click(),
         dismiss({outsidePress: false}),
-        role({role: 'dialog'}),
       ],
     });
 

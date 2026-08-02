@@ -5,6 +5,14 @@ It adds interactions, focus management, portals, collections, search, and native
 
 The package includes `@floating-ui-plus/web`; installing this package is sufficient.
 
+## Attribute policy
+
+Use `id` for a unique application-owned element and classes for repeated
+presentation or app selectors. Preserve the `data-*` attributes returned by
+Floating UI Plus bindings because they describe runtime state (for example,
+`data-loading`) or declarative package behavior. Avoid application-only
+`data-*` attributes that are merely selector hooks.
+
 ## Install
 
 ```sh
@@ -60,7 +68,6 @@ import {
   dismiss,
   flip,
   offset,
-  role,
   shift,
   transformOrigin,
 } from '@floating-ui-plus/vue';
@@ -76,7 +83,7 @@ const options = {
   ],
   whileElementsMounted: autoUpdate,
 };
-const plugins = [click(), dismiss(), role({role: 'dialog'})];
+const plugins = [click(), dismiss()];
 </script>
 
 <template>
@@ -163,6 +170,36 @@ exit. Reopening cancels a pending hide. For `top-layer="none"`, use
 until its close state completes. See the
 [entry and exit animation guide](https://fup.polcaneli.com/docs/guides/animation).
 
+## Transient presence stacks
+
+`useFloatingPresenceStack()` is the Vue adapter for the same framework-neutral
+context used by `floating-presence-stack`. Its methods mirror the Web Component
+(`add`, `close`, `remove`, `pause`, and `resume`) while `snapshot`, `records`,
+and `paused` are reactive refs for template rendering. This keeps runtime
+configuration with Vue code rather than scattering behavioral values across
+template attributes.
+
+```vue
+<script setup lang="ts">
+import {useFloatingPresenceStack} from '@floating-ui-plus/vue';
+
+const notices = useFloatingPresenceStack<{title: string}>({
+  limit: 3,
+  timeout: 5000,
+});
+
+notices.add({title: 'Saved'});
+</script>
+```
+
+Vue owns the rendered elements, ARIA, transition, and native Top Layer policy.
+Call `remove(id)` after the rendered exit transition completes.
+
+For fixed transient surfaces that should still use the browser's native Top
+Layer, pair the composable with `useFloatingTopLayer()` on the rendered
+element. It does not apply positioning, so the component remains free to own
+its layout CSS.
+
 ## Search and `useQuery()`
 
 `useSearch()` owns request state: debouncing, IME composition, cancellation,
@@ -206,7 +243,7 @@ const query = useQuery({
 </template>
 ```
 
-Provide `loading`, `error`, `empty`, and `results` slots on `FloatingSearch`
+Provide `loading`, `error`, `empty`, and `results` slots on `FloatingResults`
 as needed. `getQueryTriggerProps(query)` binds focus-preserving preset buttons.
 
 ### `useCombobox()` compatibility
@@ -247,12 +284,15 @@ confirmation first, then set `open.value = false`.
 | `FloatingRoot`, `FloatingReference`, `FloatingContent` | Vue-native surface composition |
 | `FloatingPortal`, `FloatingOverlay`, `FloatingFocusManager` | Teleport and custom modal composition |
 | `FloatingList`, `FloatingListItem`, `FloatingTree` | Keyboard collections and nested menus |
-| `useSearch()`, `FloatingSearch`, `useQuery()` | Search lifecycle, result rendering, and query interaction |
+| `useSearch()`, `FloatingResults`, `useQuery()` | Search lifecycle, result rendering, and query interaction |
 | `click`, `hover`, `focus`, `dismiss`, `role` | Composable interaction plugins |
+
+`FloatingResults` is the preferred phase renderer. `FloatingSearch` remains as
+a deprecated compatibility export, so existing templates continue to work.
 
 ## Documentation
 
-- [Home](https://fup.polcaneli.com/docs) · [Getting started](https://fup.polcaneli.com/docs/guides/getting-started) · [Vue guide](https://fup.polcaneli.com/docs/frameworks)
+- [Home](https://fup.polcaneli.com/docs) · [Getting started](https://fup.polcaneli.com/docs/getting-started) · [Vue guide](https://fup.polcaneli.com/docs/frameworks)
 - [Usage recipes](https://fup.polcaneli.com/docs/guides/usage) · [Combobox demos](https://fup.polcaneli.com/docs/guides/demo/combobox/fuzzy) · [Dismiss and closing](https://fup.polcaneli.com/docs/guides/dismiss)
 - [Entry and exit animation](https://fup.polcaneli.com/docs/guides/animation)
 

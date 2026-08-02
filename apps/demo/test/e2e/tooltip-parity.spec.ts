@@ -4,7 +4,7 @@ import {TOOLTIP_ARROW} from '../../src/example-config';
 async function inspectTooltip(page: Page, framework: 'web-components' | 'vue') {
   await page.goto(`/tooltip?framework=${framework}`);
 
-  const panel = page.locator(`[data-framework-panel="${framework}"]`);
+  const panel = page.locator(`.framework-panel--${framework}`);
   const card = panel.locator('.tooltip-card');
   await expect(card).toBeVisible();
   await expect(card).toContainText(

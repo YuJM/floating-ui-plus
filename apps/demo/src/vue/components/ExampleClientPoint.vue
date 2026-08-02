@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   FloatingContent,
-  FloatingPortal,
   FloatingReference,
   FloatingRoot,
   autoUpdate,
@@ -56,11 +55,9 @@ function track(event: MouseEvent) {
         >
           <i /><i /><i /><span>{{ label }}</span>
         </FloatingReference>
-        <FloatingPortal>
-          <FloatingContent class="cursor-tooltip">
-            Pointer is the <b>reference</b>
-          </FloatingContent>
-        </FloatingPortal>
+        <FloatingContent class="cursor-tooltip">
+          Pointer is the <b>reference</b>
+        </FloatingContent>
       </FloatingRoot>
     </div>
     <code>FloatingReference → clientPoint()</code>

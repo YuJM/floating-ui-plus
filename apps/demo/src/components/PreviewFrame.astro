@@ -38,6 +38,6 @@ const {title} = Astro.props;
   .preview-canvas { min-height: 100vh; padding: 1rem; }
   .preview-canvas > .framework-panel { width: 100%; }
   .preview-canvas > .framework-panel { display: none; }
-  html[data-framework='web-components'] .preview-canvas > [data-framework-panel='web-components'],
-  html[data-framework='vue'] .preview-canvas > [data-framework-panel='vue'] { display: block; }
+  html[data-framework='web-components'] .preview-canvas > .framework-panel--web-components,
+  html[data-framework='vue'] .preview-canvas > .framework-panel--vue { display: block; }
 </style>

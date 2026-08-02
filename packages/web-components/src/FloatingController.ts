@@ -203,10 +203,21 @@ export class FloatingRootRuntime {
       this.setReferenceElement(nextReference);
     }
 
-    this.#setSlottedFloatingElement(
-      nextFloating instanceof HTMLElement ? nextFloating : null,
-    );
+    const slottedFloating =
+      nextFloating instanceof HTMLElement &&
+      !this.#isStructuralFloatingComponent(nextFloating)
+        ? nextFloating
+        : null;
+    this.#setSlottedFloatingElement(slottedFloating);
     this.syncBindings();
+  }
+
+  #isStructuralFloatingComponent(element: HTMLElement) {
+    return (
+      element.localName.startsWith('floating-') &&
+      element.localName !== 'floating-content' &&
+      element.localName !== 'floating-portal'
+    );
   }
 
   sync() {
@@ -251,6 +262,9 @@ export class FloatingRootRuntime {
       );
     }
     this.#reference = reference;
+    this.topLayer.setRestoreFocusElement(
+      reference instanceof HTMLElement ? reference : null,
+    );
     this.engine.setReference(reference);
     this.syncBindings();
   }
@@ -293,6 +307,13 @@ export class FloatingRootRuntime {
       return 'dialog';
     }
     if (element?.localName === 'dialog') return 'dialog';
+    // Structural components such as floating-list and floating-query can be
+    // the root's default-slotted child. They are not surfaces themselves;
+    // treating them as one makes their default Popover preference override a
+    // native surface inferred from a nested content template.
+    if (element && this.#isStructuralFloatingComponent(element)) {
+      return 'none';
+    }
     if (explicitTopLayer === 'popover' || explicitTopLayer === 'dialog') {
       return explicitTopLayer;
     }
@@ -330,8 +351,12 @@ export class FloatingRootRuntime {
         ? portal.topLayer
         : 'none';
     }
-    const templateDialog = template.content.querySelector(':scope > dialog');
-    if (templateDialog) return 'dialog' as const;
+    // `:scope` on a DocumentFragment is inconsistent across browsers. The
+    // content contract already requires one top-level element, so inspect it
+    // directly to preserve a native dialog template.
+    if (template.content.firstElementChild?.localName === 'dialog') {
+      return 'dialog' as const;
+    }
     return 'popover' as const;
   }
 
@@ -587,10 +612,10 @@ export class FloatingRootRuntime {
       this.#manualFloatingElement ?? this.#slottedFloatingElement,
     );
     const topLayer =
-      surfaceTopLayer !== 'none'
-        ? surfaceTopLayer
-        : this.#templateFloatingElement && this.#templateTopLayer !== 'none'
-          ? this.#templateTopLayer
+      this.#templateFloatingElement && this.#templateTopLayer !== 'none'
+        ? this.#templateTopLayer
+        : surfaceTopLayer !== 'none'
+          ? surfaceTopLayer
           : this.#host.topLayer;
     this.topLayer.setKind(
       topLayer,
@@ -656,6 +681,7 @@ export class FloatingRootRuntime {
   }
 
   #syncComponentPlugins() {
+    this.#pruneDisconnectedComponentPluginOwners();
     if (
       this.#componentPluginsSource === this.#host.plugins &&
       this.#componentInteractions === this.#host.interactions &&
@@ -692,6 +718,20 @@ export class FloatingRootRuntime {
     if (this.#componentPluginContext) {
       this.#connectComponentPlugins(this.#componentPluginContext);
     }
+  }
+
+  #pruneDisconnectedComponentPluginOwners() {
+    let removed = false;
+    for (const owner of this.#registeredComponentPlugins.keys()) {
+      // A conditional template removes its custom elements before their
+      // lifecycle cleanups run. Do not let an old list-navigation handler
+      // consume the next key event while its replacement is mounting.
+      if (owner instanceof Node && !owner.isConnected) {
+        this.#registeredComponentPlugins.delete(owner);
+        removed = true;
+      }
+    }
+    if (removed) this.#registeredComponentPluginsVersion++;
   }
 
   #connectComponentPlugins(context: FloatingContext) {

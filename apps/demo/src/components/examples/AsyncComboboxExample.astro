@@ -4,7 +4,7 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
 ---
 
 <article class="demo-card combobox-card">
-  <section class="combobox-panel combobox-server-panel" data-demo="async-combobox">
+  <section id="async-combobox-demo" class="combobox-panel combobox-server-panel">
   <h3>Server-side search</h3>
   <p>
     MSW simulates a cursor API over {FAKE_SERVER_DESTINATION_TOTAL} distinct countries with debounce,
@@ -15,12 +15,9 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
     <label class="combobox-label" for="remote-destination-search">
       Remote destination
     </label>
-    <floating-root data-async-combobox-root placement="bottom-start">
+    <floating-root id="async-combobox-root" placement="bottom-start">
       <floating-list navigation loop allow-escape>
-        <floating-query
-          data-async-combobox
-          option-id-prefix="remote-destination-option"
-        >
+        <floating-query id="async-combobox-query">
           <floating-reference>
             <input
               id="remote-destination-search"
@@ -34,12 +31,11 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
             <span class="combobox-loading-indicator" aria-hidden="true"></span>
           </floating-reference>
           <template slot="content">
-              <div
+                <floating-results
                 class="combobox-popup async-combobox-popup"
                 aria-label="Remote destination suggestions"
-              >
-                <floating-search>
-                  <template data-search-loading>
+                >
+                  <floating-results-status type="loading">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -47,8 +43,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                     >
                       Querying remote endpoint…
                     </div>
-                  </template>
-                  <template data-search-error>
+                  </floating-results-status>
+                  <floating-results-status type="error">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -56,8 +52,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                     >
                       Remote search failed.
                     </div>
-                  </template>
-                  <template data-search-empty>
+                  </floating-results-status>
+                  <floating-results-status type="empty">
                     <div
                       class="combobox-empty"
                       role="option"
@@ -67,8 +63,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                         data-search-text="$query"
                       ></span>”
                     </div>
-                  </template>
-                  <template data-search-result>
+                  </floating-results-status>
+                  <floating-results-item>
                     <floating-list-item>
                       <div class="combobox-option">
                         <span>
@@ -78,8 +74,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                         <span class="language-badge">API</span>
                       </div>
                     </floating-list-item>
-                  </template>
-                  <template data-search-more>
+                  </floating-results-item>
+                  <floating-results-more>
                     <div class="combobox-pagination" role="status">
                       <span class="combobox-pagination-progress">
                         <strong data-search-text="$count"></strong> of
@@ -94,15 +90,13 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
                         <span class="combobox-load-more-pending">Loading…</span>
                       </button>
                     </div>
-                  </template>
-                </floating-search>
-              </div>
+                  </floating-results-more>
+                </floating-results>
           </template>
           <p
             id="remote-combobox-status"
             class="sr-only"
             aria-live="polite"
-            data-query-status
           >
             Remote destination suggestions closed
           </p>
@@ -142,10 +136,10 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
   initializeExample('async-combobox', (scope) => {
     const floating = FloatingRootElement.query(
       scope,
-      '[data-async-combobox-root]',
+      '#async-combobox-root',
     );
     const query = scope.querySelector<FloatingQueryElement>(
-      '[data-async-combobox]',
+      '#async-combobox-query',
     );
     if (!query) return;
 
