@@ -184,8 +184,10 @@ export {FloatingTransition} from './transition';
 export type {TransitionStatus, TransitionStyles} from './transition';
 export {createFloatingPresenceStack, FloatingPresenceStack} from './presenceStack';
 export type {
+  FloatingPresenceStackContext,
   PresenceStackAddOptions,
   FloatingPresenceStackOptions,
+  PresenceStackListener,
   PresenceStackRecord,
   PresenceStackSnapshot,
 } from './presenceStack';

@@ -22,7 +22,7 @@ import type {FloatingListElement} from './CollectionComponents';
 import {floatingComponentContext} from './component-context';
 import {getFloatingRootRuntime} from './FloatingController';
 import type {FloatingTemplateLifecycleDetail} from './FloatingRootElement';
-import type {FloatingSearchElement} from './FloatingSearchElement';
+import type {FloatingResultsElement} from './FloatingResultsElement';
 
 const contentsStyles = `
   :host,
@@ -78,11 +78,13 @@ function getDefaultItemLabel(item: unknown, key: string) {
 
 function getSearchViews(scope: Element) {
   return [
-    ...(scope.matches('floating-search')
-      ? [scope as FloatingSearchElement]
+    ...(scope.matches('floating-results, floating-search')
+      ? [scope as FloatingResultsElement]
       : []),
     ...Array.from(
-      scope.querySelectorAll<FloatingSearchElement>('floating-search'),
+      scope.querySelectorAll<FloatingResultsElement>(
+        'floating-results, floating-search',
+      ),
     ),
   ];
 }
@@ -167,7 +169,7 @@ const FloatingComboboxBase = c(
     useLayoutEffect(() => {
       const search = host.search;
       if (!search) return;
-      const boundViews = new Set<FloatingSearchElement>();
+      const boundViews = new Set<FloatingResultsElement>();
       const getItemLabel = (item: unknown) =>
         host.getItemLabel?.(item) ??
         getDefaultItemLabel(item, host.itemLabelKey);

@@ -2,6 +2,11 @@ export * from '@floating-ui-plus/web';
 
 export {FloatingArrowElement} from './FloatingArrowElement';
 export {
+  FloatingPresenceStackElement,
+  type FloatingPresenceStackChangeDetail,
+  type FloatingPresenceStackElementOptions,
+} from './FloatingPresenceStackElement';
+export {
   FloatingQueryElement,
   type FloatingQueryActivateDetail,
   type FloatingQueryStateChangeDetail,
@@ -23,8 +28,20 @@ export {
 } from './FloatingComboboxElement';
 export {
   FLOATING_SEARCH_PHASES,
+  FloatingResultsElement,
+  /** @deprecated Use `FloatingResultsElement`. */
   FloatingSearchElement,
-} from './FloatingSearchElement';
+} from './FloatingResultsElement';
+export {
+  FloatingResultsPartElement,
+  FloatingResultsStatusElement,
+  FloatingResultsIdleElement,
+  FloatingResultsLoadingElement,
+  FloatingResultsErrorElement,
+  FloatingResultsEmptyElement,
+  FloatingResultsItemElement,
+  FloatingResultsMoreElement,
+} from './FloatingResultsParts';
 export {createFloatingComboboxStatusFormatter} from './combobox-types';
 export type {
   FloatingComboboxConfiguration,

@@ -12,6 +12,8 @@ export interface FloatingTopLayerOptions {
   ): boolean | void;
   /** Called after a closed native surface has been restored to `hidden`. */
   onExitComplete?(element: HTMLElement): void;
+  /** Restore focus to the element that opened a native Dialog when it closes. */
+  restoreFocus?: boolean;
 }
 
 type PopoverElement = HTMLElement & {
@@ -115,6 +117,8 @@ export class FloatingTopLayerController {
   #cleanup: (() => void) | undefined;
   #unlockScroll: (() => void) | undefined;
   #cancelDeferredHide: (() => void) | undefined;
+  #previousFocus: HTMLElement | null = null;
+  #restoreFocusElement: HTMLElement | null = null;
 
   constructor(options: FloatingTopLayerOptions) {
     this.#options = options;
@@ -152,6 +156,15 @@ export class FloatingTopLayerController {
     this.#bind();
   }
 
+  /**
+   * Sets the element that should regain focus after a native Dialog closes.
+   * Renderers call this from their reference binding so pointer-down opening
+   * still restores focus to the trigger (before the browser focuses it).
+   */
+  setRestoreFocusElement(element: HTMLElement | null) {
+    this.#restoreFocusElement = element;
+  }
+
   connect() {
     if (this.#connected) return;
     this.#connected = true;
@@ -171,6 +184,7 @@ export class FloatingTopLayerController {
   destroy() {
     this.disconnect();
     this.#element = null;
+    this.#restoreFocusElement = null;
   }
 
   /** Returns whether a native top-layer surface is currently in use. */
@@ -186,6 +200,7 @@ export class FloatingTopLayerController {
       element.setAttribute('popover', 'manual');
       const shown = element.matches(':popover-open');
       if (open && !shown) {
+        this.#captureFocus(element);
         this.#cancelDeferredHide?.();
         this.#cancelDeferredHide = undefined;
         element.hidden = false;
@@ -208,6 +223,7 @@ export class FloatingTopLayerController {
 
     if (this.#kind === 'dialog' && element instanceof HTMLDialogElement) {
       if (open && !element.open) {
+        this.#captureFocus(element);
         this.#cancelDeferredHide?.();
         this.#cancelDeferredHide = undefined;
         element.hidden = false;
@@ -224,6 +240,7 @@ export class FloatingTopLayerController {
       } else if (!open && element.open) {
         this.#releaseScrollLock();
         element.close();
+        this.#restoreFocusAfterClose();
         this.#deferHidden(
           element,
           getNativeExitTransitionDuration(element),
@@ -275,6 +292,7 @@ export class FloatingTopLayerController {
         if (!this.#open) return;
         const accepted = this.#options.onOpenChange(false, event, 'click');
         if (accepted === false) this.sync(true);
+        else this.#restoreFocusAfterClose();
       };
       element.addEventListener('cancel', handleCancel);
       element.addEventListener('close', handleClose);
@@ -300,6 +318,33 @@ export class FloatingTopLayerController {
       if (element.open) element.close();
       element.hidden = true;
     }
+    this.#previousFocus = null;
+  }
+
+  #captureFocus(element: HTMLElement) {
+    if (this.#options.restoreFocus === false) return;
+    if (this.#kind !== 'dialog' && this.#options.restoreFocus !== true) return;
+    const active = element.ownerDocument.activeElement;
+    const candidate = this.#restoreFocusElement ?? active;
+    this.#previousFocus =
+      candidate instanceof HTMLElement &&
+      candidate !== element &&
+      !element.contains(candidate)
+        ? candidate
+        : null;
+  }
+
+  #restoreFocusAfterClose() {
+    const target = this.#previousFocus ?? this.#restoreFocusElement;
+    this.#previousFocus = null;
+    if (!target?.isConnected) return;
+    // Native dialog focus management runs after the close event. Defer one
+    // task so the explicit reference restoration wins over the browser's
+    // default return to the document body.
+    globalThis.setTimeout(() => {
+      if (this.#open || !target.isConnected) return;
+      target.focus({preventScroll: true});
+    }, 0);
   }
 
   #deferHidden(element: HTMLElement, duration: number) {

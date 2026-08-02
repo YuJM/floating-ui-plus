@@ -262,6 +262,9 @@ export class FloatingRootRuntime {
       );
     }
     this.#reference = reference;
+    this.topLayer.setRestoreFocusElement(
+      reference instanceof HTMLElement ? reference : null,
+    );
     this.engine.setReference(reference);
     this.syncBindings();
   }

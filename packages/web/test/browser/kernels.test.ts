@@ -600,6 +600,43 @@ describe('FloatingPresenceStack', () => {
     expect(controller.snapshot.records).toHaveLength(2);
     controller.destroy();
   });
+
+  test('keeps timeout zero records open until explicitly closed', () => {
+    vi.useFakeTimers();
+    const controller = new FloatingPresenceStack<string>({timeout: 0});
+    const id = controller.add('Persistent');
+
+    vi.advanceTimersByTime(10_000);
+    expect(controller.snapshot.records[0]).toMatchObject({id, open: true});
+
+    controller.close(id);
+    expect(controller.snapshot.records[0]).toMatchObject({id, open: false});
+    controller.destroy();
+  });
+
+  test('updates future defaults and closes excess records when the limit shrinks', () => {
+    vi.useFakeTimers();
+    const controller = new FloatingPresenceStack<string>({limit: 3, timeout: 0});
+    controller.add('First', {id: 'first'});
+    controller.add('Second', {id: 'second'});
+    controller.add('Third', {id: 'third'});
+
+    controller.setOptions({limit: 2, timeout: 50});
+
+    expect(controller.options).toEqual({limit: 2, timeout: 50});
+    expect(controller.snapshot.records).toEqual([
+      expect.objectContaining({id: 'first', open: false, overflowed: true}),
+      expect.objectContaining({id: 'second', open: true}),
+      expect.objectContaining({id: 'third', open: true}),
+    ]);
+
+    controller.add('Fourth', {id: 'fourth'});
+    vi.advanceTimersByTime(50);
+    expect(controller.snapshot.records.find(({id}) => id === 'fourth')).toMatchObject({
+      open: false,
+    });
+    controller.destroy();
+  });
 });
 
 describe('FloatingTree and context protocol', () => {

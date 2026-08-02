@@ -23,21 +23,51 @@ export const FLOATING_SEARCH_PHASES: readonly SearchPhase[] = [
   'results',
 ];
 
-function findTemplate(host: Element, phase: SearchPhase) {
+type ResultsTemplate = HTMLTemplateElement | HTMLElement;
+
+function findTemplate(host: Element, phase: SearchPhase): ResultsTemplate | undefined {
   const name = phase === 'results' ? 'result' : phase;
-  return Array.from(host.children).find(
-    (element): element is HTMLTemplateElement =>
-      element instanceof HTMLTemplateElement &&
-      element.hasAttribute(`data-search-${name}`),
+  const template = Array.from(host.children).find(
+    (element): element is ResultsTemplate =>
+      (element instanceof HTMLTemplateElement &&
+        element.hasAttribute(`data-search-${name}`)) ||
+      (element.localName === 'floating-results-status' &&
+        element.getAttribute('type') === name) ||
+      element.localName === `floating-results-${name === 'result' ? 'item' : name}`,
   );
+  if (template instanceof HTMLElement) preparePartTemplate(template);
+  return template;
 }
 
-function findLoadMoreTemplate(host: Element) {
-  return Array.from(host.children).find(
-    (element): element is HTMLTemplateElement =>
-      element instanceof HTMLTemplateElement &&
-      element.hasAttribute('data-search-more'),
+function findLoadMoreTemplate(host: Element): ResultsTemplate | undefined {
+  const template = Array.from(host.children).find(
+    (element): element is ResultsTemplate =>
+      (element instanceof HTMLTemplateElement &&
+        element.hasAttribute('data-search-more')) ||
+      element.localName === 'floating-results-more',
   );
+  if (template instanceof HTMLElement) preparePartTemplate(template);
+  return template;
+}
+
+function preparePartTemplate(part: HTMLElement) {
+  const typedPart = part as HTMLElement & {
+    prepareTemplate?: () => HTMLTemplateElement;
+  };
+  if (typedPart.prepareTemplate) return typedPart.prepareTemplate();
+  const template = document.createElement('template');
+  while (part.firstChild) {
+    template.content.append(part.firstChild);
+  }
+  part.append(template);
+  return template;
+}
+
+function cloneTemplateContent(template: ResultsTemplate) {
+  if (template instanceof HTMLTemplateElement) {
+    return template.content.cloneNode(true) as DocumentFragment;
+  }
+  return preparePartTemplate(template).content.cloneNode(true) as DocumentFragment;
 }
 
 function readPath(value: unknown, path: string): unknown {
@@ -86,15 +116,16 @@ function bindTemplate<T>(
 /**
  * Declaratively renders every SearchController phase from native templates.
  *
- * Provide `template[data-search-idle|loading|error|empty]` and one
- * `template[data-search-result]`. The result template is repeated for every
- * item. An optional `template[data-search-more]` is appended after result
- * items when the source exposes a next cursor; a descendant marked
- * `data-search-load-more` requests that next page. `data-search-text="field.path"`
+ * Prefer `<floating-results-status type="idle|loading|error|empty">` and one
+ * `<floating-results-item>` child. The item child is repeated for every
+ * result. An optional `<floating-results-more>` is appended when the source
+ * exposes a next cursor; a descendant marked `data-search-load-more` requests
+ * that next page. The earlier `template[data-search-*]` form and deprecated
+ * phase-specific result part names remain supported. `data-search-text="field.path"`
  * binds item text; `$query`, `$index`, `$count`, `$total`, and `$error` bind
  * search metadata.
  */
-export class FloatingSearchElement<T = unknown> extends HTMLElement {
+export class FloatingResultsElement<T = unknown> extends HTMLElement {
   #search: SearchController<T> | undefined;
   #query: QueryController<T> | undefined;
   #getItemLabel: ((item: T) => string) | undefined;
@@ -105,7 +136,7 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
   constructor() {
     super();
     const shadowRoot = this.attachShadow({mode: 'open'});
-    shadowRoot.innerHTML = '<style>:host{display:contents}</style><slot></slot>';
+    shadowRoot.innerHTML = '<style>:host{display:block}</style><slot></slot>';
   }
 
   connectedCallback() {
@@ -190,9 +221,7 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
     }> = [];
     if (snapshot.phase === 'results') {
       snapshot.items.forEach((item, index) => {
-        const itemFragment = template.content.cloneNode(
-          true,
-        ) as DocumentFragment;
+        const itemFragment = cloneTemplateContent(template);
         bindTemplate(itemFragment, snapshot, item, index);
         for (const listItem of Array.from(
           itemFragment.querySelectorAll('floating-list-item'),
@@ -207,9 +236,7 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
       });
       const loadMoreTemplate = findLoadMoreTemplate(this);
       if (snapshot.hasMore && loadMoreTemplate) {
-        const loadMoreFragment = loadMoreTemplate.content.cloneNode(
-          true,
-        ) as DocumentFragment;
+        const loadMoreFragment = cloneTemplateContent(loadMoreTemplate);
         bindTemplate(loadMoreFragment, snapshot);
         for (const control of Array.from(
           loadMoreFragment.querySelectorAll<HTMLElement>(
@@ -232,9 +259,7 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
         fragment.append(loadMoreFragment);
       }
     } else {
-      const phaseFragment = template.content.cloneNode(
-        true,
-      ) as DocumentFragment;
+      const phaseFragment = cloneTemplateContent(template);
       bindTemplate(phaseFragment, snapshot);
       fragment.append(phaseFragment);
     }
@@ -288,6 +313,11 @@ export class FloatingSearchElement<T = unknown> extends HTMLElement {
 
 declare global {
   interface HTMLElementTagNameMap {
+    'floating-results': FloatingResultsElement;
+    /** @deprecated Use `floating-results`. */
     'floating-search': FloatingSearchElement;
   }
 }
+
+/** @deprecated Use `FloatingResultsElement`. */
+export class FloatingSearchElement<T = unknown> extends FloatingResultsElement<T> {}

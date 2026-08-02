@@ -752,6 +752,7 @@ interface FloatingCompositeHost extends HTMLElement {
   loop: boolean;
   cols: number;
   rtl: boolean;
+  itemSelector: string;
   controller: CompositeController;
   syncController(): {
     controller: CompositeController;
@@ -769,7 +770,80 @@ const FloatingCompositeBase = c(
       () => ({...inheritedContext, composite: contextValue}),
       [inheritedContext, contextValue],
     );
+    const discoveredItems = useMemo(
+      () => new Map<HTMLElement, string | null>(),
+      [],
+    );
     useProvider(floatingComponentContext, providedContext);
+
+    useLayoutEffect(() => {
+      const restore = (element: HTMLElement) => {
+        const tabIndex = discoveredItems.get(element);
+        if (tabIndex == null) {
+          element.removeAttribute('tabindex');
+        } else {
+          element.setAttribute('tabindex', tabIndex);
+        }
+        discoveredItems.delete(element);
+      };
+      const clear = (except = new Set<HTMLElement>()) => {
+        for (const element of discoveredItems.keys()) {
+          if (except.has(element)) continue;
+          contextValue.elements.delete(element);
+          restore(element);
+        }
+      };
+      const sync = () => {
+        if (!host.itemSelector) {
+          clear();
+          contextValue.sync();
+          return;
+        }
+        let elements: HTMLElement[];
+        try {
+          elements = Array.from(
+            host.querySelectorAll<HTMLElement>(host.itemSelector),
+          ).filter(
+            (element) => element.closest('floating-composite') === host,
+          );
+        } catch {
+          clear();
+          contextValue.sync();
+          return;
+        }
+        const current = new Set(elements);
+        clear(current);
+        for (const element of elements) {
+          if (discoveredItems.has(element)) continue;
+          discoveredItems.set(element, element.getAttribute('tabindex'));
+          contextValue.elements.add(element);
+        }
+        contextValue.sync();
+      };
+
+      sync();
+      const observer = new MutationObserver((records) => {
+        if (
+          records.some(
+            (record) =>
+              record.type === 'childList' ||
+              record.attributeName !== 'tabindex',
+          )
+        ) {
+          sync();
+        }
+      });
+      observer.observe(host, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+      });
+      return () => {
+        observer.disconnect();
+        clear();
+        contextValue.sync();
+      };
+    }, [host, host.itemSelector, contextValue, discoveredItems]);
 
     return (
       <host
@@ -792,6 +866,11 @@ const FloatingCompositeBase = c(
       loop: {type: Boolean, value: (): boolean => false, reflect: true},
       cols: {type: Number, value: (): number => 1},
       rtl: {type: Boolean, value: (): boolean => false, reflect: true},
+      itemSelector: {
+        type: String,
+        value: (): string => '',
+        attr: 'item-selector',
+      },
     },
   },
 );

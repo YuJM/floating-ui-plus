@@ -11,9 +11,12 @@ import {
   FloatingCompositeElement,
   FloatingListElement,
   FloatingPortalElement,
+  FloatingPresenceStackElement,
   FloatingQueryElement,
   FloatingReferenceElement,
+  FloatingResultsElement,
   FloatingRootElement,
+  FloatingSearchElement,
   SearchController,
   click,
   createAsyncSearchSource,
@@ -36,6 +39,120 @@ afterEach(() => {
 describe('FloatingRootElement', () => {
   test('registers a direct floating-content surface', () => {
     expect(customElements.get('floating-content')).toBeDefined();
+  });
+
+  test('renders and removes transient surfaces from a declarative presence template', async () => {
+    const stack = document.createElement('floating-presence-stack');
+    stack.configure({limit: 3, timeout: 0, exitDuration: 1, topLayer: 'none'});
+    stack.tabIndex = -1;
+    stack.innerHTML = `
+      <template slot="content">
+        <article class="notice" role="status">
+          <strong data-presence-text="title"></strong>
+          <button type="button" data-presence-close>Dismiss</button>
+        </article>
+      </template>
+    `;
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    expect(stack).toBeInstanceOf(FloatingPresenceStackElement);
+    expect(stack.options).toEqual({
+      limit: 3,
+      timeout: 0,
+      exitDuration: 1,
+      topLayer: 'none',
+    });
+    const firstId = stack.add({title: 'First'}, {id: 'first'});
+    stack.add({title: 'Second'}, {id: 'second'});
+    const first = stack.querySelector<HTMLElement>(
+      '[data-presence-id="first"]',
+    );
+    const second = stack.querySelector<HTMLElement>(
+      '[data-presence-id="second"]',
+    );
+
+    expect(firstId).toBe('first');
+    expect(first?.textContent).toContain('First');
+    expect(second?.style.getPropertyValue('--floating-presence-index')).toBe(
+      '0',
+    );
+    expect(first?.dataset.presenceIndex).toBe('1');
+
+    stack.pause('pointer');
+    expect(stack.hasAttribute('data-presence-paused')).toBe(true);
+    stack.resume('pointer');
+    expect(stack.hasAttribute('data-presence-paused')).toBe(false);
+
+    first?.querySelector<HTMLButtonElement>('button')?.click();
+    expect(first?.getAttribute('data-status')).toBe('close');
+    await vi.waitFor(() => {
+      expect(stack.querySelector('[data-presence-id="first"]')).toBeNull();
+    });
+  });
+
+  test('lets code-owned presence options override static attributes', async () => {
+    const stack = document.createElement('floating-presence-stack');
+    stack.setAttribute('limit', '1');
+    stack.setAttribute('timeout', '50');
+    stack.innerHTML = '<template slot="content"><article></article></template>';
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    stack.options = {limit: 2, timeout: 0, exitDuration: 180, topLayer: 'popover'};
+
+    expect(stack.options).toEqual({
+      limit: 2,
+      timeout: 0,
+      exitDuration: 180,
+      topLayer: 'popover',
+    });
+    stack.add({title: 'Persistent'}, {id: 'persistent'});
+    await new Promise((resolve) => window.setTimeout(resolve, 60));
+    expect(stack.snapshot.records[0]).toMatchObject({
+      id: 'persistent',
+      open: true,
+    });
+  });
+
+  test('opens each transient content template clone as a native popover', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+
+    const stack = document.createElement('floating-presence-stack');
+    stack.configure({timeout: 0, exitDuration: 1, topLayer: 'popover'});
+    stack.innerHTML = `
+      <template slot="content">
+        <article role="status">
+          <strong data-presence-text="title"></strong>
+          <button type="button" data-presence-close>Dismiss</button>
+        </article>
+      </template>
+    `;
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    stack.add({title: 'Saved'}, {id: 'saved'});
+    const surface = stack.querySelector<HTMLElement>(
+      '[data-presence-id="saved"]',
+    );
+
+    expect(surface).toHaveAttribute('popover', 'manual');
+    expect(surface?.matches(':popover-open')).toBe(true);
+
+    surface?.querySelector<HTMLButtonElement>('button')?.click();
+    expect(surface?.matches(':popover-open')).toBe(false);
+    await vi.waitFor(() => {
+      expect(stack.querySelector('[data-presence-id="saved"]')).toBeNull();
+    });
+  });
+
+  test('registers floating-search as a compatibility alias for floating-results', () => {
+    expect(document.createElement('floating-results')).toBeInstanceOf(
+      FloatingResultsElement,
+    );
+    expect(document.createElement('floating-search')).toBeInstanceOf(
+      FloatingSearchElement,
+    );
   });
 
   test('binds native slotted elements without a directive', async () => {
@@ -747,7 +864,7 @@ describe('FloatingRootElement', () => {
     search.destroy();
   });
 
-  test('renders combobox search phases and result items from native templates', async () => {
+  test('renders combobox search phases and result items from results parts', async () => {
     const destination = {id: 'beijing', label: '北京', region: 'China'};
     const search = new SearchController<typeof destination>({
       items: [],
@@ -762,22 +879,22 @@ describe('FloatingRootElement', () => {
           <floating-portal>
             <template>
               <section>
-                <floating-search>
-                  <template data-search-idle><p>Try a query</p></template>
-                  <template data-search-loading><p>Searching</p></template>
-                  <template data-search-error><p data-search-text="$error"></p></template>
-                  <template data-search-empty><p>No match for <span data-search-text="$query"></span></p></template>
-                  <template data-search-result>
+                <floating-results>
+                  <floating-results-status type="idle"><p>Try a query</p></floating-results-status>
+                  <floating-results-status type="loading"><p>Searching</p></floating-results-status>
+                  <floating-results-status type="error"><p data-search-text="$error"></p></floating-results-status>
+                  <floating-results-status type="empty"><p>No match for <span data-search-text="$query"></span></p></floating-results-status>
+                  <floating-results-item>
                     <floating-list-item>
                       <div><strong data-search-text="label"></strong><small data-search-text="region"></small></div>
                     </floating-list-item>
-                  </template>
-                  <template data-search-more>
+                  </floating-results-item>
+                  <floating-results-more>
                     <button type="button" data-search-load-more>
                       Load next <span data-search-text="$count"></span>/<span data-search-text="$total"></span>
                     </button>
-                  </template>
-                </floating-search>
+                  </floating-results-more>
+                </floating-results>
               </section>
             </template>
           </floating-portal>
@@ -803,10 +920,10 @@ describe('FloatingRootElement', () => {
     await combobox.updateComplete;
 
     await vi.waitFor(() => {
-      expect(document.querySelector('floating-search')?.dataset.phase).toBe(
+      expect(document.querySelector('floating-results')?.dataset.phase).toBe(
         'idle',
       );
-      expect(document.querySelector('floating-search')?.textContent).toContain(
+      expect(document.querySelector('floating-results')?.textContent).toContain(
         'Try a query',
       );
       expect(combobox.querySelector('#combobox-status')?.textContent).toBe(
@@ -816,7 +933,7 @@ describe('FloatingRootElement', () => {
 
     search.setQuery('bejing');
     await vi.waitFor(() => {
-      expect(document.querySelector('floating-search')?.textContent).toContain(
+      expect(document.querySelector('floating-results')?.textContent).toContain(
         'No match for bejing',
       );
     });
@@ -846,7 +963,7 @@ describe('FloatingRootElement', () => {
       loading: true,
     });
     await vi.waitFor(() => {
-      const searchElement = document.querySelector('floating-search');
+      const searchElement = document.querySelector('floating-results');
       expect(searchElement?.dataset.phase).toBe('results');
       expect(searchElement?.dataset.loading).toBe('true');
       expect(searchElement?.textContent).toContain('北京China');
@@ -1632,6 +1749,36 @@ describe('FloatingRootElement', () => {
       expect(list.list.items.map((item) => item.label)).toEqual([
         'Updated',
       ]);
+    });
+  });
+
+  test('discovers composite controls from a selector without item wrappers', async () => {
+    const composite = document.createElement('floating-composite');
+    composite.orientation = 'vertical';
+    composite.loop = true;
+    composite.itemSelector = '[data-action]';
+    composite.innerHTML = `
+      <button data-action>First</button>
+      <button data-action>Second</button>
+    `;
+    document.body.append(composite);
+    await composite.updateComplete;
+    const buttons = Array.from(composite.querySelectorAll('button'));
+
+    await vi.waitFor(() => {
+      expect(buttons.map((button) => button.tabIndex)).toEqual([0, -1]);
+    });
+    buttons[0]?.focus();
+    buttons[0]?.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, key: 'ArrowDown'}),
+    );
+    expect(document.activeElement).toBe(buttons[1]);
+
+    const third = document.createElement('button');
+    third.dataset.action = '';
+    composite.append(third);
+    await vi.waitFor(() => {
+      expect(third.tabIndex).toBe(-1);
     });
   });
 

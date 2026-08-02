@@ -26,18 +26,65 @@ export interface PresenceStackAddOptions {
   timeout?: number | undefined;
 }
 
+export type PresenceStackListener<T> = (
+  snapshot: PresenceStackSnapshot<T>,
+) => void;
+
+/**
+ * Framework-neutral public contract shared by rendering adapters.
+ *
+ * Web Components, Vue composables, and application-owned renderers can expose
+ * this shape without coupling transient lifecycle state to their markup.
+ */
+export interface FloatingPresenceStackContext<T> {
+  readonly snapshot: PresenceStackSnapshot<T>;
+  add(value: T, options?: PresenceStackAddOptions): string;
+  close(id: string, overflowed?: boolean): void;
+  remove(id: string): void;
+  pause(reason?: string): void;
+  resume(reason?: string): void;
+  subscribe(listener: PresenceStackListener<T>): () => void;
+}
+
 /**
  * Framework-neutral lifecycle for bounded, pausable transient surfaces.
  * Rendering and the final removal after an exit transition stay with the host.
  */
-export class FloatingPresenceStack<T> {
+export class FloatingPresenceStack<T>
+  implements FloatingPresenceStackContext<T>
+{
+  #options: FloatingPresenceStackOptions;
   #records = new Map<string, PresenceStackRecord<T>>();
   #timers = new Map<string, number>();
   #startedAt = new Map<string, number>();
+  #persistent = new Set<string>();
   #pauseReasons = new Set<string>();
-  #listeners = new Set<(snapshot: PresenceStackSnapshot<T>) => void>();
+  #listeners = new Set<PresenceStackListener<T>>();
 
-  constructor(readonly options: FloatingPresenceStackOptions = {}) {}
+  constructor(options: FloatingPresenceStackOptions = {}) {
+    this.#options = {...options};
+  }
+
+  get options(): Readonly<FloatingPresenceStackOptions> {
+    return {...this.#options};
+  }
+
+  /**
+   * Updates defaults used by records added after this call.
+   *
+   * Reducing `limit` also closes the oldest excess records immediately. An
+   * updated timeout does not rewrite timers that are already running.
+   */
+  setOptions(options: Partial<FloatingPresenceStackOptions>) {
+    this.#options = {...this.#options, ...options};
+    if (options.limit == null) return;
+
+    const limit = Math.max(1, options.limit);
+    const visible = [...this.#records.values()].filter((record) => record.open);
+    for (const record of visible.slice(0, Math.max(0, visible.length - limit))) {
+      this.close(record.id, true);
+    }
+  }
 
   get snapshot(): PresenceStackSnapshot<T> {
     return {
@@ -47,18 +94,23 @@ export class FloatingPresenceStack<T> {
   }
 
   add(value: T, options: PresenceStackAddOptions = {}) {
-    const limit = Math.max(1, this.options.limit ?? 3);
+    const limit = Math.max(1, this.#options.limit ?? 3);
     const visible = [...this.#records.values()].filter((record) => record.open);
     if (visible.length >= limit) this.close(visible[0]!.id, true);
 
     const id = options.id ?? createId('floating-presence');
+    const timeout = Math.max(
+      0,
+      options.timeout ?? this.#options.timeout ?? 5000,
+    );
     const record: PresenceStackRecord<T> = {
       id,
       value,
       open: true,
       overflowed: false,
-      remaining: Math.max(0, options.timeout ?? this.options.timeout ?? 5000),
+      remaining: timeout,
     };
+    if (timeout === 0) this.#persistent.add(id);
     this.#records.set(id, record);
     this.#schedule(record);
     this.#emit();
@@ -78,6 +130,7 @@ export class FloatingPresenceStack<T> {
   remove(id: string) {
     if (!this.#records.delete(id)) return;
     this.#clearTimer(id);
+    this.#persistent.delete(id);
     this.#emit();
   }
 
@@ -109,9 +162,11 @@ export class FloatingPresenceStack<T> {
     this.#emit();
   }
 
-  subscribe(listener: (snapshot: PresenceStackSnapshot<T>) => void) {
+  subscribe(listener: PresenceStackListener<T>) {
     this.#listeners.add(listener);
-    return () => this.#listeners.delete(listener);
+    return () => {
+      this.#listeners.delete(listener);
+    };
   }
 
   destroy() {
@@ -120,6 +175,7 @@ export class FloatingPresenceStack<T> {
   }
 
   #schedule(record: PresenceStackRecord<T>) {
+    if (this.#persistent.has(record.id)) return;
     if (!record.open || this.#pauseReasons.size > 0 || record.remaining <= 0) {
       if (record.remaining <= 0 && record.open) this.close(record.id);
       return;

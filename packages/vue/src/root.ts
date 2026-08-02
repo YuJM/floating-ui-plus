@@ -173,6 +173,7 @@ export const FloatingReference = defineComponent({
   },
   setup(props, {attrs, slots}) {
     const injected = useFloatingRoot();
+    const topLayerController = useFloatingRootTopLayerController();
     const floating = props.floating ?? injected;
     if (!floating) {
       throw new Error('FloatingReference requires a FloatingRoot or a floating prop.');
@@ -181,10 +182,13 @@ export const FloatingReference = defineComponent({
       h(
         props.as,
         mergeProps(attrs, floating.referenceAttrs, {
-          ref: (element: unknown) =>
-            floating.controller.setReference(
-              element instanceof Element ? element : null,
-            ),
+          ref: (element: unknown) => {
+            const reference = element instanceof Element ? element : null;
+            floating.controller.setReference(reference);
+            topLayerController?.setRestoreFocusElement(
+              reference instanceof HTMLElement ? reference : null,
+            );
+          },
         }),
         slots.default?.({floating}),
       );

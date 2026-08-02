@@ -21,6 +21,7 @@ import {
   FloatingList,
   FloatingListItem,
   FloatingReference,
+  FloatingResults,
   FloatingRoot,
   FloatingSearch,
   click,
@@ -32,6 +33,7 @@ import {
   supportsFloatingTopLayer,
   useCombobox,
   useFloating,
+  useFloatingPresenceStack,
   useQuery,
   useSearch,
   vFloating,
@@ -40,6 +42,10 @@ import {
 afterEach(() => cleanup());
 
 describe('Floating UI Plus Vue adapter', () => {
+  test('keeps FloatingSearch as a compatibility alias for FloatingResults', () => {
+    expect(FloatingSearch).toBe(FloatingResults);
+  });
+
   test('can cancel a close request before Vue commits open state', async () => {
     const beforeClose = vi.fn(() => false);
     const App = defineComponent({
@@ -140,6 +146,45 @@ describe('Floating UI Plus Vue adapter', () => {
     await waitFor(() => {
       expect(getByText('北京')).toHaveAttribute('data-query', 'bejing');
     });
+  });
+
+  test('adapts the shared presence context to reactive Vue state', async () => {
+    const App = defineComponent({
+      setup() {
+        const presence = useFloatingPresenceStack<string>({
+          limit: 2,
+          timeout: 0,
+        });
+        let sequence = 0;
+        return () =>
+          h('div', [
+            h(
+              'button',
+              {
+                onClick: () => {
+                  const id = String(++sequence);
+                  presence.add(`Notice ${id}`, {id});
+                },
+              },
+              'Add',
+            ),
+            h(
+              'output',
+              presence.records.value
+                .map((record) => `${record.id}:${record.open}`)
+                .join(','),
+            ),
+          ]);
+      },
+    });
+
+    const {getByRole, getByText} = render(App);
+    const add = getByRole('button', {name: 'Add'});
+    await fireEvent.click(add);
+    await fireEvent.click(add);
+    await fireEvent.click(add);
+
+    expect(getByText('1:false,2:true,3:true')).toBeVisible();
   });
 
   test('composes query input, active option, and activation state', async () => {
@@ -260,7 +305,7 @@ describe('Floating UI Plus Vue adapter', () => {
   test('renders Vue search phase slots and shares query status bindings', async () => {
     let search: ReturnType<typeof useSearch<{id: string; label: string}>>;
     const App = defineComponent({
-      components: {FloatingSearch},
+      components: {FloatingResults},
       setup() {
         search = useSearch({
           items: [
@@ -289,11 +334,11 @@ describe('Floating UI Plus Vue adapter', () => {
           <button data-testid="preset" v-bind="query.getQueryTriggerProps('beta')">
             Try beta
           </button>
-          <FloatingSearch :search="search">
+          <FloatingResults :search="search">
             <template #results>
               <output data-testid="phase">{{ search.items.value.length }} result slots</output>
             </template>
-          </FloatingSearch>
+          </FloatingResults>
           <output data-testid="status">{{ query.statusText.value }}</output>
         </div>
       `,

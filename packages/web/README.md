@@ -186,6 +186,9 @@ padding on surfaces with different layouts.
 Popover or `<dialog>` surface explicitly transitions `display` or `overlay`
 with `allow-discrete`, it leaves the closed surface unhidden until that CSS
 transition finishes. No animation option or JavaScript duration is required.
+Native Dialog focus returns to the bound reference after close. Direct
+controller users can set that reference explicitly with
+`setRestoreFocusElement(reference)`.
 
 ```css
 .floating-panel {
@@ -232,12 +235,17 @@ const stack = new FloatingPresenceStack<{message: string}>({
 });
 
 const id = stack.add({message: 'Saved'});
+stack.setOptions({limit: 5}); // Defaults for records added from now on.
 stack.pause('pointer');
 stack.resume('pointer');
 stack.close(id);
 // After the renderer's exit transition:
 stack.remove(id);
 ```
+
+`FloatingPresenceStackContext<T>` is the small shared contract for adapters:
+snapshot, add/close/remove, pause/resume, and subscription. It deliberately has
+no DOM, ARIA, transition, or Top Layer policy; those stay in the renderer.
 
 ## Compatibility
 

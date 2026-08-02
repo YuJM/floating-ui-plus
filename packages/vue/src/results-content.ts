@@ -10,13 +10,13 @@ import type {UseSearchReturn} from './search';
 type SearchSlot = (state: SearchSnapshot<unknown>) => VNodeChild;
 
 /**
- * Vue-native phase renderer for `useSearch()`.
+ * Vue-native result-phase renderer for `useSearch()`.
  *
  * It chooses a named phase slot only. Result markup, copy, ARIA, and list
  * composition stay in the consuming Vue template.
  */
-export const FloatingSearch = defineComponent({
-  name: 'FloatingSearch',
+export const FloatingResults = defineComponent({
+  name: 'FloatingResults',
   props: {
     search: {
       type: Object as PropType<UseSearchReturn<unknown>>,
@@ -31,3 +31,6 @@ export const FloatingSearch = defineComponent({
     };
   },
 });
+
+/** @deprecated Use `FloatingResults`. */
+export const FloatingSearch = FloatingResults;
