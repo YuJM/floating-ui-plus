@@ -164,6 +164,16 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
           `${state.items.length} destinations available`,
       },
     });
+    const activate = (event: Event) => {
+      const item = (
+        event as CustomEvent<{item: MultilingualDestination}>
+      ).detail.item;
+      const input = scope.querySelector<HTMLInputElement>(
+        '#destination-search',
+      );
+      if (input) input.value = item.label;
+    };
+    query.addEventListener('queryactivate', activate);
 
     floating.configure({
       middleware: [
@@ -186,6 +196,7 @@ import {multilingualSearchPrompts} from '../../multilingual-destinations';
       plugins: [dismiss()],
     });
 
+    return () => query.removeEventListener('queryactivate', activate);
   });
 
 </script>

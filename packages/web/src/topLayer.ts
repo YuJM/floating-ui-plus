@@ -92,14 +92,18 @@ function applyDialogSafeArea(element: HTMLDialogElement) {
 }
 
 function applyPopoverPositionReset(element: HTMLElement) {
-  const inset = {
-    value: element.style.getPropertyValue('inset'),
-    priority: element.style.getPropertyPriority('inset'),
-  };
   const margin = {
     value: element.style.getPropertyValue('margin'),
     priority: element.style.getPropertyPriority('margin'),
   };
+  const inset = {
+    value: element.style.getPropertyValue('inset'),
+    priority: element.style.getPropertyPriority('inset'),
+  };
+  const authoredInset =
+    !inset.value && typeof getComputedStyle === 'function'
+      ? getComputedStyle(element).inset
+      : '';
   const right = {
     value: element.style.getPropertyValue('right'),
     priority: element.style.getPropertyPriority('right'),
@@ -113,10 +117,16 @@ function applyPopoverPositionReset(element: HTMLElement) {
     priority: element.style.getPropertyPriority('height'),
   };
   // Native popovers start with `inset: 0` and `margin: auto`. Floating UI
-  // controls the position with left, top, and transform, so those defaults
-  // must not leave right/bottom or fit-content height constraints behind in
-  // Safari.
-  element.style.setProperty('inset', 'auto');
+  // controls the position with left, top, and transform. Preserve a
+  // stylesheet-authored inset when one exists: a fixed surface may
+  // intentionally position itself with right/bottom (as Toast does), and an
+  // inline `inset: auto` would erase those declarations in the native layer.
+  // Inline positioning remains reset to `auto` for Floating UI's normal
+  // left/top positioning contract.
+  element.style.setProperty(
+    'inset',
+    inset.value ? 'auto' : authoredInset || 'auto',
+  );
   element.style.setProperty('margin', '0');
   element.style.setProperty('height', 'auto');
   return () => {

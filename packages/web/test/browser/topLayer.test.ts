@@ -64,6 +64,26 @@ describe('FloatingTopLayerController', () => {
     expect(element.style.getPropertyPriority('height')).toBe('important');
   });
 
+  test('preserves stylesheet-authored popover insets', () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const style = document.createElement('style');
+    style.textContent = '.toast-surface { inset: auto 20px 20px auto; }';
+    document.head.append(style);
+    const element = document.createElement('div');
+    element.className = 'toast-surface';
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+
+    expect(element.style.inset).toBe('auto 20px 20px auto');
+
+    topLayer.destroy();
+    expect(element.style.getPropertyValue('inset')).toBe('');
+    style.remove();
+  });
+
   test('keeps native popover right and bottom constraints reset after positioning', () => {
     if (!supportsFloatingTopLayer('popover')) return;
     const element = document.createElement('div');

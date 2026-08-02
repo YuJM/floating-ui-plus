@@ -315,7 +315,6 @@ export class FloatingPresenceStackElement<
           });
     topLayer?.setKind(topLayerKind);
     topLayer?.setElement(surface);
-    topLayer?.connect();
     const abortController = new AbortController();
     const entry: PresenceEntry<T> = {
       nodes,
@@ -342,6 +341,7 @@ export class FloatingPresenceStackElement<
 
     this.append(fragment);
     this.#entries.set(record.id, entry);
+    topLayer?.connect();
     transition.setOpen(true);
     topLayer?.sync(true);
     return entry;

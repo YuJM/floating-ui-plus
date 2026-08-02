@@ -17,7 +17,6 @@ export default defineConfig({
       name: 'desktop-chromium',
       use: {
         ...devices['Desktop Chrome'],
-        channel: 'chrome',
         viewport: {width: 1280, height: 900},
       },
     },
@@ -25,7 +24,6 @@ export default defineConfig({
       name: 'mobile-chromium',
       use: {
         ...devices['Desktop Chrome'],
-        channel: 'chrome',
         viewport: {width: 390, height: 844},
       },
     },

@@ -32,7 +32,7 @@ export default defineConfig({
         ? ['browser/**/*.test.ts']
         : ['*.test.ts', 'unit/**/*.test.ts'],
     browser: {
-      provider: playwright({launchOptions: {channel: 'chrome'}}),
+      provider: playwright(),
       enabled: process.env.TEST_ENV === 'browser',
       headless: browserHeadless,
       instances: [{browser: 'chromium'}],

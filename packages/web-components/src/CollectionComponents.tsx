@@ -510,7 +510,7 @@ interface FloatingListItemHost extends HTMLElement {
   query: FloatingOptionBinder | undefined;
 }
 
-type FloatingOptionBinder = Pick<QueryController<unknown>, 'bindOption'>;
+type FloatingOptionBinder = Pick<QueryController<unknown>, 'bindOption' | 'search'>;
 
 const FloatingListItemBase = c(
   () => {
@@ -542,7 +542,7 @@ const FloatingListItemBase = c(
         ...(host.itemId ? {id: host.itemId} : {}),
         element,
         label: host.label ?? element.textContent,
-        value: host.value ?? element,
+        value: host.value,
       });
       let unbindOption: (() => void) | undefined;
       const syncQueryOption = () => {
@@ -551,10 +551,17 @@ const FloatingListItemBase = c(
         if (!query) return;
         const item = list.items.find((current) => current.element === element);
         if (!item) return;
+        // A results render can add its replacement items before Atomico has
+        // disconnected the previous render's items. Use the current search
+        // result index when the item came from a query so option IDs stay in
+        // sync with the input's aria-activedescendant during that hand-off.
+        const queryIndex = query.search.items.indexOf(host.value);
+        const index = queryIndex === -1 ? item.index : queryIndex;
+        const queryItem = query.search.items[index] ?? item.value;
         unbindOption = query.bindOption(
           element,
-          item.value,
-          item.index,
+          queryItem,
+          index,
         );
       };
       const unsubscribe = list.subscribe(syncQueryOption);
