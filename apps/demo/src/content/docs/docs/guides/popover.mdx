@@ -31,8 +31,26 @@ does not install a touch-event interception layer by default. Applications
 targeting legacy iOS Safari or a constrained WebView can add an app-specific
 touch guard when needed.
 
+Native dialogs also receive `data-fup-safe-area` and the CSS variables
+`--fup-safe-area-inset-top`, `--fup-safe-area-inset-right`,
+`--fup-safe-area-inset-bottom`, and `--fup-safe-area-inset-left`. The package
+does not force padding onto every dialog because centered dialogs, edge sheets,
+and custom layouts need different spacing. Apply the variables where content
+needs protection from a notch or home indicator:
+
+```css
+.sheet-panel[data-fup-safe-area] {
+  padding-block-start: max(1rem, var(--fup-safe-area-inset-top));
+  padding-block-end: max(1rem, var(--fup-safe-area-inset-bottom));
+  padding-inline: max(1rem, var(--fup-safe-area-inset-left))
+    max(1rem, var(--fup-safe-area-inset-right));
+}
+```
+
 Use a portal only when the surface must move to a body-level target, such as
 escaping a clipping ancestor. Add an overlay or focus manager for a custom
 non-native modal composition.
 
 See the [modal demo](/modal) for a native dialog and nested floating surface.
+See [Entry and exit animation](/docs/guides/animation) to let CSS animate native
+Popover and dialog surfaces in both directions without JavaScript timers.

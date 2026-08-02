@@ -1,5 +1,18 @@
 # @floating-ui-plus/web
 
+## 0.7.3
+
+### Patch Changes
+
+- da0db14: Support CSS discrete entry and exit transitions for native Popover and dialog
+  top-layer surfaces without JavaScript animation timers, and add a
+  `transformOrigin()` middleware for reference-aware surface motion.
+- 0c94239: Correct query binding examples in the package documentation.
+- 96d58d6: Expose safe-area inset CSS variables on native dialog surfaces so applications
+  can protect sheet and dialog content from device notches and home indicators.
+- d3e5778: Refresh the current query and surface-composition README examples, and keep
+  the demo menus usable in constrained mobile viewports.
+
 ## 0.7.2
 
 ## 0.7.1

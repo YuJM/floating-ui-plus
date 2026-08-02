@@ -41,3 +41,8 @@ the arrow height participates in the visual offset.
 
 Use `hover()`, `focus()`, `dismiss()`, and `role({role: 'tooltip'})` in the
 [Vue adapter](/docs/frameworks) with the same behavior contract.
+
+The tooltip is a native Popover surface, so its entry and exit motion uses the
+same CSS-only discrete transition described in
+[Entry and exit animation](/docs/guides/animation). Keep the surface rendered
+while closed so the browser can finish its `display` and `overlay` transitions.

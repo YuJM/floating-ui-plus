@@ -72,6 +72,27 @@ export const EXAMPLES = [
     description:
       'Test modal focus trapping, scroll locking, Escape dismissal, and focus restoration.',
   },
+  {
+    id: 'sheet',
+    label: 'Sheet',
+    heading: 'A closer<br /><span>next step.</span>',
+    description:
+      'Build a mobile-friendly edge sheet with native dialog focus, dismissal, and a scrollable body.',
+  },
+  {
+    id: 'toast',
+    label: 'Toast',
+    heading: 'Feedback that<br /><span>does not interrupt.</span>',
+    description:
+      'Create timed notifications that stack, pause while being inspected, and leave with a controlled transition.',
+  },
+  {
+    id: 'command',
+    label: 'Command',
+    heading: 'Search, choose,<br /><span>keep moving.</span>',
+    description:
+      'Run grouped actions from a searchable dialog command palette with complete keyboard navigation.',
+  },
 ] as const;
 
 export type ExampleId = (typeof EXAMPLES)[number]['id'];

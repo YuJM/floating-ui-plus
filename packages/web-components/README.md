@@ -28,7 +28,6 @@ not needed for the usual case.
 <floating-root
   placement="bottom-start"
   interactions="click dismiss"
-  floating-role="dialog"
 >
   <floating-reference>
     <button type="button">Open settings</button>
@@ -42,6 +41,12 @@ not needed for the usual case.
   </template>
 </floating-root>
 ```
+
+`floating-role` is optional here because the root's baseline accessibility
+contract uses `dialog` for an interactive floating surface. Add
+`floating-role="dialog"` when making that intent explicit. `region` is a
+landmark role, not a role supported by the package's public floating-role
+contract.
 
 The root-owned `template[slot="content"]` is the explicit native Popover
 composition. A direct `<dialog slot="floating">` (or a top-level dialog in
@@ -58,18 +63,92 @@ CSS `overflow: hidden`. No touch-event interception is installed by default;
 add an application-specific touch guard only when targeting a legacy iOS or
 WebView environment that needs one.
 
+Native dialogs also receive `data-fup-safe-area` and the CSS variables
+`--fup-safe-area-inset-top`, `--fup-safe-area-inset-right`,
+`--fup-safe-area-inset-bottom`, and `--fup-safe-area-inset-left`. Consume these
+variables in surface CSS where a notch or home indicator needs extra space; the
+package does not force a padding policy on custom dialog layouts.
+
 Use a real `<dialog slot="floating">` for a modal. The browser then owns the
 top layer, focus, and inertness. Reserve `<floating-portal>` for a surface that
 explicitly must escape a clipping ancestor or render at a custom target.
 
-Configure function values as properties, rather than attributes:
+Configure function values as properties, rather than attributes. `configure()`
+keeps root middleware, plugins, and an optional explicit `topLayer` together;
+use it when more than one setting changes. Attribute values remain useful only
+for declarative strings such as `placement` and `interactions`.
 
 ```ts
-import {flip, offset, shift, type FloatingRootElement} from '@floating-ui-plus/web-components';
+import {
+  flip,
+  offset,
+  shift,
+  transformOrigin,
+  type FloatingRootElement,
+} from '@floating-ui-plus/web-components';
 
 const root = document.querySelector<FloatingRootElement>('floating-root')!;
-root.middleware = [offset(8), flip(), shift({padding: 12})];
+root.configure({
+  middleware: [
+    offset(8),
+    flip({padding: 12}),
+    shift({padding: 12}),
+    transformOrigin({padding: 8}),
+  ],
+});
 ```
+
+Use `root.close(event, 'click')` for an imperative approved close. The root's
+cancelable `floatingbeforeclose` event is the synchronous guard point; an
+application with asynchronous confirmation should finish that work first and
+then call `close()`.
+
+## Native entry and exit animation
+
+Native Popover and `<dialog>` surfaces close instantly unless their own CSS
+explicitly includes a non-zero `display` or `overlay` transition with
+`allow-discrete`. With that CSS present, the element remains mounted and
+unhidden through the exit transition and is hidden after `transitionend`.
+
+```css
+.floating-panel {
+  opacity: 0;
+  translate: 0 -0.25rem;
+  transform-origin: var(--floating-transform-origin, 50% 0%);
+  transition:
+    opacity 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    translate 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    display 120ms allow-discrete,
+    overlay 120ms allow-discrete;
+}
+
+.floating-panel:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@starting-style {
+  .floating-panel:popover-open {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+```
+
+`transformOrigin()` writes the CSS variable from the final placement and
+reference geometry. Keep it after placement-changing middleware; the CSS
+fallback remains valid when it is omitted.
+
+For a fixed placement, you may omit the middleware and define
+`transform-origin` in CSS. CSS alone cannot observe `flip()` or `shift()`
+results, so use `transformOrigin()` whenever the surface can move to another
+side or alignment.
+
+Template content stays mounted only while the native exit is running, and a
+reopen cancels the pending unmount. Use `<floating-transition>` for a custom
+surface with `top-layer="none"`. See the
+[entry and exit animation guide](https://fup.polcaneli.com/docs/guides/animation)
+for Popover, dialog, reduced-motion, and presence examples.
 
 ## Editable query
 
@@ -181,6 +260,7 @@ Use it only when those form-associated selected-value semantics are required.
 - [Installation](https://fup.polcaneli.com/docs/guides/installation/web-components)
 - [Getting started](https://fup.polcaneli.com/docs/guides/getting-started)
 - [Popover and dialog](https://fup.polcaneli.com/docs/guides/popover)
+- [Entry and exit animation](https://fup.polcaneli.com/docs/guides/animation)
 - [Query demos: fuzzy and server search](https://fup.polcaneli.com/docs/guides/demo/combobox/fuzzy)
 - [Dismiss and before-close](https://fup.polcaneli.com/docs/guides/dismiss)
 - [Usage recipes](https://fup.polcaneli.com/docs/guides/usage)

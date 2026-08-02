@@ -1,0 +1,85 @@
+---
+title: Surfaces, backdrops, and safe areas
+description: Style Popover, dialog, Sheet, and viewport surfaces across desktop and mobile.
+---
+
+Floating UI Plus does not impose a visual surface component. Add the backdrop,
+padding, border, and elevation that match your product. The interaction adapter
+still handles dismissal, focus, and the native top layer.
+
+## Native dialog and Popover
+
+Use platform selectors for state instead of duplicating an `is-open` class:
+
+```css
+dialog.sheet {
+  position: fixed;
+  margin: 0;
+  inset: auto 0 0;
+  inline-size: 100%;
+  max-block-size: 90dvh;
+}
+
+dialog.sheet::backdrop {
+  background: rgb(15 23 42 / 0.18);
+}
+
+dialog.sheet:not(:open) {
+  pointer-events: none;
+}
+```
+
+Use `:open` for dialogs and `:popover-open` for Popovers. A backdrop is
+optional for a Popover; a modal dialog gets `::backdrop` from the browser. The
+`dismiss()` plugin can close a dialog when its backdrop is pressed, while a
+non-modal Popover can use outside press without adding a custom overlay.
+
+## Safe-area padding
+
+Native dialogs managed by Floating UI Plus expose `data-fup-safe-area` and
+these CSS variables:
+
+```css
+.sheet-panel[data-fup-safe-area] {
+  padding-block-start: max(1.25rem, var(--fup-safe-area-inset-top));
+  padding-block-end: max(1.25rem, var(--fup-safe-area-inset-bottom));
+  padding-inline-start: max(1.25rem, var(--fup-safe-area-inset-left));
+  padding-inline-end: max(1.25rem, var(--fup-safe-area-inset-right));
+}
+```
+
+The package supplies the inset values but deliberately does not force padding:
+headers, scroll containers, and full-bleed media need different rules. For
+non-dialog fixed viewports, use the platform values directly:
+
+```css
+.toast-viewport {
+  inset-inline-end: max(1rem, env(safe-area-inset-right));
+  inset-block-end: max(1rem, env(safe-area-inset-bottom));
+}
+```
+
+Make sure the document opts into the full viewport when you rely on the
+environment variables:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+```
+
+## Responsive surfaces
+
+Prefer `dvh`, `dvw`, and logical insets for mobile surfaces. Keep the body
+scroll lock and focus behavior in the package; keep surface sizing in CSS:
+
+```css
+.command-dialog {
+  inline-size: min(42rem, calc(100vw - 2rem));
+  max-block-size: min(36rem, calc(100dvh - 2rem));
+  overflow: hidden;
+}
+
+.command-list {
+  overflow-y: auto;
+  min-block-size: 0;
+}
+```

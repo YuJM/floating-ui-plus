@@ -11,7 +11,9 @@ import {
   flip,
   offset,
   role,
+  size,
   shift,
+  transformOrigin,
 } from '@floating-ui-plus/vue';
 import {ref} from 'vue';
 import {MENU_LABELS} from '../../example-data';
@@ -20,7 +22,22 @@ const labels = MENU_LABELS;
 const open = ref(false);
 const options = {
   placement: 'bottom-start',
-  middleware: [offset(8), flip(), shift({padding: 18})],
+  middleware: [
+    offset(8),
+    flip({padding: 18}),
+    shift({padding: 18}),
+    size({
+      padding: 18,
+      rootBoundary: 'viewport',
+      apply({availableHeight, elements}) {
+        elements.floating.style.setProperty(
+          '--menu-panel-max-height',
+          `${Math.max(0, availableHeight)}px`,
+        );
+      },
+    }),
+    transformOrigin({padding: 12}),
+  ],
   whileElementsMounted: autoUpdate,
 } as const;
 const plugins = [

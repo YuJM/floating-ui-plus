@@ -60,6 +60,150 @@ describe('FloatingTopLayerController', () => {
     topLayer.destroy();
   });
 
+  test('exposes safe-area insets on native dialogs without overriding author styles', () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const element = document.createElement('dialog');
+    element.style.setProperty('--fup-safe-area-inset-bottom', '12px');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('dialog');
+    topLayer.setElement(element);
+    topLayer.connect();
+
+    expect(element).toHaveAttribute('data-fup-safe-area', '');
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-top')).toBe(
+      'env(safe-area-inset-top, 0px)',
+    );
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-bottom')).toBe(
+      '12px',
+    );
+
+    topLayer.destroy();
+    expect(element).not.toHaveAttribute('data-fup-safe-area');
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-top')).toBe('');
+    expect(element.style.getPropertyValue('--fup-safe-area-inset-bottom')).toBe(
+      '12px',
+    );
+  });
+
+  test('restores hidden after a dialog discrete exit transition', () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const element = document.createElement('dialog');
+    element.style.transition =
+      'display 100ms allow-discrete, overlay 100ms allow-discrete';
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('dialog');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    topLayer.sync(false);
+
+    expect(element.open).toBe(false);
+    expect(element.hidden).toBe(false);
+    element.dispatchEvent(
+      new TransitionEvent('transitionend', {propertyName: 'overlay'}),
+    );
+    expect(element.hidden).toBe(true);
+    topLayer.destroy();
+  });
+
+  test('restores hidden after a popover discrete exit transition', () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    element.style.transition =
+      'display 100ms allow-discrete, overlay 100ms allow-discrete';
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    topLayer.sync(false);
+
+    expect(element.matches(':popover-open')).toBe(false);
+    expect(element.hidden).toBe(false);
+    expect(element).toHaveAttribute('popover', 'manual');
+    element.dispatchEvent(
+      new TransitionEvent('transitionend', {propertyName: 'display'}),
+    );
+    expect(element.hidden).toBe(true);
+    topLayer.destroy();
+  });
+
+  test('hides a popover immediately when it has no discrete exit transition', () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    topLayer.sync(false);
+
+    expect(element.matches(':popover-open')).toBe(false);
+    expect(element.hidden).toBe(true);
+    topLayer.destroy();
+  });
+
+  test('does not defer hidden for a display transition without allow-discrete', () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    element.style.transition = 'display 100ms, overlay 100ms';
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    topLayer.sync(false);
+
+    expect(element.hidden).toBe(true);
+    topLayer.destroy();
+  });
+
+  test('does not infer an exit animation from transition all', () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const element = document.createElement('div');
+    element.style.transition = 'all 100ms allow-discrete';
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('popover');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+
+    topLayer.sync(false);
+
+    expect(element.hidden).toBe(true);
+    topLayer.destroy();
+  });
+
+  test('reopens a dialog after a CSS-driven exit', () => {
+    if (!supportsFloatingTopLayer('dialog')) return;
+    const element = document.createElement('dialog');
+    element.style.transition =
+      'display 100ms allow-discrete, overlay 100ms allow-discrete';
+    const topLayer = createFloatingTopLayer({onOpenChange: vi.fn()});
+    document.body.append(element);
+    topLayer.setKind('dialog');
+    topLayer.setElement(element);
+    topLayer.connect();
+    topLayer.sync(true);
+    topLayer.sync(false);
+
+    topLayer.sync(true);
+
+    expect(element.open).toBe(true);
+    expect(element.hidden).toBe(false);
+    topLayer.destroy();
+  });
+
   test('locks document scroll only while native dialogs are open', async () => {
     if (!supportsFloatingTopLayer('dialog')) return;
     document.body.style.overflow = 'scroll';

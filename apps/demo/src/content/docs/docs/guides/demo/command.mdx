@@ -1,0 +1,74 @@
+---
+title: "Demo: Command"
+description: Build a searchable dialog command palette with grouped actions and complete keyboard navigation.
+---
+
+import DemoPreview from "../../../../../components/docs/DemoPreview.astro";
+import commandSource from "../../../../../components/examples/CommandExample.astro?raw";
+import commandVueSource from "../../../../../vue/components/ExampleCommand.vue?raw";
+
+[Open the live Command demo](/command?framework=wc)
+
+<DemoPreview
+  route="/preview/command"
+  title="Command"
+  height={560}
+  webCode={commandSource}
+  vueCode={commandVueSource}
+  webTitle="CommandExample.astro"
+  vueTitle="ExampleCommand.vue"
+/>
+
+This example follows the shadcn Base Command composition: Command Input, List,
+Empty, Group, Separator, Item, and Shortcut are styling-oriented application
+parts inside a modal command dialog. Floating UI Plus owns the shared search,
+keyboard list navigation, dialog dismissal, and focus lifecycle.
+
+## Behavior
+
+- The trigger or `Command/Ctrl + K` opens the native dialog and focuses the
+  search input.
+- `createFuzzySearchSource()` searches labels, keywords, and group names.
+- Arrow keys move the active item while focus remains in the input. Enter runs
+  the active command and closes the dialog. Escape closes without selection.
+- Empty results replace the scrollable grouped list.
+- Group headings, separators, and shortcut labels remain application markup;
+  they do not need a new positioning primitive.
+
+```ts
+const search = useSearch({
+  source: createFuzzySearchSource(commandItems, {
+    keys: commandSearchKeys,
+    threshold: 0.35,
+  }),
+  getItemKey: (item) => item.id,
+  debounceMs: 0,
+});
+
+const command = useQuery({
+  search,
+  semantics: "dialog",
+  getItemLabel: (item) => item.label,
+  onActivate(item) {
+    runCommand(item);
+  },
+});
+```
+
+The Web Components version subscribes directly to the framework-neutral
+`SearchController`. Because its search input lives inside the dialog rather
+than acting as the floating reference, the application owns the small active
+index loop and applies `aria-activedescendant` to the input. Vue renders groups
+with `v-for` and uses `useQuery()` plus `getOptionProps()` for the equivalent
+active-item and activation state. Both adapters reuse the same search source;
+neither needs a Command-specific package primitive.
+
+The Command palette is viewport-centered, so set `transform: false` and let
+dialog CSS own its fixed inset. The list itself has a bounded block size and
+`overflow-y: auto`, allowing groups to remain usable on short mobile screens.
+
+The component names in shadcn are composition names rather than APIs added by
+Floating UI Plus. Keeping those wrappers in application code preserves the
+package boundary: search and interaction behavior are reusable while the
+command data model, grouping, icons, shortcuts, and executed actions remain
+product-specific.

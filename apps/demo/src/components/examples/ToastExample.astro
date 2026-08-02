@@ -1,0 +1,164 @@
+---
+import * as m from '../../paraglide/messages';
+import type {Locale} from '../../i18n';
+const {locale = 'en'} = Astro.props as {locale?: Locale};
+---
+
+<section class="toast-demo" aria-label="Toast example" data-demo="toast">
+  <div class="toast-demo-copy">
+    <span class="panel-kicker">TOAST / NON-MODAL</span>
+    <h3>{m.pattern_toast_heading(undefined, {locale})}</h3>
+    <p>{m.pattern_toast_description(undefined, {locale})}</p>
+    <button class="toast-create" type="button" data-toast-create>
+      Create notification <span aria-hidden="true">＋</span>
+    </button>
+  </div>
+  <ol
+    class="toast-viewport"
+    data-toast-viewport
+    role="region"
+    aria-label="Notifications"
+    aria-live="polite"
+    aria-relevant="additions"
+    tabindex="-1"
+  ></ol>
+</section>
+
+<script>
+  import {FloatingTransition} from '@floating-ui-plus/web-components';
+  import {initializeExample} from './initialize-example';
+
+  const TIMEOUT = 5000;
+  const LIMIT = 3;
+  const EXIT_DURATION = 180;
+
+  interface ToastRecord {
+    element: HTMLLIElement;
+    transition: FloatingTransition;
+    timer: number;
+    remaining: number;
+    startedAt: number;
+    closing: boolean;
+  }
+
+  initializeExample('toast', (scope) => {
+    const viewport = scope.querySelector<HTMLOListElement>('[data-toast-viewport]');
+    const createButton = scope.querySelector<HTMLButtonElement>('[data-toast-create]');
+    if (!viewport || !createButton) return;
+
+    const records = new Map<number, ToastRecord>();
+    const pauseReasons = new Set<'pointer' | 'focus'>();
+    let sequence = 0;
+
+    const refreshStack = () => {
+      const visible = [...records.entries()].filter(([, record]) => !record.closing).reverse();
+      visible.forEach(([, record], index) => {
+        record.element.style.setProperty('--toast-index', String(index));
+        record.element.style.setProperty('--toast-offset-y', `${index * -84}px`);
+        record.element.toggleAttribute('data-behind', index > 0);
+      });
+      viewport.toggleAttribute('data-expanded', pauseReasons.size > 0);
+    };
+
+    const schedule = (id: number) => {
+      const record = records.get(id);
+      if (!record || record.closing || pauseReasons.size > 0) return;
+      record.startedAt = performance.now();
+      record.timer = window.setTimeout(() => closeToast(id), record.remaining);
+    };
+
+    const closeToast = (id: number, limited = false) => {
+      const record = records.get(id);
+      if (!record || record.closing) return;
+      window.clearTimeout(record.timer);
+      record.closing = true;
+      record.element.toggleAttribute('data-limited', limited);
+      if (limited) record.element.inert = true;
+      record.transition.setOpen(false);
+      refreshStack();
+    };
+
+    const pause = (reason: 'pointer' | 'focus') => {
+      if (pauseReasons.has(reason)) return;
+      const wasRunning = pauseReasons.size === 0;
+      pauseReasons.add(reason);
+      if (wasRunning) {
+        const now = performance.now();
+        records.forEach((record) => {
+          if (record.closing) return;
+          window.clearTimeout(record.timer);
+          record.remaining = Math.max(0, record.remaining - (now - record.startedAt));
+        });
+      }
+      refreshStack();
+    };
+
+    const resume = (reason: 'pointer' | 'focus') => {
+      pauseReasons.delete(reason);
+      if (pauseReasons.size === 0) records.forEach((_, id) => schedule(id));
+      refreshStack();
+    };
+
+    const createToast = () => {
+      const openRecords = [...records.entries()].filter(([, record]) => !record.closing);
+      if (openRecords.length >= LIMIT) closeToast(openRecords[0][0], true);
+
+      const id = ++sequence;
+      const element = document.createElement('li');
+      element.className = 'toast-item';
+      element.dataset.toastId = String(id);
+      element.innerHTML = `
+        <span class="toast-icon" aria-hidden="true">✓</span>
+        <div class="toast-content">
+          <strong>Notification ${id} created</strong>
+          <p>Your changes have been saved successfully.</p>
+        </div>
+        <button class="toast-close" type="button" aria-label="Dismiss notification ${id}">×</button>
+      `;
+      viewport.append(element);
+
+      const transition = new FloatingTransition(() => 'top-end', {
+        duration: {close: EXIT_DURATION},
+      });
+      const record: ToastRecord = {
+        element,
+        transition,
+        timer: -1,
+        remaining: TIMEOUT,
+        startedAt: performance.now(),
+        closing: false,
+      };
+      records.set(id, record);
+      const unsubscribe = transition.subscribe(() => {
+        element.dataset.status = transition.status;
+        if (!transition.isMounted && transition.status === 'unmounted') {
+          unsubscribe();
+          transition.destroy();
+          records.delete(id);
+          element.remove();
+          refreshStack();
+        }
+      });
+      element.querySelector('button')?.addEventListener('click', () => closeToast(id));
+      transition.setOpen(true);
+      refreshStack();
+      schedule(id);
+    };
+
+    createButton.addEventListener('click', createToast);
+    viewport.addEventListener('pointerenter', () => pause('pointer'));
+    viewport.addEventListener('pointerleave', () => resume('pointer'));
+    viewport.addEventListener('focusin', () => pause('focus'));
+    viewport.addEventListener('focusout', () => {
+      queueMicrotask(() => {
+        if (!viewport.contains(document.activeElement)) resume('focus');
+      });
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'F6' && records.size > 0) {
+        event.preventDefault();
+        viewport.focus();
+      }
+    });
+  });
+</script>

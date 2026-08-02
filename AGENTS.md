@@ -41,7 +41,16 @@ bun run changeset
 ```
 
 Choose `patch`, `minor`, or `major` according to the public impact. Keep shared
-contract changes for affected packages in the same Changeset.
+contract changes for affected packages in the same Changeset. The automated
+package-commit flow may select only `patch` or `minor`; a `major` version bump
+requires the user's direct confirmation before it is created or applied.
+
+When a commit includes work in a published package, automate the package
+release metadata before creating the commit: create the appropriate Changeset
+Markdown file, then run the versioning step so the affected package versions
+and changelog metadata are updated together. Do not publish to npm as part of
+this commit automation; publication remains a separate, explicitly approved
+maintainer action.
 
 ## Local-only npm releases
 
@@ -52,10 +61,15 @@ unless the user explicitly changes this policy. Use `bun publish` through the
 release script; do not use `npm publish` or `changeset publish`, because Bun
 resolves workspace protocols in the registry manifest.
 
-Do not run `bun run version`, `bun run release:packages`,
+Do not run `bun run release:packages`,
 `changeset publish`, `npm publish`, or `git push --follow-tags` unless the user
 explicitly requests a release. These commands change versions or external
 registry state.
+
+The package-commit automation above is the explicit exception for
+`bun run version`: it may update local patch/minor versions and changelog
+metadata before a package-affecting commit, but it must not publish or push
+tags. Stop and ask for direct confirmation before any major version update.
 
 The maintainer release flow is:
 

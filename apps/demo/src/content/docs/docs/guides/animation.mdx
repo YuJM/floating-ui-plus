@@ -1,0 +1,268 @@
+---
+title: Entry and exit animation
+description: Animate native Popover and dialog surfaces with CSS discrete transitions.
+---
+
+Floating UI Plus supports two intentionally different close paths for native
+Popover and `<dialog>` surfaces:
+
+- Without a discrete CSS transition, the surface receives `hidden` immediately.
+  This is the default and requires no animation setup.
+- When the computed CSS contains a non-zero `display` or `overlay` transition
+  with `allow-discrete`, the native surface closes immediately but `hidden` is
+  restored after `transitionend`. A short duration-based fallback covers a
+  missing end event.
+
+The package reads the transition already applied to the surface, so there is no
+animation prop, duration attribute, overlay component, or duplicated JavaScript
+timing to keep in sync.
+
+## Instant close
+
+Do nothing when a surface should close immediately:
+
+```css
+.floating-panel {
+  /* No display/overlay allow-discrete transition. */
+}
+```
+
+Calling the normal close path then uses `hidePopover()` or `dialog.close()` and
+applies `hidden` in the same update. Ordinary menus and frequently used
+tooltips can keep this fast default.
+
+## Native Popover
+
+Style the closed state on the surface, the open state with `:popover-open`, and
+include discrete transitions for `display` and `overlay`. This is the
+recommended option when entry and exit motion are useful:
+
+Add `transformOrigin()` after middleware that can change the final placement
+or coordinates. It writes the reference-aware origin directly to the floating
+element, including aligned, shifted, and virtual references:
+
+```ts
+import { flip, offset, shift, transformOrigin } from "@floating-ui-plus/web";
+
+const middleware = [
+  offset(8),
+  flip(),
+  shift({ padding: 12 }),
+  transformOrigin({ padding: 8 }),
+];
+```
+
+```css
+.floating-panel {
+  --surface-motion-start-x: 0px;
+  --surface-motion-start-y: -0.25rem;
+  --surface-motion-start-scale: 0.985;
+  --surface-motion-origin: 50% 0%;
+  --surface-motion-enter-duration: 160ms;
+  --surface-motion-exit-duration: 120ms;
+  --surface-motion-easing: cubic-bezier(0.23, 1, 0.32, 1);
+
+  opacity: 0;
+  translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
+  scale: var(--surface-motion-start-scale);
+  transform-origin: var(
+    --floating-transform-origin,
+    var(--surface-motion-origin)
+  );
+  transition:
+    opacity var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    translate var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    scale var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    display var(--surface-motion-exit-duration) allow-discrete,
+    overlay var(--surface-motion-exit-duration) allow-discrete;
+}
+
+.floating-panel:popover-open {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+  transition-duration: var(--surface-motion-enter-duration);
+}
+
+@starting-style {
+  .floating-panel:popover-open {
+    opacity: 0;
+    translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
+    scale: var(--surface-motion-start-scale);
+  }
+}
+```
+
+`--floating-transform-origin` is written by the middleware. The nested
+`--surface-motion-origin` fallback keeps the CSS usable when the middleware is
+omitted. The other variables are application motion tokens; placement
+selectors only choose the short travel direction:
+
+### CSS-only origin
+
+When the placement is fixed, no middleware is required. Set the origin in CSS
+and optionally expose a side attribute from your own renderer:
+
+```css
+.floating-panel {
+  --surface-motion-origin: 50% 0%;
+  transform-origin: var(--surface-motion-origin);
+}
+
+.floating-panel[data-side="top"] {
+  --surface-motion-origin: 50% 100%;
+}
+
+.floating-panel[data-side="right"] {
+  --surface-motion-origin: 0% 50%;
+}
+
+.floating-panel[data-side="bottom"] {
+  --surface-motion-origin: 50% 0%;
+}
+
+.floating-panel[data-side="left"] {
+  --surface-motion-origin: 100% 50%;
+}
+```
+
+CSS cannot observe the final placement selected by `flip()` or the shifted
+coordinates produced by `shift()`. Use `transformOrigin()` when the surface
+can move or flip; omit it when a fixed placement and a CSS-defined origin are
+enough.
+
+```css
+.floating-panel[data-placement^="top"] {
+  --surface-motion-start-y: 0.25rem;
+}
+
+.floating-panel[data-placement^="bottom"] {
+  --surface-motion-start-y: -0.25rem;
+}
+```
+
+Keep tooltips especially quick (roughly 125ms in and 100ms out). Popovers can
+use a slightly longer entrance, while the exit should remain shorter so the UI
+responds immediately.
+
+The same CSS works with a Web Components template:
+
+```html
+<floating-root interactions="click dismiss">
+  <floating-reference><button>Open</button></floating-reference>
+  <template slot="content">
+    <section class="floating-panel">Popover content</section>
+  </template>
+</floating-root>
+```
+
+and with Vue content kept in its normal render tree:
+
+```vue
+<FloatingRoot v-model:open="open" :plugins="plugins">
+  <FloatingReference>Open</FloatingReference>
+  <FloatingContent class="floating-panel">Popover content</FloatingContent>
+</FloatingRoot>
+```
+
+Do not put the native surface behind `v-if`, a conditional render, or an
+open-only portal. Removing the element immediately leaves no rendered surface
+for CSS to animate. Floating UI Plus keeps a Web Components template clone
+mounted through the exit transition, then unmounts it. Vue content stays in its
+normal render tree and receives `hidden` after the exit transition.
+
+## Native dialog
+
+Use `:open` for a native dialog. Its backdrop can transition independently:
+
+```css
+.dialog-panel {
+  --surface-motion-start-x: 1.5rem;
+  --surface-motion-start-y: 0px;
+  --surface-motion-enter-duration: 240ms;
+  --surface-motion-exit-duration: 180ms;
+  --surface-motion-easing: cubic-bezier(0.32, 0.72, 0, 1);
+
+  opacity: 0;
+  translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
+  transition:
+    opacity var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    translate var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    display var(--surface-motion-exit-duration) allow-discrete,
+    overlay var(--surface-motion-exit-duration) allow-discrete;
+}
+
+.dialog-panel:open {
+  opacity: 1;
+  translate: 0;
+  transition-duration: var(--surface-motion-enter-duration);
+}
+
+.dialog-panel::backdrop {
+  background: rgb(0 0 0 / 0%);
+  transition:
+    background-color 180ms ease,
+    display 180ms allow-discrete,
+    overlay 180ms allow-discrete;
+}
+
+.dialog-panel:open::backdrop {
+  background: rgb(0 0 0 / 16%);
+}
+
+@starting-style {
+  .dialog-panel:open {
+    opacity: 0;
+    translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
+  }
+
+  .dialog-panel:open::backdrop {
+    background: rgb(0 0 0 / 0%);
+  }
+}
+```
+
+Call the normal close path. Floating UI Plus invokes `hidePopover()` or
+`dialog.close()` immediately; the browser delays the discrete `display` and
+top-layer `overlay` changes until the CSS transition finishes. Floating UI Plus
+then restores `hidden`, preventing unrelated author `display` rules from making
+a closed surface visible.
+
+## Custom presence
+
+For a surface that does not use the native top layer, use `FloatingTransition`
+or Vue's `useFloatingTransition` and keep the element mounted until its close
+state completes. This is the flexible fallback for animation systems that need
+JavaScript-controlled presence, but it also requires a duration to coordinate
+unmounting. Prefer the native CSS path above for native Popover and dialog
+surfaces because CSS remains the single source of truth.
+
+The [Toast demo](/docs/guides/demo/toast) uses this custom-presence path. Its
+stack CSS consumes `data-status` from `FloatingTransition` or
+`useFloatingTransition`, while application state supplies the independent
+expanded and behind-item states.
+
+An extra overlay component is not required for a Popover exit. In this context,
+`overlay` is the browser-managed CSS property that represents top-layer
+membership, and it must be transitioned on the floating surface itself. A
+visual modal backdrop can still be styled separately with `dialog::backdrop`.
+
+For motion-sensitive users, shorten or remove the visual transitions while
+retaining the discrete properties:
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .floating-panel,
+  .dialog-panel {
+    --surface-motion-start-x: 0px;
+    --surface-motion-start-y: 0px;
+    --surface-motion-start-scale: 1;
+    transition-duration: 80ms;
+  }
+}
+```
+
+See the live [Popover demo](/popover) and [Sheet demo](/sheet). Browser support
+for discrete `display` and `overlay` transitions should be checked against the
+targets supported by your application. Unsupported browsers still open and
+close the native surface; they simply omit the exit motion.

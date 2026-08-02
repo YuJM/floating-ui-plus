@@ -9,5 +9,8 @@
   "example_combobox_build": "We keep multilingual destination search independent from the UI framework.",
   "example_placement_build": "We make placement a product decision that updates the floating surface immediately.",
   "example_middleware_build": "We isolate each layout constraint so its effect stays visible in action.",
-  "example_modal_build": "We layer dialogs with inert surroundings, scroll locking, focus return, and ordered Escape dismissal."
+  "example_modal_build": "We layer dialogs with inert surroundings, scroll locking, focus return, and ordered Escape dismissal.",
+  "example_sheet_build": "We keep a mobile action sheet focused, dismissible, and readable without hiding the next step.",
+  "example_toast_build": "We coordinate stacked presence, pausable timeout, dismissal, and polite announcements without taking focus.",
+  "example_command_build": "We combine application-owned search with dialog dismissal and virtual list navigation for fast command execution."
 }

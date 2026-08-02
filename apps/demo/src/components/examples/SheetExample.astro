@@ -1,0 +1,52 @@
+---
+import * as m from '../../paraglide/messages';
+import type {Locale} from '../../i18n';
+const {locale = 'en'} = Astro.props as {locale?: Locale};
+---
+<section class="sheet-demo" aria-label="Sheet example" data-demo="sheet">
+  <div class="sheet-demo-copy">
+    <span class="panel-kicker">SHEET / DIALOG</span>
+    <h3>{m.pattern_sheet_heading(undefined, {locale})}</h3>
+    <p>{m.pattern_sheet_description(undefined, {locale})}</p>
+    <div class="sheet-side-picker" role="group" aria-label="Sheet side">
+      <button type="button" data-sheet-side="top">Top</button>
+      <button type="button" data-sheet-side="right" aria-pressed="true">Right</button>
+      <button type="button" data-sheet-side="bottom">Bottom</button>
+      <button type="button" data-sheet-side="left">Left</button>
+    </div>
+    <floating-root data-sheet-root placement="right" strategy="fixed" floating-role="dialog">
+      <floating-reference><button class="sheet-trigger" type="button">Open activity sheet <span aria-hidden="true">→</span></button></floating-reference>
+      <dialog slot="floating" class="sheet-panel" data-side="right" aria-labelledby="sheet-heading" aria-describedby="sheet-description">
+        <header class="sheet-header"><div><span class="panel-kicker">TODAY / 08:42</span><h4 id="sheet-heading">Activity digest</h4></div><button class="sheet-close" type="button" data-fup-close aria-label="Close sheet">×</button></header>
+        <p id="sheet-description" class="sheet-description">Review the latest changes before returning to your workspace.</p>
+        <div class="sheet-scroll-body">
+          <article class="sheet-item"><span class="sheet-item-mark sheet-item-mark--mint" aria-hidden="true">✓</span><div><strong>Design review completed</strong><p>Spacing and focus states are ready for handoff.</p></div></article>
+          <article class="sheet-item"><span class="sheet-item-mark sheet-item-mark--cyan" aria-hidden="true">↗</span><div><strong>Three notes were linked</strong><p>The workspace graph now has a clearer next action.</p></div></article>
+          <article class="sheet-item"><span class="sheet-item-mark sheet-item-mark--coral" aria-hidden="true">!</span><div><strong>One review is waiting</strong><p>Give the launch checklist a final look.</p></div></article>
+        </div>
+        <footer class="sheet-footer"><button class="sheet-secondary" type="button" data-fup-close>Not now</button><button class="sheet-primary" type="button" data-fup-close>Open checklist</button></footer>
+      </dialog>
+    </floating-root>
+  </div>
+  <div class="sheet-demo-art" aria-hidden="true"><div class="sheet-art-orbit"></div><span class="sheet-art-label">FOCUS / CONTEXT / RETURN</span></div>
+</section>
+
+<script>
+  import {FloatingRootElement, click, dismiss, role} from '@floating-ui-plus/web-components';
+  import {initializeExample} from './initialize-example';
+  initializeExample('sheet', (scope) => {
+    const sheet = FloatingRootElement.query(scope, '[data-sheet-root]');
+    sheet.transform = false;
+    sheet.configure({
+      plugins: [click(), dismiss(), role({role: 'dialog'})],
+    });
+    const panel = sheet.querySelector<HTMLDialogElement>('[slot="floating"]');
+    scope.querySelectorAll<HTMLButtonElement>('[data-sheet-side]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const side = button.dataset.sheetSide ?? 'right';
+        panel?.setAttribute('data-side', side);
+        scope.querySelectorAll('[data-sheet-side]').forEach((candidate) => candidate.setAttribute('aria-pressed', String(candidate === button)));
+      });
+    });
+  });
+</script>

@@ -1,0 +1,71 @@
+---
+title: Positioning and overflow
+description: Style middleware-driven surfaces, bounded lists, and mobile-safe overflow.
+---
+
+Positioning middleware calculates geometry; CSS makes that geometry usable.
+Keep the floating element's positioning contract small and predictable:
+
+```css
+.popover {
+  position: absolute;
+  max-inline-size: min(24rem, calc(100vw - 2rem));
+  max-block-size: min(28rem, calc(100dvh - 2rem));
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+```
+
+Use `strategy: "fixed"` when the surface must stay attached to the viewport,
+such as a command palette or a toast viewport. Use `transform: false` for a
+native dialog whose fixed edge insets are entirely controlled by CSS, as in
+the [Sheet demo](../demo/sheet).
+
+## Middleware and CSS variables
+
+`size()` is the bridge between available space and scrollable content. Apply
+the calculated dimensions to CSS custom properties instead of hard-coding a
+height in JavaScript:
+
+```ts
+import { size } from "@floating-ui-plus/web";
+
+const middleware = [
+  size({
+    padding: 12,
+    apply({ availableWidth, availableHeight, elements }) {
+      elements.floating.style.setProperty(
+        "--floating-available-width",
+        `${availableWidth}px`,
+      );
+      elements.floating.style.setProperty(
+        "--floating-available-height",
+        `${availableHeight}px`,
+      );
+    },
+  }),
+];
+```
+
+```css
+.menu-list {
+  inline-size: min(20rem, var(--floating-available-width, 20rem));
+  max-block-size: var(--floating-available-height, 24rem);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+```
+
+`scrollbar-gutter: stable` prevents the list from changing width when a
+scrollbar appears. Also check the containing demo card: `overflow: hidden` on
+a card that owns the reference can clip a portal, while `overflow: auto` on a
+viewport-sized surface can create an unexpected page scrollbar.
+
+## Transform positioning
+
+When the adapter uses transform positioning, do not replace `transform` in CSS.
+Compose your visual motion with `translate` and `scale`, or use the
+`--floating-transform-origin` variable described in
+[CSS animation examples](./animation). If the element is a native dialog or
+an edge sheet, disable transform positioning and set its physical `inset`
+properties directly.

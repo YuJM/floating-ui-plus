@@ -31,6 +31,9 @@ test('uses component names and applied-function badges on every example', async 
     ['placement', 'Placement'],
     ['middleware', 'Middleware'],
     ['modal', 'Modal'],
+    ['sheet', 'Sheet'],
+    ['toast', 'Toast'],
+    ['command', 'Command'],
   ] as const;
 
   for (const [path, title] of examples) {

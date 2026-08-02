@@ -1,0 +1,169 @@
+---
+title: "Demo: Sheet"
+description: Open a modal sheet from every viewport edge with native dialog focus, backdrop dismissal, and exit animation.
+---
+
+import DemoPreview from "../../../../../components/docs/DemoPreview.astro";
+import sheetSource from "../../../../../components/examples/SheetExample.astro?raw";
+import sheetVueSource from "../../../../../vue/components/ExampleSheet.vue?raw";
+
+[Open the live Sheet demo](/sheet?framework=wc)
+
+<DemoPreview
+  route="/preview/sheet"
+  title="Sheet"
+  height={560}
+  webCode={sheetSource}
+  vueCode={sheetVueSource}
+  webTitle="SheetExample.astro"
+  vueTitle="ExampleSheet.vue"
+/>
+
+The example uses the native `<dialog>` top layer as a modal Sheet. Choose top,
+right, bottom, or left before opening it. Focus moves into the Sheet, the page
+behind it becomes inert, and focus returns to the trigger after it closes.
+
+`dismiss()` treats a press on the native dialog backdrop as an outside press.
+Escape and the explicit close controls use the same close-request path. Set
+`outsidePress: false` when a workflow must require an explicit choice.
+
+```html
+<floating-root placement="right" strategy="fixed">
+  <floating-reference><button>Open sheet</button></floating-reference>
+  <dialog slot="floating" data-side="right" aria-labelledby="sheet-title">
+    <h2 id="sheet-title">Activity</h2>
+    <button data-fup-close>Close</button>
+  </dialog>
+</floating-root>
+```
+
+```js
+root.transform = false;
+root.configure({ plugins: [click(), dismiss(), role({ role: "dialog" })] });
+```
+
+An edge Sheet is positioned by viewport insets rather than reference
+coordinates. Disable Floating UI's transform positioning as shown above. In
+Vue, pass the equivalent option to `FloatingRoot`:
+
+```vue
+<FloatingRoot
+  v-model:open="open"
+  :options="{ placement: 'right', strategy: 'fixed', transform: false }"
+  :plugins="plugins"
+>
+  <FloatingContent as="dialog" class="sheet" :data-side="side" />
+</FloatingRoot>
+```
+
+Native dialog transitions should use the platform's discrete transition
+support, so `close()` remains immediate while CSS keeps the visual surface and
+backdrop present until the transition completes.
+
+```css
+.sheet {
+  position: fixed;
+  margin: 0;
+
+  --surface-motion-start-x: 100%;
+  --surface-motion-start-y: 0px;
+  --surface-motion-enter-duration: 240ms;
+  --surface-motion-exit-duration: 180ms;
+  --surface-motion-easing: cubic-bezier(0.32, 0.72, 0, 1);
+
+  opacity: 0;
+  translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
+  transition:
+    opacity var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    translate var(--surface-motion-exit-duration) var(--surface-motion-easing),
+    display var(--surface-motion-exit-duration) allow-discrete,
+    overlay var(--surface-motion-exit-duration) allow-discrete;
+}
+
+.sheet:open {
+  opacity: 1;
+  translate: 0 0;
+  transition-duration: var(--surface-motion-enter-duration);
+}
+
+.sheet[data-side="top"] {
+  inset: 0 0 auto 0;
+  width: 100%;
+  height: min(34rem, 78dvh);
+  --surface-motion-start-x: 0px;
+  --surface-motion-start-y: -100%;
+}
+
+.sheet[data-side="right"] {
+  inset: 0 0 0 auto;
+  width: min(25rem, 100vw);
+  height: 100dvh;
+}
+
+.sheet[data-side="bottom"] {
+  inset: auto 0 0 0;
+  width: 100%;
+  height: min(34rem, 78dvh);
+  --surface-motion-start-x: 0px;
+  --surface-motion-start-y: 100%;
+}
+
+.sheet[data-side="left"] {
+  inset: 0 auto 0 0;
+  width: min(25rem, 100vw);
+  height: 100dvh;
+  --surface-motion-start-x: -100%;
+  --surface-motion-start-y: 0px;
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0%);
+  transition:
+    background-color var(--surface-motion-exit-duration)
+      var(--surface-motion-easing),
+    display var(--surface-motion-exit-duration) allow-discrete,
+    overlay var(--surface-motion-exit-duration) allow-discrete;
+}
+
+.sheet:open::backdrop {
+  background: rgb(0 0 0 / 16%);
+}
+
+@starting-style {
+  .sheet:open {
+    opacity: 0;
+    translate: var(--surface-motion-start-x) var(--surface-motion-start-y);
+  }
+
+  .sheet:open::backdrop {
+    background: rgb(0 0 0 / 0%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    --surface-motion-start-x: 0px;
+    --surface-motion-start-y: 0px;
+    transition-duration: 80ms;
+  }
+}
+```
+
+Each direction owns both its physical viewport inset and its travel vector.
+Using physical `top`, `right`, `bottom`, and `left` properties makes the edge
+contract explicit. If a shared component-layer rule uses `!important`, keep
+these directional overrides in that same cascade layer so a base inset cannot
+win unexpectedly.
+
+The `display` and `overlay` transitions are required for native exit motion.
+They keep the closing dialog in layout and in the top layer while `opacity`,
+`translate`, and `::backdrop` finish. Without a supported discrete transition,
+the Sheet still closes correctly; it simply closes without the exit motion.
+
+The Web Components example sets `root.transform = false`; Vue sets
+`transform: false` inside `options`. Both ultimately render the same native
+`<dialog>` and use the same side, open-state, backdrop, `dismiss()`, and
+reduced-motion CSS.
+
+For the general native Popover/dialog lifecycle and browser support notes, see
+[Entry and exit animation](/docs/guides/animation).

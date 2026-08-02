@@ -1,0 +1,87 @@
+# Floating UI Plus
+
+> Framework-neutral floating UI primitives for Web, Web Components, and Vue.
+Use this index to find the documentation most relevant to an implementation.
+
+## Packages
+- [Web](https://www.npmjs.com/package/@floating-ui-plus/web): Framework-neutral positioning and interaction kernel.
+- [Web Components](https://www.npmjs.com/package/@floating-ui-plus/web-components): Custom Elements adapter for floating surfaces.
+- [Vue](https://www.npmjs.com/package/@floating-ui-plus/vue): Vue adapter with reactive bindings and list interactions.
+
+
+## Overview
+
+- [Floating UI Plus](https://fup.polcaneli.com/docs): Accessible floating interfaces for the Web, Web Components, and Vue.
+
+- [Web Components and Vue](https://fup.polcaneli.com/docs/frameworks): Use the same Floating UI Plus contract from Custom Elements or Vue.
+
+- [Web](https://fup.polcaneli.com/docs/frameworks/web): Use framework-neutral Floating UI Plus controllers with your own renderer.
+
+
+## Guides
+
+- [Entry and exit animation](https://fup.polcaneli.com/docs/guides/animation): Animate native Popover and dialog surfaces with CSS discrete transitions.
+
+- [Demo walkthrough](https://fup.polcaneli.com/docs/guides/demo): Browse every interactive Floating UI Plus demo and its detailed guide.
+
+- [Dismiss and before-close](https://fup.polcaneli.com/docs/guides/dismiss): Control outside press, Escape, and close requests consistently.
+
+- [Getting started](https://fup.polcaneli.com/docs/guides/getting-started): Install Floating UI Plus and choose the right package.
+
+- [Installation](https://fup.polcaneli.com/docs/guides/installation): Install the renderer adapter that matches your application.
+
+- [Install Vue](https://fup.polcaneli.com/docs/guides/installation/vue): Add Floating UI Plus components and composables to a Vue application.
+
+- [Install the Web core](https://fup.polcaneli.com/docs/guides/installation/web): Add framework-neutral Floating UI Plus controllers to a custom renderer.
+
+- [Install Web Components](https://fup.polcaneli.com/docs/guides/installation/web-components): Add Floating UI Plus Custom Elements to an HTML-first application.
+
+- [LLM documentation](https://fup.polcaneli.com/docs/guides/llms): Use the generated llms.txt index to give coding agents a concise map of Floating UI Plus documentation.
+
+- [Popover and dialog](https://fup.polcaneli.com/docs/guides/popover): Choose native Popover, dialog, template, and portal composition.
+
+- [Usage recipes](https://fup.polcaneli.com/docs/guides/usage): Complete usage recipes for the Web, Web Components, and Vue adapters.
+
+
+## Styling
+
+- [Styling floating surfaces](https://fup.polcaneli.com/docs/guides/styling): A styling guide for positioning, surfaces, safe areas, and motion with Floating UI Plus.
+
+- [CSS animation examples](https://fup.polcaneli.com/docs/guides/styling/animation): Apply CSS entry, exit, backdrop, Sheet, and Toast animations with Floating UI Plus.
+
+- [Positioning and overflow](https://fup.polcaneli.com/docs/guides/styling/positioning): Style middleware-driven surfaces, bounded lists, and mobile-safe overflow.
+
+- [Component states and selectors](https://fup.polcaneli.com/docs/guides/styling/states): Style open, placement, active, and closing states from the package's rendered hooks.
+
+- [Surfaces, backdrops, and safe areas](https://fup.polcaneli.com/docs/guides/styling/surfaces): Style Popover, dialog, Sheet, and viewport surfaces across desktop and mobile.
+
+
+## Demos
+
+- [Demo: Client point](https://fup.polcaneli.com/docs/guides/demo/client-point): Position a surface against pointer coordinates with a virtual reference.
+
+- [Demo: Query — fuzzy search](https://fup.polcaneli.com/docs/guides/demo/combobox/fuzzy): Explore local typo-tolerant search with the Query demo.
+
+- [Demo: Query — server search](https://fup.polcaneli.com/docs/guides/demo/combobox/server): Explore cancellable cursor-based server search with the Query demo.
+
+- [Demo: Command](https://fup.polcaneli.com/docs/guides/demo/command): Build a searchable dialog command palette with grouped actions and complete keyboard navigation.
+
+- [Demo: Menu](https://fup.polcaneli.com/docs/guides/demo/menu): Use list navigation, typeahead, looping, and close-on-select menu items.
+
+- [Demo: Middleware](https://fup.polcaneli.com/docs/guides/demo/middleware): Compare offset, shift, flip, arrow, size, autoPlacement, hide, and inline.
+
+- [Demo: Modal focus room](https://fup.polcaneli.com/docs/guides/demo/modal): Exercise native dialog focus, nested surfaces, inert neighbors, and Escape ordering.
+
+- [Demo: Nested menu](https://fup.polcaneli.com/docs/guides/demo/nested-menu): Coordinate parent and submenu roots with tree nodes and focus restoration.
+
+- [Demo: Placement](https://fup.polcaneli.com/docs/guides/demo/placement): Explore all typed placement values and update position interactively.
+
+- [Demo: Popover](https://fup.polcaneli.com/docs/guides/demo/popover): Build an anchored non-modal surface with a root-owned native template.
+
+- [Demo: Sheet](https://fup.polcaneli.com/docs/guides/demo/sheet): Open a modal sheet from every viewport edge with native dialog focus, backdrop dismissal, and exit animation.
+
+- [Demo: Toast](https://fup.polcaneli.com/docs/guides/demo/toast): Build stacked, timed, non-modal notifications with pausable dismissal and controlled presence.
+
+- [Demo: Tooltip](https://fup.polcaneli.com/docs/guides/demo/tooltip): Combine hover, focus, safe polygon dismissal, and arrow positioning.
+
+

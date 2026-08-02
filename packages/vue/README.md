@@ -48,10 +48,42 @@ Use the component layer for ordinary popovers, menus, and dialogs. The root
 owns one controller and its descendants receive the corresponding bindings.
 
 ```vue
+<script setup lang="ts">
+import {ref} from 'vue';
+import {
+  FloatingClose,
+  FloatingContent,
+  FloatingReference,
+  FloatingRoot,
+  autoUpdate,
+  click,
+  dismiss,
+  flip,
+  offset,
+  role,
+  shift,
+  transformOrigin,
+} from '@floating-ui-plus/vue';
+
+const open = ref(false);
+const options = {
+  placement: 'bottom-start',
+  middleware: [
+    offset(8),
+    flip({padding: 12}),
+    shift({padding: 12}),
+    transformOrigin({padding: 8}),
+  ],
+  whileElementsMounted: autoUpdate,
+};
+const plugins = [click(), dismiss(), role({role: 'dialog'})];
+</script>
+
 <template>
   <FloatingRoot
     v-model:open="open"
-    :plugins="[click(), dismiss(), role({role: 'dialog'})]"
+    :options="options"
+    :plugins="plugins"
   >
     <FloatingReference>Open settings</FloatingReference>
     <FloatingContent class="popover">
@@ -77,6 +109,59 @@ Native dialogs also acquire a ref-counted document scroll lock while open.
 The default uses CSS `overflow: hidden`; touch-event interception is not
 installed. Add a touch guard in the host application only for legacy iOS or a
 WebView that still requires it.
+
+Native dialogs also receive `data-fup-safe-area` and the CSS variables
+`--fup-safe-area-inset-top`, `--fup-safe-area-inset-right`,
+`--fup-safe-area-inset-bottom`, and `--fup-safe-area-inset-left`. Consume these
+variables in surface CSS where a notch or home indicator needs extra space; the
+package does not force a padding policy on custom dialog layouts.
+
+## Native entry and exit animation
+
+Keep `<FloatingContent>` in the Vue tree and style the native surface states
+directly. A non-zero `display` or `overlay` transition with `allow-discrete`
+opts into CSS exit motion; without one, closed content receives `hidden`
+immediately.
+
+```css
+.floating-panel {
+  opacity: 0;
+  translate: 0 -0.25rem;
+  transform-origin: var(--floating-transform-origin, 50% 0%);
+  transition:
+    opacity 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    translate 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    display 120ms allow-discrete,
+    overlay 120ms allow-discrete;
+}
+
+.floating-panel:popover-open {
+  opacity: 1;
+  translate: 0 0;
+}
+
+@starting-style {
+  .floating-panel:popover-open {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+```
+
+`transformOrigin()` writes the CSS variable from the final placement and
+reference geometry. Keep it after placement-changing middleware; the CSS
+fallback remains valid when it is omitted.
+
+For a fixed placement, you may omit the middleware and define
+`transform-origin` in CSS. CSS alone cannot observe `flip()` or `shift()`
+results, so use `transformOrigin()` whenever the surface can move to another
+side or alignment.
+
+Do not wrap an animated native surface in `v-if`; removing it bypasses the CSS
+exit. Reopening cancels a pending hide. For `top-layer="none"`, use
+`FloatingTransition` or `useFloatingTransition` and keep the surface mounted
+until its close state completes. See the
+[entry and exit animation guide](https://fup.polcaneli.com/docs/guides/animation).
 
 ## Search and `useQuery()`
 
@@ -169,6 +254,7 @@ confirmation first, then set `open.value = false`.
 
 - [Home](https://fup.polcaneli.com/docs) · [Getting started](https://fup.polcaneli.com/docs/guides/getting-started) · [Vue guide](https://fup.polcaneli.com/docs/frameworks)
 - [Usage recipes](https://fup.polcaneli.com/docs/guides/usage) · [Combobox demos](https://fup.polcaneli.com/docs/guides/demo/combobox/fuzzy) · [Dismiss and closing](https://fup.polcaneli.com/docs/guides/dismiss)
+- [Entry and exit animation](https://fup.polcaneli.com/docs/guides/animation)
 
 ## Verify
 

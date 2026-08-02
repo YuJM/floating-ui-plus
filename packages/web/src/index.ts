@@ -182,3 +182,12 @@ export {DelayGroup, NextDelayGroup} from './delayGroup';
 export type {DelayGroupOptions} from './delayGroup';
 export {FloatingTransition} from './transition';
 export type {TransitionStatus, TransitionStyles} from './transition';
+export {
+  FLOATING_TRANSFORM_ORIGIN_VARIABLE,
+  getFloatingTransformOrigin,
+  transformOrigin,
+} from './transformOrigin';
+export type {
+  TransformOriginData,
+  TransformOriginOptions,
+} from './transformOrigin';

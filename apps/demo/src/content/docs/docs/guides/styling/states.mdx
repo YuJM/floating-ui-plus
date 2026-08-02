@@ -1,0 +1,80 @@
+---
+title: Component states and selectors
+description: Style open, placement, active, and closing states from the package's rendered hooks.
+---
+
+Prefer the state hooks emitted by the adapter over a second visual state store.
+The hooks are attributes, so the same CSS can be shared by Web Components and
+Vue when the Vue template binds the equivalent value explicitly.
+
+## Surface state
+
+Web Components surfaces expose their lifecycle and resolved placement through
+attributes. A placement can change after `flip()` or `autoPlacement()` runs:
+
+```css
+[data-status="closed"] {
+  pointer-events: none;
+}
+
+[data-placement^="top"] {
+  --motion-origin: 50% 100%;
+}
+
+[data-placement^="right"] {
+  --motion-origin: 0% 50%;
+}
+```
+
+For Vue, bind placement from the floating state when you need the same CSS:
+
+```vue
+<FloatingContent :data-placement="floating.placement.value" />
+```
+
+Do not infer open state from opacity. The interaction adapter remains the
+source of truth; opacity is only a visual treatment.
+
+## Collection state
+
+Menus, comboboxes, and Command lists have an active option while keyboard
+navigation is running. Style the active state together with the semantic ARIA
+state:
+
+```css
+[data-active="true"],
+[aria-selected="true"] {
+  background: var(--color-accent);
+  color: var(--color-accent-foreground);
+}
+
+[role="option"]:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+```
+
+`FloatingListItem` can emit `data-active` when navigation is enabled. Keep
+group headings, separators, icons, and shortcut labels as application markup;
+they are styling slots, not additional package primitives. The
+[Command demo](../demo/command) uses this composition for grouped actions and
+an empty state.
+
+## Closing state
+
+`FloatingTransition` exposes a status that can be mapped to a `data-status`
+attribute. Make closing content inert while it is fading out, then allow the
+helper to remove it:
+
+```css
+[data-status="close"] {
+  pointer-events: none;
+  user-select: none;
+}
+```
+
+For native Popover and dialog surfaces, use `:popover-open` or `:open` and the
+discrete `display`/`overlay` transitions described in
+[CSS animation examples](./animation). Do not remove an animated native
+surface with a framework conditional before its close lifecycle finishes.

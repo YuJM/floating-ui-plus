@@ -195,6 +195,56 @@ describe('FloatingRootElement', () => {
     expect(root.floatingElement?.hidden).toBe(false);
   });
 
+  test('keeps a native template mounted only through its CSS exit transition', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <template slot="content"><section data-animated style="transition: display 100ms allow-discrete, overlay 100ms allow-discrete">Content</section></template>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    expect(root.floatingElement).toBeNull();
+
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+    const surface = root.floatingElement!;
+    expect(surface).toHaveAttribute('popover', 'manual');
+    expect(root.floatingElement).toBe(surface);
+    expect(surface.matches(':popover-open')).toBe(true);
+
+    root.open = false;
+    await root.updateComplete;
+    expect(root.floatingElement).toBe(surface);
+    expect(surface.hidden).toBe(false);
+    expect(surface.matches(':popover-open')).toBe(false);
+    surface.dispatchEvent(
+      new TransitionEvent('transitionend', {propertyName: 'overlay'}),
+    );
+    await vi.waitFor(() => expect(root.floatingElement).toBeNull());
+  });
+
+  test('unmounts a native template immediately when it has no exit CSS', async () => {
+    if (!supportsFloatingTopLayer('popover')) return;
+    const root = document.createElement('floating-root');
+    root.innerHTML = `
+      <floating-reference><button>Open</button></floating-reference>
+      <template slot="content"><section>Content</section></template>
+    `;
+    document.body.append(root);
+    await root.updateComplete;
+
+    root.open = true;
+    await root.updateComplete;
+    await vi.waitFor(() => expect(root.floatingElement).not.toBeNull());
+
+    root.open = false;
+    await root.updateComplete;
+    await vi.waitFor(() => expect(root.floatingElement).toBeNull());
+  });
+
   test('uses a slotted dialog as a native modal surface', async () => {
     if (!supportsFloatingTopLayer('dialog')) return;
     const root = document.createElement('floating-root');
