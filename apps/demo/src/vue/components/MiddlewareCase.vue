@@ -212,7 +212,7 @@ onMounted(async () => {
       props.kind === 'auto'
     ) {
       stage.value.scrollTop =
-        props.kind === 'size' ? 210 : props.kind === 'auto' ? 130 : 160;
+        props.kind === 'auto' ? 130 : 160;
     }
     void primary.update();
     if (props.kind === 'offset' || props.kind === 'inline') {

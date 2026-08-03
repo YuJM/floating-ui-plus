@@ -88,7 +88,7 @@
   .vue-mw-reference-size { top: 240px; left: 50%; width: 150px; transform: translateX(-50%); }
   .vue-mw-reference-auto { top: 200px; left: 50%; transform: translateX(-50%); }
   .vue-mw-reference-hide { top: 210px; left: 50%; transform: translateX(-50%); }
-  .vue-mw-panel { position: absolute; z-index: 5; min-width: 116px; border-radius: 8px; padding: 8px 10px; color: #173a32; font-size: 11px; line-height: 1.5; white-space: nowrap; box-shadow: 0 10px 20px rgb(23 58 50 / .16); }
+  .vue-mw-panel { position: absolute; z-index: 5; min-width: 116px; max-width: min(400px, calc(100vw - 16px)); max-height: calc(100dvh - 16px); overflow: visible; border-radius: 8px; padding: 8px 10px; color: #173a32; font-size: 11px; line-height: 1.5; white-space: nowrap; box-shadow: 0 10px 20px rgb(23 58 50 / .16); }
   .vue-mw-panel-green { background: #70e2b1; }
   .vue-mw-panel-lime { background: #d7f0c6; }
   .vue-mw-panel-coral { background: #f7c7ae; }
@@ -97,7 +97,7 @@
   .vue-mw-panel-mint { background: #caefdf; }
   .vue-mw-panel-arrow { min-width: 148px; text-align: center; }
   .vue-mw-arrow { position: absolute; display: block; width: 14px; height: 7px; fill: #173a32; pointer-events: none; }
-  .vue-mw-panel-size { display: grid; gap: 5px; width: 190px; min-width: 0; overflow: auto; box-sizing: border-box; white-space: normal; }
+  .vue-mw-panel-size { display: grid; gap: 5px; width: min(190px, calc(100vw - 32px)); min-width: 0; overflow: visible; box-sizing: border-box; white-space: normal; }
   .vue-mw-panel-size strong { margin-bottom: 2px; }
   .vue-mw-panel-size span { color: #60766e; }
   .vue-mw-panel-auto { width: 260px; text-align: center; }

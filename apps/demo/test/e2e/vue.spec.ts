@@ -466,6 +466,54 @@ test("routes to individual Vue examples and the middleware lab", async ({
   );
 });
 
+test("keeps Vue middleware surfaces and arrows visible without popup scrollbars", async ({
+  page,
+}) => {
+  await page.goto("/middleware?framework=vue");
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  const metrics = await page.locator(".vue-middleware-grid").evaluate((demo) => {
+    const panels = [...demo.querySelectorAll<HTMLElement>(".vue-mw-panel")];
+    const arrow = demo.querySelector<HTMLElement>(".vue-mw-arrow");
+    const arrowPanel = demo.querySelector<HTMLElement>(".vue-mw-panel-arrow");
+    const box = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      return {x: rect.x, right: rect.right, bottom: rect.bottom};
+    };
+    return {
+      overflow: panels.map((panel) => getComputedStyle(panel).overflow),
+      sizeScroll: (() => {
+        const panel = demo.querySelector<HTMLElement>(".vue-mw-panel-size")!;
+        return {width: panel.scrollWidth - panel.clientWidth, height: panel.scrollHeight - panel.clientHeight};
+      })(),
+      arrow: arrow && arrowPanel ? {arrow: box(arrow), panel: box(arrowPanel)} : null,
+      stages: [...demo.querySelectorAll<HTMLElement>(".vue-mw-stage")].map((stage) => ({
+        x: getComputedStyle(stage).overflowX,
+        y: getComputedStyle(stage).overflowY,
+        scrollWidth: stage.scrollWidth,
+        clientWidth: stage.clientWidth,
+        scrollHeight: stage.scrollHeight,
+        clientHeight: stage.clientHeight,
+      })),
+    };
+  });
+  expect(metrics.overflow.every((value) => value === "visible")).toBe(true);
+  expect(metrics.sizeScroll.width).toBe(0);
+  expect(metrics.sizeScroll.height).toBeGreaterThanOrEqual(0);
+  expect(metrics.arrow).not.toBeNull();
+  expect(metrics.arrow!.arrow.x).toBeGreaterThanOrEqual(metrics.arrow!.panel.x - 1);
+  expect(metrics.arrow!.arrow.right).toBeLessThanOrEqual(metrics.arrow!.panel.right + 1);
+  expect(metrics.arrow!.arrow.bottom).toBeLessThanOrEqual(metrics.arrow!.panel.bottom + 8);
+  expect(metrics.stages.some((stage) => stage.x === "auto" && stage.scrollWidth > stage.clientWidth)).toBe(true);
+  expect(metrics.stages.some((stage) => stage.y === "auto" && stage.scrollHeight > stage.clientHeight)).toBe(true);
+  for (const panel of await page.locator(".vue-mw-panel").all()) {
+    const box = await panel.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(-1);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1);
+  }
+});
+
 test("placement constants drive all 12 Vue positions", async ({ page }) => {
   await page.goto("/placement?framework=vue");
 
