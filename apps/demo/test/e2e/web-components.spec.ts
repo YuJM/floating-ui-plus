@@ -794,6 +794,59 @@ test("all middleware fixtures expose their observable behavior", async ({
   expect(inlineMetrics.withDistance).toBeLessThanOrEqual(2);
 });
 
+test("keeps middleware surfaces and arrows visible without popup scrollbars", async ({
+  page,
+}) => {
+  await page.goto("/middleware");
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+
+  const metrics = await page.locator("#middleware-demo").evaluate((demo) => {
+    const panels = [...demo.querySelectorAll<HTMLElement>(".mw-panel")];
+    const arrow = demo.querySelector<HTMLElement>(".mw-arrow");
+    const arrowPanel = demo.querySelector<HTMLElement>(".mw-panel-arrow");
+    const rect = (element: HTMLElement) => {
+      const box = element.getBoundingClientRect();
+      return {x: box.x, y: box.y, right: box.right, bottom: box.bottom};
+    };
+    return {
+      overflow: panels.map((panel) => getComputedStyle(panel).overflow),
+      sizeScroll: (() => {
+        const panel = demo.querySelector<HTMLElement>(".mw-panel-size")!;
+        return {
+          width: panel.scrollWidth - panel.clientWidth,
+          height: panel.scrollHeight - panel.clientHeight,
+        };
+      })(),
+      arrow: arrow && arrowPanel ? {arrow: rect(arrow), panel: rect(arrowPanel)} : null,
+      stages: [...demo.querySelectorAll<HTMLElement>(".mw-stage")].map((stage) => ({
+        x: getComputedStyle(stage).overflowX,
+        y: getComputedStyle(stage).overflowY,
+        scrollWidth: stage.scrollWidth,
+        clientWidth: stage.clientWidth,
+        scrollHeight: stage.scrollHeight,
+        clientHeight: stage.clientHeight,
+      })),
+    };
+  });
+
+  expect(metrics.overflow.every((value) => value === "visible")).toBe(true);
+  expect(metrics.sizeScroll.width).toBe(0);
+  expect(metrics.sizeScroll.height).toBeGreaterThanOrEqual(0);
+  expect(metrics.arrow).not.toBeNull();
+  expect(metrics.arrow!.arrow.x).toBeGreaterThanOrEqual(metrics.arrow!.panel.x - 1);
+  expect(metrics.arrow!.arrow.right).toBeLessThanOrEqual(metrics.arrow!.panel.right + 1);
+  expect(metrics.arrow!.arrow.bottom).toBeLessThanOrEqual(metrics.arrow!.panel.bottom + 8);
+  expect(metrics.stages.some((stage) => stage.x === "auto" && stage.scrollWidth > stage.clientWidth)).toBe(true);
+  expect(metrics.stages.some((stage) => stage.y === "auto" && stage.scrollHeight > stage.clientHeight)).toBe(true);
+  for (const panel of await page.locator(".mw-panel").all()) {
+    const box = await panel.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(-1);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1);
+  }
+});
+
 test("placement controls drive all 12 component positions", async ({
   page,
 }) => {

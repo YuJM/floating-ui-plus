@@ -32,7 +32,7 @@ export const MIDDLEWARE_EXAMPLES = [
     number: '05',
     title: 'Size',
     docsPath: 'size',
-    description: 'Scroll vertically. Available height constrains the panel, whose content remains scrollable.',
+    description: 'Scroll vertically. Available height constrains the panel without adding a second popup scrollbar.',
   },
   {
     id: 'auto',

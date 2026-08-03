@@ -288,7 +288,7 @@ floating-arrow.tooltip-arrow::part(path) { fill: currentColor; }
 .mw-reference-size { top: 240px; left: 50%; width: 150px; transform: translateX(-50%); }
 .mw-reference-auto { top: 200px; left: 50%; transform: translateX(-50%); }
 .mw-reference-hide { top: 210px; left: 50%; transform: translateX(-50%); }
-.mw-panel { position: absolute; min-width: 116px; padding: 8px 10px; border-radius: 8px; font-size: 11px; line-height: 1.5; box-shadow: 0 10px 20px rgba(23,24,47,.16); white-space: nowrap; z-index: 5; }
+.mw-panel { position: absolute; min-width: 116px; max-width: min(400px, calc(100vw - 16px)); max-height: calc(100dvh - 16px); overflow: visible; padding: 8px 10px; border-radius: 8px; font-size: 11px; line-height: 1.5; box-shadow: 0 10px 20px rgba(23,24,47,.16); white-space: nowrap; z-index: 5; }
 .mw-panel-cyan { background: var(--cyan); }
 .mw-panel-lavender { background: var(--lavender); }
 .mw-panel-coral { background: var(--coral); }
@@ -298,7 +298,7 @@ floating-arrow.tooltip-arrow::part(path) { fill: currentColor; }
 .mw-panel-arrow { min-width: 148px; text-align: center; }
 .mw-arrow { position: absolute; display: block; width: 14px; height: 7px; pointer-events: none; }
 .mw-arrow::part(path) { fill: var(--ink); }
-.mw-panel-size { display: grid; gap: 5px; width: 190px; min-width: 0; overflow: auto; box-sizing: border-box; white-space: normal; }
+.mw-panel-size { display: grid; gap: 5px; width: min(190px, calc(100vw - 32px)); min-width: 0; overflow: visible; box-sizing: border-box; white-space: normal; }
 .mw-panel-size strong { margin-bottom: 2px; }
 .mw-panel-size span { color: #6c6d80; }
 .mw-panel-auto { width: 260px; text-align: center; }

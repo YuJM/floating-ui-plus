@@ -1,0 +1,7 @@
+# Keep HTML fresh while allowing Cloudflare's edge to serve repeat requests.
+/*
+  Cache-Control: public, max-age=0, s-maxage=300, must-revalidate
+
+# Astro's generated assets include content hashes and can be cached safely.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
