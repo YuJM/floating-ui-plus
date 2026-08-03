@@ -1,0 +1,81 @@
+---
+title: Query and results
+description: Build searchable floating results with Custom Elements.
+---
+
+`<floating-query>` supplies the input-side behavior for a searchable floating
+surface. Pair it with `<floating-results>` and its result parts to render
+loading, empty, error, status, and pagination states without repeating the
+ARIA and keyboard wiring.
+
+The query does not own your selected value or form submission. Your
+application decides what an activated result means.
+
+## Structure
+
+```html
+<floating-root placement="bottom-start" interactions="click dismiss">
+  <floating-query id="destination-query">
+    <floating-reference>
+      <input
+        aria-label="Destination"
+        autocomplete="off"
+        placeholder="Search destinations"
+      />
+    </floating-reference>
+
+    <template slot="content">
+      <floating-results>
+        <floating-results-status></floating-results-status>
+        <floating-results-empty>No matches</floating-results-empty>
+        <floating-results-item data-search-text="name">
+          Result
+        </floating-results-item>
+        <floating-results-more>Load more</floating-results-more>
+      </floating-results>
+    </template>
+  </floating-query>
+</floating-root>
+```
+
+The component establishes the combobox/listbox/option relationship and active
+descendant behavior. Inside a native dialog it automatically uses dialog
+semantics. Use `semantics="dialog"` for a non-native dialog surface, or
+`semantics="none"` when your application owns the ARIA contract.
+
+## Result phases
+
+Prefer the `floating-results-*` parts for result phases:
+
+- `floating-results-status` exposes status text.
+- `floating-results-idle`, `floating-results-loading`,
+  `floating-results-error`, and `floating-results-empty` render phase-specific
+  content.
+- `floating-results-item` binds an option.
+- `floating-results-more` provides a load-more action.
+
+`<floating-search>` remains registered as a deprecated compatibility alias for
+`<floating-results>`. Use the `floating-results-*` names in new markup.
+
+## Styling and scrolling
+
+The components are headless and do not add a scrollbar policy. Give the
+results surface a viewport-safe `max-height` and make the result list the
+scroll container when there are many results:
+
+```css
+.results-panel {
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: min(26rem, calc(100dvh - 2rem));
+  overflow: hidden;
+}
+
+.results-list {
+  max-height: inherit;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+```
+
+Keep this policy on the result surface or list, not as a package-wide default;
+menus, tooltips, dialogs, and toast stacks need different overflow behavior.

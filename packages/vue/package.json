@@ -1,6 +1,6 @@
 {
   "name": "@floating-ui-plus/vue",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "type": "module",
   "homepage": "https://fup.polcaneli.com/",
   "description": "Vue Floating UI composables and components for interactions, focus management, portals, collections, and search",

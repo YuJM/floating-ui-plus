@@ -1,0 +1,90 @@
+---
+title: Root and content
+description: Position and coordinate one floating surface with a Custom Element.
+---
+
+`<floating-root>` connects one reference element to one floating element. It
+applies the positioning result, synchronizes open state, and exposes the
+framework-neutral middleware and interaction APIs through a Custom Element.
+
+## Native Popover surface
+
+Use `template[slot="content"]` for the usual anchored, conditional surface.
+The root creates a native Popover while it is open:
+
+```html
+<floating-root
+  placement="bottom-start"
+  interactions="click dismiss"
+>
+  <button slot="reference" type="button">Open settings</button>
+
+  <template slot="content">
+    <section class="settings-panel" aria-label="Settings">
+      Settings
+      <button type="button" data-fup-close>Close</button>
+    </section>
+  </template>
+</floating-root>
+```
+
+The root defaults to the `dialog` ARIA contract for an interactive surface.
+Use `floating-role="menu"` or `floating-role="tooltip"` when that is the
+actual semantic role. Do not use `region` as a floating role.
+
+## In-flow or clipped surface
+
+Direct slotted non-dialog surfaces use the Popover API by default. Set
+`top-layer="none"` when the surface must remain in its DOM clipping context:
+
+```html
+<floating-root top-layer="none" placement="bottom">
+  <button slot="reference" type="button">Reference</button>
+  <div slot="floating" class="clipped-panel">In-flow surface</div>
+</floating-root>
+```
+
+This is useful for an embedded canvas, a clipped demo boundary, or a surface
+whose parent owns scrolling. It also means the application must provide the
+appropriate stacking and overflow styles.
+
+Use a real `<dialog slot="floating">` for modal content. Native dialog owns
+the Top Layer, inertness, focus lifecycle, and the package's document-scoped
+scroll lock. A Popover is non-modal and does not lock document scrolling.
+
+## Middleware and configuration
+
+Configure middleware as a property so function values are preserved:
+
+```ts
+import {
+  FloatingRootElement,
+  flip,
+  offset,
+  shift,
+} from '@floating-ui-plus/web-components';
+
+const root = document.querySelector<FloatingRootElement>('floating-root')!;
+root.configure({
+  middleware: [offset(8), flip({padding: 12}), shift({padding: 12})],
+});
+```
+
+`size()` reports available dimensions; your surface CSS or middleware
+`apply()` callback decides how to consume `availableWidth` and
+`availableHeight`. The package does not force an overflow or scrollbar policy.
+
+For an arrow, place `<floating-arrow>` inside the floating surface and include
+`arrow({element})` after placement-changing middleware. The component provides
+its SVG geometry and keeps the arrow overflow visible; your surface still
+needs an overflow policy that does not clip the arrow.
+
+## Closing and lifecycle
+
+Use `data-fup-close` for declarative close controls. For imperative close,
+call `root.close(event, 'click')`. The cancelable `floatingbeforeclose` event
+is the synchronous guard point before a close is accepted.
+
+Native Popover and dialog entry/exit transitions require the surface's own
+CSS to transition `display` and `overlay` with `allow-discrete`. See the
+[animation guide](/docs/guides/animation) for that contract.

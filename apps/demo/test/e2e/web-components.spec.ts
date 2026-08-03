@@ -734,11 +734,23 @@ test("all middleware fixtures expose their observable behavior", async ({
 
   const sizeStage = page.locator(".mw-stage-size");
   const sizePanel = sizeStage.locator(".mw-panel-size");
+  await expect(sizePanel).not.toHaveAttribute("popover");
   const maxHeight = await sizePanel.evaluate((element) =>
     Number.parseFloat(getComputedStyle(element).maxHeight),
   );
   expect(maxHeight).toBeGreaterThan(0);
   expect(maxHeight).toBeLessThan((await sizeStage.boundingBox())!.height);
+  await expect(sizePanel).toHaveCSS("overflow", "hidden");
+  const [sizeCardBox, sizePanelBox] = await Promise.all([
+    page.locator("#middleware-size").boundingBox(),
+    sizePanel.boundingBox(),
+  ]);
+  expect(sizeCardBox).not.toBeNull();
+  expect(sizePanelBox).not.toBeNull();
+  expect(sizePanelBox!.y).toBeGreaterThanOrEqual(sizeCardBox!.y);
+  expect(sizePanelBox!.y + sizePanelBox!.height).toBeLessThanOrEqual(
+    sizeCardBox!.y + sizeCardBox!.height,
+  );
 
   const autoStage = page.locator(".mw-stage-auto-placement");
   const autoPanel = autoStage.locator(".mw-panel-auto");
@@ -761,10 +773,12 @@ test("all middleware fixtures expose their observable behavior", async ({
 
   const hideStage = page.locator(".mw-stage-hide");
   const hidePanel = hideStage.locator(".mw-panel-hide");
+  await expect(hidePanel).not.toHaveAttribute("popover");
   await hideStage.evaluate((element) => {
     element.scrollTop = element.scrollHeight;
   });
   await expect(hidePanel).toHaveAttribute("data-reference-hidden", "true");
+  await expect(hidePanel).toBeHidden();
   await expect(
     page.locator('#hide .mw-state-readout'),
   ).toContainText("reference hidden");
@@ -810,7 +824,10 @@ test("keeps middleware surfaces and arrows visible without popup scrollbars", as
       return {x: box.x, y: box.y, right: box.right, bottom: box.bottom};
     };
     return {
-      overflow: panels.map((panel) => getComputedStyle(panel).overflow),
+      overflow: panels.map((panel) => ({
+        className: panel.className,
+        value: getComputedStyle(panel).overflow,
+      })),
       sizeScroll: (() => {
         const panel = demo.querySelector<HTMLElement>(".mw-panel-size")!;
         return {
@@ -830,7 +847,15 @@ test("keeps middleware surfaces and arrows visible without popup scrollbars", as
     };
   });
 
-  expect(metrics.overflow.every((value) => value === "visible")).toBe(true);
+  expect(
+    metrics.overflow
+      .filter((panel) => !panel.className.includes("mw-panel-size"))
+      .every((panel) => panel.value === "visible"),
+  ).toBe(true);
+  expect(
+    metrics.overflow.find((panel) => panel.className.includes("mw-panel-size"))
+      ?.value,
+  ).toBe("hidden");
   expect(metrics.sizeScroll.width).toBe(0);
   expect(metrics.sizeScroll.height).toBeGreaterThanOrEqual(0);
   expect(metrics.arrow).not.toBeNull();
@@ -845,6 +870,48 @@ test("keeps middleware surfaces and arrows visible without popup scrollbars", as
     expect(box!.x).toBeGreaterThanOrEqual(-1);
     expect(box!.x + box!.width).toBeLessThanOrEqual(viewport!.width + 1);
   }
+});
+
+test("keeps WC size and hide contained after document scrolling", async ({
+  page,
+}) => {
+  if (page.viewportSize()?.width !== 1280) test.skip();
+  await page.setViewportSize({width: 1426, height: 1648});
+  await page.goto("/middleware");
+  await expect(page.locator('#middleware-demo')).toHaveAttribute(
+    "data-initialized",
+    "true",
+  );
+
+  const sizeCard = page.locator("#middleware-size");
+  const sizePanel = page.locator(".mw-stage-size .mw-panel-size");
+  await sizeCard.scrollIntoViewIfNeeded();
+  await expect(sizePanel).toBeVisible();
+  const [sizeCardBox, sizePanelBox] = await Promise.all([
+    sizeCard.boundingBox(),
+    sizePanel.boundingBox(),
+  ]);
+  expect(sizeCardBox).not.toBeNull();
+  expect(sizePanelBox).not.toBeNull();
+  expect(sizePanelBox!.x).toBeGreaterThanOrEqual(sizeCardBox!.x);
+  expect(sizePanelBox!.y).toBeGreaterThanOrEqual(sizeCardBox!.y);
+  expect(sizePanelBox!.x + sizePanelBox!.width).toBeLessThanOrEqual(
+    sizeCardBox!.x + sizeCardBox!.width,
+  );
+  expect(sizePanelBox!.y + sizePanelBox!.height).toBeLessThanOrEqual(
+    sizeCardBox!.y + sizeCardBox!.height,
+  );
+
+  const hideStage = page.locator(".mw-stage-hide");
+  const hidePanel = page.locator(".mw-panel-hide");
+  await hideStage.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(hidePanel).toHaveAttribute("data-reference-hidden", "true");
+  await expect(hidePanel).toBeHidden();
+  await expect(page.locator('#hide .mw-state-readout')).toHaveText(
+    "State: reference hidden",
+  );
 });
 
 test("placement controls drive all 12 component positions", async ({

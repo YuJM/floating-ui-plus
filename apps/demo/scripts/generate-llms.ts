@@ -42,7 +42,9 @@ function toDocEntry(path: string, source: string): DocEntry {
     .replace(/\/$/, '');
   const route = routePath ? `/docs/${routePath}` : '/docs';
   const segments = relativePath.split('/');
-  const group = segments[0] === 'guides'
+  const group = segments[0] === 'components'
+    ? 'Components'
+    : segments[0] === 'guides'
     ? segments[1] === 'styling'
       ? 'Styling'
       : segments[1] === 'demo'
@@ -81,7 +83,7 @@ const entries = (await Promise.all(files.map(async (path) =>
   toDocEntry(path, await readFile(path, 'utf8')),
 ))).sort((a, b) => a.href.localeCompare(b.href));
 
-const groupOrder = ['Overview', 'Guides', 'Styling', 'Demos'];
+const groupOrder = ['Overview', 'Components', 'Guides', 'Styling', 'Demos'];
 const groups = groupOrder
   .map((name) => ({name, docs: entries.filter((entry) => entry.group === name)}))
   .filter((group) => group.docs.length > 0);

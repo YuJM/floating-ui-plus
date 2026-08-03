@@ -1,0 +1,169 @@
+---
+title: Presence stack
+description: Render timed, pausable, and dismissible presence entries such as toasts.
+---
+
+`<floating-presence-stack>` is the package's declarative presence component.
+Use it for toasts, notices, and other entries that need a shared limit,
+timeouts, pause reasons, exit presence, and eventual removal.
+
+It does not decide the visual layout or ARIA wording. The application owns the
+template markup, stacking layout, close controls, and whether the stack is a
+native Popover or an in-flow surface.
+
+## Basic stack
+
+```html
+<floating-presence-stack id="notices" tabindex="-1">
+  <template slot="content">
+    <article class="toast" role="status">
+      <strong data-presence-text="title"></strong>
+      <p data-presence-text="description"></p>
+      <button type="button" data-presence-close>Dismiss</button>
+    </article>
+  </template>
+</floating-presence-stack>
+
+<script type="module">
+  const notices = document.querySelector('#notices');
+  notices.configure({
+    limit: 3,
+    timeout: 5000,
+    exitDuration: 180,
+    topLayer: 'popover',
+  });
+  notices.add({
+    title: 'Saved',
+    description: 'Your changes are ready.',
+  });
+</script>
+```
+
+Use `topLayer: 'popover'` for a viewport-level non-modal toast stack. Use
+`topLayer: 'none'` when the stack belongs inside an application-owned layout
+and should be clipped or scrolled by its parent. Toasts are not modal content;
+do not use a dialog for them.
+
+## Configuration
+
+`configure()` accepts the options that normally change together:
+
+| Option | Purpose |
+| --- | --- |
+| `limit` | Maximum number of open entries |
+| `timeout` | Milliseconds before automatic close; use `0` to keep entries open |
+| `exitDuration` | Time reserved for the exit-presence phase |
+| `topLayer` | `'popover'`, `'dialog'`, or `'none'`; use Popover or none for toasts |
+
+The equivalent `limit`, `timeout`, `exit-duration`, and `top-layer` attributes
+are available for static HTML. JavaScript options take precedence.
+
+## Text and controls
+
+`data-presence-text` writes values from the entry into matching descendants.
+It supports a value path and the `$id`, `$index`, and `$remaining` placeholders.
+Use `data-presence-close` on a button inside the rendered entry. The first
+template root receives runtime markers such as `data-status`,
+`data-presence-id`, `data-presence-index`, and `data-presence-overflowed`.
+
+The host reflects pause state with `data-presence-paused` and emits
+`presencechange` with the current `snapshot`.
+
+## Pause and resume
+
+Pause independently for each interaction reason, then resume that same
+reason when the interaction ends:
+
+```ts
+notices.pause('pointer');
+notices.pause('focus');
+
+// Both reasons must be resumed before the timeout continues.
+notices.resume('pointer');
+notices.resume('focus');
+```
+
+This lets pointer hover, keyboard focus, and application-specific policies
+coexist without one interaction accidentally restarting another one's timer.
+
+## Vue adapter
+
+Vue uses `useFloatingPresenceStack()` with the same core options and actions,
+but the template owns every rendered surface. `records`, `snapshot`, and
+`paused` are reactive refs; `add`, `close`, `remove`, `pause`, `resume`, and
+`subscribe` mirror the shared context.
+
+```vue
+<script setup lang="ts">
+import {useFloatingPresenceStack} from '@floating-ui-plus/vue';
+
+type Notice = {title: string; description?: string};
+
+const notices = useFloatingPresenceStack<Notice>({
+  limit: 3,
+  timeout: 5000,
+});
+
+function addNotice() {
+  notices.add({title: 'Saved', description: 'Your changes are ready.'});
+}
+</script>
+
+<template>
+  <button type="button" @click="addNotice">Show notice</button>
+
+  <div
+    class="toast-viewport"
+    :data-presence-paused="notices.paused.value || undefined"
+    @mouseenter="notices.pause('pointer')"
+    @mouseleave="notices.resume('pointer')"
+  >
+    <article
+      v-for="(record, index) in notices.records.value"
+      :key="record.id"
+      class="toast"
+      :data-presence-id="record.id"
+      :data-presence-index="index"
+      :data-status="record.open ? 'open' : 'close'"
+      :data-presence-overflowed="record.overflowed || undefined"
+      :style="{'--floating-presence-index': index}"
+      role="status"
+      @transitionend="!record.open && notices.remove(record.id)"
+    >
+      <strong>{{ record.value.title }}</strong>
+      <p v-if="record.value.description">{{ record.value.description }}</p>
+      <button type="button" @click="notices.close(record.id)">Dismiss</button>
+    </article>
+  </div>
+</template>
+```
+
+Keep a closed record rendered until its exit transition finishes, then call
+`remove(record.id)`. Do not use `v-if="record.open"` on the surface itself or
+the exit state will be removed before it can run. Vue owns the layout and does
+not select a native Top Layer mode for this composable.
+
+For a fixed Vue surface that should use native Popover or dialog behavior, pair
+the rendered element with `useFloatingTopLayer()`. That hook manages only the
+native lifecycle; it does not position or style the element. For custom
+in-flow exit motion, use `FloatingTransition` or `useFloatingTransition()`.
+
+## Shared controller contract
+
+`FloatingPresenceStack` and `createFloatingPresenceStack()` are also exported
+from `@floating-ui-plus/web`. Both adapters use this record shape:
+
+| API | Contract |
+| --- | --- |
+| `limit` | Maximum number of simultaneously open entries; defaults to `3`. |
+| `timeout` | Default auto-close time in milliseconds; `0` disables auto-close. |
+| `add(value, options?)` | Adds an entry and returns its id. `options` accepts `id` and a per-entry `timeout`. |
+| `close(id, overflowed?)` | Starts the close phase; `overflowed` marks a limit-driven close. |
+| `remove(id)` | Removes a closed entry after the renderer's exit transition. |
+| `pause(reason?)` / `resume(reason?)` | Pauses or resumes timers by named, overlapping reasons. |
+| `snapshot` | Contains `records` and `paused`; records contain `id`, `value`, `open`, `overflowed`, and `remaining`. |
+
+The Web Component additionally provides `configure()`, `options`,
+`exitDuration`, `topLayer`, `presencechange`, and declarative template
+bindings. Vue exposes reactive `snapshot`, `records`, and `paused` through the
+composable and leaves exit rendering to the template.

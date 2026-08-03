@@ -1,0 +1,53 @@
+---
+title: Components
+description: Special Web Components and Vue building blocks provided by Floating UI Plus.
+---
+
+Floating UI Plus keeps positioning and interaction state framework-neutral, but
+also provides a small set of renderer-aware components for recurring surface
+patterns. These components do not impose visual styles: your application still
+owns markup details, layout, ARIA labels, and transitions.
+
+## Start with the adapter
+
+- [Web Components installation](/docs/guides/installation/web-components) for
+  declarative Custom Elements and native HTML templates.
+- [Vue framework guide](/docs/frameworks) for Vue components, composables, and
+  renderer-owned transitions.
+- [Styling surfaces](/docs/guides/styling/surfaces) for sizing, safe areas,
+  backdrops, and responsive surface CSS.
+
+## Special components
+
+| Pattern | Web Components | Vue | Use it for |
+| --- | --- | --- | --- |
+| Transient presence | `<floating-presence-stack>` | `useFloatingPresenceStack()` | Bounded, timed notifications with pause/resume and exit presence |
+| Native surface lifecycle | `<floating-transition>` | `FloatingTransition`, `useFloatingTransition()` | Keep a custom surface mounted while its close transition runs |
+| Native Top Layer | Native surface options | `useFloatingTopLayer()` | Connect a renderer-owned fixed surface to Popover or dialog behavior |
+| Surface composition | `<floating-root>`, `<floating-content>`, `<floating-portal>`, `<floating-overlay>` | `FloatingRoot`, `FloatingContent`, `FloatingPortal`, `FloatingOverlay` | Compose anchored surfaces, portals, and custom modal overlays |
+| Query rendering | `<floating-query>`, `<floating-results>` | `useQuery()`, `FloatingResults` | Connect editable query state to result phases and keyboard navigation |
+| Collections | `<floating-list>`, `<floating-tree>`, `<floating-composite>` | `FloatingList`, `FloatingTree`, `Composite` | Ordered navigation, nested surfaces, and grid-like roving focus |
+
+## Which one should I use?
+
+Use a normal root and content surface for an anchored popover, menu, tooltip,
+or dialog. Use the [popover and dialog guide](/docs/guides/popover) when the
+surface should use the browser's native top layer, and the [animation guide](/docs/guides/animation)
+when it needs entry or exit motion.
+
+Use the [presence stack guide](/docs/components/presence-stack) when the
+application creates transient records such as toasts, status messages, or
+undo notices. The stack manages bounded records and their timing; the
+application renders and styles each surface.
+
+For searchable surfaces, start with the [query and search recipes](/docs/guides/usage)
+and prefer `useQuery()`/`<floating-query>` for new work. The older combobox
+workflow remains available for form-associated selected-value behavior.
+
+## Shared responsibility
+
+The package provides lifecycle state, positioning, interaction plugins, and
+the bindings needed by the renderer. It does not choose a product's visual
+language or a universal overflow policy. In particular, notification stacks
+and custom surfaces need application CSS for placement, safe-area insets,
+stack layout, and responsive sizing.

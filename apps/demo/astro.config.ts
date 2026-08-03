@@ -55,6 +55,10 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Components',
+          items: [{autogenerate: {directory: 'docs/components'}}],
+        },
+        {
           label: 'Styling',
           // Let Starlight discover this documentation group. This avoids a
           // broken docs route when a page is added, renamed, or moved during

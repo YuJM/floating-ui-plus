@@ -131,13 +131,15 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-size">
               Reference
             </button>
-            <template slot="content">
-              <div class="mw-panel mw-panel-paper mw-panel-size">
-                <strong>Floating content</strong>
-                <span>One</span><span>Two</span><span>Three</span>
-                <span>Four</span><span>Five</span>
-              </div>
-            </template>
+            <div
+              slot="floating"
+              top-layer="none"
+              class="mw-panel mw-panel-paper mw-panel-size"
+            >
+              <strong>Floating content</strong>
+              <span>One</span><span>Two</span><span>Three</span>
+              <span>Four</span><span>Five</span>
+            </div>
           </floating-root>
         </div>
       </div>
@@ -187,9 +189,13 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
             <button slot="reference" class="mw-reference mw-reference-hide">
               Reference
             </button>
-            <template slot="content">
-              <div class="mw-panel mw-panel-paper mw-panel-hide">Floating</div>
-            </template>
+            <div
+              slot="floating"
+              top-layer="none"
+              class="mw-panel mw-panel-paper mw-panel-hide"
+            >
+              Floating
+            </div>
           </floating-root>
         </div>
       </div>
@@ -433,6 +439,7 @@ const [offsetExample, shiftExample, flipExample, arrowExample, sizeExample, auto
       if (shiftStage) shiftStage.scrollLeft = 360;
       if (flipStage) flipStage.scrollTop = 160;
       if (arrowStage) arrowStage.scrollLeft = 520;
+      if (sizeStage) sizeStage.scrollTop = 280;
       if (autoStage) autoStage.scrollTop = 130;
       if (hideStage) hideStage.scrollTop = 160;
       void Promise.all([
