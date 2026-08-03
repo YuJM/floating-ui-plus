@@ -488,12 +488,17 @@ test("keeps Vue middleware surfaces and arrows visible without popup scrollbars"
       })(),
       arrow: arrow && arrowPanel ? {arrow: box(arrow), panel: box(arrowPanel)} : null,
       stages: [...demo.querySelectorAll<HTMLElement>(".vue-mw-stage")].map((stage) => ({
+        scrollbarGutter: getComputedStyle(stage).scrollbarGutter,
         x: getComputedStyle(stage).overflowX,
         y: getComputedStyle(stage).overflowY,
         scrollWidth: stage.scrollWidth,
         clientWidth: stage.clientWidth,
         scrollHeight: stage.scrollHeight,
         clientHeight: stage.clientHeight,
+        scrollbar: {
+          width: getComputedStyle(stage, "::-webkit-scrollbar").width,
+          height: getComputedStyle(stage, "::-webkit-scrollbar").height,
+        },
       })),
     };
   });
@@ -506,6 +511,8 @@ test("keeps Vue middleware surfaces and arrows visible without popup scrollbars"
   expect(metrics.arrow!.arrow.bottom).toBeLessThanOrEqual(metrics.arrow!.panel.bottom + 8);
   expect(metrics.stages.some((stage) => stage.x === "auto" && stage.scrollWidth > stage.clientWidth)).toBe(true);
   expect(metrics.stages.some((stage) => stage.y === "auto" && stage.scrollHeight > stage.clientHeight)).toBe(true);
+  expect(metrics.stages.every((stage) => stage.scrollbarGutter === "stable")).toBe(true);
+  expect(metrics.stages.every((stage) => stage.scrollbar.width === "10px" && stage.scrollbar.height === "10px")).toBe(true);
   for (const panel of await page.locator(".vue-mw-panel").all()) {
     const box = await panel.boundingBox();
     expect(box).not.toBeNull();
