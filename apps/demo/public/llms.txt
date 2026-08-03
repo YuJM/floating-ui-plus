@@ -20,6 +20,17 @@ Use this index to find the documentation most relevant to an implementation.
 - [Getting started](https://fup.polcaneli.com/docs/getting-started): Install Floating UI Plus and choose the right package.
 
 
+## Components
+
+- [Components](https://fup.polcaneli.com/docs/components): Special Web Components and Vue building blocks provided by Floating UI Plus.
+
+- [Presence stack](https://fup.polcaneli.com/docs/components/presence-stack): Render timed, pausable, and dismissible presence entries such as toasts.
+
+- [Query and results](https://fup.polcaneli.com/docs/components/query): Build searchable floating results with Custom Elements.
+
+- [Root and content](https://fup.polcaneli.com/docs/components/root): Position and coordinate one floating surface with a Custom Element.
+
+
 ## Guides
 
 - [Entry and exit animation](https://fup.polcaneli.com/docs/guides/animation): Animate native Popover and dialog surfaces with CSS discrete transitions.
