@@ -1,5 +1,13 @@
 # @floating-ui-plus/vue
 
+## 0.8.2
+
+### Patch Changes
+
+- 4962a6c: Document the shared component families, presence stack, root/content surfaces,
+  and query/results APIs for Web Components and Vue.
+  - @floating-ui-plus/web@0.8.2
+
 ## 0.8.1
 
 ### Patch Changes
