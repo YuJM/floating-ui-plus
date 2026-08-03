@@ -52,12 +52,12 @@ can try the behavior without leaving the documentation.
 ## Mock server for the async combobox
 
 The async combobox calls `/api/demo/destinations` with `q`, `limit`, and
-`cursor` just as it would call a remote API. In development, MSW starts in the
-browser and serves 480 deterministic fake records in cursor pages. For a
-Cloudflare Pages build, set `PUBLIC_ENABLE_DEMO_MOCK_SERVER=true` to publish
-the same browser-only mock API; Pages only needs to serve the generated
-`public/mockServiceWorker.js` asset. Leave the flag unset when a real API owns
-that route.
+`cursor` just as it would call a remote API. By default, MSW starts in the
+browser in both development and static builds and serves 240 deterministic fake
+records in cursor pages. The generated `public/mockServiceWorker.js` asset is
+served with the demo. Set `PUBLIC_ENABLE_DEMO_MOCK_SERVER=false` when a real API
+owns that route; any other value, including an unset variable, keeps the mock
+server enabled.
 
 ## Verification
 

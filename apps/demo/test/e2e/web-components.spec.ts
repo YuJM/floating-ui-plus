@@ -808,6 +808,45 @@ test("all middleware fixtures expose their observable behavior", async ({
   expect(inlineMetrics.withDistance).toBeLessThanOrEqual(2);
 });
 
+test("async Web Component server combobox renders, selects, and paginates", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/demo/destinations")) {
+      requests.push(request.url());
+    }
+  });
+
+  await page.goto("/combobox?framework=wc&source=server");
+  const input = page.locator("#remote-destination-search");
+  const popup = page.locator(".async-combobox-popup");
+
+  await input.fill("japan");
+  const firstResult = popup.getByRole("option", {name: /^Japan/});
+  await expect(firstResult).toBeVisible();
+  expect(
+    requests.some(
+      (url) => new URL(url).searchParams.get("q") === "japan",
+    ),
+  ).toBe(true);
+
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(input).toHaveValue("Japan");
+  await expect(popup).toBeHidden();
+
+  await input.fill("");
+  await expect(popup.getByRole("option")).toHaveCount(8);
+  await expect(popup).toHaveCSS("max-height", "384px");
+  await expect(popup.getByRole("button", {name: "Show next 8"})).toBeVisible();
+  await popup.getByRole("button", {name: "Show next 8"}).click();
+  await expect(popup.getByRole("option")).toHaveCount(16);
+  await expect(popup.locator(".combobox-pagination-progress")).toHaveText(
+    /16\s+of\s*240 loaded/,
+  );
+});
+
 test("keeps middleware surfaces and arrows visible without popup scrollbars", async ({
   page,
 }) => {

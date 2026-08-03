@@ -345,7 +345,7 @@ floating-arrow.tooltip-arrow::part(path) { fill: currentColor; }
 floating-combobox[data-loading="true"] .combobox-loading-indicator { display: block; }
 @keyframes combobox-loading-spin { to { transform: rotate(360deg); } }
 .combobox-popup { z-index: 60; width: min(400px,calc(100vw - 36px)); overflow: hidden; padding: 6px; border: 1px solid rgba(23,37,84,.18); border-radius: 12px; background: var(--paper); box-shadow: 0 22px 55px rgba(23,37,84,.22); }
-.async-combobox-popup { --async-combobox-popup-max-height: min(26rem, calc(100dvh - 32px)); max-height: var(--async-combobox-popup-max-height); overflow: hidden; }
+.async-combobox-popup { --async-combobox-popup-max-height: min(24rem, calc(100dvh - 32px)); max-height: var(--async-combobox-popup-max-height); overflow: hidden; }
 .async-combobox-popup { display: block; max-height: calc(var(--async-combobox-popup-max-height) - 12px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgba(91,90,181,.52) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
 .async-combobox-popup::-webkit-scrollbar { width: 10px; }
 .async-combobox-popup::-webkit-scrollbar-track { background: transparent; }

@@ -133,6 +133,8 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
   import {searchDestinationsOnServer} from '../../server-destination-search';
   import {initializeExample} from './initialize-example';
 
+  const SERVER_QUERY_MAX_HEIGHT = 24 * 16;
+
   initializeExample('async-combobox', (scope) => {
     const floating = FloatingRootElement.query(
       scope,
@@ -181,7 +183,10 @@ import {FAKE_SERVER_DESTINATION_TOTAL} from '../../fake-server-destinations';
           padding: 18,
           rootBoundary: 'viewport',
           apply({availableHeight, elements}) {
-            const maxHeight = `${Math.max(0, availableHeight)}px`;
+            const maxHeight = `${Math.max(
+              0,
+              Math.min(availableHeight, SERVER_QUERY_MAX_HEIGHT),
+            )}px`;
             elements.floating.style.setProperty(
               '--async-combobox-popup-max-height',
               maxHeight,

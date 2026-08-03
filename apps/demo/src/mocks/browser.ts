@@ -6,14 +6,12 @@ const worker = setupWorker(...destinationHandlers);
 let ready: Promise<void> | undefined;
 
 /**
- * Starts the browser-only demo API. Production builds opt in explicitly so a
- * deployed static demo can show the same HTTP lifecycle without a Pages
- * Function; a real API can take over by leaving the flag unset.
+ * Starts the browser-only demo API. The static demo uses the same deterministic
+ * HTTP lifecycle by default; set the flag to `false` when a real API owns the
+ * route.
  */
 export function enableDemoMockServer() {
-  const enabled =
-    import.meta.env.DEV ||
-    import.meta.env.PUBLIC_ENABLE_DEMO_MOCK_SERVER === 'true';
+  const enabled = import.meta.env.PUBLIC_ENABLE_DEMO_MOCK_SERVER !== 'false';
   if (!enabled) return Promise.resolve();
   ready ??= worker
     .start({

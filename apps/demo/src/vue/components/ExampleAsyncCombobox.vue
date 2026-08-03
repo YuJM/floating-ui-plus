@@ -15,13 +15,16 @@ import {
   useQuery,
   useSearch,
 } from '@floating-ui-plus/vue';
-import {shallowRef} from 'vue';
+import {shallowRef, watch} from 'vue';
 import type {MultilingualDestination} from '../../multilingual-destinations';
 import {
   FAKE_SERVER_DESTINATION_PAGE_SIZE,
   FAKE_SERVER_DESTINATION_TOTAL,
 } from '../../fake-server-destinations';
 import {searchDestinationsOnServer} from '../../server-destination-search';
+
+const SERVER_QUERY_MAX_HEIGHT = 24 * 16;
+let floatingElement: HTMLElement | null = null;
 
 const search = useSearch<MultilingualDestination>({
   source: searchDestinationsOnServer,
@@ -62,6 +65,19 @@ const {
       `${state.items.length} remote destinations available`,
   },
 });
+// Vue keeps FloatingContent mounted while closed. Clear a stale viewport cap
+// so the next open can let flip measure the surface before size constrains it.
+watch(
+  open,
+  (isOpen) => {
+    if (isOpen || !floatingElement) return;
+    floatingElement.style.removeProperty('max-height');
+    floatingElement.style.removeProperty(
+      '--vue-async-combobox-popup-max-height',
+    );
+  },
+  {flush: 'sync'},
+);
 const options = {
   placement: 'bottom-start',
   middleware: [
@@ -72,7 +88,19 @@ const options = {
       padding: 18,
       rootBoundary: 'viewport',
       apply({availableHeight, elements}) {
-        const maxHeight = `${Math.max(0, availableHeight)}px`;
+        floatingElement = elements.floating;
+        // autoUpdate can still run while the retained surface is closed.
+        if (!open.value) {
+          elements.floating.style.removeProperty('max-height');
+          elements.floating.style.removeProperty(
+            '--vue-async-combobox-popup-max-height',
+          );
+          return;
+        }
+        const maxHeight = `${Math.max(
+          0,
+          Math.min(availableHeight, SERVER_QUERY_MAX_HEIGHT),
+        )}px`;
         elements.floating.style.setProperty(
           '--vue-async-combobox-popup-max-height',
           maxHeight,

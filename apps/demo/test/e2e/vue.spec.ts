@@ -645,7 +645,7 @@ test("async Vue server combobox renders loading and ignores stale requests", asy
   page,
 }) => {
   await page.goto("/combobox?framework=vue&source=server");
-  const input = page.getByRole("combobox", { name: "Remote destination" });
+  const input = page.locator("#vue-remote-search");
   const popup = page.locator(".vue-async-combobox-popup");
 
   await input.focus();
@@ -668,4 +668,47 @@ test("async Vue server combobox renders loading and ignores stale requests", asy
   await input.press("Enter");
   await expect(input).toHaveValue("Japan");
   await expect(popup).toBeHidden();
+});
+
+test("async Vue server combobox renders, selects, and paginates", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/demo/destinations")) {
+      requests.push(request.url());
+    }
+  });
+
+  await page.goto("/combobox?framework=vue&source=server");
+  const input = page.locator("#vue-remote-search");
+  const popup = page.locator(".vue-async-combobox-popup");
+
+  await input.focus();
+  await expect(input).toHaveCSS("box-sizing", "border-box");
+  await expect(input).toHaveCSS("padding", "13px 42px 13px 14px");
+  await expect(input).toHaveCSS("border-radius", "10px");
+  await expect(input).toHaveCSS("border-top-width", "1px");
+
+  await input.fill("japan");
+  const firstResult = popup.getByRole("option", {name: /^Japan/});
+  await expect(firstResult).toBeVisible();
+  expect(
+    requests.some(
+      (url) => new URL(url).searchParams.get("q") === "japan",
+    ),
+  ).toBe(true);
+
+  await input.press("ArrowDown");
+  await input.press("Enter");
+  await expect(input).toHaveValue("Japan");
+  await expect(popup).toBeHidden();
+
+  await input.fill("");
+  await expect(popup.getByRole("option")).toHaveCount(8);
+  await expect(popup).toHaveCSS("max-height", "384px");
+  await expect(popup.getByRole("button", {name: "Show next 8"})).toBeVisible();
+  await popup.getByRole("button", {name: "Show next 8"}).click();
+  await expect(popup.getByRole("option")).toHaveCount(16);
+  await expect(popup.getByText("16 of 240 loaded")).toBeVisible();
 });

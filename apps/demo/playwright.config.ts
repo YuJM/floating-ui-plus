@@ -42,9 +42,6 @@ export default defineConfig({
     cwd: '../..',
     url: 'http://127.0.0.1:4173',
     reuseExistingServer: false,
-    env: {
-      PUBLIC_ENABLE_DEMO_MOCK_SERVER: 'true',
-    },
     timeout: 60_000,
     gracefulShutdown: {signal: 'SIGTERM', timeout: 1_000},
     stdout: 'ignore',

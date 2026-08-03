@@ -128,10 +128,13 @@
   .vue-combobox-popup:not(.vue-async-combobox-popup) { --vue-combobox-popup-max-height: min(26rem, calc(100dvh - 32px)); max-height: var(--vue-combobox-popup-max-height); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgb(38 142 97 / .52) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
   .vue-combobox-shell { position: relative; margin-top: 24px; }
   .vue-combobox-label { display: block; margin-bottom: 7px; color: #426057; font: 9px ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  .vue-combobox-input { box-sizing: border-box; width: 100%; padding: 13px 42px 13px 14px; border: 1px solid rgb(23 58 50 / .22); border-radius: 10px; outline: 0; color: #173a32; background: #fafffd; font-size: 14px; transition: border-color .16s ease, box-shadow .16s ease; }
+  .vue-combobox-input::placeholder { color: #899f96; }
+  .vue-combobox-input:focus { border-color: #268e61; box-shadow: 0 0 0 4px rgb(66 184 131 / .18); }
   .vue-combobox-icon { position: absolute; right: 14px; bottom: 12px; color: #268e61; font-size: 19px; pointer-events: none; }
   .vue-combobox-loading-indicator { position: absolute; right: 16px; bottom: 15px; width: 13px; height: 13px; border: 2px solid rgb(38 142 97 / .25); border-top-color: #268e61; border-radius: 50%; animation: vue-combobox-loading-spin .7s linear infinite; pointer-events: none; }
   @keyframes vue-combobox-loading-spin { to { transform: rotate(360deg); } }
-  .vue-combobox-popup.vue-async-combobox-popup { --vue-async-combobox-popup-max-height: min(26rem, calc(100dvh - 32px)); max-height: var(--vue-async-combobox-popup-max-height); overflow: hidden; }
+  .vue-combobox-popup.vue-async-combobox-popup { --vue-async-combobox-popup-max-height: min(24rem, calc(100dvh - 32px)); max-height: var(--vue-async-combobox-popup-max-height); overflow: hidden; }
   .vue-async-combobox-scroll { max-height: calc(var(--vue-async-combobox-popup-max-height) - 12px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: rgb(38 142 97 / .52) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
   .vue-async-combobox-scroll::-webkit-scrollbar { width: 10px; }
   .vue-async-combobox-scroll::-webkit-scrollbar-track { background: transparent; }
