@@ -1,0 +1,110 @@
+---
+title: Vue
+description: Choose between Vue composables and declarative floating components.
+---
+
+The Vue adapter gives you two equivalent entry points:
+
+- `useFloating()` for a component that already owns its reference and surface
+  elements.
+- `FloatingRoot` with `FloatingReference` and `FloatingContent` when descendants
+  should receive the controller through Vue's component tree.
+
+## Renderless composition
+
+Use `useFloating()` when your component needs complete control over its markup,
+ARIA, and presence policy.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { autoUpdate, click, dismiss, offset, useFloating } from "@floating-ui-plus/vue";
+
+const open = ref(false);
+const reference = ref<HTMLElement | null>(null);
+const floating = ref<HTMLElement | null>(null);
+const menu = useFloating(reference, floating, {
+  open,
+  onOpenChange: (next) => (open.value = next),
+  middleware: [offset(8)],
+  whileElementsMounted: autoUpdate,
+}).pipe(click(), dismiss());
+</script>
+
+<template>
+  <button ref="reference" v-bind="menu.referenceAttrs">Open</button>
+  <div v-if="open" ref="floating" v-bind="menu.floatingAttrs">
+    Menu content
+  </div>
+</template>
+```
+
+`v-floating` is available when you prefer the directive form. The application
+still decides which element to render, how it is styled, and whether exit
+presence keeps it mounted.
+
+## Declarative composition
+
+Use the component layer when a reference and surface should share one provided
+controller.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import {
+  FloatingClose,
+  FloatingContent,
+  FloatingReference,
+  FloatingRoot,
+  click,
+  dismiss,
+  offset,
+} from "@floating-ui-plus/vue";
+
+const open = ref(false);
+const options = { placement: "bottom-start", middleware: [offset(8)] };
+const plugins = [click(), dismiss()];
+</script>
+
+<template>
+  <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
+    <FloatingReference>Open settings</FloatingReference>
+    <FloatingContent>
+      Settings
+      <FloatingClose>Close</FloatingClose>
+    </FloatingContent>
+  </FloatingRoot>
+</template>
+```
+
+`FloatingContent` uses the Popover API by default. Use `top-layer="none"` for
+an intentionally positioned surface, or `as="dialog"` for a native modal
+dialog. `role()` changes ARIA semantics; it does not select Popover or Dialog.
+
+Keep a native surface in the Vue tree. Add `FloatingPortal` only when the
+surface must escape a clipping ancestor or use a different DOM target.
+
+## Search and transient UI
+
+Use `useSearch()` and `useQuery()` for query-driven input and result state.
+Use `useFloatingPresenceStack()` for transient notices whose records need
+reactive Vue rendering. The application owns result markup, ARIA labels,
+transition styling, and removal after an exit transition.
+
+See [Components](/docs/components), the [query guide](/docs/components/query),
+the [presence stack guide](/docs/components/presence-stack), and the
+[entry and exit animation guide](/docs/guides/animation) for focused examples.
+
+## Related APIs
+
+| API | Use it for |
+| --- | --- |
+| `useFloating()` / `v-floating` | Renderless positioning |
+| `FloatingRoot` and child components | Provided declarative composition |
+| `FloatingPortal` / `FloatingOverlay` | Custom modal and portal composition |
+| `FloatingTransition` / `useFloatingTransition()` | Exit presence for `top-layer="none"` surfaces |
+| `useSearch()` / `useQuery()` | Search lifecycle and query interaction |
+| `useFloatingPresenceStack()` | Reactive transient presence records |
+
+See the [Vue package README](https://github.com/polcaneli/floating-ui-plus/tree/main/packages/vue#readme)
+for the complete export and compatibility notes.

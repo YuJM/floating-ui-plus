@@ -15,6 +15,8 @@ Use this index to find the documentation most relevant to an implementation.
 
 - [Web Components and Vue](https://fup.polcaneli.com/docs/frameworks): Use the same Floating UI Plus contract from Custom Elements or Vue.
 
+- [Vue](https://fup.polcaneli.com/docs/frameworks/vue): Choose between Vue composables and declarative floating components.
+
 - [Web](https://fup.polcaneli.com/docs/frameworks/web): Use framework-neutral Floating UI Plus controllers with your own renderer.
 
 - [Getting started](https://fup.polcaneli.com/docs/getting-started): Install Floating UI Plus and choose the right package.

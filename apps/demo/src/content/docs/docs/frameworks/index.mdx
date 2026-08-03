@@ -7,13 +7,15 @@ import { Tabs, TabItem } from "@astrojs/starlight/components";
 
 The Web Components and Vue packages expose the same interaction model. Choose
 the tab that matches your renderer; the close contract, native top-layer rules,
-and search lifecycle remain the same.
+and search lifecycle remain the same. Detailed component-family guidance lives
+in the [Components](/docs/components) section.
 
 ## One contract, two renderers
 
 Both adapters provide a reference, a floating surface, an open model,
-interaction plugins, and an optional focus manager. The renderer still owns
-labels, classes, ARIA names, presence transitions, and result markup.
+interaction plugins, and an optional focus manager. The application owns labels,
+classes, ARIA names, transition styling, and result markup; the adapter owns
+bindings, lifecycle state, and the native surface integration.
 
 When you opt into a native surface, Floating UI Plus uses the browser's Web
 Standards APIs: the [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API)
@@ -45,11 +47,15 @@ Register the elements once, then compose a root-owned template:
 ```ts
 import "@floating-ui-plus/web-components";
 import { flip, offset, shift } from "@floating-ui-plus/web";
-import type { FloatingRootElement } from "@floating-ui-plus/web-components";
+import type {
+  FloatingOpenChangeDetail,
+  FloatingRootElement,
+} from "@floating-ui-plus/web-components";
 
 const root = document.querySelector<FloatingRootElement>("floating-root")!;
 root.middleware = [offset(8), flip(), shift({ padding: 12 })];
-root.addEventListener("openchange", ({ detail }) => {
+root.addEventListener("openchange", (event) => {
+  const { detail } = event as CustomEvent<FloatingOpenChangeDetail>;
   console.log(detail.open, detail.reason, detail.sourceEvent);
 });
 ```
