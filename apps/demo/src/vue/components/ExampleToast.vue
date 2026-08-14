@@ -13,10 +13,15 @@ interface ToastContent {
 
 const sequence = ref(0);
 const viewport = ref<HTMLElement>();
-const presence = useFloatingPresenceStack<ToastContent>({limit: 3, timeout: 5000});
+const presence = useFloatingPresenceStack<ToastContent>({
+  limit: 6,
+  timeout: 5000,
+  pauseTarget: viewport,
+  pauseOn: 'pointer focus',
+});
 const snapshot = presence.snapshot;
 const visible = computed(() => snapshot.value.records.filter((record) => record.open).reverse());
-const rendered = computed(() => [...snapshot.value.records].reverse());
+const rendered = computed(() => snapshot.value.records);
 const paused = presence.paused;
 
 function closeToast(id: string) {
@@ -29,20 +34,6 @@ function createToast() {
     title: `Notification ${id} created`,
     description: 'Your changes have been saved successfully.',
   }, {id: String(id)});
-}
-
-function pause(kind: 'pointer' | 'focus') {
-  presence.pause(kind);
-}
-
-function resume(kind: 'pointer' | 'focus') {
-  presence.resume(kind);
-}
-
-function handleFocusOut() {
-  queueMicrotask(() => {
-    if (!viewport.value?.contains(document.activeElement)) resume('focus');
-  });
 }
 
 function handleF6(event: KeyboardEvent) {
@@ -63,7 +54,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section ref="viewport" class="toast-demo vue-toast-demo" aria-label="Toast example">
+  <section class="toast-demo vue-toast-demo" aria-label="Toast example">
     <div class="toast-demo-copy">
       <span class="panel-kicker">TOAST / NON-MODAL</span>
       <h3>{{ m.pattern_toast_heading(undefined, {locale: props.locale}) }}</h3>
@@ -71,6 +62,7 @@ onBeforeUnmount(() => {
       <button class="toast-create" type="button" @click="createToast">Create notification <span aria-hidden="true">＋</span></button>
     </div>
     <div
+      ref="viewport"
       class="toast-viewport"
       :data-presence-paused="paused ? '' : undefined"
       role="region"
@@ -78,10 +70,6 @@ onBeforeUnmount(() => {
       aria-live="polite"
       aria-relevant="additions"
       aria-atomic="false"
-      @pointerenter="pause('pointer')"
-      @pointerleave="resume('pointer')"
-      @focusin="pause('focus')"
-      @focusout="handleFocusOut"
     >
         <ExampleToastItem
           v-for="(record, index) in rendered"

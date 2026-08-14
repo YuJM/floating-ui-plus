@@ -7,9 +7,15 @@ description: Render timed, pausable, and dismissible presence entries such as to
 Use it for toasts, notices, and other entries that need a shared limit,
 timeouts, pause reasons, exit presence, and eventual removal.
 
-It does not decide the visual layout or ARIA wording. The application owns the
-template markup, stacking layout, close controls, and whether the stack is a
-native Popover or an in-flow surface.
+It is headless: it does not decide color, peek spacing, or ARIA wording. It
+does own the **core host box** that pointer hit-testing depends on. The
+application owns template markup, stacking layout, close controls, and
+in-flow vs top-layer opt-out.
+
+Clones default to native `popover="manual"`. Use `top-layer="none"` when the
+stack belongs inside an application-owned layout and should be clipped or
+scrolled by its parent. Toasts are not modal content; do not use a dialog for
+them.
 
 ## Basic stack
 
@@ -26,12 +32,6 @@ native Popover or an in-flow surface.
 
 <script type="module">
   const notices = document.querySelector('#notices');
-  notices.configure({
-    limit: 3,
-    timeout: 5000,
-    exitDuration: 180,
-    topLayer: 'popover',
-  });
   notices.add({
     title: 'Saved',
     description: 'Your changes are ready.',
@@ -39,24 +39,36 @@ native Popover or an in-flow surface.
 </script>
 ```
 
-Use `topLayer: 'popover'` for a viewport-level non-modal toast stack. Use
-`topLayer: 'none'` when the stack belongs inside an application-owned layout
-and should be clipped or scrolled by its parent. Toasts are not modal content;
-do not use a dialog for them.
-
 ## Configuration
 
-`configure()` accepts the options that normally change together:
+`configure()` accepts the options that normally change together. Static
+attributes cover the same values for markup-owned configuration.
 
 | Option | Purpose |
 | --- | --- |
-| `limit` | Maximum number of open entries |
+| `limit` | Maximum number of open entries; defaults to `3` |
 | `timeout` | Milliseconds before automatic close; use `0` to keep entries open |
-| `exitDuration` | Time reserved for the exit-presence phase |
-| `topLayer` | `'popover'`, `'dialog'`, or `'none'`; use Popover or none for toasts |
+| `exitDuration` | Time reserved for the exit-presence phase. `0` (default) reads the consumer CSS discrete `display` / `overlay` length |
+| `topLayer` | Defaults to `'popover'`. Use `'none'` for in-flow stacks. `'dialog'` only when the surface is genuinely modal |
+| `pauseOn` | Space-separated `pointer` and/or `focus`. Empty (default) does not bind host pause |
+| `resumeDelay` | Delay before `resume('pointer')` after `pointerleave`; defaults to `100` |
 
-The equivalent `limit`, `timeout`, `exit-duration`, and `top-layer` attributes
-are available for static HTML. JavaScript options take precedence.
+The equivalent `limit`, `timeout`, `exit-duration`, `top-layer`, `pause-on`,
+and `resume-delay` attributes are available for static HTML. JavaScript
+options take precedence.
+
+The host is a generating box (`display: block`), not `display: contents`.
+Empty stacks use `pointer-events: none` so the page stays clickable; open or
+paused stacks raise the host to `auto` so gaps between popovers do not fall
+through. Clone surfaces get `pointer-events: auto` so buttons stay clickable
+while the empty host box is `none`.
+
+Paused `min-height` reads `--floating-presence-hit-span` from application CSS.
+Size that token to the **current** expanded stack — card height plus a fixed
+row offset times `count - 1` — not to a maximum cap. Collapsed hosts can keep
+`height: 0` so only the cards themselves receive hits. The application also
+owns paused translate: keep a fixed row (`84px` in the Toast demo) so later
+cards do not cover earlier content.
 
 ## Text and controls
 
@@ -64,44 +76,55 @@ are available for static HTML. JavaScript options take precedence.
 It supports a value path and the `$id`, `$index`, and `$remaining` placeholders.
 Use `data-presence-close` on a button inside the rendered entry. The first
 template root receives runtime markers such as `data-status`,
-`data-presence-id`, `data-presence-index`, and `data-presence-overflowed`.
+`data-presence-id`, `data-presence-index`, and `data-presence-overflowed`,
+plus `--floating-presence-index`. The host sets `--floating-presence-count`
+for visible open entries. Do not use `sibling-count()` as the count source on
+Web Components; the `<template>` sibling is included.
 
-The host reflects pause state with `data-presence-paused` and emits
-`presencechange` with the current `snapshot`.
+The host reflects pause state with `data-presence-paused`, open entries with
+`data-presence-open`, and emits `presencechange` with the current `snapshot`.
 
 ## Pause and resume
 
-Pause independently for each interaction reason, then resume that same
-reason when the interaction ends:
+Pause is opt-in. Set `pause-on="pointer focus"` to bind the host, or call
+`pause()` / `resume()` yourself. Named reasons overlap, so every reason must
+be resumed before the timeout continues:
 
 ```ts
 notices.pause('pointer');
 notices.pause('focus');
 
-// Both reasons must be resumed before the timeout continues.
 notices.resume('pointer');
 notices.resume('focus');
 ```
 
-This lets pointer hover, keyboard focus, and application-specific policies
-coexist without one interaction accidentally restarting another one's timer.
+Pointer leave waits for `resume-delay` so moving across the gap between
+stacked popovers does not fold the stack. A `pointerenter` in that window
+cancels the pending resume. Focus out keeps the pause while
+`contains(activeElement)` is true.
 
 ## Vue adapter
 
 Vue uses `useFloatingPresenceStack()` with the same core options and actions,
 but the template owns every rendered surface. `records`, `snapshot`, and
 `paused` are reactive refs; `add`, `close`, `remove`, `pause`, `resume`, and
-`subscribe` mirror the shared context.
+`subscribe` mirror the shared context. Pass `pauseTarget` to bind the same
+opt-in pause listeners and `--floating-presence-count` token; the composable
+does not style that node.
 
 ```vue
 <script setup lang="ts">
+import {ref} from 'vue';
 import {useFloatingPresenceStack} from '@floating-ui-plus/vue';
 
 type Notice = {title: string; description?: string};
 
+const viewport = ref<HTMLElement>();
 const notices = useFloatingPresenceStack<Notice>({
   limit: 3,
   timeout: 5000,
+  pauseTarget: viewport,
+  pauseOn: 'pointer focus',
 });
 
 function addNotice() {
@@ -113,10 +136,9 @@ function addNotice() {
   <button type="button" @click="addNotice">Show notice</button>
 
   <div
+    ref="viewport"
     class="toast-viewport"
     :data-presence-paused="notices.paused.value || undefined"
-    @mouseenter="notices.pause('pointer')"
-    @mouseleave="notices.resume('pointer')"
   >
     <article
       v-for="(record, index) in notices.records.value"
@@ -140,13 +162,13 @@ function addNotice() {
 
 Keep a closed record rendered until its exit transition finishes, then call
 `remove(record.id)`. Do not use `v-if="record.open"` on the surface itself or
-the exit state will be removed before it can run. Vue owns the layout and does
-not select a native Top Layer mode for this composable.
+the exit state will be removed before it can run.
 
 For a fixed Vue surface that should use native Popover or dialog behavior, pair
-the rendered element with `useFloatingTopLayer()`. That hook manages only the
-native lifecycle; it does not position or style the element. For custom
-in-flow exit motion, use `FloatingTransition` or `useFloatingTransition()`.
+the rendered element with `useFloatingTopLayer()`. That hook defaults to
+Popover and manages only the native lifecycle; it does not position or style
+the element. For custom in-flow exit motion, use `FloatingTransition` or
+`useFloatingTransition()`.
 
 ## Shared controller contract
 
@@ -161,9 +183,11 @@ from `@floating-ui-plus/web`. Both adapters use this record shape:
 | `close(id, overflowed?)` | Starts the close phase; `overflowed` marks a limit-driven close. |
 | `remove(id)` | Removes a closed entry after the renderer's exit transition. |
 | `pause(reason?)` / `resume(reason?)` | Pauses or resumes timers by named, overlapping reasons. |
+| `bindPresenceStackPause()` | Opt-in pointer/focus pause on an application-owned host. |
 | `snapshot` | Contains `records` and `paused`; records contain `id`, `value`, `open`, `overflowed`, and `remaining`. |
 
 The Web Component additionally provides `configure()`, `options`,
-`exitDuration`, `topLayer`, `presencechange`, and declarative template
-bindings. Vue exposes reactive `snapshot`, `records`, and `paused` through the
-composable and leaves exit rendering to the template.
+`exitDuration`, `topLayer`, `pauseOn`, `resumeDelay`, `presencechange`, the
+host box, `--floating-presence-count`, `--floating-presence-hit-span`, and
+declarative template bindings. Vue exposes reactive `snapshot`, `records`,
+and `paused` through the composable, plus opt-in `pauseTarget` / `pauseOn`.

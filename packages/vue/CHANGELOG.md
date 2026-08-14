@@ -1,5 +1,16 @@
 # @floating-ui-plus/vue
 
+## 0.9.0
+
+### Minor Changes
+
+- Presence stacks default to native Popover, expose a host hit box and `--floating-presence-count`, and add opt-in `pause-on` / Vue `pauseTarget` so gaps between stacked surfaces can keep pause.
+
+### Patch Changes
+
+- Updated dependencies
+  - @floating-ui-plus/web@0.9.0
+
 ## 0.8.2
 
 ### Patch Changes

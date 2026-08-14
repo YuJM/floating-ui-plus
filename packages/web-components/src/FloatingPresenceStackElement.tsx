@@ -1,8 +1,11 @@
 import {c, useEffect, useHost, useLayoutEffect} from 'atomico';
 import {
+  bindPresenceStackPause,
   createFloatingTopLayer,
   FloatingPresenceStack,
   FloatingTransition,
+  getNativeExitTransitionDuration,
+  parsePresencePauseOn,
   type FloatingPresenceStackContext,
   type FloatingPresenceStackOptions,
   type FloatingTopLayer,
@@ -12,8 +15,20 @@ import {
   type PresenceStackSnapshot,
 } from '@floating-ui-plus/web';
 
-const contentsStyles = `
-  :host,
+const hostStyles = `
+  :host {
+    display: block;
+    pointer-events: none;
+  }
+  :host:has([data-status="open"]),
+  :host:has([data-presence-id]:popover-open),
+  :host([data-presence-open]),
+  :host([data-presence-paused]) {
+    pointer-events: auto;
+  }
+  :host([data-presence-paused]) {
+    min-height: var(--floating-presence-hit-span, auto);
+  }
   slot {
     display: contents;
   }
@@ -30,6 +45,10 @@ export interface FloatingPresenceStackElementOptions
   exitDuration?: number | undefined;
   /** Native top-layer primitive used by every cloned surface. */
   topLayer?: FloatingTopLayer | undefined;
+  /** Space-separated `pointer` and/or `focus`. Empty disables host pause. */
+  pauseOn?: string | undefined;
+  /** Delay before `resume('pointer')` after `pointerleave`. */
+  resumeDelay?: number | undefined;
 }
 
 interface FloatingPresenceStackHost extends HTMLElement {
@@ -37,6 +56,8 @@ interface FloatingPresenceStackHost extends HTMLElement {
   timeoutMs: number;
   exitDuration: number;
   topLayer: FloatingTopLayer;
+  pauseOn: string;
+  resumeDelay: number;
   syncAttributeOptions(options: FloatingPresenceStackElementOptions): void;
   connect(): () => void;
 }
@@ -45,6 +66,7 @@ interface PresenceEntry<T> {
   nodes: Node[];
   surface: HTMLElement;
   transition: FloatingTransition;
+  duration: {close: number};
   unsubscribeTransition: () => void;
   abortController: AbortController;
   record: PresenceStackRecord<T>;
@@ -56,7 +78,13 @@ function getTopLayer(
   fallback: FloatingTopLayer,
 ): FloatingTopLayer {
   const candidate = (surface as HTMLElement & {topLayer?: unknown}).topLayer;
-  if (candidate === 'popover' || candidate === 'dialog') return candidate;
+  if (
+    candidate === 'popover' ||
+    candidate === 'dialog' ||
+    candidate === 'none'
+  ) {
+    return candidate;
+  }
   return surface.localName === 'dialog' ? 'dialog' : fallback;
 }
 
@@ -102,14 +130,26 @@ const FloatingPresenceStackBase = c(
           ? {exitDuration: host.exitDuration}
           : {}),
         ...(host.hasAttribute('top-layer') ? {topLayer: host.topLayer} : {}),
+        ...(host.hasAttribute('pause-on') ? {pauseOn: host.pauseOn} : {}),
+        ...(host.hasAttribute('resume-delay')
+          ? {resumeDelay: host.resumeDelay}
+          : {}),
       });
-    }, [host, host.limit, host.timeoutMs, host.exitDuration, host.topLayer]);
+    }, [
+      host,
+      host.limit,
+      host.timeoutMs,
+      host.exitDuration,
+      host.topLayer,
+      host.pauseOn,
+      host.resumeDelay,
+    ]);
 
     useEffect(() => host.connect(), [host]);
 
     return (
       <host shadowDom>
-        <style>{contentsStyles}</style>
+        <style>{hostStyles}</style>
         <slot />
       </host>
     );
@@ -129,8 +169,18 @@ const FloatingPresenceStackBase = c(
       },
       topLayer: {
         type: String,
-        value: (): FloatingTopLayer => 'none',
+        value: (): FloatingTopLayer => 'popover',
         attr: 'top-layer',
+      },
+      pauseOn: {
+        type: String,
+        value: (): string => '',
+        attr: 'pause-on',
+      },
+      resumeDelay: {
+        type: Number,
+        value: (): number => 100,
+        attr: 'resume-delay',
       },
     },
   },
@@ -152,9 +202,13 @@ export class FloatingPresenceStackElement<
   #codeOptions: FloatingPresenceStackElementOptions = {};
   #options: FloatingPresenceStackOptions = {limit: 3, timeout: 5000};
   #exitDuration = 0;
-  #topLayer: FloatingTopLayer = 'none';
+  #topLayer: FloatingTopLayer = 'popover';
+  #pauseOn = '';
+  #resumeDelay = 100;
+  #unbindPause: (() => void) | undefined;
   #controller = new FloatingPresenceStack<T>(this.#options);
   #entries = new Map<string, PresenceEntry<T>>();
+  #openFrames = new Map<string, number[]>();
 
   get updateComplete() {
     return this.updated;
@@ -174,6 +228,8 @@ export class FloatingPresenceStackElement<
       ...this.#options,
       exitDuration: this.#exitDuration,
       topLayer: this.#topLayer,
+      pauseOn: this.#pauseOn,
+      resumeDelay: this.#resumeDelay,
     };
   }
 
@@ -221,7 +277,9 @@ export class FloatingPresenceStackElement<
       limit: 3,
       timeout: 5000,
       exitDuration: 0,
-      topLayer: 'none' as FloatingTopLayer,
+      topLayer: 'popover' as FloatingTopLayer,
+      pauseOn: '',
+      resumeDelay: 100,
       ...this.#attributeOptions,
       ...this.#codeOptions,
     };
@@ -231,7 +289,21 @@ export class FloatingPresenceStackElement<
     };
     this.#controller.setOptions(this.#options);
     this.#exitDuration = Math.max(0, options.exitDuration ?? 0);
-    this.#topLayer = options.topLayer ?? 'none';
+    this.#topLayer = options.topLayer ?? 'popover';
+    this.#pauseOn = options.pauseOn ?? '';
+    this.#resumeDelay = Math.max(0, options.resumeDelay ?? 100);
+    this.#bindPause();
+  }
+
+  #bindPause() {
+    this.#unbindPause?.();
+    this.#unbindPause = undefined;
+    const kinds = parsePresencePauseOn(this.#pauseOn);
+    if (kinds.size === 0) return;
+    this.#unbindPause = bindPresenceStackPause(this, this.#controller, {
+      kinds,
+      resumeDelay: this.#resumeDelay,
+    });
   }
 
   connect() {
@@ -249,10 +321,13 @@ export class FloatingPresenceStackElement<
       );
     });
 
+    this.#bindPause();
     this.#sync(this.snapshot);
 
     return () => {
       unsubscribe();
+      this.#unbindPause?.();
+      this.#unbindPause = undefined;
       this.#clearEntries();
       this.#controller.destroy();
       this.#controller = new FloatingPresenceStack<T>(this.#options);
@@ -261,6 +336,10 @@ export class FloatingPresenceStackElement<
 
   #sync(snapshot: PresenceStackSnapshot<T>) {
     const visible = snapshot.records.filter((record) => record.open).reverse();
+    this.style.setProperty(
+      '--floating-presence-count',
+      String(visible.length),
+    );
     for (const record of snapshot.records) {
       let entry = this.#entries.get(record.id);
       if (!entry && record.open) entry = this.#createEntry(record);
@@ -281,10 +360,17 @@ export class FloatingPresenceStackElement<
         'data-presence-overflowed',
         record.overflowed,
       );
-      if (!record.open) entry.transition.setOpen(false);
-      entry.topLayer?.sync(record.open);
+      if (!record.open) {
+        this.#cancelOpenFrame(record.id);
+        this.#prepareCloseDuration(entry);
+        entry.transition.setOpen(false);
+        entry.topLayer?.sync(false);
+      } else if (!this.#openFrames.has(record.id)) {
+        entry.topLayer?.sync(true);
+      }
     }
     this.toggleAttribute('data-presence-paused', snapshot.paused);
+    this.toggleAttribute('data-presence-open', visible.length > 0);
   }
 
   #createEntry(record: PresenceStackRecord<T>) {
@@ -301,9 +387,8 @@ export class FloatingPresenceStackElement<
       nodes.find((node): node is HTMLElement => node instanceof HTMLElement);
     if (!surface) return undefined;
 
-    const transition = new FloatingTransition(() => 'bottom-end', {
-      duration: {close: this.#exitDuration},
-    });
+    const duration = {close: this.#exitDuration};
+    const transition = new FloatingTransition(() => 'bottom-end', {duration});
     const topLayerKind = getTopLayer(surface, this.#topLayer);
     const topLayer =
       topLayerKind === 'none'
@@ -320,6 +405,7 @@ export class FloatingPresenceStackElement<
       nodes,
       surface,
       transition,
+      duration,
       unsubscribeTransition: () => undefined,
       abortController,
       record,
@@ -339,12 +425,45 @@ export class FloatingPresenceStackElement<
       }
     });
 
+    surface.style.pointerEvents = 'auto';
+    if (topLayerKind === 'popover') {
+      surface.setAttribute('popover', 'manual');
+    }
     this.append(fragment);
     this.#entries.set(record.id, entry);
     topLayer?.connect();
     transition.setOpen(true);
-    topLayer?.sync(true);
+    this.#scheduleOpen(record.id);
     return entry;
+  }
+
+  #scheduleOpen(id: string) {
+    this.#cancelOpenFrame(id);
+    const frames: number[] = [];
+    const first = requestAnimationFrame(() => {
+      const second = requestAnimationFrame(() => {
+        this.#openFrames.delete(id);
+        const entry = this.#entries.get(id);
+        if (!entry?.record.open) return;
+        entry.topLayer?.sync(true);
+      });
+      frames.push(second);
+    });
+    frames.push(first);
+    this.#openFrames.set(id, frames);
+  }
+
+  #cancelOpenFrame(id: string) {
+    const frames = this.#openFrames.get(id);
+    frames?.forEach((frame) => cancelAnimationFrame(frame));
+    this.#openFrames.delete(id);
+  }
+
+  #prepareCloseDuration(entry: PresenceEntry<T>) {
+    entry.duration.close =
+      this.#exitDuration > 0
+        ? this.#exitDuration
+        : getNativeExitTransitionDuration(entry.surface);
   }
 
   #bindEntry(entry: PresenceEntry<T>, index: number) {
@@ -360,6 +479,7 @@ export class FloatingPresenceStackElement<
   #removeEntry(id: string) {
     const entry = this.#entries.get(id);
     if (!entry) return;
+    this.#cancelOpenFrame(id);
     entry.abortController.abort();
     entry.unsubscribeTransition();
     entry.transition.destroy();

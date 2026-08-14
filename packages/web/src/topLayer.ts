@@ -35,7 +35,8 @@ function getTimeInMilliseconds(value: string) {
   return 0;
 }
 
-function getNativeExitTransitionDuration(element: HTMLElement) {
+/** Longest discrete `display`/`overlay` exit on a native top-layer surface. */
+export function getNativeExitTransitionDuration(element: HTMLElement) {
   if (typeof getComputedStyle !== 'function') return 0;
   const style = getComputedStyle(element);
   const properties = style.transitionProperty

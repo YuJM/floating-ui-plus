@@ -22,26 +22,35 @@ import toastVueSource from "../../../../../vue/components/ExampleToast.vue?raw";
 This example follows the core behavior of the
 [Base UI Toast specification](https://base-ui.com/react/components/toast): a
 manager creates notifications, a viewport owns their stack, each notification
-can close itself, and a default timeout removes it automatically. The demo caps
-the visible stack at three notifications.
+can close itself, and a default timeout removes it automatically. The package
+default `limit` is three; the demo sets `limit="6"` so a taller paused stack
+with preserved row spacing is visible.
 
-`FloatingPresenceStack` owns the framework-neutral lifecycle. The Web Component
-adapter, `floating-presence-stack`, also owns template cloning, value binding,
-transition presence, raw stack state, and final DOM removal. Application code
-owns pause/resume triggers and keyboard focus policy; application markup and CSS
-own semantics, layout, and appearance. The same element can therefore render
-banners, transient editors, or other delayed-removal surfaces without becoming
-a Toast component.
+`FloatingPresenceStack` is headless: it does not paint toast chrome. The Web
+Component adapter still owns the **core host box** that interaction depends
+on — `display: block`, empty-stack `pointer-events: none`, and `auto` while a
+surface is open or the stack is paused — plus template cloning, value binding,
+transition presence, and DOM removal. Application CSS owns color, peek,
+row spacing, and corner placement. Application code owns `add()`, ARIA, and
+`F6`. Pause is opt-in through `pause-on`; the demo uses `pause-on="pointer focus"`.
+
+Clones default to native `popover="manual"`. Omit `top-layer` unless the stack
+must stay in flow (`top-layer="none"`). Dialog is intentionally avoided
+because a Toast must not trap focus, inert the page, or lock scrolling.
 
 The Web Component example needs no list or composite wrapper. Native buttons
 already participate in the document's Tab order, while `F6` moves focus to the
 newest notification's close button. Vue exposes the same controller methods
 through `useFloatingPresenceStack()` and adds reactive state for template
-rendering.
+rendering. Pass `pauseTarget` to the viewport node so Vue can attach the same
+opt-in pause listeners and `--floating-presence-count` token.
 
 ```html
 <floating-presence-stack
   class="toast-viewport"
+  limit="6"
+  timeout="5000"
+  pause-on="pointer focus"
   role="region"
   aria-label="Notifications"
   aria-live="polite"
@@ -58,90 +67,95 @@ rendering.
 
 ```ts
 const viewport = document.querySelector("floating-presence-stack");
-viewport.configure({
-  limit: 3,
-  timeout: 5_000,
-  exitDuration: 220,
-  topLayer: "popover",
-});
-
 viewport.add({
   title: "Saved",
   description: "Your changes have been saved successfully.",
 });
-
-viewport.addEventListener("pointerenter", () => viewport.pause("pointer"));
-viewport.addEventListener("pointerleave", () => viewport.resume("pointer"));
 ```
 
-`configure()` accepts a partial object, so behavioral values stay with the
-application's JavaScript configuration. Assigning `viewport.options = {...}`
-is equivalent. The `limit`, `timeout`, `exit-duration`, and `top-layer`
-attributes remain a static-HTML fallback; explicit code options take
-precedence. Keep landmark and live-region attributes in markup because they
-describe the rendered region rather than behavior configuration.
+Static `limit`, `timeout`, `pause-on`, `resume-delay`, `exit-duration`, and
+`top-layer` attributes cover values that belong in markup. `configure()` is
+for runtime overrides. Keep landmark and live-region attributes in markup
+because they describe the rendered region rather than behavior configuration.
+Leave `exit-duration` unset so unmount waits for the consumer CSS discrete
+`display` / `overlay` length.
 
 Vue receives the same lifecycle API without a component wrapper:
 
 ```ts
+const viewport = ref<HTMLElement>();
 const notices = useFloatingPresenceStack<ToastContent>({
-  limit: 3,
+  limit: 6,
   timeout: 5_000,
+  pauseTarget: viewport,
+  pauseOn: "pointer focus",
 });
 
 notices.add({title: "Saved", description: "Your changes were saved."});
-notices.pause("pointer");
-notices.resume("pointer");
 // Render notices.records.value; call notices.remove(id) after CSS exit.
 ```
 
 For a fixed Vue surface that should participate in the browser's native Top
 Layer, pair the presence lifecycle with `useFloatingTopLayer()` on the element
-you render. This keeps the API parallel with `top-layer="popover"` on the Web
-Component while leaving the element's markup and CSS in application code:
+you render. The hook already defaults to Popover, matching the Web Component
+host default:
 
 ```ts
 const surface = ref<HTMLElement | null>(null);
-useFloatingTopLayer(surface, computed(() => record.open), {
-  kind: 'popover',
-});
+useFloatingTopLayer(surface, computed(() => record.open));
 ```
 
 ## Interaction contract
 
 - A notification remains for five seconds by default.
-- Hovering the viewport or moving keyboard focus into it pauses every active
-  timeout; leaving resumes the remaining duration rather than restarting it.
-- The stack expands while paused so covered notification content becomes
-  readable.
+- `pause-on="pointer focus"` pauses every active timeout while the pointer or
+  keyboard focus is inside the host; leaving resumes the remaining duration
+  rather than restarting it. `resume-delay` (default 100ms) covers the gap
+  between stacked popovers so `pointerleave` does not immediately fold the
+  stack.
+- The host box, not the page, receives pointer hits in the gaps while paused.
+  Set `--floating-presence-hit-span` to the **current** expanded stack height
+  (card size plus row spacing times `count - 1`); the package reads that
+  token as paused `min-height`. Do not size the hit box to a max cap.
+- The stack expands while paused so each notification keeps its row spacing
+  and stays readable. Demo CSS peeks only three collapsed cards
+  (`min(index, 2)`). Paused layout uses a fixed `--toast-row` (84px), not a
+  compressed amount.
 - The close button starts an exit transition. DOM removal occurs after the
   transition finishes.
 - The viewport is a labelled landmark with polite live announcements. `F6`
   moves focus to the newest close button without taking focus when a
   notification first appears; Tab continues through the remaining controls.
 - `template[slot="content"]` follows the same declarative surface contract as
-  `floating-root`. With `topLayer: "popover"`, every cloned notification uses
-  the native manual Popover API. Dialog is intentionally avoided because a
-  Toast must not trap focus, inert the page, or lock scrolling.
+  `floating-root`. Every cloned notification uses the native manual Popover
+  API unless `top-layer="none"`.
 
-CSS owns the visual stack. `floating-presence-stack` only exposes raw state:
-`--floating-presence-index`, `data-presence-index`,
-`data-presence-overflowed`, `data-presence-paused`, and the transition's
-`data-status`. The application decides how those values affect layout and
-motion. The Vue example calculates equivalent values through bindings and uses
-`useFloatingPresenceStack()` plus `useFloatingTransition()` for presence.
+CSS owns the visual stack. `floating-presence-stack` exposes raw state:
+`--floating-presence-index`, `--floating-presence-count`,
+`data-presence-index`, `data-presence-overflowed`, `data-presence-paused`,
+`data-presence-open`, and the transition's `data-status`. Use
+`--floating-presence-count` for layout math; `sibling-count()` also sees the
+Web Component `<template>` sibling. The application decides how those values
+affect layout and motion.
 
 ## Stack values
 
-The newest surface is index `0`. The component supplies the index, while the
-demo's CSS decides that a collapsed row advances by 10px and a paused stack
-advances by the full 84px row-and-gap measurement.
+The newest surface is index `0`. Render clones in chronological order so the
+newest node is last; `sibling-count() - sibling-index()` then matches that
+index without `:nth-child` rules. `--floating-presence-index` remains the
+fallback where those functions are unsupported. Collapsed peek uses
+`min(--toast-index, 2)` so only three cards show; paused layout offsets each
+card by `--toast-row` so later cards do not cover earlier content.
 
 Vue computes the same custom properties and binds the state attributes:
 
 ```vue
-<ol class="toast-viewport" :data-presence-paused="paused ? '' : undefined">
-  <li
+<div
+  ref="viewport"
+  class="toast-viewport"
+  :data-presence-paused="paused ? '' : undefined"
+>
+  <article
     class="toast-item"
     :data-status="status"
     :data-presence-index="index"
@@ -149,55 +163,100 @@ Vue computes the same custom properties and binds the state attributes:
       '--floating-presence-index': String(index),
     }"
   />
-</ol>
+</div>
 ```
 
-The CSS below is the complete motion contract. Toasts are anchored to the
-viewport bottom, so both entry and exit travel downward. `data-status` comes
-from `FloatingTransition` or `useFloatingTransition`; it is independent from
-the stack's expanded/collapsed state.
+The CSS below is the complete motion contract. Demo toasts are native manual
+Popovers, so entry uses `:popover-open` plus `@starting-style` — the same
+discrete top-layer path as Popover and Sheet. `data-status` still covers the
+Vue first-paint path and the close frame before `hidePopover()`. Both entry
+and exit travel downward from the viewport bottom. Restack delay is
+`calc(var(--toast-index) * 35ms)`, so older surfaces cascade instead of
+jumping together.
 
 ```css
 .toast-viewport {
+  --toast-count: var(--floating-presence-count, 0);
+  --toast-card: 74px;
+  --toast-row: 84px;
+  --toast-stack-span: calc(var(--toast-row) * max(var(--toast-count) - 1, 0));
+  --floating-presence-hit-span: calc(
+    var(--toast-card) * min(var(--toast-count), 1) + var(--toast-stack-span)
+  );
   position: fixed;
   right: max(20px, env(safe-area-inset-right));
   bottom: max(20px, env(safe-area-inset-bottom));
   width: min(360px, calc(100vw - 32px));
-  height: 290px;
+  height: 0;
   pointer-events: none;
+}
+
+.toast-viewport:has([data-status="open"]),
+.toast-viewport:has([data-presence-id]:popover-open),
+.toast-viewport[data-presence-paused] {
+  pointer-events: auto;
+}
+
+.toast-viewport[data-presence-paused] {
+  height: var(--floating-presence-hit-span);
+  min-height: var(--floating-presence-hit-span, auto);
 }
 
 .toast-item {
   --floating-presence-index: 0;
+  --toast-index: var(--floating-presence-index, 0);
+  --toast-index: calc(sibling-count() - sibling-index());
+  --toast-count: var(--floating-presence-count, 1);
+  --toast-peek-index: min(var(--toast-index), 2);
+  --toast-stagger: 35ms;
 
   position: fixed;
   inset: auto max(20px, env(safe-area-inset-right))
     max(20px, env(safe-area-inset-bottom)) auto;
-  z-index: calc(30 - var(--floating-presence-index));
+  z-index: calc(30 - var(--toast-index));
   width: min(360px, calc(100vw - 32px));
   margin: 0;
   pointer-events: auto;
-  transform: translateY(calc(var(--floating-presence-index) * -10px))
-    scale(calc(1 - var(--floating-presence-index) * 0.04));
   transform-origin: 100% 100%;
-  opacity: calc(1 - var(--floating-presence-index) * 0.14);
+  opacity: 0;
+  translate: 0 120%;
+  scale: 0.98;
   transition:
     opacity 180ms cubic-bezier(0.16, 1, 0.3, 1),
-    transform 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    translate 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    scale 220ms cubic-bezier(0.32, 0.72, 0, 1),
     display 220ms allow-discrete,
     overlay 220ms allow-discrete;
 }
 
-/* Hover or focus pauses dismissal and reveals the complete stack. */
-.toast-viewport[data-presence-paused] .toast-item {
-  transform: translateY(calc(var(--floating-presence-index) * -84px)) scale(1);
+.toast-item:popover-open {
+  opacity: calc(1 - var(--toast-peek-index) * 0.14);
+  translate: 0 calc(var(--toast-peek-index) * -10px);
+  scale: calc(1 - var(--toast-peek-index) * 0.04);
+  transition-delay: calc(var(--toast-index) * var(--toast-stagger));
+}
+
+@starting-style {
+  .toast-item:popover-open {
+    opacity: 0;
+    translate: 0 120%;
+    scale: 0.98;
+    transition-delay: 0s;
+  }
+}
+
+.toast-viewport[data-presence-paused] .toast-item:popover-open {
+  translate: 0 calc(var(--toast-index) * var(--toast-row) * -1);
+  scale: 1;
   opacity: 1;
 }
 
 .toast-item[data-status="initial"],
 .toast-item[data-status="close"] {
-  transform: translateY(120%) scale(0.98);
+  translate: 0 120%;
+  scale: 0.98;
   opacity: 0;
+  transition-delay: 0s;
 }
 
 .toast-item[data-status="close"] {
@@ -206,17 +265,20 @@ the stack's expanded/collapsed state.
 
 @media (prefers-reduced-motion: reduce) {
   .toast-item {
+    --toast-stagger: 0s;
     transition-duration: 80ms;
+    transition-delay: 0s;
   }
 }
 ```
 
 The reduced-motion rule keeps a short presence window so the transition helper
 can finish removing the node, but removes most of the perceived travel. Keep
-the CSS duration aligned with `exit-duration`; Vue passes the duration to
-`useFloatingTransition()`.
+the CSS duration aligned with unmount: omit `exit-duration` on the Web
+Component so it reads the discrete CSS length; Vue still passes that duration
+to `useFloatingTransition()`.
 
 At the lower level, `FloatingPresenceStack` emits a closed record immediately.
-The Web Component adapter keeps its clone mounted until `exit-duration` ends
-and then removes the record. Consumers call `add()` or `close()` and connect
-`pause()` / `resume()` to the interaction policy they choose.
+The Web Component adapter keeps its clone mounted until the exit duration ends
+and then removes the record. Consumers call `add()` or `close()`; opt into
+`pause-on` or call `pause()` / `resume()` from an application policy.

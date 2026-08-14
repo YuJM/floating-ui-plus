@@ -88,8 +88,10 @@ surface must escape a clipping ancestor or use a different DOM target.
 
 Use `useSearch()` and `useQuery()` for query-driven input and result state.
 Use `useFloatingPresenceStack()` for transient notices whose records need
-reactive Vue rendering. The application owns result markup, ARIA labels,
-transition styling, and removal after an exit transition.
+reactive Vue rendering. Pass `pauseTarget` and `pauseOn` when the viewport
+should pause dismissal on pointer or focus; size `--floating-presence-hit-span`
+on that node to the current stack. The application owns result markup, ARIA
+labels, transition styling, and removal after an exit transition.
 
 See [Components](/docs/components), the [query guide](/docs/components/query),
 the [presence stack guide](/docs/components/presence-stack), and the
@@ -104,7 +106,7 @@ the [presence stack guide](/docs/components/presence-stack), and the
 | `FloatingPortal` / `FloatingOverlay` | Custom modal and portal composition |
 | `FloatingTransition` / `useFloatingTransition()` | Exit presence for `top-layer="none"` surfaces |
 | `useSearch()` / `useQuery()` | Search lifecycle and query interaction |
-| `useFloatingPresenceStack()` | Reactive transient presence records |
+| `useFloatingPresenceStack()` | Reactive transient presence records, with opt-in `pauseTarget` |
 
 See the [Vue package README](https://github.com/polcaneli/floating-ui-plus/tree/main/packages/vue#readme)
 for the complete export and compatibility notes.

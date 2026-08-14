@@ -175,17 +175,23 @@ until its close state completes. See the
 `useFloatingPresenceStack()` is the Vue adapter for the same framework-neutral
 context used by `floating-presence-stack`. Its methods mirror the Web Component
 (`add`, `close`, `remove`, `pause`, and `resume`) while `snapshot`, `records`,
-and `paused` are reactive refs for template rendering. This keeps runtime
-configuration with Vue code rather than scattering behavioral values across
-template attributes.
+and `paused` are reactive refs for template rendering. Pass `pauseTarget` and
+`pauseOn` to bind opt-in pointer/focus pause and `--floating-presence-count`
+on an application-owned host. The composable does not style that node; size
+`--floating-presence-hit-span` on the target to the current stack and keep a
+fixed paused row in application CSS so later cards stay readable.
 
 ```vue
 <script setup lang="ts">
+import {ref} from 'vue';
 import {useFloatingPresenceStack} from '@floating-ui-plus/vue';
 
+const viewport = ref<HTMLElement>();
 const notices = useFloatingPresenceStack<{title: string}>({
   limit: 3,
   timeout: 5000,
+  pauseTarget: viewport,
+  pauseOn: 'pointer focus',
 });
 
 notices.add({title: 'Saved'});
@@ -193,7 +199,8 @@ notices.add({title: 'Saved'});
 ```
 
 Vue owns the rendered elements, ARIA, transition, and native Top Layer policy.
-Call `remove(id)` after the rendered exit transition completes.
+`useFloatingTopLayer()` defaults to Popover. Call `remove(id)` after the
+rendered exit transition completes.
 
 For fixed transient surfaces that should still use the browser's native Top
 Layer, pair the composable with `useFloatingTopLayer()` on the rendered

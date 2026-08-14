@@ -256,15 +256,17 @@ complete the work, then call `root.close()`.
 ## Transient presence stacks
 
 `floating-presence-stack` renders timed notifications or other transient
-surfaces from one native content template. It owns the bounded controller,
-overlapping pause reasons, exit presence, Top Layer lifecycle, and final clone
-removal. The application owns ARIA, focus-entry keys, pointer/focus pause
-policy, layout, and styling.
+surfaces from one native content template. It is headless visually, but owns
+the core host box, bounded controller, opt-in pause binding, exit presence,
+Top Layer lifecycle, and final clone removal. Clones default to native
+`popover="manual"`; set `top-layer="none"` for an in-flow stack. The
+application owns ARIA, focus-entry keys, layout, and styling.
 
 ```html
 <floating-presence-stack
   id="notices"
   tabindex="-1"
+  pause-on="pointer focus"
 >
   <template slot="content">
     <article role="status">
@@ -276,35 +278,36 @@ policy, layout, and styling.
 
 <script type="module">
   const notices = document.querySelector('#notices');
-  notices.configure({
-    limit: 3,
-    timeout: 5000,
-    exitDuration: 180,
-    topLayer: 'popover',
-  });
   notices.add({title: 'Saved'});
 </script>
 ```
 
 Use `configure()` when several runtime values belong to one application
-configuration object. The equivalent `limit`, `timeout`, `exit-duration`, and
-`top-layer` attributes remain available for static HTML. Code options take
-precedence over matching attributes, and `options` is also an assignable
-property for custom-element bindings.
+configuration object. The equivalent `limit`, `timeout`, `exit-duration`,
+`top-layer`, `pause-on`, and `resume-delay` attributes remain available for
+static HTML. Code options take precedence over matching attributes, and
+`options` is also an assignable property for custom-element bindings. Leave
+`exit-duration` unset to unmount after the consumer CSS discrete
+`display` / `overlay` length.
 
 `data-presence-text` accepts a value path plus `$id`, `$index`, and
 `$remaining`. The element writes `data-status`, `data-presence-id`,
 `data-presence-index`, `data-presence-overflowed`, and
-`--floating-presence-index` on the first template root. Mark a nested surface
+`--floating-presence-index` on the first template root, and
+`--floating-presence-count` on the host. Mark a nested surface
 with `data-presence-item` only when a multi-root template needs an explicit
 target. The host reflects controller state with `data-presence-paused` and
-emits `presencechange` with `{snapshot}`. Call `pause(reason)` and
-`resume(reason)` from the interaction policy appropriate to the application.
+`data-presence-open`, and
+emits `presencechange` with `{snapshot}`. Set `pause-on="pointer focus"` or
+call `pause(reason)` and `resume(reason)` from the interaction policy
+appropriate to the application. Size `--floating-presence-hit-span` to the
+current expanded stack (card height plus a fixed row times `count - 1`) so the
+paused host box matches the cards, not a maximum cap.
 
 Like `floating-root`, the stack reads its surface from
-`template[slot="content"]`. Configure `topLayer: 'popover'` to make every clone
-a native manual Popover. Use `none` for an in-flow surface; Dialog remains
-available for genuinely modal content but is not appropriate for Toasts.
+`template[slot="content"]`. The default Top Layer is Popover. Use `none` for
+an in-flow surface; Dialog remains available for genuinely modal content but
+is not appropriate for Toasts.
 
 Set `timeout="0"` to keep entries open until `close(id)` is called.
 

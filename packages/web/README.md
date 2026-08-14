@@ -225,9 +225,15 @@ presence in your renderer and use `FloatingTransition` instead. See the
 stacked transient surfaces. It owns the limit, remaining timeout, and
 pause/resume reasons; the renderer owns ARIA, layout, and exit animation. Keep
 a closed record until the renderer finishes its transition, then call `remove`.
+`bindPresenceStackPause()` is an opt-in helper that pauses on pointer/focus for
+an application-owned host. Size `--floating-presence-hit-span` on that host to
+the current stack height so empty space does not capture hits.
 
 ```ts
-import {FloatingPresenceStack} from '@floating-ui-plus/web';
+import {
+  FloatingPresenceStack,
+  bindPresenceStackPause,
+} from '@floating-ui-plus/web';
 
 const stack = new FloatingPresenceStack<{message: string}>({
   limit: 3,
@@ -236,11 +242,13 @@ const stack = new FloatingPresenceStack<{message: string}>({
 
 const id = stack.add({message: 'Saved'});
 stack.setOptions({limit: 5}); // Defaults for records added from now on.
-stack.pause('pointer');
-stack.resume('pointer');
+const unbindPause = bindPresenceStackPause(viewport, stack, {
+  kinds: ['pointer', 'focus'],
+});
 stack.close(id);
 // After the renderer's exit transition:
 stack.remove(id);
+unbindPause();
 ```
 
 `FloatingPresenceStackContext<T>` is the small shared contract for adapters:

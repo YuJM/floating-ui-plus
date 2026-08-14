@@ -187,6 +187,41 @@ describe('Floating UI Plus Vue adapter', () => {
     expect(getByText('1:false,2:true,3:true')).toBeVisible();
   });
 
+  test('binds opt-in pause listeners and the count token to pauseTarget', async () => {
+    const App = defineComponent({
+      setup() {
+        const viewport = ref<HTMLElement | null>(null);
+        const presence = useFloatingPresenceStack<string>({
+          limit: 3,
+          timeout: 0,
+          pauseTarget: viewport,
+          pauseOn: 'pointer',
+        });
+        return () =>
+          h('div', {ref: viewport, 'data-testid': 'viewport'}, [
+            h(
+              'button',
+              {
+                onClick: () => presence.add('Notice', {id: 'one'}),
+              },
+              'Add',
+            ),
+            h('output', presence.paused.value ? 'paused' : 'running'),
+          ]);
+      },
+    });
+
+    const {getByRole, getByTestId, getByText} = render(App);
+    await fireEvent.click(getByRole('button', {name: 'Add'}));
+    const viewport = getByTestId('viewport');
+    expect(viewport.style.getPropertyValue('--floating-presence-count')).toBe(
+      '1',
+    );
+
+    await fireEvent.pointerEnter(viewport);
+    expect(getByText('paused')).toBeVisible();
+  });
+
   test('composes query input, active option, and activation state', async () => {
     const App = defineComponent({
       setup() {

@@ -229,6 +229,30 @@ test("stacks, pauses, focuses, and dismisses Web Component toasts", async ({
 
   await viewport.locator('[data-presence-id="2"]').hover();
   await expect(viewport).toHaveAttribute("data-presence-paused", "");
+  await expect
+    .poll(async () => {
+      return viewport.evaluate((root) => {
+        const items = [...root.querySelectorAll(".toast-item")].map((element) =>
+          element.getBoundingClientRect(),
+        );
+        if (items.length < 2) return 0;
+        const [upper, lower] = items.sort((left, right) => left.top - right.top);
+        return lower.top - upper.bottom;
+      });
+    })
+    .toBeGreaterThan(2);
+  const gap = await viewport.evaluate((root) => {
+    const items = [...root.querySelectorAll(".toast-item")].map((element) =>
+      element.getBoundingClientRect(),
+    );
+    const [upper, lower] = items.sort((left, right) => left.top - right.top);
+    return {
+      x: (upper.left + upper.right) / 2,
+      y: (upper.bottom + lower.top) / 2,
+    };
+  });
+  await page.mouse.move(gap.x, gap.y);
+  await expect(viewport).toHaveAttribute("data-presence-paused", "");
   await page.keyboard.press("F6");
   await expect(
     viewport.locator('[data-presence-id="2"] [data-presence-close]'),

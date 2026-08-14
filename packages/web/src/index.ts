@@ -21,9 +21,19 @@ export type * from './types';
 export {
   createFloatingTopLayer,
   FloatingTopLayerController,
+  getNativeExitTransitionDuration,
   supportsFloatingTopLayer,
 } from './topLayer';
 export type {FloatingTopLayer, FloatingTopLayerOptions} from './topLayer';
+export {
+  bindPresenceStackPause,
+  parsePresencePauseOn,
+} from './presencePause';
+export type {
+  BindPresenceStackPauseOptions,
+  PresencePauseController,
+  PresencePauseKind,
+} from './presencePause';
 export {
   createAsyncSearchSource,
   createSearch,

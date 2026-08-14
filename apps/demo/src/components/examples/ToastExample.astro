@@ -16,6 +16,9 @@ const {locale = 'en'} = Astro.props as {locale?: Locale};
   <floating-presence-stack
     class="toast-viewport"
     id="toast-viewport"
+    limit="6"
+    timeout="5000"
+    pause-on="pointer focus"
     role="region"
     aria-label="Notifications"
     aria-live="polite"
@@ -56,13 +59,6 @@ const {locale = 'en'} = Astro.props as {locale?: Locale};
     const createButton = scope.querySelector<HTMLButtonElement>('#toast-create');
     if (!viewport || !createButton) return;
 
-    viewport.configure({
-      limit: 3,
-      timeout: 5000,
-      exitDuration: 220,
-      topLayer: 'popover',
-    });
-
     let sequence = 0;
     createButton.addEventListener('click', () => {
       const id = ++sequence;
@@ -73,14 +69,6 @@ const {locale = 'en'} = Astro.props as {locale?: Locale};
         },
         {id: String(id)},
       );
-    });
-    viewport.addEventListener('pointerenter', () => viewport.pause('pointer'));
-    viewport.addEventListener('pointerleave', () => viewport.resume('pointer'));
-    viewport.addEventListener('focusin', () => viewport.pause('focus'));
-    viewport.addEventListener('focusout', () => {
-      queueMicrotask(() => {
-        if (!viewport.contains(document.activeElement)) viewport.resume('focus');
-      });
     });
     document.addEventListener('keydown', (event) => {
       if (event.key !== 'F6' || !viewport.snapshot.records.some((record) => record.open)) {

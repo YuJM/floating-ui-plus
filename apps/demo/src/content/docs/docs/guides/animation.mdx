@@ -237,10 +237,15 @@ JavaScript-controlled presence, but it also requires a duration to coordinate
 unmounting. Prefer the native CSS path above for native Popover and dialog
 surfaces because CSS remains the single source of truth.
 
-The [Toast demo](/docs/guides/demo/toast) uses this custom-presence path. Its
-stack CSS consumes `data-status` from `FloatingTransition` or
-`useFloatingTransition`, while application state supplies the independent
-expanded and behind-item states.
+The [Toast demo](/docs/guides/demo/toast) uses both paths: native Popover
+entry/exit (`:popover-open`, `@starting-style`, discrete `display`/`overlay`)
+and `FloatingTransition` / `useFloatingTransition` so clones stay mounted until
+that CSS finishes. Stack index can use `sibling-index()` with
+`--floating-presence-index` as the fallback. Stack **count** comes from
+`--floating-presence-count` because `sibling-count()` also sees the Web
+Component `<template>` sibling. Size `--floating-presence-hit-span` to
+`card + row × (count - 1)` and keep a fixed paused row offset so later cards
+stay readable; do not compress many cards into a max height.
 
 An extra overlay component is not required for a Popover exit. In this context,
 `overlay` is the browser-managed CSS property that represents top-layer

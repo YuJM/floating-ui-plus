@@ -18,7 +18,11 @@ const floating = createFloating(() => ({
 
 Use `createFloatingTopLayer()` for a native Popover or `<dialog>` without
 moving the element. Use `createPortalBridge()` only when a different DOM target
-is required.
+is required. Use `createFloatingPresenceStack()` and
+`bindPresenceStackPause()` for bounded, pausable transient records such as
+toasts; adapters own the host box, while application CSS sizes
+`--floating-presence-hit-span` to the current stack.
 
 See the [usage recipes](/docs/guides/usage) for controller and interaction
-composition examples.
+composition examples, and the [presence stack guide](/docs/components/presence-stack)
+for the shared record contract.

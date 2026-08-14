@@ -5,7 +5,10 @@ export {useFloating} from './useFloating';
 export {useSearch} from './search';
 export type {UseSearchReturn} from './search';
 export {useFloatingPresenceStack} from './presence-stack';
-export type {UseFloatingPresenceStackReturn} from './presence-stack';
+export type {
+  UseFloatingPresenceStackOptions,
+  UseFloatingPresenceStackReturn,
+} from './presence-stack';
 export {useFloatingTopLayer} from './top-layer';
 export type {UseFloatingTopLayerOptions} from './top-layer';
 export {
@@ -45,6 +48,7 @@ export {
   createQueryStatusFormatter,
   createFloating,
   createFloatingContextScope,
+  bindPresenceStackPause,
   createFloatingTopLayer,
   createFuzzyMatcher,
   createFuzzySearch,
@@ -52,6 +56,8 @@ export {
   createSearch,
   createSearchRenderer,
   createFloatingPresenceStack,
+  getNativeExitTransitionDuration,
+  parsePresencePauseOn,
   FLOATING_UI_PLUS_ARROW_ATTRIBUTE,
   FLOATING_UI_PLUS_ARROW_HEIGHT_ATTRIBUTE,
   createOverlayElement,
@@ -159,8 +165,11 @@ export type {
   SearchSourceInput,
   SearchSourceItem,
   PresenceStackAddOptions,
+  BindPresenceStackPauseOptions,
   FloatingPresenceStackContext,
   FloatingPresenceStackOptions,
+  PresencePauseController,
+  PresencePauseKind,
   PresenceStackListener,
   PresenceStackRecord,
   PresenceStackSnapshot,

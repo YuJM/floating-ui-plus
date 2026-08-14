@@ -21,7 +21,7 @@ owns markup details, layout, ARIA labels, and transitions.
 
 | Pattern | Web Components | Vue | Use it for |
 | --- | --- | --- | --- |
-| Transient presence | `<floating-presence-stack>` | `useFloatingPresenceStack()` | Bounded, timed notifications with pause/resume and exit presence |
+| Transient presence | `<floating-presence-stack>` | `useFloatingPresenceStack()` | Bounded, timed notifications with opt-in pause, a host hit box, and exit presence |
 | Native surface lifecycle | `<floating-transition>` | `FloatingTransition`, `useFloatingTransition()` | Keep a custom surface mounted while its close transition runs |
 | Native Top Layer | Native surface options | `useFloatingTopLayer()` | Connect a renderer-owned fixed surface to Popover or dialog behavior |
 | Surface composition | `<floating-root>`, `<floating-content>`, `<floating-portal>`, `<floating-overlay>` | `FloatingRoot`, `FloatingContent`, `FloatingPortal`, `FloatingOverlay` | Compose anchored surfaces, portals, and custom modal overlays |
@@ -37,8 +37,9 @@ when it needs entry or exit motion.
 
 Use the [presence stack guide](/docs/components/presence-stack) when the
 application creates transient records such as toasts, status messages, or
-undo notices. The stack manages bounded records and their timing; the
-application renders and styles each surface.
+undo notices. The stack manages bounded records, opt-in pause, and a host hit
+box; the application renders each surface and sizes `--floating-presence-hit-span`
+to the current stack so empty space does not capture pointer events.
 
 For searchable surfaces, start with the [query and search recipes](/docs/guides/usage)
 and prefer `useQuery()`/`<floating-query>` for new work. The older combobox

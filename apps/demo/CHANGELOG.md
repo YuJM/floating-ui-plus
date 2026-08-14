@@ -1,5 +1,13 @@
 # floating-ui-plus-demo
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @floating-ui-plus/web-components@0.9.0
+  - @floating-ui-plus/vue@0.9.0
+
 ## 0.0.6
 
 ### Patch Changes

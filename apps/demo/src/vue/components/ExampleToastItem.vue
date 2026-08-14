@@ -18,10 +18,9 @@ const surface = ref<HTMLElement | null>(null);
 const {isMounted, status} = useFloatingTransition(
   computed(() => props.open),
   'top-end',
-  {duration: {close: 180}},
+  {duration: {close: 220}},
 );
 useFloatingTopLayer(surface, computed(() => props.open), {
-  kind: 'popover',
   onOpenChange(open) {
     if (!open && props.open) emit('close', props.id);
   },

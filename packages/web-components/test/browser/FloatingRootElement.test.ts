@@ -29,6 +29,23 @@ import {getFloatingRootRuntime} from '../../src/FloatingController';
 
 const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
 
+function waitForPaint() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
+function presenceTemplate() {
+  return `
+      <template slot="content">
+        <article class="notice" role="status">
+          <strong data-presence-text="title"></strong>
+          <button type="button" data-presence-close>Dismiss</button>
+        </article>
+      </template>
+    `;
+}
+
 afterEach(() => {
   document.body.replaceChildren();
   if (originalScrollIntoView) {
@@ -65,6 +82,8 @@ describe('FloatingRootElement', () => {
       timeout: 0,
       exitDuration: 1,
       topLayer: 'none',
+      pauseOn: '',
+      resumeDelay: 100,
     });
     const firstId = stack.add({title: 'First'}, {id: 'first'});
     stack.add({title: 'Second'}, {id: 'second'});
@@ -109,6 +128,8 @@ describe('FloatingRootElement', () => {
       timeout: 0,
       exitDuration: 180,
       topLayer: 'popover',
+      pauseOn: '',
+      resumeDelay: 100,
     });
     stack.add({title: 'Persistent'}, {id: 'persistent'});
     await new Promise((resolve) => window.setTimeout(resolve, 60));
@@ -122,7 +143,7 @@ describe('FloatingRootElement', () => {
     if (!supportsFloatingTopLayer('popover')) return;
 
     const stack = document.createElement('floating-presence-stack');
-    stack.configure({timeout: 0, exitDuration: 1, topLayer: 'popover'});
+    stack.configure({timeout: 0, exitDuration: 1});
     stack.innerHTML = `
       <template slot="content">
         <article role="status">
@@ -134,12 +155,16 @@ describe('FloatingRootElement', () => {
     document.body.append(stack);
     await stack.updateComplete;
 
+    expect(stack.options.topLayer).toBe('popover');
     stack.add({title: 'Saved'}, {id: 'saved'});
     const surface = stack.querySelector<HTMLElement>(
       '[data-presence-id="saved"]',
     );
 
     expect(surface).toHaveAttribute('popover', 'manual');
+    expect(surface?.style.pointerEvents).toBe('auto');
+    expect(surface?.matches(':popover-open')).toBe(false);
+    await waitForPaint();
     expect(surface?.matches(':popover-open')).toBe(true);
 
     surface?.querySelector<HTMLButtonElement>('button')?.click();
@@ -147,6 +172,58 @@ describe('FloatingRootElement', () => {
     await vi.waitFor(() => {
       expect(stack.querySelector('[data-presence-id="saved"]')).toBeNull();
     });
+  });
+
+  test('keeps in-flow clones when top-layer is none', async () => {
+    const stack = document.createElement('floating-presence-stack');
+    stack.setAttribute('top-layer', 'none');
+    stack.configure({timeout: 0, exitDuration: 1});
+    stack.innerHTML = presenceTemplate();
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    expect(stack.options.topLayer).toBe('none');
+    stack.add({title: 'Inline'}, {id: 'inline'});
+    const surface = stack.querySelector<HTMLElement>(
+      '[data-presence-id="inline"]',
+    );
+    expect(surface).not.toHaveAttribute('popover');
+    await waitForPaint();
+    expect(surface?.matches(':popover-open')).toBe(false);
+  });
+
+  test('creates a host box and exposes the visible count token', async () => {
+    const stack = document.createElement('floating-presence-stack');
+    stack.configure({timeout: 0, exitDuration: 1, topLayer: 'none'});
+    stack.innerHTML = presenceTemplate();
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    expect(getComputedStyle(stack).display).toBe('block');
+    expect(getComputedStyle(stack).pointerEvents).toBe('none');
+
+    stack.add({title: 'First'}, {id: 'first'});
+    stack.add({title: 'Second'}, {id: 'second'});
+    expect(stack.style.getPropertyValue('--floating-presence-count')).toBe('2');
+    expect(stack).toHaveAttribute('data-presence-open', '');
+    await waitForPaint();
+    expect(getComputedStyle(stack).pointerEvents).toBe('auto');
+  });
+
+  test('does not pause on hover unless pause-on includes pointer', async () => {
+    const stack = document.createElement('floating-presence-stack');
+    stack.configure({timeout: 0, exitDuration: 1, topLayer: 'none'});
+    stack.innerHTML = presenceTemplate();
+    document.body.append(stack);
+    await stack.updateComplete;
+
+    stack.add({title: 'First'}, {id: 'first'});
+    stack.dispatchEvent(new PointerEvent('pointerenter', {bubbles: true}));
+    expect(stack.hasAttribute('data-presence-paused')).toBe(false);
+
+    stack.configure({pauseOn: 'pointer'});
+    stack.dispatchEvent(new PointerEvent('pointerenter', {bubbles: true}));
+    expect(stack.hasAttribute('data-presence-paused')).toBe(true);
   });
 
   test('registers floating-search as a compatibility alias for floating-results', () => {

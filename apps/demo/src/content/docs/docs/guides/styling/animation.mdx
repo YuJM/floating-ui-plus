@@ -132,21 +132,56 @@ handling.
 
 ## Toast from the viewport edge
 
-Toast is not a native top-layer surface, so keep it mounted with
-`FloatingTransition` or `useFloatingTransition`. Target its lifecycle status
-and animate from the bottom of the viewport:
+The demo Toast is a native manual Popover, so entry and exit follow the same
+`:popover-open`, `@starting-style`, and discrete `display`/`overlay` contract
+as other top-layer surfaces. Keep the node mounted with `FloatingTransition`
+or `useFloatingTransition` until that CSS finishes. Use
+`--floating-presence-count` for stack size; `sibling-count()` also sees a Web
+Component `<template>` sibling. `sibling-index()` can still derive the
+0-based index when clones are chronological (newest last);
+`--floating-presence-index` is the fallback.
 
 ```css
 .toast-item {
-  position: absolute;
+  --toast-index: var(--floating-presence-index, 0);
+  --toast-index: calc(sibling-count() - sibling-index());
+  --toast-count: var(--floating-presence-count, 1);
+  --toast-peek-index: min(var(--toast-index), 2);
+
+  position: fixed;
   inset-inline-end: 0;
   inset-block-end: 0;
   width: min(22.5rem, calc(100vw - 2rem));
   transform-origin: 100% 100%;
+  opacity: 0;
+  translate: 0 120%;
+  scale: 0.98;
   transition:
     opacity 180ms ease,
     translate 220ms cubic-bezier(0.32, 0.72, 0, 1),
-    scale 220ms cubic-bezier(0.32, 0.72, 0, 1);
+    scale 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    display 220ms allow-discrete,
+    overlay 220ms allow-discrete;
+}
+
+.toast-item:popover-open {
+  opacity: calc(1 - var(--toast-peek-index) * 0.14);
+  translate: 0 calc(var(--toast-peek-index) * -10px);
+  scale: calc(1 - var(--toast-peek-index) * 0.04);
+}
+
+.toast-viewport[data-presence-paused] .toast-item:popover-open {
+  translate: 0 calc(var(--toast-index) * var(--toast-row, 84px) * -1);
+  scale: 1;
+  opacity: 1;
+}
+
+@starting-style {
+  .toast-item:popover-open {
+    opacity: 0;
+    translate: 0 120%;
+    scale: 0.98;
+  }
 }
 
 .toast-item[data-status="initial"],
@@ -161,9 +196,11 @@ and animate from the bottom of the viewport:
 }
 ```
 
-The package controls `data-status`; stack depth, `data-expanded`, and
-`--toast-offset-y` remain application state. See the [Toast demo](../demo/toast)
-for the complete pause, stack, and accessibility example.
+The package controls `data-status`; stack depth and pause layout remain
+application CSS. Size `--floating-presence-hit-span` to the current expanded
+stack and keep a fixed paused row so content stays readable. See the
+[Toast demo](../demo/toast) for the complete pause, stack, and accessibility
+example.
 
 ## CSS-only origin
 
