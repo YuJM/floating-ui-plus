@@ -1,5 +1,11 @@
 # @floating-ui-plus/web
 
+## 0.10.1
+
+### Patch Changes
+
+- Explicitly export Floating UI positioning types such as `Placement` and `Middleware` from the built root declarations. The 0.10.0 source-level wildcard export was omitted from the published declarations.
+
 ## 0.10.0
 
 ### Minor Changes

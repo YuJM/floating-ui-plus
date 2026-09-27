@@ -1,5 +1,13 @@
 # @floating-ui-plus/web-components
 
+## 0.10.1
+
+### Patch Changes
+
+- Explicitly re-export the `web` runtime and types from the package root. The 0.10.0 archive omitted source-level wildcard re-exports, so imports such as `createFuzzySearch`, `offset`, and `hover` failed when installing only Web Components.
+- Updated dependencies
+  - @floating-ui-plus/web@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes

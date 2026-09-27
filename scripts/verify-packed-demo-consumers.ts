@@ -151,6 +151,26 @@ async function verifyAdapter(
     }
   }
 
+  if (adapter === 'web-components') {
+    const exportsIn = async (name: string, file: 'index.js' | 'index.d.ts') => {
+      const source = await Bun.file(join(
+        fixture, 'node_modules/@floating-ui-plus', name, 'dist', file,
+      )).text();
+      const blocks = [...source.matchAll(/export \{([^}]+)\};/g)];
+      const final = blocks.at(-1)?.[1];
+      if (!final) throw new Error(`No ${file} exports in packed ${name}`);
+      return new Set(final.split(',').map((entry) => entry.trim().split(' as ').at(-1)!));
+    };
+    for (const file of ['index.js', 'index.d.ts'] as const) {
+      const webExports = await exportsIn('web', file);
+      const componentExports = await exportsIn('web-components', file);
+      const missing = [...webExports].filter((name) => !componentExports.has(name));
+      if (missing.length > 0) {
+        throw new Error(`Packed web-components ${file} omits web exports: ${missing.join(', ')}`);
+      }
+    }
+  }
+
   run(['bun', 'build', 'entry.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
   run(['bun', 'build', 'all-demo-imports.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
   run([join(root, 'node_modules/.bin/tsc'), '--project', 'tsconfig.json'], fixture);

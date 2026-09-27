@@ -1,5 +1,13 @@
 # @floating-ui-plus/vue
 
+## 0.10.1
+
+### Patch Changes
+
+- Export Floating UI positioning types such as `Placement` and `Middleware` from the built Vue root declarations so demo components typecheck after installing only Vue.
+- Updated dependencies
+  - @floating-ui-plus/web@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes
