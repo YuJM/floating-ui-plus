@@ -13,6 +13,23 @@ The previous `framework=web-components` value is still read as Web Components
 for bookmarked links, but new links use the shorter `wc` token.
 The combobox route also accepts `source=fuzzy` or `source=server`.
 
+## Reusing an example
+
+Install `@floating-ui-plus/web-components` for a Web Components example or
+`@floating-ui-plus/vue` for a Vue example. Each adapter resolves
+`@floating-ui-plus/web` through its own package dependency; the example code
+imports Floating UI Plus APIs only from its selected adapter. Vue itself is
+the Vue adapter's peer dependency.
+
+The source tabs show components from this demo application. Data, labels,
+styles, and the simulated server belong to the application rather than the
+adapter packages. If an example imports one of those files, copy the relevant
+application code or replace it with your own. The
+[fuzzy Query](/docs/guides/demo/combobox/fuzzy) and
+[server Query](/docs/guides/demo/combobox/server) guides show their supporting
+search code. The release check also builds the public imports used by every
+example from packed adapter packages in independent consumer projects.
+
 ## Interaction demos
 
 - [Tooltip](/docs/guides/demo/tooltip): hover, focus, safe polygon, and arrow.

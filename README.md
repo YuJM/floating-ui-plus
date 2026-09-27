@@ -120,6 +120,13 @@ checkout. Cloudflare Pages deployment is a separate process and must not run
 native `bun publish`, which resolves workspace dependency protocols to semver
 ranges in the published manifest.
 
+The demo uses local workspace links during development, so its browser tests
+cannot detect an incorrect dependency range in an npm archive. Run
+`bun run test:consumer` to install the packed adapters in isolated projects and
+build the public imports used by every Web Components and Vue demo with only
+the matching adapter as a direct Floating UI Plus dependency. The package
+release check runs this verification too.
+
 Prepare and publish a release from the intended release branch:
 
 ```sh
@@ -132,7 +139,13 @@ bun run release:packages
 ```
 
 The release commands expect `bun run version` to have consumed every pending
-Changeset and written the current versions to the package changelogs. The
+Changeset, written the current versions to the package changelogs, and
+synchronized all workspace versions in `bun.lock`. Run `bun run check:lockfile`
+to verify the lockfile without changing it. This explicit synchronization is
+needed because [Bun can leave workspace versions stale after a version-only
+change](https://github.com/oven-sh/bun/issues/18906); `bun install --lockfile-only`
+and `bun install --frozen-lockfile` do not detect that drift in this repository.
+Package builds and release checks run the lockfile check before packing. The
 publish command may run from any branch and does not require that branch to
 match a remote; it only requires a clean worktree so the reviewed files are
 exactly the files being published. It also verifies npm authentication,

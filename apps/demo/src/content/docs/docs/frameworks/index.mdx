@@ -45,11 +45,12 @@ Register the elements once, then compose a root-owned template:
 ```
 
 ```ts
-import "@floating-ui-plus/web-components";
-import { flip, offset, shift } from "@floating-ui-plus/web";
-import type {
-  FloatingOpenChangeDetail,
-  FloatingRootElement,
+import {
+  flip,
+  offset,
+  shift,
+  type FloatingOpenChangeDetail,
+  type FloatingRootElement,
 } from "@floating-ui-plus/web-components";
 
 const root = document.querySelector<FloatingRootElement>("floating-root")!;

@@ -1,5 +1,11 @@
 # @floating-ui-plus/web
 
+## 0.10.0
+
+### Minor Changes
+
+- Align the framework-neutral runtime version with the standalone adapter release and correct the fuzzy search key example to use the supported `{name: 'name'}` shape.
+
 ## 0.9.0
 
 ### Minor Changes

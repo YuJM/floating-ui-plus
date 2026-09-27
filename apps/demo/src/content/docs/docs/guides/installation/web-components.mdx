@@ -50,8 +50,10 @@ inertness, and the native top layer.
 ## What gets installed
 
 Your package manager resolves `@floating-ui-plus/web` through the adapter's
-dependency graph. You only need a direct `@floating-ui-plus/web` dependency if
-you also import framework-neutral controllers in your own application code.
+dependency graph. The adapter also re-exports shared helpers, so the fuzzy
+Query demo can import `createFuzzySearchSource` directly from
+`@floating-ui-plus/web-components`. Add `@floating-ui-plus/web` as a direct
+dependency only when your own code imports its package path.
 
 For complete templates, native Popover and dialog guidance, and close guards,
 see the [usage recipes](/docs/guides/usage).

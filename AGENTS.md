@@ -11,6 +11,21 @@
 - Use `git mv` or the operating system's `mv` command when renaming or moving
   files.
 
+### Workspace lockfile versions
+
+- Bun may leave `bun.lock` workspace versions unchanged when only a workspace
+  `package.json` version changes. `bun install --lockfile-only` and
+  `bun install --frozen-lockfile` do not detect this drift here. Do not treat a
+  successful install as proof that the lockfile contains current versions.
+- Use `bun run version` for Changeset-driven package version updates; it also
+  synchronizes workspace versions in `bun.lock`. If a workspace version changes
+  outside that command, run `bun run sync:lockfile` and include `bun.lock` in
+  the same commit as the manifest change.
+- Run `bun run check:lockfile` before packaging or publishing. Package builds
+  and release checks run it automatically. For published adapter changes, run
+  `bun run test:consumer` to verify the packed Web Components and Vue demo
+  imports and their resolved workspace dependency versions.
+
 ## Testing boundaries
 
 - Keep framework-neutral behavior and kernel logic in `@floating-ui-plus/web`

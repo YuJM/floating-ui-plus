@@ -107,7 +107,7 @@ const floating = createFloating(() => ({
 }));
 
 const search = createSearch({
-  source: createFuzzySearchSource(destinations, {keys: ['name']}),
+  source: createFuzzySearchSource(destinations, {keys: [{name: 'name'}]}),
   getItemKey: (item) => item.id,
 });
 

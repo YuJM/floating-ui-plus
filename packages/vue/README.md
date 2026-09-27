@@ -220,38 +220,88 @@ a command palette, or `"none"` when the rendered UI owns all ARIA.
 
 ```vue
 <script setup lang="ts">
-import {FloatingContent, FloatingList, FloatingReference, FloatingRoot,
-  createFuzzySearchSource, dismiss, useQuery, useSearch} from '@floating-ui-plus/vue';
+import {
+  FloatingContent,
+  FloatingList,
+  FloatingListItem,
+  FloatingReference,
+  FloatingResults,
+  FloatingRoot,
+  autoUpdate,
+  createFuzzySearchSource,
+  dismiss,
+  useQuery,
+  useSearch,
+} from '@floating-ui-plus/vue';
 
-const search = useSearch({
-  source: createFuzzySearchSource(cities, {keys: ['name']}),
+type City = {id: string; name: string};
+const cities: City[] = [
+  {id: 'seoul', name: 'Seoul'},
+  {id: 'tokyo', name: 'Tokyo'},
+  {id: 'paris', name: 'Paris'},
+];
+const search = useSearch<City>({
+  source: createFuzzySearchSource(cities, {keys: [{name: 'name'}]}),
   getItemKey: (city) => city.id,
+  debounceMs: 0,
 });
-const query = useQuery({
+const {
+  open,
+  activeIndex,
+  inputProps,
+  rolePlugin,
+  getOptionProps,
+  getNavigationOptions,
+} = useQuery<City>({
   search,
   getItemLabel: (city) => city.name,
-  onActivate: (city) => chooseCity(city),
+  onActivate(city) {
+    search.controller.setQuery(city.name);
+  },
 });
+const options = {placement: 'bottom-start', whileElementsMounted: autoUpdate} as const;
+const plugins = [dismiss(), rolePlugin];
+const navigationOptions = getNavigationOptions({allowEscape: true});
 </script>
 
 <template>
-  <FloatingRoot v-model:open="query.open" :plugins="[dismiss(), query.rolePlugin]">
+  <FloatingRoot v-model:open="open" :options="options" :plugins="plugins">
     <FloatingList
-      v-model:active-index="query.activeIndex"
+      v-model:active-index="activeIndex"
       navigation
-      :navigation-options="query.getNavigationOptions({allowEscape: true})"
+      :navigation-options="navigationOptions"
     >
-      <FloatingReference as="input" v-bind="query.inputProps" />
+      <FloatingReference
+        as="input"
+        aria-label="City"
+        autocomplete="off"
+        v-bind="inputProps"
+      />
       <FloatingContent>
-        <!-- Render search.items.value with query.getOptionProps(city, index). -->
+        <FloatingResults :search="search">
+          <template #results>
+            <FloatingListItem
+              v-for="(city, index) in search.items.value"
+              :key="city.id"
+              :label="city.name"
+              :value="city"
+              v-bind="getOptionProps(city, index)"
+            >
+              {{ city.name }}
+            </FloatingListItem>
+          </template>
+          <template #empty>No cities found.</template>
+        </FloatingResults>
       </FloatingContent>
     </FloatingList>
   </FloatingRoot>
 </template>
 ```
 
-Provide `loading`, `error`, `empty`, and `results` slots on `FloatingResults`
-as needed. `getQueryTriggerProps(query)` binds focus-preserving preset buttons.
+The fuzzy source, Query composable, and rendered components all come from
+`@floating-ui-plus/vue`. Add `loading` and `error` slots on `FloatingResults`
+when the application needs them. `getQueryTriggerProps(query)` binds
+focus-preserving preset buttons.
 
 ### `useCombobox()` compatibility
 

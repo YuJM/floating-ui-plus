@@ -55,8 +55,10 @@ semantics need to change.
 ## What gets installed
 
 Your package manager resolves `@floating-ui-plus/web` through the Vue adapter's
-dependency graph. You only need a direct `@floating-ui-plus/web` dependency if
-you also import framework-neutral controllers in your own application code.
+dependency graph. The Vue adapter re-exports `createFuzzySearchSource`, so the
+fuzzy Query component can import its search source, composables, and components
+from `@floating-ui-plus/vue`. Add `@floating-ui-plus/web` as a direct dependency
+only when your own code imports its package path.
 
 For native Popover and dialog behavior, portals, search, and close guards, see
 the [usage recipes](/docs/guides/usage) and [Vue framework guide](/docs/frameworks).

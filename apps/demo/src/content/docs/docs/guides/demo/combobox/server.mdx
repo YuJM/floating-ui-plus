@@ -4,8 +4,11 @@ description: Explore cancellable cursor-based server search with the Query demo.
 ---
 
 import DemoPreview from '../../../../../../components/docs/DemoPreview.astro';
+import {Code} from '@astrojs/starlight/components';
 import asyncComboboxSource from '../../../../../../components/examples/AsyncComboboxExample.astro?raw';
 import asyncComboboxVueSource from '../../../../../../vue/components/ExampleAsyncCombobox.vue?raw';
+import searchSource from '../../../../../../server-destination-search.ts?raw';
+import destinationsSource from '../../../../../../fake-server-destinations.ts?raw';
 
 The server-search Query demo passes an application-owned async source to the
 shared search controller. The demo's MSW endpoint simulates debounce,
@@ -17,6 +20,17 @@ phases, and cursor pagination.
 - [View the fuzzy-search demo](/docs/guides/demo/combobox/fuzzy)
 
 <DemoPreview route="/preview/combobox/server" title="Query · server search" height={640} webCode={asyncComboboxSource} vueCode={asyncComboboxVueSource} webTitle="AsyncComboboxExample.astro" vueTitle="ExampleAsyncCombobox.vue" />
+
+## Application-owned search source
+
+Both implementations import the request adapter below. The running demo uses
+MSW to answer its endpoint and a generated JSON fixture for destination data;
+in another application, provide an endpoint with the same response contract or
+replace `searchDestinationsOnServer()` with your own request function. Neither
+adapter requires a direct `@floating-ui-plus/web` installation.
+
+<Code code={searchSource} lang="ts" title="server-destination-search.ts" />
+<Code code={destinationsSource} lang="ts" title="fake-server-destinations.ts" />
 
 ## What this demo shows
 

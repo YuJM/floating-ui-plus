@@ -1,6 +1,8 @@
 import {fileURLToPath} from 'node:url';
 import {createInterface} from 'node:readline/promises';
-import {readdir} from 'node:fs/promises';
+import {mkdtemp, readdir, rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 
 type Mode = 'check' | 'publish';
 
@@ -14,6 +16,7 @@ interface PackageInfo {
   directory: string;
   name: string;
   version: string;
+  dependencies: Record<string, string>;
 }
 
 const rootDirectory = fileURLToPath(new URL('..', import.meta.url));
@@ -93,6 +96,7 @@ async function readPackages(): Promise<PackageInfo[]> {
         directory,
         name: manifest.name,
         version: manifest.version,
+        dependencies: manifest.dependencies ?? {},
       };
     }),
   );
@@ -138,6 +142,25 @@ export function validatePublishWorktree(status: string) {
     throw new Error(
       'Publishing requires a clean worktree. Commit or stash every change first.',
     );
+  }
+}
+
+export function validatePackedDependencies(
+  packed: {name: string; dependencies?: Record<string, string>},
+  packages: PackageInfo[],
+) {
+  const source = packages.find((pkg) => pkg.name === packed.name);
+  if (!source) throw new Error(`Unknown packed package: ${packed.name}`);
+  for (const dependency of packages) {
+    if (source.dependencies[dependency.name] !== 'workspace:^') continue;
+    const actual = packed.dependencies?.[dependency.name];
+    const expected = `^${dependency.version}`;
+    if (actual !== expected) {
+      throw new Error(
+        `${packed.name} packs ${dependency.name}@${actual}; expected ${expected}. `
+          + 'Run `bun run sync:lockfile` before publishing.',
+      );
+    }
   }
 }
 
@@ -196,15 +219,29 @@ async function runVerification(packages: PackageInfo[]) {
   console.log('\nPreviewing package archives...');
   for (const pkg of packages) {
     console.log(`\n${pkg.name}@${pkg.version}`);
-    await run(
-      ['bun', 'pm', 'pack', '--dry-run'],
-      `${rootDirectory}/${pkg.directory}`,
-    );
+    const directory = await mkdtemp(join(tmpdir(), 'floating-ui-plus-pack-'));
+    try {
+      const archive = join(directory, 'package.tgz');
+      await run(
+        ['bun', 'pm', 'pack', '--filename', archive],
+        `${rootDirectory}/${pkg.directory}`,
+      );
+      const packed = JSON.parse(
+        await capture(['tar', '-xOf', archive, 'package/package.json']),
+      );
+      validatePackedDependencies(packed, packages);
+      console.log('✓ packed workspace dependencies match package versions');
+    } finally {
+      await rm(directory, {recursive: true, force: true});
+    }
     await run(
       ['bun', 'publish', '--dry-run', '--access', 'public'],
       `${rootDirectory}/${pkg.directory}`,
     );
   }
+
+  console.log('\nBuilding demo imports from packed packages...');
+  await run(['bun', 'scripts/verify-packed-demo-consumers.ts']);
 }
 
 async function findPendingPackages(packages: PackageInfo[]) {
@@ -241,6 +278,8 @@ export async function main() {
 
   console.log('\nChecking versioned release plan...');
   await assertVersionedReleasePlan(packages);
+
+  await run(['bun', 'run', 'check:lockfile']);
 
   await assertNpmAuthentication();
   await runVerification(packages);

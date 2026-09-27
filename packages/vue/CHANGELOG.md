@@ -1,5 +1,16 @@
 # @floating-ui-plus/vue
 
+## 0.10.0
+
+### Minor Changes
+
+- Fix standalone installation so Vue components, `useQuery()`, and the re-exported fuzzy search source resolve the matching `@floating-ui-plus/web` runtime. Document a complete fuzzy Query component and verify all Vue demo imports against packed packages.
+
+### Patch Changes
+
+- Updated dependencies
+  - @floating-ui-plus/web@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

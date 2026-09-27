@@ -1,5 +1,16 @@
 # @floating-ui-plus/web-components
 
+## 0.10.0
+
+### Minor Changes
+
+- Fix standalone installation so the root import loads the matching `@floating-ui-plus/web` runtime. Existing exports and custom elements, including presence stacks and fuzzy Query, work after installing only `@floating-ui-plus/web-components`; document a complete fuzzy Query example and verify all demo imports against packed packages.
+
+### Patch Changes
+
+- Updated dependencies
+  - @floating-ui-plus/web@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

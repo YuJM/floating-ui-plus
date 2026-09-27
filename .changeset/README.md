@@ -37,7 +37,9 @@ bun run version
 ```
 
 This updates package versions, internal workspace dependency ranges where
-needed, and package changelogs. Review and commit those generated changes.
+needed, package changelogs, and the workspace versions in `bun.lock`. Review
+and commit those generated changes. `bun run check:lockfile` verifies the
+lockfile without changing it; package builds and release checks run it too.
 
 Commit the generated version and changelog changes before publishing:
 

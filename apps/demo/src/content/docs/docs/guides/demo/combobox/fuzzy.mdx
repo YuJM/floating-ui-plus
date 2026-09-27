@@ -4,12 +4,21 @@ description: Explore local typo-tolerant search with the Query demo.
 ---
 
 import DemoPreview from '../../../../../../components/docs/DemoPreview.astro';
+import {Code} from '@astrojs/starlight/components';
 import fuzzyComboboxSource from '../../../../../../components/examples/FuzzyComboboxExample.astro?raw';
 import fuzzyComboboxVueSource from '../../../../../../vue/components/ExampleFuzzyCombobox.vue?raw';
+import destinationSource from '../../../../../../multilingual-destinations.ts?raw';
+import initializeExampleSource from '../../../../../../components/examples/initialize-example.ts?raw';
 
 The fuzzy Query demo keeps its data local and searches it with
 `createFuzzySearchSource()`. Use the implementation switch in the preview to
 compare the Web Components and Vue adapters with the same search contract.
+The Web Components example imports its elements, Query types, and fuzzy source
+from `@floating-ui-plus/web-components`. The Vue example imports its components,
+composables, and fuzzy source from `@floating-ui-plus/vue`; Vue itself remains
+the application's peer dependency. Both examples also import the demo-local
+destination data shown below, and the Web Components example uses a demo-local
+initialization helper.
 
 - [Open the Web Components demo](/combobox?framework=wc&source=fuzzy)
 - [Open the Vue demo](/combobox?framework=vue&source=fuzzy)
@@ -17,11 +26,24 @@ compare the Web Components and Vue adapters with the same search contract.
 
 <DemoPreview route="/preview/combobox/fuzzy" title="Query · fuzzy search" height={640} webCode={fuzzyComboboxSource} vueCode={fuzzyComboboxVueSource} webTitle="FuzzyComboboxExample.astro" vueTitle="ExampleFuzzyCombobox.vue" />
 
+## Demo-local support files
+
+Both implementations use this application-owned destination data and search-key
+configuration. The Web Components example also waits for element registration
+with the small `initializeExample()` helper shown below. The preview runs inside
+the workspace demo, where these relative imports resolve to app source files;
+the snippets document that example's imports and are not a test of an npm
+tarball in an independent application.
+
+<Code code={destinationSource} lang="ts" title="multilingual-destinations.ts" />
+<Code code={initializeExampleSource} lang="ts" title="initialize-example.ts (Web Components)" />
+
 ## What this demo shows
 
 - Local typo-tolerant matching across city, country, aliases, and local scripts.
-- Query presets, virtual focus, keyboard navigation, and an ARIA live region.
-- Activation callbacks, virtual focus, and default ARIA combobox semantics.
+- Query presets, keyboard navigation, activation callbacks, and an ARIA live
+  region.
+- Virtual focus and default ARIA combobox semantics.
 - The same `createSearch()`/`useSearch()` and `createQuery()`/`useQuery()` phases in both renderers.
 
 The search controller owns query, loading, error, empty, results, IME,
