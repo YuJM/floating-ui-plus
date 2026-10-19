@@ -153,6 +153,55 @@ render. Use `createFuzzySearchSource()` for local matching or provide an async
 state, use `items` instead of `source` and update that state in response to the
 input lifecycle.
 
+## Editor-owned queries and direct keyboard handling
+
+Use `bindExternalInput(editorElement)` for contenteditable, Tiptap, or another
+editor that owns its document and input lifecycle. It binds loading and active
+option attributes plus a focus target, without installing input, composition,
+or keyboard listeners. Unbinding restores the original attributes. Neither
+`setExternalQuery()` nor activation writes the editor's text or selection.
+
+```ts
+const unbind = query.bindExternalInput(editorElement);
+const navigation = query.navigationPlugin({
+  loop: true,
+  keyboardHandling: 'manual',
+});
+floating.pipe(query.rolePlugin(), navigation);
+// Connect floating and search, render results, and bind options as above.
+
+// In the editor's transaction/update hook:
+query.setExternalQuery(queryText, {composing: editorIsComposing});
+
+// In ProseMirror's handleKeyDown, after its composition checks:
+function handleKeyDown(event: KeyboardEvent): boolean {
+  if (editorIsComposing) return false;
+  return navigation.handleKeyDown(event) || query.handleKeyDown(event);
+}
+
+// On disposal:
+unbind();
+```
+
+`listNavigation()` and `query.navigationPlugin()` return a
+`ListNavigationPlugin`. Its `handleKeyDown(event, source?)` consumes the original
+event and returns whether it handled it; disconnected, composing, modified, or
+already handled events return false. Manual calls default to popup navigation,
+so Home/End select the first/last option. Pass `reference` as the second argument
+to preserve text-input Home/End behavior. `keyboardHandling: 'manual'` disables
+automatic keydown handling while retaining pointer and open-state behavior.
+
+`query.handleKeyDown(event)` handles Enter activation and returns a boolean. It
+leaves IME confirmation Enter untouched when `event.isComposing`,
+`event.keyCode === 229`, or `search.composing` is true. `setExternalQuery(text,
+{composing, event?})` supplies the extracted query and composition state; the
+caller owns range validation and document transactions in `onActivate`.
+
+Keep the editor as the real reference and supply caret geometry with
+`floating.setPositionReference({contextElement: editorElement,
+getBoundingClientRect})`. Keep document/range mapping and editor-specific IME
+guards in the integration. Set `semantics: 'none'` when the editor owns ARIA.
+
 ## Essential API
 
 - `createFloating()` — positioning, open-state, and composable interactions.

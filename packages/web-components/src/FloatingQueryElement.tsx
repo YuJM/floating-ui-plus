@@ -9,6 +9,7 @@ import {
 } from 'atomico';
 import {
   QueryController,
+  type ExternalQueryOptions,
   type QuerySnapshot,
   type QuerySemantics,
   SearchController,
@@ -22,7 +23,10 @@ import {
 import type {FloatingListElement} from './CollectionComponents';
 import {floatingComponentContext} from './component-context';
 import {getFloatingRootRuntime} from './FloatingController';
-import type {FloatingTemplateLifecycleDetail} from './FloatingRootElement';
+import type {
+  FloatingRootElement,
+  FloatingTemplateLifecycleDetail,
+} from './FloatingRootElement';
 import type {FloatingResultsElement} from './FloatingResultsElement';
 
 const contentsStyles = `
@@ -31,6 +35,8 @@ const contentsStyles = `
     display: contents;
   }
 `;
+
+const connectionVersions = new WeakMap<HTMLElement, number>();
 
 export interface FloatingQueryStateChangeDetail<T = unknown> {
   snapshot: QuerySnapshot<T>;
@@ -42,6 +48,7 @@ export interface FloatingQueryActivateDetail<T = unknown> {
 }
 
 interface FloatingQueryHost extends HTMLElement {
+  externalInput: HTMLElement | null;
   inputSelector: string;
   itemLabelKey: string;
   optionIdPrefix: string;
@@ -109,7 +116,7 @@ const FloatingQueryBase = c(
     const listElement = host.closest(
       'floating-list',
     ) as FloatingListElement | null;
-    const input = findInput(host);
+    const input = host.externalInput ?? findInput(host);
     const semantics = getQuerySemantics(host);
     const controller = useMemo(() => {
       if (!root || !host.search) return undefined;
@@ -148,6 +155,7 @@ const FloatingQueryBase = c(
       host.getItemLabel,
       host.itemLabelKey,
       host.optionIdPrefix,
+      connectionVersions.get(host),
     ]);
     const contextValue = useMemo(
       () => ({...inheritedContext, query: controller}),
@@ -218,11 +226,15 @@ const FloatingQueryBase = c(
     useLayoutEffect(() => {
       if (!root || !controller || !input) return;
       const previousVirtual = listElement?.virtual;
+      const previousManualKeyboard = listElement?.manualKeyboard;
       if (listElement) {
         listElement.virtual =
           controller.getNavigationOptions().virtual === true;
+        if (host.externalInput) listElement.manualKeyboard = true;
       }
-      const unbindInput = controller.bindInput(input);
+      const unbindInput = host.externalInput
+        ? controller.bindExternalInput(input)
+        : controller.bindInput(input as HTMLInputElement);
       const unregisterRole = getFloatingRootRuntime(
         root,
       ).registerComponentPlugins(host, [controller.rolePlugin()]);
@@ -272,6 +284,9 @@ const FloatingQueryBase = c(
         if (listElement && previousVirtual != null) {
           listElement.virtual = previousVirtual;
         }
+        if (listElement && previousManualKeyboard != null) {
+          listElement.manualKeyboard = previousManualKeyboard;
+        }
       };
     }, [
       host,
@@ -279,6 +294,7 @@ const FloatingQueryBase = c(
       listElement,
       controller,
       input,
+      host.externalInput,
       host.statusSelector,
       host.statusFormatter,
     ]);
@@ -377,12 +393,24 @@ const FloatingQueryBase = c(
  * It is not form-associated and does not own a selected value.
  */
 export class FloatingQueryElement extends FloatingQueryBase {
+  #externalInput: HTMLElement | null = null;
   #search: SearchController<unknown> | undefined;
   #getItemKey: ((item: unknown) => string | number) | undefined;
   #getItemLabel: ((item: unknown) => string) | undefined;
   #controller: QueryController<unknown> | undefined;
   #statusFormatter: FloatingQueryStatusFormatter<unknown> | undefined;
   #ownsSearch = false;
+
+  connectedCallback() {
+    // Atomico's constructor type omits its standard Custom Element callbacks.
+    (FloatingQueryBase.prototype as HTMLElement & {
+      connectedCallback(): void;
+    }).connectedCallback.call(this);
+    // Atomico preserves memoized state and can skip child updates when only
+    // an ancestor was removed. Rebuild the disposed controller on reconnect.
+    connectionVersions.set(this, (connectionVersions.get(this) ?? 0) + 1);
+    void this.update();
+  }
 
   get updateComplete() {
     return this.updated;
@@ -424,6 +452,17 @@ export class FloatingQueryElement extends FloatingQueryBase {
     return this.#controller;
   }
 
+  /** An editor-owned focus target; no input or keyboard listeners are added. */
+  get externalInput() {
+    return this.#externalInput;
+  }
+
+  set externalInput(input: HTMLElement | null) {
+    if (input === this.#externalInput) return;
+    this.#externalInput = input;
+    void this.update();
+  }
+
   get statusFormatter() {
     return this.#statusFormatter;
   }
@@ -435,6 +474,9 @@ export class FloatingQueryElement extends FloatingQueryBase {
   }
 
   configure<T>(configuration: FloatingQueryConfiguration<T>) {
+    if (configuration.externalInput !== undefined) {
+      this.externalInput = configuration.externalInput;
+    }
     this.getItemLabel = configuration.getItemLabel as (item: unknown) => string;
     this.getItemKey = configuration.getItemKey as
       | ((item: unknown) => string | number)
@@ -461,6 +503,22 @@ export class FloatingQueryElement extends FloatingQueryBase {
 
   setQuery(query: string, event?: Event) {
     this.#controller?.setQuery(query, event);
+  }
+
+  setExternalQuery(query: string, options?: ExternalQueryOptions) {
+    this.#controller?.setExternalQuery(query, options);
+  }
+
+  /** Returns whether navigation or Enter activation consumed the event. */
+  handleKeyDown(event: KeyboardEvent): boolean {
+    if (
+      !this.isConnected ||
+      !this.closest<FloatingRootElement>('floating-root')?.open ||
+      this.#search?.composing || event.defaultPrevented ||
+      event.isComposing || event.keyCode === 229
+    ) return false;
+    const list = this.closest('floating-list') as FloatingListElement | null;
+    return list?.handleKeyDown(event) || this.#controller?.handleKeyDown(event) || false;
   }
 
   #setSearch(value: SearchController<unknown> | undefined, owned: boolean) {

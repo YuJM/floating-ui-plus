@@ -121,7 +121,7 @@ export default defineConfig({
     sitemap({
       filter: (page) => {
         const pathname = new URL(page).pathname;
-        return pathname !== '/404';
+        return pathname !== '/404' && !pathname.startsWith('/fixtures/');
       },
     }),
   ],

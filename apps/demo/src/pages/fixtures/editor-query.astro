@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex" />
+    <title>Tiptap external Query integration fixture</title>
+  </head>
+  <body>
+    <h1>Editor Query integration</h1>
+    <button id="outside" type="button">Outside editor</button>
+    <button id="detach" type="button">Detach menu</button>
+    <button id="reattach" type="button">Reattach menu</button>
+    <output id="activations">0</output>
+    <div id="scroller"><div id="editor"></div><div class="spacer"></div></div>
+    <floating-root id="root" placement="bottom-start" strategy="fixed">
+      <floating-list navigation loop virtual>
+        <floating-query id="query" option-id-prefix="editor-option">
+          <template slot="content">
+            <floating-results id="popup" aria-label="Block commands">
+              <floating-results-item>
+                <floating-list-item>
+                  <button type="button" data-search-text="label"></button>
+                </floating-list-item>
+              </floating-results-item>
+              <floating-results-empty><p>No matching blocks</p></floating-results-empty>
+            </floating-results>
+          </template>
+        </floating-query>
+      </floating-list>
+    </floating-root>
+    <script>
+      import {Editor, Extension} from '@tiptap/core';
+      import StarterKit from '@tiptap/starter-kit';
+      import {Plugin} from '@tiptap/pm/state';
+      import {
+        createFuzzySearchSource, dismiss, flip, offset, shift, size,
+      } from '@floating-ui-plus/web-components';
+
+      const root = document.querySelector('floating-root')!;
+      const query = document.querySelector('floating-query')!;
+      const list = document.querySelector('floating-list')!;
+      let activations = 0;
+      let dismissed = false;
+      const commands = [
+        {id: 'paragraph', label: '본문'},
+        {id: 'heading', label: '제목'},
+        ...Array.from({length: 18}, (_, index) => ({id: `item-${index}`, label: `Block ${index}`})),
+      ];
+      const getRange = () => {
+        const {selection} = editor.state;
+        if (!selection.empty) return null;
+        const match = /\/([^\s/]*)$/.exec(
+          selection.$from.parent.textBetween(0, selection.$from.parentOffset),
+        );
+        return match ? {from: selection.from - match[0].length, to: selection.from, query: match[1]} : null;
+      };
+      const sync = () => {
+        if (!root.isConnected || editor.isDestroyed) return;
+        const range = getRange();
+        if (!range) { root.open = false; dismissed = false; return; }
+        if (dismissed) return;
+        query.setExternalQuery(range.query, {composing: editor.view.composing});
+        root.setPositionReference({
+          contextElement: editor.view.dom,
+          getBoundingClientRect() {
+            const {left, right, top, bottom} = editor.view.coordsAtPos(editor.state.selection.from);
+            return new DOMRect(left, top, Math.max(1, right - left), bottom - top);
+          },
+        });
+        root.open = true;
+        void root.updatePosition();
+      };
+      const editor = new Editor({
+        element: document.querySelector('#editor')!,
+        extensions: [StarterKit, Extension.create({
+          name: 'externalQueryKeys',
+          priority: 1000,
+          addProseMirrorPlugins: () => [new Plugin({props: {
+            handleKeyDown: (_view, event) => {
+              if (!root.open || editor.view.composing || event.isComposing || event.keyCode === 229) return false;
+              if (event.key === 'Escape' || event.key === 'Tab') {
+                dismissed = true;
+                root.close(event);
+                return event.key === 'Escape';
+              }
+              return query.handleKeyDown(event);
+            },
+          }})],
+        })],
+        content: '<p>Write here </p>',
+        editorProps: {attributes: {'aria-label': 'Document editor', role: 'textbox'}},
+        onTransaction: sync,
+        onSelectionUpdate: sync,
+      });
+      // Manual keyboard mode keeps all FUP listeners behind ProseMirror's guards.
+      query.configure({
+        externalInput: editor.view.dom,
+        search: {
+          source: createFuzzySearchSource(commands, {keys: [{name: 'label'}]}),
+          getItemKey: (item) => item.id, debounceMs: 0,
+        },
+        getItemLabel: (item) => item.label,
+      });
+      root.configure({
+        middleware: [offset(8), flip({padding: 12}), shift({padding: 12}), size({
+          padding: 12,
+          apply: ({availableHeight, elements}) => {
+            elements.floating.style.maxHeight = `${Math.max(0, Math.min(180, availableHeight))}px`;
+          },
+        })],
+        plugins: [dismiss({escapeKey: false})],
+        topLayer: 'popover',
+      });
+      root.setReferenceElement(editor.view.dom);
+      query.addEventListener('queryactivate', (event) => {
+        const range = getRange();
+        if (!range || editor.view.composing || query.search?.composing) return;
+        const command = (event as CustomEvent<{item: {id: string}}>).detail.item;
+        const chain = editor.chain().focus().deleteRange(range);
+        if (command.id === 'heading') chain.setHeading({level: 2}).run();
+        else chain.setParagraph().run();
+        document.querySelector('#activations')!.textContent = String(++activations);
+        root.open = false;
+      });
+      root.on('openchange', ({open, reason}) => {
+        if (!open && reason !== undefined) dismissed = true;
+      });
+      editor.view.dom.addEventListener('compositionend', () => queueMicrotask(sync));
+      document.querySelector('#detach')!.addEventListener('click', () => root.remove());
+      document.querySelector('#reattach')!.addEventListener('click', async () => {
+        document.body.append(root);
+        await query.updateComplete;
+        dismissed = false;
+        editor.commands.focus('end');
+        sync();
+      });
+      await root.updateComplete;
+      await list.updateComplete;
+      await query.updateComplete;
+      document.body.dataset.ready = 'true';
+    </script>
+    <style is:global>
+      body { margin: 24px; font: 16px system-ui; }
+      #scroller { margin-top: 32px; height: 260px; overflow: auto; border: 1px solid #888; }
+      #editor { margin: 100px 24px 0; }
+      .tiptap { min-height: 80px; outline: none; }
+      .spacer { height: 800px; }
+      #popup { width: 230px; overflow: auto; padding: 4px; background: white; border: 1px solid #888; }
+      #popup button { display: block; width: 100%; padding: 8px; text-align: left; }
+      #popup [data-active="true"] { background: #ddd; }
+    </style>
+  </body>
+</html>

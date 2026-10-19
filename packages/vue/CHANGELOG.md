@@ -1,5 +1,16 @@
 # @floating-ui-plus/vue
 
+## 0.11.0
+
+### Minor Changes
+
+- Prevent Query Enter activation during IME composition, including the Safari keyCode 229 confirmation path. Add direct list keyboard handlers and manual keyboard ownership for editor integrations. Support externally supplied query/composition state and editor focus targets without reading or changing the document, with attribute cleanup on unbind. Expose the APIs through Web Components and Vue, and verify a real Tiptap integration with unit and browser E2E tests.
+
+### Patch Changes
+
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.0
+
 ## 0.10.1
 
 ### Patch Changes

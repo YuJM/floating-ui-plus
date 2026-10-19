@@ -233,6 +233,45 @@ provide an application-owned async `source`; the package does not choose your
 transport or cache library. Use `query.setQuery()` for programmatic changes and
 `query.search?.loadMore()` for cursor pagination.
 
+## External contenteditable and editor queries
+
+Configure `externalInput` to use an editor outside the query's DOM subtree.
+Query extraction, composition state, and document updates remain editor-owned:
+
+```ts
+query.configure({
+  externalInput: editorElement,
+  search: {source, getItemKey: (item) => item.id},
+  getItemLabel: (item) => item.label,
+});
+await query.updateComplete;
+
+// In the editor update hook:
+query.setExternalQuery(queryText, {composing: editorIsComposing});
+
+// In the editor's own keyboard hook, after its IME guards:
+const handled = !editorIsComposing && query.handleKeyDown(event);
+```
+
+Keep `<floating-query>` inside `<floating-list navigation loop virtual>`.
+External mode enables the list's `manualKeyboard` mode while bound, so FUP
+does not intercept editor keydown before ProseMirror processes composition.
+`query.handleKeyDown(event)` handles list navigation and Enter activation and
+returns a boolean without redispatching a synthetic event. Escape, Tab,
+document range validation, and transactions stay in the application.
+
+Standalone lists also expose `list.handleKeyDown(event)`; set the
+`manual-keyboard` attribute to leave native event ordering to the caller.
+The editor stays the root's real reference, while `root.setPositionReference()`
+can track its caret separately. Removing/rebinding the query restores its
+external loading/active-option attributes and the list's keyboard mode.
+
+The demo's `/fixtures/editor-query` route tests this contract with real Tiptap.
+Its Chrome and WebKit E2E covers typing, original-event navigation, portal
+clicks, scrolling, composition event sequences, dismissal, and remount cleanup.
+Synthetic composition events verify the integration contract; they do not
+automate a platform's native IME candidate window.
+
 ## Closing contract
 
 `data-fup-close` remains a convenient declarative close control. For

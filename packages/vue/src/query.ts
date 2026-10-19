@@ -2,6 +2,7 @@ import {
   QueryController as WebQueryController,
   createQueryStatusFormatter,
   type FloatingPlugin,
+  type ExternalQueryOptions,
   type QueryInputProps,
   type QueryNavigationOptions,
   type QueryOptionProps,
@@ -60,6 +61,9 @@ export interface UseQueryReturn<T> {
   inputProps: ComputedRef<QueryInputProps & QueryInputLifecycleProps>;
   rolePlugin: FloatingPlugin;
   setQuery(query: string, event?: Event): void;
+  setExternalQuery(query: string, options?: ExternalQueryOptions): void;
+  bindExternalInput(input: HTMLElement): () => void;
+  handleKeyDown(event: KeyboardEvent): boolean;
   activate(item: T, event?: Event): void;
   getItemId(index: number): string;
   getOptionProps(item: T, index: number): QueryOptionProps;
@@ -161,6 +165,9 @@ export function useQuery<T>(options: UseQueryOptions<T>): UseQueryReturn<T> {
     inputProps,
     rolePlugin,
     setQuery: (query, event) => controller.setQuery(query, event),
+    setExternalQuery: (query, state) => controller.setExternalQuery(query, state),
+    bindExternalInput: (input) => controller.bindExternalInput(input),
+    handleKeyDown: (event) => controller.handleKeyDown(event),
     activate: (item, event) => controller.activate(item, event),
     getItemId: (index) => controller.getItemId(index),
     getOptionProps: (item, index) => {

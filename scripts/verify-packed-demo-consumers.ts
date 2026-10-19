@@ -119,6 +119,10 @@ async function verifyAdapter(
     join(root, 'apps/demo/test/consumer', `fuzzy-${adapter}.ts`),
     join(fixture, 'entry.ts'),
   );
+  await copyFile(
+    join(root, 'apps/demo/test/consumer', `editor-${adapter}.ts`),
+    join(fixture, 'editor.ts'),
+  );
   const allRuntime = imports.runtime.join(', ');
   const allTypes = imports.types.join(', ');
   await Bun.write(join(fixture, 'all-demo-imports.ts'), [
@@ -137,7 +141,7 @@ async function verifyAdapter(
       skipLibCheck: true,
       noEmit: true,
     },
-    files: ['all-demo-imports.ts', 'entry.ts'],
+    files: ['all-demo-imports.ts', 'entry.ts', 'editor.ts'],
   }));
   run(['bun', 'install', '--ignore-scripts'], fixture);
 
@@ -172,9 +176,10 @@ async function verifyAdapter(
   }
 
   run(['bun', 'build', 'entry.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
+  run(['bun', 'build', 'editor.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
   run(['bun', 'build', 'all-demo-imports.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
   run([join(root, 'node_modules/.bin/tsc'), '--project', 'tsconfig.json'], fixture);
-  console.log(`✓ @floating-ui-plus/${adapter} builds imports from ${imports.files.length} demo files and fuzzy Query fixture`);
+  console.log(`✓ @floating-ui-plus/${adapter} builds imports from ${imports.files.length} demo files, fuzzy Query, and external editor Query fixtures`);
 }
 
 const directory = await mkdtemp(join(tmpdir(), 'floating-ui-plus-consumer-'));

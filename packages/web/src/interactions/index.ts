@@ -9,7 +9,7 @@ export type {FocusOptions} from './focus';
 export {hover} from './hover';
 export type {HandleClose, HandleCloseContext, HoverOptions} from './hover';
 export {listNavigation} from './listNavigation';
-export type {ListNavigationOptions} from './listNavigation';
+export type {ListNavigationOptions, ListNavigationPlugin} from './listNavigation';
 export {role} from './role';
 export type {FloatingRole, RoleOptions} from './role';
 export {safePolygon} from './safePolygon';
