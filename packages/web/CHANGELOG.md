@@ -1,5 +1,11 @@
 # @floating-ui-plus/web
 
+## 0.11.2
+
+### Patch Changes
+
+- Keep query option accessibility state synchronized and ignore stale or composing option clicks.
+
 ## 0.11.1
 
 ### Patch Changes

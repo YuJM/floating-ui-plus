@@ -339,6 +339,7 @@ export class QueryController<T> {
       event.isComposing ||
       event.keyCode === 229 ||
       this.search.composing ||
+      this.search.loading ||
       !(this.#options.selectOnEnter ?? true) ||
       event.key !== 'Enter' ||
       this.activeIndex == null
@@ -380,11 +381,19 @@ export class QueryController<T> {
       ...(semantics === 'combobox'
         ? {
             role: 'option' as const,
-            'aria-selected': 'false' as const,
+            'aria-selected': (index === this.activeIndex ? 'true' : 'false') as 'true' | 'false',
           }
         : {}),
       onMousedown: (event) => event.preventDefault(),
-      onClick: (event) => this.activate(item, event),
+      onClick: (event) => {
+        const current = this.search.items[index];
+        if (
+          event.defaultPrevented || this.#destroyed || this.search.composing ||
+          this.search.loading || item == null || current == null ||
+          this.getItemKey(current) !== this.getItemKey(item)
+        ) return;
+        this.activate(current, event);
+      },
     };
   }
 
@@ -586,7 +595,15 @@ export class QueryController<T> {
       }
     }
     this.listRef.current.forEach((item, index) => {
-      if (item) item.dataset.active = String(index === this.activeIndex);
+      if (!item) return;
+      item.dataset.active = String(index === this.activeIndex);
+      const value = this.search.items[index];
+      if (this.#getSemantics() === 'combobox') {
+        const selected = value == null
+          ? 'false'
+          : this.getOptionProps(value, index)['aria-selected'];
+        if (selected != null) item.setAttribute('aria-selected', selected);
+      }
     });
   }
 

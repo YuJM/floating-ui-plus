@@ -214,6 +214,12 @@ unbindEditor();
 plugin returns false. Manual mode disables automatic keyboard handling while
 keeping pointer and open-state behavior.
 
+Bound option clicks reject composing, loading, or stale results before closing
+the popup. Combobox options reflect the active item with `aria-selected`; this
+is list state, not a committed document value. The editor must still validate
+its current document range and permissions before applying a command, including
+when it calls `activate()` directly.
+
 Vue's `useQuery()` exposes `bindExternalInput()`, `setExternalQuery()`, and
 the Enter-only `handleKeyDown()`. Obtain the manual navigation plugin from
 `query.controller.navigationPlugin()` and pass it to `useFloating().pipe()`

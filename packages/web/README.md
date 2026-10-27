@@ -145,6 +145,11 @@ combobox option semantics.
 
 The `onActivate` callback is deliberately not a selected value. It lets search,
 autocomplete, filters, and command palettes decide what activation means.
+For combobox semantics, the active option exposes `aria-selected="true"` as
+transient list state; it does not commit a value. Bound option clicks are
+ignored while searching or composing and when the option no longer matches the
+current result at its index. Direct `activate()` calls remain application-owned;
+validate editor document ranges and permissions before applying a command.
 
 `createSearch()` is a state controller, not a renderer. Subscribe it to render
 the current `search.items`, then replace the query's list elements after each

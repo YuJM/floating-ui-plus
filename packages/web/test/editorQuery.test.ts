@@ -22,6 +22,46 @@ function setup() {
 }
 
 describe('IME-safe Query activation', () => {
+  test('rejects stale, loading, and composing pointer options before closing', () => {
+    const {query, search, onActivate} = setup();
+    const onOpenChange = vi.fn();
+    query.setOptions({onOpenChange});
+    const button = document.createElement('button');
+    query.bindOption(button, items[0], 0);
+    search.startComposition();
+    button.click();
+    search.endComposition();
+    search.setControlledState({items, loading: true});
+    button.click();
+    query.setActiveIndex(0);
+    const enter = new KeyboardEvent('keydown', {key: 'Enter', cancelable: true});
+    expect(query.handleKeyDown(enter)).toBe(false);
+    expect(enter.defaultPrevented).toBe(false);
+    search.setControlledState({items: [items[1], items[0]], loading: false});
+    button.click();
+    expect(onActivate).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    const updated = {...items[0], label: 'updated'};
+    search.setControlledState({items: [updated, items[1]], loading: false});
+    button.click();
+    expect(onActivate).toHaveBeenCalledOnce();
+    expect(onActivate).toHaveBeenCalledWith(updated, expect.any(MouseEvent));
+  });
+
+  test('keeps combobox option selection aligned with virtual navigation', () => {
+    const {query} = setup();
+    const options = items.map(() => document.createElement('button'));
+    query.setListElements(options);
+    options.forEach((element, index) => query.bindOption(element, items[index]!, index));
+    query.setActiveIndex(0);
+    expect(options.map((element) => element.getAttribute('aria-selected'))).toEqual(['true', 'false']);
+    query.setActiveIndex(1);
+    expect(options.map((element) => element.getAttribute('aria-selected'))).toEqual(['false', 'true']);
+    query.setActiveIndex(0);
+    query.search.setControlledState({items: []});
+    expect(options[0]?.getAttribute('aria-selected')).toBe('false');
+  });
+
   test.each(['event', 'search', '229', 'prevented'])(
     'leaves Enter untouched during %s composition/handling', (guard) => {
       const {query, search, onActivate} = setup();

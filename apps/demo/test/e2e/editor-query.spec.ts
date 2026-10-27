@@ -24,6 +24,25 @@ test('real Tiptap keys navigate once, preserve selection/focus and execute one t
   await expect(page.locator('#popup')).toHaveCount(0);
 });
 
+test('query options expose active selection and do not activate during composition', async ({page}) => {
+  const editor = page.getByRole('combobox', {name: 'Document editor'});
+  const paragraph = page.getByRole('option', {name: '본문', exact: true});
+  const heading = page.getByRole('option', {name: '제목', exact: true});
+  await page.keyboard.press('ArrowDown');
+  await expect(paragraph).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('ArrowDown');
+  await expect(paragraph).toHaveAttribute('aria-selected', 'false');
+  await expect(heading).toHaveAttribute('aria-selected', 'true');
+  await page.locator('floating-query').evaluate((query) => query.setExternalQuery('', {composing: true}));
+  await heading.click();
+  await expect(page.locator('#activations')).toHaveText('0');
+  await expect(page.locator('#popup')).toBeVisible();
+  await page.locator('floating-query').evaluate((query) => query.setExternalQuery('', {composing: false}));
+  await heading.click();
+  await expect(page.locator('#activations')).toHaveText('1');
+  await expect(editor.locator('h2')).toBeVisible();
+});
+
 test('Home/End scroll only the option list and Escape preserves writing focus', async ({page}) => {
   const editor = page.getByRole('combobox', {name: 'Document editor'});
   const scrollTop = await page.locator('#scroller').evaluate((element) => element.scrollTop);
