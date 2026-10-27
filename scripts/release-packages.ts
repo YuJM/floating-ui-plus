@@ -3,6 +3,12 @@ import {createInterface} from 'node:readline/promises';
 import {mkdtemp, readdir, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {createHash} from 'node:crypto';
+import {
+  packageNames,
+  verifyPackedConsumers,
+  type PackageArchives,
+} from './verify-packed-demo-consumers';
 
 type Mode = 'check' | 'publish';
 
@@ -19,6 +25,21 @@ interface PackageInfo {
   dependencies: Record<string, string>;
 }
 
+interface PreparedPackage extends PackageInfo {
+  archive: string;
+  integrity: string;
+}
+
+interface PackedManifest {
+  name: string;
+  version: string;
+  exports?: unknown;
+  main?: string;
+  module?: string;
+  types?: string;
+  dependencies?: Record<string, string>;
+}
+
 const rootDirectory = fileURLToPath(new URL('..', import.meta.url));
 const packageDirectories = [
   'packages/web',
@@ -33,8 +54,8 @@ Usage:
   bun scripts/release-packages.ts --check
   bun scripts/release-packages.ts --publish
 
---check    Validate authentication, tests, builds, archives, and npm versions.
---publish  Run the same checks from any clean checkout, then publish.
+--check    Validate local artifacts and public npm versions; report authentication.
+--publish  Require authentication and a clean checkout, verify, then publish the verified archives.
 `);
 }
 
@@ -164,18 +185,58 @@ export function validatePackedDependencies(
   }
 }
 
+export function validatePackedManifest(
+  packed: PackedManifest,
+  packages: PackageInfo[],
+  files: string[],
+) {
+  validatePackedDependencies(packed, packages);
+  const source = packages.find((pkg) => pkg.name === packed.name)!;
+  if (packed.version !== source.version) {
+    throw new Error(`${packed.name} archive version ${packed.version} differs from ${source.version}.`);
+  }
+  if (!packed.exports || typeof packed.exports !== 'object' || !('.' in packed.exports)) {
+    throw new Error(`${packed.name} is missing its public root export.`);
+  }
+  const targets: string[] = [];
+  const collect = (value: unknown) => {
+    if (typeof value === 'string') targets.push(value);
+    else if (value && typeof value === 'object') Object.values(value).forEach(collect);
+  };
+  collect(packed.exports);
+  collect(packed.main);
+  collect(packed.module);
+  collect(packed.types);
+  const paths = new Set(files);
+  for (const target of targets) {
+    if (target.split('/').includes('..') || !paths.has(`package/${target.replace(/^\.\//, '')}`)) {
+      throw new Error(`${packed.name} exports a missing archive file: ${target}`);
+    }
+  }
+}
+
+export async function archiveIntegrity(archive: string) {
+  const bytes = new Uint8Array(await Bun.file(archive).arrayBuffer());
+  return `sha512-${createHash('sha512').update(bytes).digest('base64')}`;
+}
+
+export async function validateArchiveIntegrity(
+  prepared: Pick<PreparedPackage, 'name' | 'archive' | 'integrity'>,
+) {
+  if (await archiveIntegrity(prepared.archive) !== prepared.integrity) {
+    throw new Error(`${prepared.name} archive changed after verification. Run release checks again.`);
+  }
+}
+
 async function assertCleanWorktree() {
   const status = await capture(['git', 'status', '--porcelain']);
   validatePublishWorktree(status);
   console.log('✓ clean release worktree');
 }
 
-async function assertNpmAuthentication() {
+async function checkNpmAuthentication() {
   const result = await execute(['bun', 'pm', 'whoami'], {capture: true});
-  if (result.exitCode !== 0) {
-    throw new Error('npm authentication failed. Run `bunx npm login` and try again.');
-  }
-  console.log('✓ npm authentication');
+  return result.exitCode === 0;
 }
 
 async function isPublished(pkg: PackageInfo) {
@@ -197,15 +258,18 @@ async function isPublished(pkg: PackageInfo) {
   throw new Error(`Unable to query npm for ${specifier}.\n${output.trim()}`);
 }
 
-async function runVerification(packages: PackageInfo[]) {
+async function runVerification(packages: PackageInfo[], directory: string) {
+  console.log('\nBuilding packages...');
+  await run(['bun', 'run', 'build:packages']);
+
   console.log('\nTypechecking...');
   await run(['bun', 'run', 'typecheck']);
 
   console.log('\nRunning package unit tests...');
   await run(['bun', 'run', 'test:packages']);
 
-  console.log('\nBuilding packages...');
-  await run(['bun', 'run', 'build:packages']);
+  console.log('\nTesting release tooling...');
+  await run(['bun', 'run', 'test:release']);
 
   console.log('\nRunning package browser tests...');
   await run([
@@ -217,35 +281,38 @@ async function runVerification(packages: PackageInfo[]) {
   ]);
 
   console.log('\nPreviewing package archives...');
+  const prepared: PreparedPackage[] = [];
+  const archives = {} as PackageArchives;
   for (const pkg of packages) {
     console.log(`\n${pkg.name}@${pkg.version}`);
-    const directory = await mkdtemp(join(tmpdir(), 'floating-ui-plus-pack-'));
-    try {
-      const archive = join(directory, 'package.tgz');
-      await run(
-        ['bun', 'pm', 'pack', '--filename', archive],
-        `${rootDirectory}/${pkg.directory}`,
-      );
-      const packed = JSON.parse(
-        await capture(['tar', '-xOf', archive, 'package/package.json']),
-      );
-      validatePackedDependencies(packed, packages);
-      console.log('✓ packed workspace dependencies match package versions');
-    } finally {
-      await rm(directory, {recursive: true, force: true});
-    }
+    const key = packageNames.find((name) => pkg.directory === `packages/${name}`);
+    if (!key) throw new Error(`Unknown package archive: ${pkg.directory}`);
+    const archive = join(directory, `${key}.tgz`);
     await run(
-      ['bun', 'publish', '--dry-run', '--access', 'public'],
+      ['bun', 'pm', 'pack', '--filename', archive],
       `${rootDirectory}/${pkg.directory}`,
+    );
+    const packed = JSON.parse(
+      await capture(['tar', '-xOf', archive, 'package/package.json']),
+    );
+    const files = (await capture(['tar', '-tf', archive])).split('\n');
+    validatePackedManifest(packed, packages, files);
+    const integrity = await archiveIntegrity(archive);
+    prepared.push({...pkg, archive, integrity});
+    archives[key] = archive;
+    console.log(`✓ archive exports, version, dependencies: ${integrity}`);
+    await run(
+      ['bun', 'publish', '--dry-run', '--access', 'public', archive],
     );
   }
 
   console.log('\nBuilding demo imports from packed packages...');
-  await run(['bun', 'scripts/verify-packed-demo-consumers.ts']);
+  await verifyPackedConsumers(archives);
+  return prepared;
 }
 
-async function findPendingPackages(packages: PackageInfo[]) {
-  const pending: PackageInfo[] = [];
+async function findPendingPackages<T extends PackageInfo>(packages: T[]) {
+  const pending: T[] = [];
   for (const pkg of packages) {
     if (!(await isPublished(pkg))) pending.push(pkg);
   }
@@ -281,35 +348,62 @@ export async function main() {
 
   await run(['bun', 'run', 'check:lockfile']);
 
-  await assertNpmAuthentication();
-  await runVerification(packages);
-  const pendingPackages = await findPendingPackages(packages);
-
-  if (pendingPackages.length === 0) {
-    console.log('\nAll local package versions are already published.');
-    return;
+  const authenticated = await checkNpmAuthentication();
+  if (mode === 'publish' && !authenticated) {
+    throw new Error('npm authentication failed. Run `bunx npm login` and try again.');
   }
+  console.log(authenticated
+    ? '✓ npm authentication'
+    : 'npm authentication unavailable; local/public-registry checks will continue. Publication requires login.');
+  const directory = await mkdtemp(join(tmpdir(), 'floating-ui-plus-release-'));
+  try {
+    const prepared = await runVerification(packages, directory);
+    const pendingPackages = await findPendingPackages(prepared);
 
-  console.log('\nUnpublished package versions:');
-  for (const pkg of pendingPackages) {
-    console.log(`  - ${pkg.name}@${pkg.version}`);
-  }
+    if (pendingPackages.length === 0) {
+      console.log('\nAll local package versions are already published.');
+      return;
+    }
 
-  if (mode === 'check') {
-    console.log('\nRelease check completed. No packages were published.');
-    return;
-  }
+    console.log('\nUnpublished package versions:');
+    for (const pkg of pendingPackages) {
+      console.log(`  - ${pkg.name}@${pkg.version}`);
+    }
 
-  await confirmPublish(pendingPackages);
-  for (const pkg of pendingPackages) {
-    console.log(`\nPublishing ${pkg.name}@${pkg.version} with Bun...`);
-    await run(
-      ['bun', 'publish', '--access', 'public', '--tolerate-republish'],
-      `${rootDirectory}/${pkg.directory}`,
-    );
+    if (mode === 'check') {
+      console.log('\nRelease check completed. No packages were published.');
+      if (!authenticated) console.log('Before publishing: run `bunx npm login`, then use the publish command to rerun verification.');
+      return;
+    }
+
+    // Builds and validation may update tracked files. Recheck both before
+    // confirmation and after the user has had time to edit the checkout.
+    await assertCleanWorktree();
+    await confirmPublish(pendingPackages);
+    await assertCleanWorktree();
+    const published: string[] = [];
+    try {
+      for (const pkg of pendingPackages) {
+        await validateArchiveIntegrity(pkg);
+        console.log(`\nPublishing ${pkg.name}@${pkg.version} with Bun...`);
+        // Publish the bytes that passed archive and consumer verification.
+        // A conflicting version must fail rather than silently succeed.
+        await run(['bun', 'publish', '--access', 'public', pkg.archive]);
+        published.push(`${pkg.name}@${pkg.version}`);
+      }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Publication stopped. Published in this run: ${published.join(', ') || 'none'}. `
+        + 'Rerun the release command after resolving the error; registry versions are checked again.\n'
+        + reason,
+      );
+    }
+    console.log('\nPackage publication completed.');
+    console.log('Push the release commit or any manual tags separately if desired.');
+  } finally {
+    await rm(directory, {recursive: true, force: true});
   }
-  console.log('\nPackage publication completed.');
-  console.log('Push the release commit or any manual tags separately if desired.');
 }
 
 if (import.meta.main) {

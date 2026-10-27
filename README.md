@@ -124,8 +124,12 @@ The demo uses local workspace links during development, so its browser tests
 cannot detect an incorrect dependency range in an npm archive. Run
 `bun run test:consumer` to install the packed adapters in isolated projects and
 build the public imports used by every Web Components and Vue demo with only
-the matching adapter as a direct Floating UI Plus dependency. The package
-release check runs this verification too.
+the matching adapter as a direct Floating UI Plus dependency. It also loads
+the packed Web Components adapter through an Auko-style dynamic namespace
+import in Chromium and WebKit, and checks the editor Query/List methods,
+IME guards, original-event navigation, and cleanup. Install both browser
+engines with `bun run test:browser:install` if needed. The package release
+check runs this verification against the same archives it would publish.
 
 Prepare and publish a release from the intended release branch:
 
@@ -133,8 +137,8 @@ Prepare and publish a release from the intended release branch:
 bun run version
 git add .changeset packages bun.lock
 git commit -m "release: 패키지 버전 업데이트"
-npm login
 bun run release:packages:check
+bunx npm login
 bun run release:packages
 ```
 
@@ -148,11 +152,26 @@ and `bun install --frozen-lockfile` do not detect that drift in this repository.
 Package builds and release checks run the lockfile check before packing. The
 publish command may run from any branch and does not require that branch to
 match a remote; it only requires a clean worktree so the reviewed files are
-exactly the files being published. It also verifies npm authentication,
-typechecks, runs package unit and browser tests, builds every package, previews
-each package archive, and asks for confirmation before publishing.
-`bun run release:packages:check` performs the package, authentication, test,
-build, archive, and npm-version validation without publishing anything.
+exactly the files being published. It builds packages before typechecking,
+runs release-tooling and package unit/browser tests, and verifies every packed
+runtime/type export target and workspace dependency version. Each archive is
+packed once, dry-run with Bun, and installed in isolated consumers. Publication
+uses those exact verified tarballs, checks their SHA-512 integrity, and asks
+for confirmation. The worktree is checked again before and after confirmation.
+
+`bun run release:packages:check` performs the local and public-registry checks
+without publishing anything. Missing npm authentication is reported but does
+not stop the build/export/browser checks; publishing still requires login.
+Registry connection or metadata errors fail the check. `bun run test:release`
+runs the release-tooling regression tests separately.
+
+The publish command requires authentication before verification. It publishes
+dependencies before adapters, stops on the first failure, and reports which
+versions succeeded. On rerun it queries registry versions again and skips
+already published versions. A conflicting version fails instead of being
+silently accepted with `--tolerate-republish`. Publishing a prepared archive
+uses [Bun's tarball publication](https://bun.com/docs/pm/cli/publish) so the
+package is not repacked or modified by a second packing lifecycle.
 Pushing the release commit or any manually created tags is a separate
 maintainer action and is not a publication prerequisite.
 

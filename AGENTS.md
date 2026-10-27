@@ -97,8 +97,8 @@ The maintainer release flow is:
 bun run version
 git add .changeset packages bun.lock
 git commit -m "release: 패키지 버전 업데이트"
-npm login
 bun run release:packages:check
+bunx npm login
 bun run release:packages
 ```
 
@@ -112,3 +112,11 @@ package archives, and asks for explicit confirmation before publication.
 
 `bun run release:packages:check` is the non-publishing validation command. It
 may query npm and launch browser tests, but it does not publish packages.
+Missing npm authentication is reported without skipping local/export/browser
+verification; `--publish` still requires authentication and a clean worktree.
+The release flow packs once, validates manifest export targets and workspace
+versions, tests those archives in isolated consumers, and publishes the same
+tarballs with an integrity check. Do not replace this with directory-based
+repacking or `--tolerate-republish`. Run `bun run test:release` when changing
+release tooling. `test:consumer` also requires Chromium and WebKit because it
+executes the packed editor API in both engines.
