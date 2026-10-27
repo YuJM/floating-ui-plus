@@ -42,6 +42,17 @@ export interface ListNavigationOptions {
   virtualItemRef?: Ref<HTMLElement | null> | undefined;
   itemSizes?: Array<{width: number; height: number}> | undefined;
   dense?: boolean | undefined;
+  /** Manual mode leaves keyboard event ordering to an editor integration. */
+  keyboardHandling?: 'automatic' | 'manual' | undefined;
+}
+
+export interface ListNavigationPlugin extends FloatingPlugin {
+  /**
+   * Handles the original event after an editor's own IME checks. Manual calls
+   * use popup navigation (including Home/End) unless source is `reference`.
+   * Returns false while disconnected or when the event is left unhandled.
+   */
+  handleKeyDown(event: KeyboardEvent, source?: 'reference' | 'floating'): boolean;
 }
 
 function isNavigationKey(
@@ -99,15 +110,19 @@ function isToEndKey(
 
 export function listNavigation(
   options: ValueOrGetter<ListNavigationOptions>,
-): FloatingPlugin {
+): ListNavigationPlugin {
   let lastInput: 'pointer' | 'keyboard' = 'keyboard';
   let pendingFocusOnOpen = false;
   let pendingFocusDirection: 'start' | 'end' | null = null;
   let logicalIndex = -1;
   let scrollRequest = 0;
+  let handleKeyDown: ListNavigationPlugin['handleKeyDown'] | undefined;
+  const handledEvents = new WeakSet<KeyboardEvent>();
 
   return {
     name: 'listNavigation',
+    handleKeyDown: (event, source = 'floating') =>
+      handleKeyDown?.(event, source) ?? false,
     connect(context) {
       const reference = context.elements.domReference;
       const floating = context.elements.floating;
@@ -184,17 +199,24 @@ export function listNavigation(
         }
       }
 
-      function onKeyDown(event: KeyboardEvent) {
+      function onKeyDown(
+        event: KeyboardEvent,
+        source: 'reference' | 'floating',
+      ): boolean {
         const current = getOptions();
         const orientation = current.orientation || 'vertical';
         const rtl = Boolean(current.rtl);
-        if (!current.enabled || event.defaultPrevented) {
-          return;
+        if (
+          !current.enabled || event.defaultPrevented || event.isComposing ||
+          event.keyCode === 229 || event.ctrlKey || event.metaKey ||
+          event.altKey || event.shiftKey
+        ) {
+          return false;
         }
 
         lastInput = 'keyboard';
 
-        if (current.nested && event.currentTarget === reference) {
+        if (current.nested && source === 'reference') {
           if (
             !isCrossAxisOpenKey(
               event.key,
@@ -202,7 +224,7 @@ export function listNavigation(
               rtl,
             )
           ) {
-            return;
+            return false;
           }
 
           event.preventDefault();
@@ -218,12 +240,12 @@ export function listNavigation(
             context.onOpenChange(true, event, 'list-navigation');
             scheduleFocusPending();
           }
-          return;
+          return true;
         }
 
         if (
           current.nested &&
-          event.currentTarget === floating &&
+          source === 'floating' &&
           isCrossAxisCloseKey(
             event.key,
             orientation,
@@ -243,18 +265,18 @@ export function listNavigation(
           if (reference instanceof HTMLElement && !current.virtual) {
             reference.focus({preventScroll: true});
           }
-          return;
+          return true;
         }
 
         const isHomeOrEnd = event.key === 'Home' || event.key === 'End';
         if (
           isHomeOrEnd &&
           !(
-            event.currentTarget === reference &&
+            source === 'reference' &&
             isTypeableElement(reference)
           )
         ) {
-          if (!context.open) return;
+          if (!context.open) return false;
           event.preventDefault();
           event.stopPropagation();
           navigate(
@@ -263,11 +285,11 @@ export function listNavigation(
               : getMaxListIndex(current.listRef, current.disabledIndices),
             event,
           );
-          return;
+          return true;
         }
 
         if (!isNavigationKey(event.key, orientation)) {
-          return;
+          return false;
         }
 
         const listRef = current.listRef;
@@ -279,8 +301,8 @@ export function listNavigation(
           logicalIndex = current.selectedIndex;
         }
 
-        if (event.currentTarget === reference && !context.open) {
-          if (!current.openOnArrowKeyDown) return;
+        if (source === 'reference' && !context.open) {
+          if (!current.openOnArrowKeyDown) return false;
           event.preventDefault();
           event.stopPropagation();
           pendingFocusOnOpen = true;
@@ -289,14 +311,14 @@ export function listNavigation(
             : 'end';
           context.onOpenChange(true, event, 'list-navigation');
           focusPendingItem();
-          return;
+          return true;
         }
 
         if (
-          event.currentTarget === floating &&
+          source === 'floating' &&
           !context.open
         ) {
-          return;
+          return false;
         }
 
         const cols = current.cols || 1;
@@ -382,7 +404,7 @@ export function listNavigation(
           if (nextItem != null) {
             navigate(nextItem, event);
           }
-          return;
+          return true;
         }
 
         const forward = isToEndKey(event.key, orientation, rtl);
@@ -424,12 +446,13 @@ export function listNavigation(
             event.preventDefault();
             event.stopPropagation();
           }
-          return;
+          return context.open;
         }
 
         event.preventDefault();
         event.stopPropagation();
         navigate(next === -1 ? null : next, event);
+        return true;
       }
 
       function findItem(target: EventTarget | null) {
@@ -474,9 +497,24 @@ export function listNavigation(
         enqueueMicrotask(focusPendingItem);
       }
 
+      const dispatchKeyDown: ListNavigationPlugin['handleKeyDown'] = (
+        event, source = 'floating',
+      ) => {
+        if (event.defaultPrevented || handledEvents.has(event)) return false;
+        const handled = onKeyDown(event, source);
+        if (handled) handledEvents.add(event);
+        return handled;
+      };
+      handleKeyDown = dispatchKeyDown;
+      const automaticKeyDown = (
+        event: KeyboardEvent, source: 'reference' | 'floating',
+      ) => {
+        if (getOptions().keyboardHandling !== 'manual') dispatchKeyDown(event, source);
+      };
+
       const cleanups = [
-        addListener(reference, 'keydown', onKeyDown),
-        addListener(floating, 'keydown', onKeyDown),
+        addListener(reference, 'keydown', (event) => automaticKeyDown(event, 'reference')),
+        addListener(floating, 'keydown', (event) => automaticKeyDown(event, 'floating')),
         addListener(reference, 'pointerdown', () => {
           lastInput = 'pointer';
         }),
@@ -524,6 +562,7 @@ export function listNavigation(
         ...cleanups,
         () => {
           scrollRequest++;
+          if (handleKeyDown === dispatchKeyDown) handleKeyDown = undefined;
         },
       ]);
     },

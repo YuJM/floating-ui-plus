@@ -1,6 +1,6 @@
 {
   "name": "floating-ui-plus-demo",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
   "type": "module",
   "scripts": {
@@ -41,6 +41,9 @@
     "@faker-js/faker": "^10.5.0",
     "@inlang/plugin-message-format": "^4.3.0",
     "@tailwindcss/vite": "^4.3.3",
+    "@tiptap/core": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
     "msw": "^2.15.0",
     "playwright": "^1.50.0",
     "tailwindcss": "^4.3.3",

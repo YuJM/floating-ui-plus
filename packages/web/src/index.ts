@@ -14,7 +14,49 @@ export {
   shift,
   size,
 } from '@floating-ui/dom';
-export type * from '@floating-ui/dom';
+export type {
+  AlignedPlacement,
+  Alignment,
+  AutoPlacementOptions,
+  AutoUpdateOptions,
+  Axis,
+  Boundary,
+  ClientRectObject,
+  ComputePositionConfig,
+  ComputePositionReturn,
+  Coords,
+  Derivable,
+  DetectOverflowOptions,
+  Dimensions,
+  ElementContext,
+  ElementRects,
+  Elements,
+  FlipOptions,
+  FloatingElement,
+  HideOptions,
+  InlineOptions,
+  Length,
+  LimitShiftOptions,
+  Middleware,
+  MiddlewareArguments,
+  MiddlewareData,
+  MiddlewareReturn,
+  MiddlewareState,
+  NodeScroll,
+  OffsetOptions,
+  Padding,
+  Placement,
+  Platform,
+  Rect,
+  ReferenceElement,
+  RootBoundary,
+  ShiftOptions,
+  Side,
+  SideObject,
+  SizeOptions,
+  Strategy,
+  VirtualElement,
+} from '@floating-ui/dom';
 
 export {createFloating} from './createFloating';
 export type * from './types';
@@ -66,6 +108,7 @@ export {
   QueryController,
 } from './combobox';
 export type {
+  ExternalQueryOptions,
   QueryInputProps,
   QueryNavigationOptions,
   QueryOptionProps,

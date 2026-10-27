@@ -1,6 +1,6 @@
 ---
 title: Vue
-description: Choose between Vue composables and declarative floating components.
+description: Choose Vue composables and components, including external editor Query state and IME-safe manual keyboard integration.
 ---
 
 The Vue adapter gives you two equivalent entry points:
@@ -96,6 +96,25 @@ labels, transition styling, and removal after an exit transition.
 See [Components](/docs/components), the [query guide](/docs/components/query),
 the [presence stack guide](/docs/components/presence-stack), and the
 [entry and exit animation guide](/docs/guides/animation) for focused examples.
+
+## External editor queries
+
+`useQuery()` exposes `bindExternalInput(editorElement)`,
+`setExternalQuery(text, {composing})`, and the Enter-only
+`handleKeyDown(event)`. Bind an editor after mount, supply its extracted query
+and composition state from editor updates, and avoid applying `inputProps`
+to the same external editor.
+
+Use `query.controller.navigationPlugin({keyboardHandling: 'manual', loop: true})`
+with `useFloating().pipe(query.rolePlugin, navigation)`. Inside the editor's
+keyboard hook, after editor IME, Escape/Tab, and modifier checks, return
+`navigation.handleKeyDown(event) || query.handleKeyDown(event)`.
+
+External binding leaves document text and selection under editor control. Its
+cleanup restores owned attributes; scope disposal destroys the current Query
+controller. Keep document-range validation and command transactions in the
+application. See the [editor Query guide](/docs/guides/editor-query) for the
+complete contract and the distinction from Web Components' combined handler.
 
 ## Related APIs
 

@@ -113,6 +113,18 @@ describe('ComboboxController', () => {
     expect(onSelect).toHaveBeenCalledWith(beta, expect.any(KeyboardEvent));
   });
 
+  test('keeps committed Combobox selection separate from the active option', () => {
+    const {combobox} = setup();
+    const options = [document.createElement('button'), document.createElement('button')];
+    combobox.bindOption(options[0], alpha, 0);
+    combobox.bindOption(options[1], beta, 1);
+    combobox.setListElements(options);
+    combobox.setSelectedItem(beta);
+    combobox.setActiveIndex(0);
+    expect(options.map((option) => option.getAttribute('aria-selected'))).toEqual(['false', 'true']);
+    expect(options[0]?.dataset.active).toBe('true');
+  });
+
   test('provides combobox role and virtual list navigation plugins', () => {
     const {combobox} = setup();
     expect(combobox.interactions({loop: true}).map((plugin) => plugin.name)).toEqual([
@@ -272,7 +284,7 @@ describe('QueryController', () => {
     expect(query.getOptionProps(beta, 1)).toMatchObject({
       id: 'query-option-beta',
       role: 'option',
-      'aria-selected': 'false',
+      'aria-selected': 'true',
     });
 
     input.dispatchEvent(

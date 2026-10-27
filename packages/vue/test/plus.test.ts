@@ -42,6 +42,36 @@ import {
 afterEach(() => cleanup());
 
 describe('Floating UI Plus Vue adapter', () => {
+  test('exposes an external editor query and cleans its attributes on unmount', async () => {
+    const editor = document.createElement('div');
+    editor.innerHTML = '<p>Document /</p>';
+    editor.setAttribute('aria-busy', 'original');
+    const activate = vi.fn();
+    const App = defineComponent({
+      setup() {
+        const search = useSearch({
+          items: [{id: 'heading', label: '제목'}],
+          getItemKey: (item) => item.id,
+        });
+        const query = useQuery({search, getItemLabel: (item) => item.label, onActivate: activate});
+        query.bindExternalInput(editor);
+        query.setExternalQuery('ㅈ', {composing: true});
+        query.controller.setActiveIndex(0);
+        expect(query.handleKeyDown(new KeyboardEvent('keydown', {key: 'Enter'}))).toBe(false);
+        query.setExternalQuery('제목', {composing: false});
+        query.controller.setActiveIndex(0);
+        expect(query.handleKeyDown(new KeyboardEvent('keydown', {key: 'Enter'}))).toBe(true);
+        return () => h('span', 'Editor adapter');
+      },
+    });
+    const {unmount} = render(App);
+    expect(activate).toHaveBeenCalledOnce();
+    expect(editor.innerHTML).toBe('<p>Document /</p>');
+    unmount();
+    expect(editor.getAttribute('aria-busy')).toBe('original');
+    expect(editor.hasAttribute('aria-activedescendant')).toBe(false);
+  });
+
   test('keeps FloatingSearch as a compatibility alias for FloatingResults', () => {
     expect(FloatingSearch).toBe(FloatingResults);
   });

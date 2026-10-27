@@ -4,6 +4,7 @@ export {
   QueryController,
 } from './combobox';
 export type {
+  ExternalQueryOptions,
   QueryInputProps,
   QueryNavigationOptions,
   QueryOptionProps,

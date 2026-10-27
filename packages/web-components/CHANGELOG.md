@@ -1,5 +1,41 @@
 # @floating-ui-plus/web-components
 
+## 0.11.2
+
+### Patch Changes
+
+- Keep query option accessibility state synchronized and ignore stale or composing option clicks.
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.2
+
+## 0.11.1
+
+### Patch Changes
+
+- Document external editor Query integration, IME-safe activation, direct keyboard APIs, caret references, ARIA ownership, cleanup, and migration from synthetic slash-menu keyboard events. Add Web, Web Components, and Vue guidance to the documentation site and generated LLM index.
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.1
+
+## 0.11.0
+
+### Minor Changes
+
+- Prevent Query Enter activation during IME composition, including the Safari keyCode 229 confirmation path. Add direct list keyboard handlers and manual keyboard ownership for editor integrations. Support externally supplied query/composition state and editor focus targets without reading or changing the document, with attribute cleanup on unbind. Expose the APIs through Web Components and Vue, and verify a real Tiptap integration with unit and browser E2E tests.
+- Restore original reference attributes when a root is removed or rebound, and re-register Query, List, and ListItem behavior when an ancestor reconnects.
+
+### Patch Changes
+
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.0
+
+## 0.10.1
+
+### Patch Changes
+
+- Explicitly re-export the `web` runtime and types from the package root. The 0.10.0 archive omitted source-level wildcard re-exports, so imports such as `createFuzzySearch`, `offset`, and `hover` failed when installing only Web Components.
+- Updated dependencies
+  - @floating-ui-plus/web@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes

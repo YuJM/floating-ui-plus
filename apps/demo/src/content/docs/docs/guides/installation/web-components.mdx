@@ -20,8 +20,11 @@ application bootstrap:
 import '@floating-ui-plus/web-components';
 ```
 
-The import defines the `floating-*` Custom Elements. The package is SSR-safe;
-element behavior starts when the elements connect in the browser.
+The import defines the `floating-*` Custom Elements and evaluates DOM-backed
+constructors. Load the runtime adapter on the client after DOM APIs exist.
+For shared SSR or headless editor modules, use type-only imports or the
+framework-neutral `@floating-ui-plus/web` controllers and load this adapter
+from a separate browser entry point.
 
 ## First surface
 

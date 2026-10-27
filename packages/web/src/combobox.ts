@@ -1,6 +1,7 @@
 import {
   listNavigation,
   type ListNavigationOptions,
+  type ListNavigationPlugin,
 } from './interactions/listNavigation';
 import {role} from './interactions/role';
 import type {SearchController, SearchSnapshot} from './search';
@@ -42,6 +43,12 @@ export interface QueryOptions<T> {
 export interface QuerySnapshot<T> {
   activeIndex: number | null;
   search: SearchSnapshot<T>;
+}
+
+/** Editor-owned query state. FUP never reads or writes the editor document. */
+export interface ExternalQueryOptions {
+  composing?: boolean | undefined;
+  event?: Event | undefined;
 }
 
 export interface QueryInputProps {
@@ -193,7 +200,8 @@ export class QueryController<T> {
 
   #options: QueryOptions<T>;
   #listeners = new Set<(snapshot: QuerySnapshot<T>) => void>();
-  #input: HTMLInputElement | null = null;
+  #input: HTMLElement | null = null;
+  #externalInput = false;
   #inputCleanup: (() => void) | null = null;
   #unsubscribeSearch: () => void;
   #destroyed = false;
@@ -216,6 +224,7 @@ export class QueryController<T> {
         this.setActiveIndex(null);
         return;
       }
+      this.#syncActiveState();
       this.emit();
     });
   }
@@ -272,6 +281,18 @@ export class QueryController<T> {
     this.search.setQuery(query);
   }
 
+  /** Supplies editor state without modifying its DOM or installing listeners. */
+  setExternalQuery(query: string, options: ExternalQueryOptions = {}) {
+    if (query !== this.search.query) this.setActiveIndex(null);
+    if (options.composing) this.search.startComposition();
+    this.requestOpen(true, options.event);
+    if (!options.composing && this.search.composing) {
+      this.search.endComposition(query);
+    } else {
+      this.search.setQuery(query);
+    }
+  }
+
   /** Applies an external query preset and restores focus to the bound input. */
   activateQuery(query: string, event?: Event) {
     this.setQuery(query, event);
@@ -310,18 +331,26 @@ export class QueryController<T> {
     );
   };
 
-  handleKeyDown = (event: KeyboardEvent) => {
+  /** Handles Enter activation; compose with a navigation plugin's handler. */
+  handleKeyDown = (event: KeyboardEvent): boolean => {
     if (
+      event.defaultPrevented ||
+      this.#destroyed ||
+      event.isComposing ||
+      event.keyCode === 229 ||
+      this.search.composing ||
+      this.search.loading ||
       !(this.#options.selectOnEnter ?? true) ||
       event.key !== 'Enter' ||
       this.activeIndex == null
     ) {
-      return;
+      return false;
     }
     const item = this.search.items[this.activeIndex];
-    if (!item) return;
+    if (!item) return false;
     event.preventDefault();
     this.activate(item, event);
+    return true;
   };
 
   getInputProps(): QueryInputProps {
@@ -352,11 +381,19 @@ export class QueryController<T> {
       ...(semantics === 'combobox'
         ? {
             role: 'option' as const,
-            'aria-selected': 'false' as const,
+            'aria-selected': (index === this.activeIndex ? 'true' : 'false') as 'true' | 'false',
           }
         : {}),
       onMousedown: (event) => event.preventDefault(),
-      onClick: (event) => this.activate(item, event),
+      onClick: (event) => {
+        const current = this.search.items[index];
+        if (
+          event.defaultPrevented || this.#destroyed || this.search.composing ||
+          this.search.loading || item == null || current == null ||
+          this.getItemKey(current) !== this.getItemKey(item)
+        ) return;
+        this.activate(current, event);
+      },
     };
   }
 
@@ -372,6 +409,7 @@ export class QueryController<T> {
 
   bindInput(input: HTMLInputElement) {
     this.#inputCleanup?.();
+    this.#externalInput = false;
     this.#input = input;
     const props = this.getInputProps();
     input.value = props.value;
@@ -406,9 +444,43 @@ export class QueryController<T> {
    * itself. Unlike `bindInput()`, this does not add listeners.
    */
   setInputElement(input: HTMLInputElement | null) {
+    this.#inputCleanup?.();
+    this.#externalInput = false;
     this.#input = input;
     this.#syncInputState();
     this.#syncActiveState();
+  }
+
+  /**
+   * Binds only loading/active-option attributes and a focus target. The caller
+   * owns query extraction, composition, keyboard ordering, and document edits.
+   * The original attributes are restored on rebind, cleanup, or destroy.
+   */
+  bindExternalInput(input: HTMLElement) {
+    this.#inputCleanup?.();
+    const attributes = [
+      'aria-busy', 'data-loading',
+      ...(this.#getSemantics() === 'combobox' ? ['aria-activedescendant'] : []),
+    ];
+    const previous = attributes.map((name) => input.getAttribute(name));
+    this.#input = input;
+    this.#externalInput = true;
+    this.#syncInputState();
+    this.#syncActiveState();
+    let disposed = false;
+    const cleanup = () => {
+      if (disposed) return;
+      disposed = true;
+      attributes.forEach((name, index) => {
+        const value = previous[index];
+        if (value == null) input.removeAttribute(name);
+        else input.setAttribute(name, value);
+      });
+      if (this.#input === input) this.#input = null;
+      if (this.#inputCleanup === cleanup) this.#inputCleanup = null;
+    };
+    this.#inputCleanup = cleanup;
+    return cleanup;
   }
 
   bindQueryTrigger(element: HTMLElement, query: string) {
@@ -461,7 +533,7 @@ export class QueryController<T> {
 
   navigationPlugin(
     options: Partial<QueryNavigationOptions> = {},
-  ): FloatingPlugin {
+  ): ListNavigationPlugin {
     return listNavigation(() => ({
       ...this.getNavigationOptions(options),
       listRef: this.listRef,
@@ -494,7 +566,9 @@ export class QueryController<T> {
   }
 
   protected setInputValue(value: string) {
-    if (this.#input) this.#input.value = value;
+    if (!this.#externalInput && this.#input && this.#input instanceof HTMLInputElement) {
+      this.#input.value = value;
+    }
   }
 
   protected focusInput() {
@@ -510,7 +584,7 @@ export class QueryController<T> {
   }
 
   #syncActiveState() {
-    if (this.#input) {
+    if (this.#input && (!this.#externalInput || this.#getSemantics() === 'combobox')) {
       if (this.#getSemantics() !== 'combobox' || this.activeIndex == null) {
         this.#input.removeAttribute('aria-activedescendant');
       } else {
@@ -521,7 +595,15 @@ export class QueryController<T> {
       }
     }
     this.listRef.current.forEach((item, index) => {
-      if (item) item.dataset.active = String(index === this.activeIndex);
+      if (!item) return;
+      item.dataset.active = String(index === this.activeIndex);
+      const value = this.search.items[index];
+      if (this.#getSemantics() === 'combobox') {
+        const selected = value == null
+          ? 'false'
+          : this.getOptionProps(value, index)['aria-selected'];
+        if (selected != null) item.setAttribute('aria-selected', selected);
+      }
     });
   }
 

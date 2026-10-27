@@ -60,6 +60,7 @@ export class FloatingRootRuntime {
   #forceTemplateRemount = false;
   #contentWarning: string | null = null;
   #referenceAttributes = new Set<string>();
+  #originalReferenceAttributes = new Map<string, string | null>();
   #floatingAttributes = new Set<string>();
   #contextAttachmentCleanup: (() => void) | null = null;
   #unsubscribePosition: (() => void) | null = null;
@@ -181,6 +182,7 @@ export class FloatingRootRuntime {
         this.#contentScopes.set(scope, null);
       }
       this.engine.disconnect();
+      this.#restoreReferenceAttributes();
       this.#contextAttachmentCleanup?.();
       this.#contextAttachmentCleanup = null;
       this.engine.setContextParent(null);
@@ -254,13 +256,7 @@ export class FloatingRootRuntime {
 
   setReferenceElement(reference: Element | null) {
     if (reference === this.#reference) return;
-    if (this.#reference) {
-      this.#referenceAttributes = setAttributes(
-        this.#reference,
-        {},
-        this.#referenceAttributes,
-      );
-    }
+    this.#restoreReferenceAttributes();
     this.#reference = reference;
     this.topLayer.setRestoreFocusElement(
       reference instanceof HTMLElement ? reference : null,
@@ -601,7 +597,12 @@ export class FloatingRootRuntime {
 
   syncBindings() {
     const context = this.engine.context;
-    if (this.#reference) {
+    if (this.#reference && this.#connected) {
+      for (const name of Object.keys(context.attributes.reference ?? {})) {
+        if (!this.#originalReferenceAttributes.has(name)) {
+          this.#originalReferenceAttributes.set(name, this.#reference.getAttribute(name));
+        }
+      }
       this.#referenceAttributes = setAttributes(
         this.#reference,
         context.attributes.reference ?? {},
@@ -655,6 +656,17 @@ export class FloatingRootRuntime {
         rotate: arrowOptions.rotation !== 'none',
       }),
     );
+  }
+
+  #restoreReferenceAttributes() {
+    if (this.#reference) {
+      for (const [name, value] of this.#originalReferenceAttributes) {
+        if (value == null) this.#reference.removeAttribute(name);
+        else this.#reference.setAttribute(name, value);
+      }
+    }
+    this.#originalReferenceAttributes.clear();
+    this.#referenceAttributes.clear();
   }
 
   #installComponentPluginBridge() {

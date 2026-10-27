@@ -94,6 +94,7 @@ export default defineConfig({
               ],
             },
             {slug: 'docs/guides/dismiss'},
+            {slug: 'docs/guides/editor-query'},
             {slug: 'docs/guides/popover'},
             {slug: 'docs/guides/usage'},
           ],
@@ -121,7 +122,7 @@ export default defineConfig({
     sitemap({
       filter: (page) => {
         const pathname = new URL(page).pathname;
-        return pathname !== '/404';
+        return pathname !== '/404' && !pathname.startsWith('/fixtures/');
       },
     }),
   ],

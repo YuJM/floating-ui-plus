@@ -7,6 +7,25 @@ description: Position and coordinate one floating surface with a Custom Element.
 applies the positioning result, synchronizes open state, and exposes the
 framework-neutral middleware and interaction APIs through a Custom Element.
 
+## Editor references and caret positioning
+
+Use the editor element as the interaction reference and a virtual rectangle as
+the positioning reference. These are separate public bindings:
+
+```ts
+root.setReferenceElement(editorElement);
+root.setPositionReference({
+  contextElement: editorElement,
+  getBoundingClientRect: getCaretRect,
+});
+```
+
+Update caret geometry after relevant editor transactions. The application
+owns valid document positions and range mapping. Removing or rebinding a
+root restores the original attributes of its reference; the root does not
+own editor plugins or application listeners. See the
+[editor Query guide](/docs/guides/editor-query) for IME-safe event ordering.
+
 ## Native Popover surface
 
 Use `template[slot="content"]` for the usual anchored, conditional surface.

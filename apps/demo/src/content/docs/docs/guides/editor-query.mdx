@@ -1,0 +1,266 @@
+---
+title: Editor queries and IME-safe keyboard handling
+description: Connect contenteditable or Tiptap to external Query state, manual keyboard navigation, and caret positioning without synthetic events.
+---
+
+Use this pattern for slash commands, mentions, and other suggestions whose
+text comes from an editor rather than a normal input. The external Query and
+direct keyboard APIs were introduced in **0.11.0**.
+
+The editor supplies the extracted query, composition state, and caret geometry.
+Floating UI Plus owns search results, active-option navigation, and optional
+ARIA bindings. The editor keeps ownership of document text, selection, and
+transactions.
+
+## Choose the input contract
+
+| Input owner | Web | Web Components | Vue |
+| --- | --- | --- | --- |
+| Native input | `query.bindInput(input)` | An input inside `floating-query` | `query.inputProps` |
+| External editor | `query.bindExternalInput(editorElement)` | `query.configure({externalInput: editorElement, ...})` | `query.bindExternalInput(editorElement)` |
+| Query updates from the editor | `query.setExternalQuery(text, {composing})` | `query.setExternalQuery(text, {composing})` | `query.setExternalQuery(text, {composing})` |
+
+External binding installs no input, composition, or keyboard listeners on the
+editor. It supplies a focus target and loading/active-option attributes; it
+does not read `textContent`, replace document content, or move the selection.
+Do not also bind native input props to the same editor.
+
+## Web Components composition
+
+Keep the Query inside a shared list. The editor can be outside the root.
+Import the Web Components adapter in a browser module, after DOM APIs exist.
+
+```html
+<div id="editor" contenteditable="true" aria-label="Document editor"></div>
+
+<floating-root id="block-root" placement="bottom-start" strategy="fixed">
+  <floating-list navigation loop virtual>
+    <floating-query id="block-query" option-id-prefix="block-option">
+      <template slot="content">
+        <floating-results aria-label="Block commands" class="block-results">
+          <floating-results-item>
+            <floating-list-item>
+              <button type="button" data-search-text="label"></button>
+            </floating-list-item>
+          </floating-results-item>
+          <floating-results-empty>No matching blocks</floating-results-empty>
+        </floating-results>
+      </template>
+    </floating-query>
+  </floating-list>
+</floating-root>
+```
+
+The following browser-side adapter exposes update, keyboard, and disposal
+hooks for your editor. Call `update()` from editor updates and composition
+state changes. Pass `null` when the slash/mention range is no longer active.
+
+```ts
+import {
+  createFuzzySearchSource,
+  dismiss,
+  flip,
+  offset,
+  shift,
+  type FloatingQueryElement,
+  type FloatingRootElement,
+  type FloatingQueryActivateDetail,
+} from '@floating-ui-plus/web-components';
+
+type Command = {id: string; label: string};
+
+export async function connectBlockQuery(
+  editorElement: HTMLElement,
+  activateIfCurrent: (command: Command) => void,
+) {
+  const root = document.querySelector<FloatingRootElement>('#block-root')!;
+  const query = document.querySelector<FloatingQueryElement>('#block-query')!;
+  const commands: Command[] = [
+    {id: 'paragraph', label: 'Paragraph'},
+    {id: 'heading', label: 'Heading'},
+  ];
+
+  root.configure({
+    middleware: [offset(8), flip({padding: 12}), shift({padding: 12})],
+    plugins: [dismiss({escapeKey: false})],
+    topLayer: 'popover',
+  });
+  root.setReferenceElement(editorElement);
+  query.configure<Command>({
+    externalInput: editorElement,
+    search: {
+      source: createFuzzySearchSource(commands, {keys: [{name: 'label'}]}),
+      getItemKey: (item) => item.id,
+      debounceMs: 0,
+    },
+    getItemLabel: (item) => item.label,
+  });
+  await root.updateComplete;
+  await query.updateComplete;
+
+  const onActivate = (event: Event) => {
+    const {item} = (event as CustomEvent<FloatingQueryActivateDetail<Command>>).detail;
+    activateIfCurrent(item);
+  };
+  query.addEventListener('queryactivate', onActivate);
+
+  return {
+    update(text: string | null, composing: boolean, getCaretRect: () => DOMRect) {
+      if (text === null) {
+        root.open = false;
+        return;
+      }
+      query.setExternalQuery(text, {composing});
+      root.setPositionReference({
+        contextElement: editorElement,
+        getBoundingClientRect: getCaretRect,
+      });
+      root.open = true;
+      void root.updatePosition();
+    },
+    handleKeyDown(event: KeyboardEvent, editorIsComposing: boolean): boolean {
+      if (!root.open || editorIsComposing || event.isComposing || event.keyCode === 229) {
+        return false;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        root.close(event);
+        return true;
+      }
+      if (event.key === 'Tab') {
+        root.close(event);
+        return false;
+      }
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return false;
+      return query.handleKeyDown(event);
+    },
+    dispose() {
+      query.removeEventListener('queryactivate', onActivate);
+      root.remove();
+    },
+  };
+}
+```
+
+The external Query automatically puts its ancestor list in `manualKeyboard`
+mode while bound. It therefore waits for your editor hook instead of handling
+the editor's native keydown ahead of ProseMirror. `query.handleKeyDown(event)`
+uses the original event for navigation and Enter activation and returns
+whether it was handled. Do not create or redispatch a second KeyboardEvent.
+
+Your `activateIfCurrent` callback must re-read the current editor state and
+validate the expected range/query, composition state, and command before
+applying a transaction. This also protects pointer activation and callbacks
+queued before the document changed. Query's keyboard guard is not a document
+validity check.
+
+Bound the results surface with CSS such as `max-height: min(18rem,
+calc(100dvh - 2rem)); overflow: auto`. Use the [positioning and overflow
+guide](/docs/guides/styling/positioning) for middleware-driven sizing.
+
+## Tiptap and ProseMirror event ordering
+
+Call the adapter from ProseMirror's `handleKeyDown` hook, after the editor's
+own composition checks and DOM reconciliation. Keep this ordering when
+migrating an existing slash menu; do not replace it with a capture listener
+on `document` or the editor DOM.
+
+```ts
+handleKeyDown(view, event) {
+  return menu.handleKeyDown(event, view.composing);
+}
+```
+
+The `menu` above is the result of `connectBlockQuery()`. Query guards Enter
+using `event.isComposing`, `event.keyCode === 229`, and `search.composing`.
+The editor-level guard still protects Escape, Tab, and editor commands that
+Query does not handle. Preserve your application's modified-key policy too;
+Query's Enter handler does not define Ctrl/Meta/Alt/Shift shortcuts.
+
+Use the editor element as the real DOM reference for interactions and ARIA.
+Use `setPositionReference({contextElement, getBoundingClientRect})` for the
+caret. Tiptap can supply that rectangle using `editor.view.coordsAtPos()`;
+mapping a transaction to a valid document position remains editor-owned.
+
+## Web controller and Vue composable
+
+With the Web core, `query.handleKeyDown()` handles Enter only. Compose it with
+the navigation plugin returned by `query.navigationPlugin()` in your existing
+floating renderer:
+
+```ts
+const unbindEditor = query.bindExternalInput(editorElement);
+const navigation = query.navigationPlugin({
+  loop: true,
+  keyboardHandling: 'manual',
+});
+floating.pipe(query.rolePlugin(), navigation);
+
+// The floating controller must be connected with reference/floating elements.
+// Supply rendered option elements using setListElements() and bindOption().
+query.setExternalQuery(queryText, {composing: editorIsComposing});
+
+// Inside the editor hook, after IME, Escape/Tab, and modifier checks:
+const handled = navigation.handleKeyDown(event) || query.handleKeyDown(event);
+
+// When changing editor targets or disposing the integration:
+unbindEditor();
+```
+
+`listNavigation()` and `query.navigationPlugin()` return a
+`ListNavigationPlugin`. Its `handleKeyDown(event, source?)` defaults to
+`source: 'floating'`, so Home/End navigate result endpoints. Pass
+`'reference'` to retain native text-input Home/End behavior. A disconnected
+plugin returns false. Manual mode disables automatic keyboard handling while
+keeping pointer and open-state behavior.
+
+Bound option clicks reject composing, loading, or stale results before closing
+the popup. Combobox options reflect the active item with `aria-selected`; this
+is list state, not a committed document value. The editor must still validate
+its current document range and permissions before applying a command, including
+when it calls `activate()` directly.
+
+Vue's `useQuery()` exposes `bindExternalInput()`, `setExternalQuery()`, and
+the Enter-only `handleKeyDown()`. Obtain the manual navigation plugin from
+`query.controller.navigationPlugin()` and pass it to `useFloating().pipe()`
+alongside `query.rolePlugin`. Bind the editor after mount and release the
+binding when its target changes; scope disposal destroys the Query controller.
+See the [Vue framework guide](/docs/frameworks/vue) for renderer composition.
+
+## ARIA ownership and cleanup
+
+Default combobox semantics let Query manage the active descendant. Keep
+option IDs and bindings under the same Query owner. Use `semantics: 'none'`
+when the editor owns the role, controls relationship, and active-descendant
+contract; external binding then leaves its active-descendant attribute alone.
+Loading bindings still update `aria-busy` and `data-loading`.
+
+Unbinding an external input restores attributes owned by that binding.
+Removing or rebinding a Web Components root restores its original reference
+attributes. Reconnecting an ancestor re-registers Query, List, and ListItem
+behavior. Release subscriptions, editor plugins, and application event
+listeners separately; FUP does not own their lifetime.
+
+## Migrating a custom slash menu
+
+| Existing adapter code | Migration |
+| --- | --- |
+| Synthetic keydown creation and dispatch | Replace with the direct list or Query keyboard API |
+| Custom Enter activation in a rendered menu | Route it through Query to receive Query's IME guard |
+| Separate start/end composition and query-update branches | Call `setExternalQuery(text, {composing})` |
+| Manual active-descendant synchronization | Delegate to default Query semantics, or retain it with `semantics: 'none'` |
+| ProseMirror keyboard plugin and editor composition guard | Keep them as the editor event boundary |
+| Escape/Tab, modifiers, range validation, capability checks, and transactions | Keep these application policies |
+
+Upgrading the dependency alone does not protect a custom Enter handler that
+still calls application activation directly. Move that path onto Query before
+removing duplicate guards.
+
+## Verification example
+
+The repository's [Tiptap fixture](/fixtures/editor-query) uses these public APIs.
+Its `apps/demo/test/e2e/editor-query.spec.ts` specification covers original-event
+navigation, writing focus, Home/End scrolling, portal
+clicks, caret positioning, dismissal, and detach/reattach in Chrome and WebKit.
+Composition tests dispatch composition events and exercise the 229 guard;
+they do not automate an operating system's native IME candidate window.

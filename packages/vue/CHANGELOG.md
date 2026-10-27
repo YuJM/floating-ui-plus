@@ -1,5 +1,40 @@
 # @floating-ui-plus/vue
 
+## 0.11.2
+
+### Patch Changes
+
+- Keep query option accessibility state synchronized and ignore stale or composing option clicks.
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.2
+
+## 0.11.1
+
+### Patch Changes
+
+- Document external editor Query integration, IME-safe activation, direct keyboard APIs, caret references, ARIA ownership, cleanup, and migration from synthetic slash-menu keyboard events. Add Web, Web Components, and Vue guidance to the documentation site and generated LLM index.
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.1
+
+## 0.11.0
+
+### Minor Changes
+
+- Prevent Query Enter activation during IME composition, including the Safari keyCode 229 confirmation path. Add direct list keyboard handlers and manual keyboard ownership for editor integrations. Support externally supplied query/composition state and editor focus targets without reading or changing the document, with attribute cleanup on unbind. Expose the APIs through Web Components and Vue, and verify a real Tiptap integration with unit and browser E2E tests.
+
+### Patch Changes
+
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.0
+
+## 0.10.1
+
+### Patch Changes
+
+- Export Floating UI positioning types such as `Placement` and `Middleware` from the built Vue root declarations so demo components typecheck after installing only Vue.
+- Updated dependencies
+  - @floating-ui-plus/web@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes

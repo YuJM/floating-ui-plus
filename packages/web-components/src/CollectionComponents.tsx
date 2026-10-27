@@ -21,6 +21,7 @@ import {
   typeahead,
   type CompositeOptions,
   type FloatingPlugin,
+  type ListNavigationPlugin,
 } from '@floating-ui-plus/web';
 
 import {getFloatingRootRuntime} from './FloatingController';
@@ -181,9 +182,11 @@ interface FloatingListHost extends HTMLElement {
   loop: boolean;
   nested: boolean;
   virtual: boolean;
+  manualKeyboard: boolean;
   allowEscape: boolean;
   activeIndex: number | null;
   commitActiveIndex(index: number | null): void;
+  setNavigationPlugin(plugin: ListNavigationPlugin | undefined): void;
 }
 
 export interface FloatingListActiveIndexChangeDetail {
@@ -374,18 +377,19 @@ const FloatingListBase = c(
       if (!root || (!host.navigation && !host.typeahead)) return;
       const plugins: FloatingPlugin[] = [];
       if (host.navigation) {
-        plugins.push(
-          listNavigation(() => ({
-            listRef: elementRef,
-            activeIndex: host.activeIndex,
-            loop: host.loop,
-            nested: host.nested || root.controller.context.nested,
-            virtual: host.virtual,
-            allowEscape: host.allowEscape,
-            focusItemOnOpen: host.virtual ? false : 'auto',
-            onNavigate: (index) => host.commitActiveIndex(index),
-          })),
-        );
+        const navigation = listNavigation(() => ({
+          listRef: elementRef,
+          activeIndex: host.activeIndex,
+          loop: host.loop,
+          nested: host.nested || root.controller.context.nested,
+          virtual: host.virtual,
+          keyboardHandling: host.manualKeyboard ? 'manual' : 'automatic',
+          allowEscape: host.allowEscape,
+          focusItemOnOpen: host.virtual ? false : 'auto',
+          onNavigate: (index) => host.commitActiveIndex(index),
+        }));
+        host.setNavigationPlugin(navigation);
+        plugins.push(navigation);
       }
       if (host.typeahead) {
         plugins.push(
@@ -401,10 +405,14 @@ const FloatingListBase = c(
           })),
         );
       }
-      return getFloatingRootRuntime(root).registerComponentPlugins(
+      const unregister = getFloatingRootRuntime(root).registerComponentPlugins(
         host,
         plugins,
       );
+      return () => {
+        host.setNavigationPlugin(undefined);
+        unregister();
+      };
     }, [
       root,
       host.navigation,
@@ -412,6 +420,7 @@ const FloatingListBase = c(
       host.loop,
       host.nested,
       host.virtual,
+      host.manualKeyboard,
       host.allowEscape,
       elementRef,
       labelRef,
@@ -443,6 +452,10 @@ const FloatingListBase = c(
       loop: {type: Boolean, value: (): boolean => false, reflect: true},
       nested: {type: Boolean, value: (): boolean => false, reflect: true},
       virtual: {type: Boolean, value: (): boolean => false, reflect: true},
+      manualKeyboard: {
+        type: Boolean, value: (): boolean => false, reflect: true,
+        attr: 'manual-keyboard',
+      },
       allowEscape: {
         type: Boolean,
         value: (): boolean => false,
@@ -457,6 +470,26 @@ const FloatingListBase = c(
 export class FloatingListElement extends FloatingListBase {
   #list: FloatingList<unknown> = new FloatingList();
   #activeIndex: number | null = null;
+  #navigationPlugin: ListNavigationPlugin | undefined;
+
+  connectedCallback() {
+    // Atomico's constructor type omits its standard Custom Element callbacks.
+    (FloatingListBase.prototype as HTMLElement & {
+      connectedCallback(): void;
+    }).connectedCallback.call(this);
+    // Re-register navigation and item subscriptions after ancestor removal.
+    void this.update();
+  }
+
+  setNavigationPlugin(plugin: ListNavigationPlugin | undefined) {
+    this.#navigationPlugin = plugin;
+  }
+
+  /** Call after the editor's own keyboard/IME guards, without redispatching. */
+  handleKeyDown(event: KeyboardEvent): boolean {
+    if (!this.isConnected) return false;
+    return this.#navigationPlugin?.handleKeyDown(event) ?? false;
+  }
 
   get updateComplete() {
     return this.updated;
@@ -604,6 +637,13 @@ const FloatingListItemBase = c(
 
 /** Registers its first child with the nearest FloatingList. */
 export class FloatingListItemElement extends FloatingListItemBase {
+  connectedCallback() {
+    (FloatingListItemBase.prototype as HTMLElement & {
+      connectedCallback(): void;
+    }).connectedCallback.call(this);
+    // An ancestor reconnect keeps this item's parent but needs registration.
+    void this.update();
+  }
   #value: unknown;
   #list: FloatingList<unknown> | undefined;
   #query: FloatingOptionBinder | undefined;

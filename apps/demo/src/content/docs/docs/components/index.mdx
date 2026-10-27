@@ -45,6 +45,11 @@ For searchable surfaces, start with the [query and search recipes](/docs/guides/
 and prefer `useQuery()`/`<floating-query>` for new work. The older combobox
 workflow remains available for form-associated selected-value behavior.
 
+When the query comes from contenteditable or Tiptap, use the
+[external editor Query contract](/docs/guides/editor-query). It supplies
+query/composition state and direct keyboard handling while the application
+keeps document ownership.
+
 ## Shared responsibility
 
 The package provides lifecycle state, positioning, interaction plugins, and

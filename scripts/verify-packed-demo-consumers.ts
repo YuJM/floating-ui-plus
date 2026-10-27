@@ -4,7 +4,8 @@ import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
-const packageNames = ['web', 'web-components', 'vue'] as const;
+export const packageNames = ['web', 'web-components', 'vue'] as const;
+export type PackageArchives = Record<(typeof packageNames)[number], string>;
 const demoSources = {
   'web-components': 'apps/demo/src/components/examples/FuzzyComboboxExample.astro',
   vue: 'apps/demo/src/vue/components/ExampleFuzzyCombobox.vue',
@@ -96,7 +97,7 @@ function run(command: string[], cwd: string) {
 async function verifyAdapter(
   adapter: Adapter,
   directory: string,
-  archives: Record<(typeof packageNames)[number], string>,
+  archives: PackageArchives,
 ) {
   const imports = await collectDemoImports(adapter);
   const fixture = join(directory, adapter);
@@ -119,6 +120,16 @@ async function verifyAdapter(
     join(root, 'apps/demo/test/consumer', `fuzzy-${adapter}.ts`),
     join(fixture, 'entry.ts'),
   );
+  await copyFile(
+    join(root, 'apps/demo/test/consumer', `editor-${adapter}.ts`),
+    join(fixture, 'editor.ts'),
+  );
+  if (adapter === 'web-components') {
+    await copyFile(
+      join(root, 'apps/demo/test/consumer/packed-editor-runtime.ts'),
+      join(fixture, 'packed-editor-runtime.ts'),
+    );
+  }
   const allRuntime = imports.runtime.join(', ');
   const allTypes = imports.types.join(', ');
   await Bun.write(join(fixture, 'all-demo-imports.ts'), [
@@ -137,7 +148,10 @@ async function verifyAdapter(
       skipLibCheck: true,
       noEmit: true,
     },
-    files: ['all-demo-imports.ts', 'entry.ts'],
+    files: [
+      'all-demo-imports.ts', 'entry.ts', 'editor.ts',
+      ...(adapter === 'web-components' ? ['packed-editor-runtime.ts'] : []),
+    ],
   }));
   run(['bun', 'install', '--ignore-scripts'], fixture);
 
@@ -151,34 +165,98 @@ async function verifyAdapter(
     }
   }
 
-  run(['bun', 'build', 'entry.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
-  run(['bun', 'build', 'all-demo-imports.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
-  run([join(root, 'node_modules/.bin/tsc'), '--project', 'tsconfig.json'], fixture);
-  console.log(`✓ @floating-ui-plus/${adapter} builds imports from ${imports.files.length} demo files and fuzzy Query fixture`);
-}
-
-const directory = await mkdtemp(join(tmpdir(), 'floating-ui-plus-consumer-'));
-try {
-  await verifyFixtureImports('web-components');
-  await verifyFixtureImports('vue');
-  const archives = {} as Record<(typeof packageNames)[number], string>;
-  for (const name of packageNames) {
-    archives[name] = join(directory, `${name}.tgz`);
-    run(['bun', 'pm', 'pack', '--filename', archives[name]], join(root, 'packages', name));
-  }
-  const web = JSON.parse(run(['tar', '-xOf', archives.web, 'package/package.json'], root));
-  for (const adapter of ['web-components', 'vue'] as const) {
-    const packed = JSON.parse(
-      run(['tar', '-xOf', archives[adapter], 'package/package.json'], root),
-    );
-    const expected = `^${web.version}`;
-    const actual = packed.dependencies?.['@floating-ui-plus/web'];
-    if (actual !== expected) {
-      throw new Error(`Packed ${adapter} requires web@${actual}; expected ${expected}`);
+  if (adapter === 'web-components') {
+    const exportsIn = async (name: string, file: 'index.js' | 'index.d.ts') => {
+      const source = await Bun.file(join(
+        fixture, 'node_modules/@floating-ui-plus', name, 'dist', file,
+      )).text();
+      const blocks = [...source.matchAll(/export \{([^}]+)\};/g)];
+      const final = blocks.at(-1)?.[1];
+      if (!final) throw new Error(`No ${file} exports in packed ${name}`);
+      return new Set(final.split(',').map((entry) => entry.trim().split(' as ').at(-1)!));
+    };
+    for (const file of ['index.js', 'index.d.ts'] as const) {
+      const webExports = await exportsIn('web', file);
+      const componentExports = await exportsIn('web-components', file);
+      const missing = [...webExports].filter((name) => !componentExports.has(name));
+      if (missing.length > 0) {
+        throw new Error(`Packed web-components ${file} omits web exports: ${missing.join(', ')}`);
+      }
     }
   }
-  await verifyAdapter('web-components', directory, archives);
-  await verifyAdapter('vue', directory, archives);
-} finally {
-  await rm(directory, {recursive: true, force: true});
+
+  run(['bun', 'build', 'entry.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
+  run(['bun', 'build', 'editor.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
+  run(['bun', 'build', 'all-demo-imports.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
+  run([join(root, 'node_modules/.bin/tsc'), '--project', 'tsconfig.json'], fixture);
+  if (adapter === 'web-components') {
+    run(['bun', 'build', 'packed-editor-runtime.ts', '--target', 'browser', '--outdir', 'dist'], fixture);
+    await verifyPackedEditorRuntime(fixture);
+  }
+  console.log(`✓ @floating-ui-plus/${adapter} builds imports from ${imports.files.length} demo files, fuzzy Query, and external editor Query fixtures`);
+}
+
+async function verifyPackedEditorRuntime(fixture: string) {
+  const {chromium, webkit} = await import('playwright');
+  const bundle = Bun.file(join(fixture, 'dist/packed-editor-runtime.js'));
+  const server = Bun.serve({
+    hostname: '127.0.0.1', port: 0,
+    fetch: (request) => new URL(request.url).pathname === '/runtime.js'
+      ? new Response(bundle, {headers: {'Content-Type': 'text/javascript'}})
+      : new Response('<!doctype html><html><body><script type="module">window.result = import("/runtime.js").then(module => module.runPackedEditorChecks());</script></body></html>', {
+          headers: {'Content-Type': 'text/html'},
+        }),
+  });
+  try {
+    for (const [name, engine] of [['chromium', chromium], ['webkit', webkit]] as const) {
+      const browser = await engine.launch({headless: true});
+      try {
+        const page = await browser.newPage();
+        await page.goto(server.url.toString());
+        await page.waitForFunction(() => 'result' in window);
+        const checks = await page.evaluate(async () =>
+          await (window as Window & {result: Promise<string[]>}).result,
+        );
+        console.log(`✓ packed editor runtime in ${name}: ${checks.join(', ')}`);
+      } finally {
+        await browser.close();
+      }
+    }
+  } finally {
+    server.stop(true);
+  }
+}
+
+export async function verifyPackedConsumers(suppliedArchives?: PackageArchives) {
+  const directory = await mkdtemp(join(tmpdir(), 'floating-ui-plus-consumer-'));
+  try {
+    await verifyFixtureImports('web-components');
+    await verifyFixtureImports('vue');
+    const archives = suppliedArchives ?? {} as PackageArchives;
+    if (!suppliedArchives) {
+      for (const name of packageNames) {
+        archives[name] = join(directory, `${name}.tgz`);
+        run(['bun', 'pm', 'pack', '--filename', archives[name]], join(root, 'packages', name));
+      }
+    }
+    const web = JSON.parse(run(['tar', '-xOf', archives.web, 'package/package.json'], root));
+    for (const adapter of ['web-components', 'vue'] as const) {
+      const packed = JSON.parse(
+        run(['tar', '-xOf', archives[adapter], 'package/package.json'], root),
+      );
+      const expected = `^${web.version}`;
+      const actual = packed.dependencies?.['@floating-ui-plus/web'];
+      if (actual !== expected) {
+        throw new Error(`Packed ${adapter} requires web@${actual}; expected ${expected}`);
+      }
+    }
+    await verifyAdapter('web-components', directory, archives);
+    await verifyAdapter('vue', directory, archives);
+  } finally {
+    await rm(directory, {recursive: true, force: true});
+  }
+}
+
+if (import.meta.main) {
+  await verifyPackedConsumers();
 }

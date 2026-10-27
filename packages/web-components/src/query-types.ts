@@ -21,6 +21,8 @@ export type FloatingQuerySearchConfiguration<T> =
 
 /** Configuration for the non-form-associated `<floating-query>` element. */
 export interface FloatingQueryConfiguration<T> {
+  /** External editor focus target. Query text and keyboard events stay caller-owned. */
+  externalInput?: HTMLElement | null | undefined;
   search: FloatingQuerySearchConfiguration<T>;
   getItemLabel(item: T): string;
   getItemKey?: ((item: T) => string | number) | undefined;
