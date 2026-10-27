@@ -319,6 +319,9 @@ editor as its DOM reference and use a virtual position reference for the caret.
 Invoke the unbind callback when changing editor targets; scope disposal also
 cleans up the controller's current binding.
 
+See the [editor Query guide](https://fup.polcaneli.com/docs/guides/editor-query)
+for the shared contract, manual navigation, and editor-owned validation.
+
 ### `useCombobox()` compatibility
 
 `useCombobox()` is deprecated. It remains available when a form-like selected

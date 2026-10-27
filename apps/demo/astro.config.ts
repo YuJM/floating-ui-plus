@@ -94,6 +94,7 @@ export default defineConfig({
               ],
             },
             {slug: 'docs/guides/dismiss'},
+            {slug: 'docs/guides/editor-query'},
             {slug: 'docs/guides/popover'},
             {slug: 'docs/guides/usage'},
           ],

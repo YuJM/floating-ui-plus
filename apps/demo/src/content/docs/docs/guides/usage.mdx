@@ -34,8 +34,9 @@ bun add @floating-ui-plus/web-components
 import "@floating-ui-plus/web-components";
 ```
 
-Register the elements once on the client. Importing during SSR is safe; DOM
-behavior starts when the elements connect.
+Register the elements once in a browser module after DOM APIs exist. Keep
+the runtime Web Components import out of server-side schema/Markdown modules;
+use a guarded dynamic import when a shared module can run on the server.
 
 </TabItem>
 <TabItem label="Vue">
@@ -305,6 +306,15 @@ collections, `FloatingTree`/`FloatingNode` for nested menus, and
 
 </TabItem>
 </Tabs>
+
+## Editor slash commands and mentions
+
+For text owned by contenteditable, Tiptap, or ProseMirror, follow the
+[editor Query guide](/docs/guides/editor-query). Use external input binding,
+`setExternalQuery(text, {composing})`, and manual direct keyboard handling.
+Keep the editor's IME boundary, Escape/Tab behavior, range validation, and
+transactions. Native-input Query recipes below remain the default for normal
+search fields.
 
 ## Query search
 

@@ -1,6 +1,6 @@
 ---
 title: Web
-description: Use framework-neutral Floating UI Plus controllers with your own renderer.
+description: Use framework-neutral controllers, external editor queries, and manual list keyboard APIs with your own renderer.
 ---
 
 `@floating-ui-plus/web` owns controller state and interaction plugins while
@@ -22,6 +22,23 @@ is required. Use `createFloatingPresenceStack()` and
 `bindPresenceStackPause()` for bounded, pausable transient records such as
 toasts; adapters own the host box, while application CSS sizes
 `--floating-presence-hit-span` to the current stack.
+
+## Editor-owned Query state
+
+`createQuery()` supports `bindExternalInput(editorElement)` and
+`setExternalQuery(text, {composing})` for contenteditable and Tiptap consumers.
+External binding adds no input/keyboard listeners and does not replace the
+document. The renderer supplies option elements and applies controller
+attributes and positioning styles.
+
+`query.handleKeyDown(event)` handles Enter only. Combine it with the
+connected plugin from `query.navigationPlugin({keyboardHandling: 'manual'})`
+after the editor's own IME checks. Return the boolean result to ProseMirror
+instead of creating and redispatching a KeyboardEvent. Keep range validation,
+Escape/Tab, modifiers, and transactions in the editor integration.
+
+See [editor queries and keyboard handling](/docs/guides/editor-query) for the
+shared contract, caret anchoring, cleanup, and migration from custom menus.
 
 See the [usage recipes](/docs/guides/usage) for controller and interaction
 composition examples, and the [presence stack guide](/docs/components/presence-stack)

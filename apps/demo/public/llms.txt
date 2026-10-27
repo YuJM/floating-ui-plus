@@ -8,6 +8,13 @@ Use this index to find the documentation most relevant to an implementation.
 - [Web Components](https://www.npmjs.com/package/@floating-ui-plus/web-components): Custom Elements adapter for floating surfaces.
 - [Vue](https://www.npmjs.com/package/@floating-ui-plus/vue): Vue adapter with reactive bindings and list interactions.
 
+## Editor Query integration
+- [Editor queries and IME-safe keyboard handling](https://fup.polcaneli.com/docs/guides/editor-query): Start here for contenteditable, Tiptap slash menus, and mentions. External editor APIs were added in 0.11.0.
+- Supply extracted text and composition with setExternalQuery(text, {composing, event?}). Bind the focus target with bindExternalInput(element), or configure floating-query with externalInput. External binding installs no input/composition/keyboard listeners and never replaces the editor document.
+- In Web Components, floating-query.handleKeyDown(event) combines ancestor list navigation and Enter. Web QueryController and Vue useQuery handleKeyDown(event) handle Enter only; combine them with a connected navigationPlugin({keyboardHandling: 'manual'}). Pass the original KeyboardEvent after the editor's IME checks; do not synthesize or redispatch keyboard events.
+- Query guards Enter with event.isComposing, keyCode === 229, and search.composing. Keep editor.view.composing checks, Escape/Tab and modifier policy, current range/query/capability validation, and document transactions in the editor integration. A direct application activation callback bypasses Query's Enter guard.
+- Keep the editor as the real DOM reference and use setPositionReference({contextElement, getBoundingClientRect}) for caret geometry. Use semantics: 'none' for editor-owned ARIA; loading attributes remain bound. Dispose application listeners/plugins as well as FUP bindings.
+
 
 ## Overview
 
@@ -15,9 +22,9 @@ Use this index to find the documentation most relevant to an implementation.
 
 - [Web Components and Vue](https://fup.polcaneli.com/docs/frameworks): Use the same Floating UI Plus contract from Custom Elements or Vue.
 
-- [Vue](https://fup.polcaneli.com/docs/frameworks/vue): Choose between Vue composables and declarative floating components.
+- [Vue](https://fup.polcaneli.com/docs/frameworks/vue): Choose Vue composables and components, including external editor Query state and IME-safe manual keyboard integration.
 
-- [Web](https://fup.polcaneli.com/docs/frameworks/web): Use framework-neutral Floating UI Plus controllers with your own renderer.
+- [Web](https://fup.polcaneli.com/docs/frameworks/web): Use framework-neutral controllers, external editor queries, and manual list keyboard APIs with your own renderer.
 
 - [Getting started](https://fup.polcaneli.com/docs/getting-started): Install Floating UI Plus and choose the right package.
 
@@ -28,7 +35,7 @@ Use this index to find the documentation most relevant to an implementation.
 
 - [Presence stack](https://fup.polcaneli.com/docs/components/presence-stack): Render timed, pausable, and dismissible presence entries such as toasts.
 
-- [Query and results](https://fup.polcaneli.com/docs/components/query): Build searchable floating results with Custom Elements.
+- [Query and results](https://fup.polcaneli.com/docs/components/query): Build searchable results with native or external editor inputs, IME-safe activation, and direct keyboard APIs.
 
 - [Root and content](https://fup.polcaneli.com/docs/components/root): Position and coordinate one floating surface with a Custom Element.
 
@@ -40,6 +47,8 @@ Use this index to find the documentation most relevant to an implementation.
 - [Demo walkthrough](https://fup.polcaneli.com/docs/guides/demo): Browse every interactive Floating UI Plus demo and its detailed guide.
 
 - [Dismiss and before-close](https://fup.polcaneli.com/docs/guides/dismiss): Control outside press, Escape, and close requests consistently.
+
+- [Editor queries and IME-safe keyboard handling](https://fup.polcaneli.com/docs/guides/editor-query): Connect contenteditable or Tiptap to external Query state, manual keyboard navigation, and caret positioning without synthetic events.
 
 - [Installation](https://fup.polcaneli.com/docs/guides/installation): Install the renderer adapter that matches your application.
 

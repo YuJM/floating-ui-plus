@@ -70,6 +70,13 @@ Use this index to find the documentation most relevant to an implementation.
 - [Web Components](https://www.npmjs.com/package/@floating-ui-plus/web-components): Custom Elements adapter for floating surfaces.
 - [Vue](https://www.npmjs.com/package/@floating-ui-plus/vue): Vue adapter with reactive bindings and list interactions.
 
+## Editor Query integration
+- [Editor queries and IME-safe keyboard handling]({{ siteUrl }}/docs/guides/editor-query): Start here for contenteditable, Tiptap slash menus, and mentions. External editor APIs were added in 0.11.0.
+- Supply extracted text and composition with setExternalQuery(text, {composing, event?}). Bind the focus target with bindExternalInput(element), or configure floating-query with externalInput. External binding installs no input/composition/keyboard listeners and never replaces the editor document.
+- In Web Components, floating-query.handleKeyDown(event) combines ancestor list navigation and Enter. Web QueryController and Vue useQuery handleKeyDown(event) handle Enter only; combine them with a connected navigationPlugin({keyboardHandling: 'manual'}). Pass the original KeyboardEvent after the editor's IME checks; do not synthesize or redispatch keyboard events.
+- Query guards Enter with event.isComposing, keyCode === 229, and search.composing. Keep editor.view.composing checks, Escape/Tab and modifier policy, current range/query/capability validation, and document transactions in the editor integration. A direct application activation callback bypasses Query's Enter guard.
+- Keep the editor as the real DOM reference and use setPositionReference({contextElement, getBoundingClientRect}) for caret geometry. Use semantics: 'none' for editor-owned ARIA; loading attributes remain bound. Dispose application listeners/plugins as well as FUP bindings.
+
 {% for group in groups %}
 ## {{ group.name }}
 {% for doc in group.docs %}
@@ -91,7 +98,7 @@ const groups = groupOrder
 const textby = new TextBy();
 await textby.renderToFile({
   template,
-  data: {groups},
+  data: {groups, siteUrl},
   output: outputPath,
 });
 

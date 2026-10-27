@@ -1,6 +1,6 @@
 ---
 title: Query and results
-description: Build searchable floating results with Custom Elements.
+description: Build searchable results with native or external editor inputs, IME-safe activation, and direct keyboard APIs.
 ---
 
 `<floating-query>` supplies the input-side behavior for a searchable floating
@@ -10,6 +10,11 @@ ARIA and keyboard wiring.
 
 The query does not own your selected value or form submission. Your
 application decides what an activated result means.
+
+For contenteditable, Tiptap slash commands, and mentions, use the
+[editor Query guide](/docs/guides/editor-query). It explains the external input
+contract added in 0.11.0, direct keyboard handling, and the editor-side guards
+that remain necessary.
 
 ## Structure
 
@@ -42,6 +47,62 @@ The component establishes the combobox/listbox/option relationship and active
 descendant behavior. Inside a native dialog it automatically uses dialog
 semantics. Use `semantics="dialog"` for a non-native dialog surface, or
 `semantics="none"` when your application owns the ARIA contract.
+
+## Input and configuration API
+
+| API | Contract |
+| --- | --- |
+| `query.configure({search, getItemLabel, getItemKey?, semantics?, externalInput?})` | Accept `SearchOptions` or an existing `SearchController`; the element owns a controller created from options |
+| `query.externalInput = editorElement` | Property-only external focus target; the query text and editor DOM remain application-owned |
+| `input-selector` | Discover a native `HTMLInputElement` inside the Query; this is not a contenteditable selector |
+| `query.setQuery(text, event?)` | Programmatic native query update; it can write the bound native input value |
+| `query.setExternalQuery(text, {composing?, event?})` | Supply editor-extracted text and composition state without replacing the editor's content |
+| `query.handleKeyDown(event)` | Handle direct list navigation and Enter; return false for a closed/disconnected Query, composition, or an already handled event |
+| `query.controller` / `query.search` | Access the shared Query and search controllers once the component is ready |
+| `queryactivate` | Emit `{item, sourceEvent?}` when an item activates; the application validates and applies the action |
+| `querystatechange` | Emit `{snapshot}` with active index and search state for a custom renderer |
+
+Await `query.updateComplete` after configuration before using its controller.
+Keep the Query inside `floating-list navigation` for ordered navigation. An
+external Query enables the list's manual keyboard mode while bound, so the
+application passes events from its editor keyboard hook.
+
+## Direct keyboard APIs
+
+The adapter and controller handlers have different scopes:
+
+| Handler | Handles |
+| --- | --- |
+| Web Components `query.handleKeyDown(event)` | Ancestor list navigation followed by Query Enter activation |
+| `floating-list.handleKeyDown(event)` | List navigation only; use `manual-keyboard` to disable automatic keydown handling |
+| Web `QueryController.handleKeyDown(event)` and Vue `useQuery().handleKeyDown(event)` | Enter activation only |
+| `ListNavigationPlugin.handleKeyDown(event, source?)` | Navigation from a connected `listNavigation()` or `query.navigationPlugin()` plugin |
+
+List navigation defaults to `source: 'floating'` for a direct call, including
+Home/End option navigation. Use `'reference'` when text-input Home/End should
+retain its native meaning. `keyboardHandling: 'manual'` leaves keyboard event
+ordering to the editor and retains pointer/open-state behavior.
+
+Query's Enter handler leaves `event.isComposing`, `event.keyCode === 229`,
+`search.composing`, and already prevented events unhandled. Escape, Tab,
+modified-key policy, and document-range validity remain application-owned.
+The keyboard guard does not validate arbitrary programmatic or pointer
+activation callbacks. See [editor queries](/docs/guides/editor-query) for the
+complete ownership and migration guidance.
+
+## ARIA and external binding cleanup
+
+`bindExternalInput(element)` on the Web controller or Vue composable installs
+no native input, composition, or keyboard listeners. Its cleanup restores
+`aria-busy`, `data-loading`, and the active-descendant attribute it owns under
+combobox semantics. With `semantics: 'none'`, external binding leaves the
+editor-owned active descendant alone. Do not bind Vue `inputProps` to that
+same external editor.
+
+For Web Components, the root's real reference supplies interactions and ARIA;
+use `setPositionReference()` separately for caret geometry. Removing or
+rebinding the root restores the original reference attributes, and ancestor
+reconnection re-registers Query, List, and ListItem behavior.
 
 ## Result phases
 

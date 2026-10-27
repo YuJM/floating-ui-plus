@@ -272,6 +272,10 @@ clicks, scrolling, composition event sequences, dismissal, and remount cleanup.
 Synthetic composition events verify the integration contract; they do not
 automate a platform's native IME candidate window.
 
+See the [editor Query guide](https://fup.polcaneli.com/docs/guides/editor-query)
+for the external input API, an editor adapter example, and the guards to keep
+when migrating a custom slash menu.
+
 ## Closing contract
 
 `data-fup-close` remains a convenient declarative close control. For

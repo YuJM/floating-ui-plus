@@ -1,5 +1,13 @@
 # @floating-ui-plus/vue
 
+## 0.11.1
+
+### Patch Changes
+
+- Document external editor Query integration, IME-safe activation, direct keyboard APIs, caret references, ARIA ownership, cleanup, and migration from synthetic slash-menu keyboard events. Add Web, Web Components, and Vue guidance to the documentation site and generated LLM index.
+- Updated dependencies
+  - @floating-ui-plus/web@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

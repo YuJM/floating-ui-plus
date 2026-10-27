@@ -202,6 +202,10 @@ Keep the editor as the real reference and supply caret geometry with
 getBoundingClientRect})`. Keep document/range mapping and editor-specific IME
 guards in the integration. Set `semantics: 'none'` when the editor owns ARIA.
 
+See the [editor Query guide](https://fup.polcaneli.com/docs/guides/editor-query)
+for adapter examples, ProseMirror event ordering, and migration from custom
+slash-menu keyboard handling.
+
 ## Essential API
 
 - `createFloating()` — positioning, open-state, and composable interactions.
